@@ -12,7 +12,7 @@ __author__ = "Sam Scholten"
 
 import os
 import warnings
-from collections import OrderedDict
+from collections import OrderedDict, defaultdict
 import re
 import json
 from multiprocessing import cpu_count
@@ -33,14 +33,31 @@ def failfloat(a):
 # ============================================================================
 
 
-def json_to_dict(filename):
+def defaultdict_from_d(d):
+    "converts d to a defaultdict, with default value of None for all keys"
+    dd = defaultdict(lambda: None)
+    dd.update(d)
+    return dd
+
+
+# ============================================================================
+
+
+def json_to_dict(filename, hook="od"):
     """ read the json file at filepath (in cwd) into a dict """
     _, pattern = os.path.splitext(filename)
     if pattern != ".json":
-        warnings.warn("input parameters were not a json file")
+        warnings.warn("input options file did not have a json pattern/suffix")
 
     with open(filename, "r", encoding="utf-8") as fp:
-        dct = json.loads(json_remove_comments(fp.read()), object_pairs_hook=OrderedDict)
+        if hook == "od":
+            oph = OrderedDict
+        elif hook == "dd":
+            oph = defaultdict_from_d
+        else:
+            raise RuntimeError("bad choice for dict hook")
+
+        dct = json.loads(json_remove_comments(fp.read()), object_pairs_hook=oph)
         # set some things that cannot be stored in the json
         if "plt" not in filename:
             # need to know number of threads to call (might be parallel fitting)
@@ -49,6 +66,7 @@ def json_to_dict(filename):
             dct["filepath"] = os.getcwd()
         dct["filepath"] = os.path.normpath(dct["filepath"])
         if "fit_method" in dct:
+            # ensure only useful (scipy) loss method is used
             if dct["fit_method"] == "lm":
                 dct["loss"] = "linear"
         if "base_dir" in dct:
@@ -248,9 +266,7 @@ def json_remove_comments(string, strip_space=True):
             escaped = end_slashes_re.search(string, 0, match.start())
 
             # start of string or unescaped quote character to end string
-            if not in_string or (
-                escaped is None or len(escaped.group()) % 2 == 0
-            ):  # noqa
+            if not in_string or (escaped is None or len(escaped.group()) % 2 == 0):  # noqa
                 in_string = not in_string
             index -= 1  # include " character in next catch
         elif not (in_string or in_multi or in_single):
@@ -264,9 +280,7 @@ def json_remove_comments(string, strip_space=True):
                 new_str.append(" " * len(val))
         elif val in "\r\n" and not (in_multi or in_string) and in_single:
             in_single = False
-        elif not (
-            (in_multi or in_single) or (val in " \r\n\t" and strip_space)
-        ):  # noqa
+        elif not ((in_multi or in_single) or (val in " \r\n\t" and strip_space)):  # noqa
             new_str.append(val)
 
         if not strip_space:
