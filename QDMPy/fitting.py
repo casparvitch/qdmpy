@@ -155,6 +155,24 @@ def fit_roi(options, sig_norm, sweep_list, fit_model):
 
 # ==========================================================================
 
+# FIXME option to scramble pixels
+# just operate on sig_norm, there should be a method in numpy only on specific axes (last 2)
+
+# ar = ...
+# rng = np.random.default_rng()
+# x_shuf = rng.permutation(ar.shape[1])
+# x_unshuf = np.argsort(x_shuf)
+# y_shuf = rng.permutation(ar.shape[2])
+# y_unshuf = np.argsort(y_shuf)
+# ok how do we use it now...
+
+# ar_shuffled_in_x = ar[:, shuf_x, :]
+# ar_shuffled_in_xy = ar_shuffled_in_x[:, :, shuf_y]
+# can then go backwards with same process...
+# does that mean we need to store fit info in the same way?
+# But that's ok as we _do_ store the info (after get_pixel_fitting_results) in image arrays!!!
+# NOTE ok this will actually work :o
+
 
 def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_fit_result):
     systems.clean_options(options)

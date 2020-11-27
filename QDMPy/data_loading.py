@@ -5,9 +5,96 @@ __author__ = "Sam Scholten"
 
 import numpy as np
 import warnings
+import os
+import pathlib
 
+import misc
 import systems
 
+# ============================================================================
+
+
+# ============================================================================
+#
+# =============== OUTWARD-FACING FUNCTIONS
+#
+# ============================================================================
+
+
+def load_options(path="options/fit_options.json"):
+    prelim_options = misc.json_to_dict(path)  # requires main to be dir above opts
+
+    sys = systems.choose_system(prelim_options["system"])
+    metadata = sys.read_metadata(prelim_options["filepath"])
+
+    prelim_options.update(metadata)  # add metadata to options dict
+
+    options = sys.get_default_options()  # first load in default options
+    options.update(prelim_options)  # now update with what has been decided upon by user
+
+    options["system"] = sys
+
+    systems.clean_options(options)  # check all the options make sense
+
+    check_if_already_processed(options)
+    # TODO: check if same thing has already been processed, check all (non-plotting) options
+    # are the same. If not, will need to create a different output dir
+    # below: assuming haven't processed already. Write into a couple of functions
+
+    options["original_bin"] = int(metadata["Binning"])
+    if not int(options["additional_bins"]):
+        options["total_bin"] = options["original_bin"]
+    else:
+        options["total_bin"] = options["original_bin"] * int(options["additional_bins"])
+
+    output_dir = pathlib.PurePosixPath(
+        options["filepath"] + "_processed" + "_bin_" + str(options["total_bin"])
+    )
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+    options["output_dir"] = output_dir
+
+    options["data_dir"] = output_dir / "data"
+    if not os.path.exists(options["data_dir"]):
+        os.mkdir(options["data_dir"])
+
+    return options
+
+
+# ============================================================================
+
+
+def load_raw_and_sweep(options):
+    systems.clean_options(options)
+
+    raw_data = options["system"].read_raw(options["filepath"])
+    sweep_list = options["system"].read_sweep_list(options["filepath"])
+    return raw_data, sweep_list
+
+
+# ============================================================================
+
+
+def reshape_dataset(options, raw_data, sweep_list):
+    systems.clean_options(options)
+
+    # ok now start transforming dataset (again should depend on processed/not processed)
+    image = reshape_raw(options, raw_data, sweep_list)
+    image_rebinned, sig, ref, sig_norm = rebin_image(options, image)
+    ROI = define_roi()
+
+    # somewhat important a lot of this isn't hidden, so we can adjust it later
+    image_ROI, sig, ref, sig_norm, sweep_list = remove_unwanted_sweeps(
+        options, image_rebinned, sweep_list, sig, ref, sig_norm, ROI
+    )  # also cuts sig etc. down to ROI
+
+    return image_ROI, sig, ref, sig_norm, sweep_list
+
+
+# ============================================================================
+#
+# =============== INWARD-FACING FUNCTIONS
+#
 # ============================================================================
 
 
@@ -20,7 +107,7 @@ def check_if_already_processed(options):
 
 
 def read_processed_param(options, fitted_param):
-    """ TODO... """
+    """ FIXME... """
     return np.loadtxt(options["filepath_data"] + "/" + fitted_param + ".txt")
 
 
@@ -208,3 +295,6 @@ def define_AOIs(options):
             AOIs.append(define_area_roi(centre, size))
         except KeyError:
             break
+
+
+# ============================================================================
