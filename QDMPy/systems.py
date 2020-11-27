@@ -9,8 +9,6 @@ import re
 import pathlib
 import warnings
 
-from collections import defaultdict
-
 
 DIR_PATH = pathlib.Path(__file__).parent.absolute()
 
@@ -100,9 +98,6 @@ class Zyla(UniMelb):
         return self._raw_pixel_size
 
 
-systems_dict = {"zyla": Zyla}
-
-
 def choose_system(name):
     return systems_dict[name]()
 
@@ -146,3 +141,14 @@ def check_options(options):
     system = options["system"]
     for key, val in options.items():
         check_option(key, val, system)
+    options["cleaned"] = True
+
+
+def clean_options(options):
+    if "cleaned" in options.keys() and options["cleaned"]:
+        return
+    else:
+        check_options(options)
+
+
+systems_dict = {"zyla": Zyla}

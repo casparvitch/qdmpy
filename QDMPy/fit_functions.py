@@ -3,6 +3,7 @@
 import numpy as np
 from numba import njit, jit
 
+# TODO... might want to go through and speed-test njit, jit again :)
 
 # ================================================================================================
 # ================================================================================================
@@ -15,8 +16,9 @@ from numba import njit, jit
 
 class FitFunc:
     """
-    Parent class for fit arbitary peak fit functions
-    num_fns is the number of functins in this FitFunc, including backgrounds
+    Parent class for arbitary fit functions
+    num_fns is the number of (base) functions in this FitFunc
+    i.e. 8 lorentzians, each with independent params, bounds, guesses
     """
 
     param_defn = []
@@ -61,22 +63,25 @@ class FitFunc:
         try:
             ftype = self.fn_type
         except AttributeError:
-            raise AttributeError("You need to define the type of your function - peak or bground")
+            # Just so we can check for chain termination (could be done more neatly)
+            raise AttributeError("You need to define the type of your function.")
 
         for i, f_params in enumerate(new_params):
             if not i:
                 output = self.grad_fn(sweep_vec, *f_params)
             else:
-                # stack on next peak's 'grad'/jacobian
+                # stack on next fn's grad to the jacobian
                 output = np.hstack((output, self.grad_fn(sweep_vec, *f_params)))
 
-        # FIXME what does this do?
+        # chain terminator here adds on PL jacobian term
+        # this is the recursive exit case
+        # stop hstacking onto jac matrix
         if self.chain_fitfunc.fn_type == "terminator":
             return output
 
         # stack on the next fit functions jacobian (recursively)
         # NOTE the chain fitfuncs have to be added at the start as that's how its defined
-        # in fit_model (gen_fit_params), UNTESTED for more than one bground fn
+        # in fit_model (gen_fit_params),
         return np.hstack((self.chain_fitfunc.jacobian(sweep_vec, chain_params), output))
 
     # =================================

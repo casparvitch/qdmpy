@@ -12,8 +12,8 @@ import data_loading
 import misc
 
 # NOTES
-# - chuck first section into a data_handling folder (sub-package)
 # - separate fns to plot results (these should return results in some format)
+# -> plotting file?
 # ->> future design = jupyter
 
 # - need modular code: don't produce output unless the user asks for it,
@@ -40,9 +40,9 @@ def main(__spec__=None):
     options = sys.get_default_options()  # first load in default options
     options.update(prelim_options)  # now update with what has been decided upon by user
 
-    systems.check_options(options)  # check all the options make sense
-
     options["system"] = sys
+
+    systems.clean_options(options)  # check all the options make sense
 
     data_loading.check_if_already_processed(options)
 
@@ -72,29 +72,31 @@ def main(__spec__=None):
     image = data_loading.reshape_raw(options, raw_data, sweep_list)
     image_rebinned, sig, ref, sig_norm = data_loading.rebin_image(options, image)
     ROI = data_loading.define_roi()
-    # mask()
 
     # somewhat important a lot of this isn't hidden, so we can adjust it later
     image_ROI, sig, ref, sig_norm, sweep_list = data_loading.remove_unwanted_sweeps(
         options, image_rebinned, sweep_list, sig, ref, sig_norm, ROI
-    )
-
-    # plot_ROI()
+    )  # also cuts sig etc. down to ROI
 
     fit_model = fitting.define_fit_model()
 
-    fit_ROI(options, fit_model, ROI)
+    # roi_fit_result is an FitResultROI object,
+    # see fitting file to see a nice explanation of contents
+    roi_fit_result = fitting.fit_ROI(options, sig_norm, sweep_list, fit_model)
+
+    # plot_ROI(sig_norm)
+
+    # plot_ROI_fit() # residual!!!
 
     # want to do this in a scaled manner? User select with cursor, run in real time etc.?
-    define_AOIs(options, ROI)
-    fit_AOIs()
+    AOIs = data_loading.define_AOIs(options)
+    AOI_fit_params = fitting.fit_AOIs(options, fit_model, AOIs)
 
-    # plot_AOI_comparison()
+    # plot_AOI_comparison() # residual, compare to ROI!!!
 
-    # plot_ROI_fit()
+    # move on to the pixel fitting
+    fitting.fit_pixels()  # remember to scramble pixels
 
-    # ok stop process here, delete any unneeded data, now moving on to the pixel fitting
-    fit_pixels()  # remember to scramble pixels
-    plot_fit_results()  # ok need to expand this to more direct functions {params, etc.?}
+    # plot_fit_results()  # ok need to expand this to more direct functions {params, etc.?}
 
     # Note on finishing, need to save options etc. Remember to remove 'system' information

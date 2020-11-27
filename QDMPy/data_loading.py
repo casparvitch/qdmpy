@@ -6,10 +6,17 @@ __author__ = "Sam Scholten"
 import numpy as np
 import warnings
 
+import systems
+
+# ============================================================================
+
 
 def check_if_already_processed(options):
     """ TODO """
     pass
+
+
+# ============================================================================
 
 
 def read_processed_param(options, fitted_param):
@@ -17,7 +24,13 @@ def read_processed_param(options, fitted_param):
     return np.loadtxt(options["filepath_data"] + "/" + fitted_param + ".txt")
 
 
+# ============================================================================
+
+
 def reshape_raw(options, raw_data, sweep_list):
+
+    systems.clean_options(options)
+
     options["used_ref"] = False  # flag for later
 
     try:
@@ -52,7 +65,12 @@ def reshape_raw(options, raw_data, sweep_list):
     return image.transpose([0, 2, 1]).copy()
 
 
+# ============================================================================
+
+
 def rebin_image(options, image):
+    systems.clean_options(options)
+
     if options["additional_bins"] in [0, 1]:
         image_rebinned = image
     else:
@@ -99,7 +117,11 @@ def rebin_image(options, image):
     return image_rebinned, sig, ref, sig_norm
 
 
+# ============================================================================
+
+
 def define_roi(options, image_rebinned):
+    systems.clean_options(options)
 
     # from old code, not sure what case it handles
     try:
@@ -128,6 +150,9 @@ def define_roi(options, image_rebinned):
     return ROI
 
 
+# ============================================================================
+
+
 def define_area_roi(start_x, start_y, end_x, end_y):
     """Makes a list with a mesh that defines the an ROI
     This ROI can be simply applied to the 2D image through direct
@@ -140,6 +165,9 @@ def define_area_roi(start_x, start_y, end_x, end_y):
     return [yv, xv]
 
 
+# ============================================================================
+
+
 def define_area_roi_centre(centre, size):
     x = [np.linspace(centre[0] - size / 2, centre[0] + size / 2, size + 1, dtype=int)]
     y = [np.linspace(centre[1] - size / 2, centre[1] + size / 2, size + 1, dtype=int)]
@@ -147,13 +175,36 @@ def define_area_roi_centre(centre, size):
     return [yv, xv]
 
 
+# ============================================================================
+
+
 def remove_unwanted_sweeps(options, image_rebinned, sweep_list, sig, ref, sig_norm, ROI):
+    systems.clean_options(options)
+
+    # here ensure we have copies, not views
     rem_start = options["remove_start_sweep"]
     rem_end = options["remove_end_sweep"]
-    image_ROI = image_rebinned[:, ROI[0], ROI[1]]
-    sig = sig[rem_start : -1 - rem_end, ROI[0], ROI[1]]  # noqa: E203
-    ref = ref[rem_start : -1 - rem_end, ROI[0], ROI[1]]  # noqa: E203
-    sig_norm = sig_norm[rem_start : -1 - rem_end, ROI[0], ROI[1]]  # noqa: E203
-    sweep_list = np.asarray(sweep_list[rem_start : -1 - rem_end])  # noqa: E203
+    image_ROI = image_rebinned[:, ROI[0], ROI[1]].copy()
+    sig = sig[rem_start : -1 - rem_end, ROI[0], ROI[1]].copy()  # noqa: E203
+    ref = ref[rem_start : -1 - rem_end, ROI[0], ROI[1]].copy()  # noqa: E203
+    sig_norm = sig_norm[rem_start : -1 - rem_end, ROI[0], ROI[1]].copy()  # noqa: E203
+    sweep_list = np.asarray(sweep_list[rem_start : -1 - rem_end]).copy()  # noqa: E203
 
     return image_ROI, sig, ref, sig_norm, sweep_list
+
+
+# ============================================================================
+
+
+def define_AOIs(options):
+    AOIs = []
+
+    i = 0
+    while True:
+        i += 1
+        try:
+            centre = options["area_" + str(i) + "_centre"]
+            size = 2 * options["area_" + str(i) + "_size"]
+            AOIs.append(define_area_roi(centre, size))
+        except KeyError:
+            break
