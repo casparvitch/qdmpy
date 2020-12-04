@@ -7,6 +7,7 @@ import numpy as np
 import warnings
 import os
 import pathlib
+import json
 
 import misc
 import systems
@@ -21,10 +22,10 @@ import systems
 # ============================================================================
 
 
-def load_options(path="options/fit_options.json"):
+def load_options(path="options/fit_options.json", check_for_prev_result=False):
     prelim_options = misc.json_to_dict(path)  # requires main to be dir above opts
 
-    sys = systems.choose_system(prelim_options["system"])
+    sys = systems.choose_system(prelim_options["system_name"])
     metadata = sys.read_metadata(prelim_options["filepath"])
 
     prelim_options.update(metadata)  # add metadata to options dict
@@ -32,14 +33,11 @@ def load_options(path="options/fit_options.json"):
     options = sys.get_default_options()  # first load in default options
     options.update(prelim_options)  # now update with what has been decided upon by user
 
+    sys.system_specific_option_update(options)
+
     options["system"] = sys
 
     systems.clean_options(options)  # check all the options make sense
-
-    check_if_already_processed(options)
-    # TODO: check if same thing has already been processed, check all (non-plotting) options
-    # are the same. If not, will need to create a different output dir
-    # below: assuming haven't processed already. Write into a couple of functions
 
     options["original_bin"] = int(metadata["Binning"])
     if not int(options["additional_bins"]):
@@ -47,16 +45,8 @@ def load_options(path="options/fit_options.json"):
     else:
         options["total_bin"] = options["original_bin"] * int(options["additional_bins"])
 
-    output_dir = pathlib.PurePosixPath(
-        options["filepath"] + "_processed" + "_bin_" + str(options["total_bin"])
-    )
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
-    options["output_dir"] = output_dir
-
-    options["data_dir"] = output_dir / "data"
-    if not os.path.exists(options["data_dir"]):
-        os.mkdir(options["data_dir"])
+    if check_for_prev_result:
+        check_if_already_processed(options)
 
     return options
 
@@ -98,17 +88,72 @@ def reshape_dataset(options, raw_data, sweep_list):
 # ============================================================================
 
 
-def check_if_already_processed(options):
-    """ TODO """
-    pass
+def get_prev_options(options):
+    prev_opt_path = os.path.normpath(options["output_dir"] + "/saved_options.json")
+    f = open(prev_opt_path)
+    json_str = f.read()
+    return json.loads(json_str)
 
 
 # ============================================================================
 
 
-def read_processed_param(options, fitted_param):
-    """ FIXME... """
-    return np.loadtxt(options["filepath_data"] + "/" + fitted_param + ".txt")
+def check_if_already_processed(options):
+    output_dir = pathlib.PurePosixPath(
+        options["filepath"] + "_processed" + "_bin_" + str(options["total_bin"])
+    )
+    options["output_dir"] = output_dir
+    options["data_dir"] = output_dir / "data"
+
+    if os.path.exists(output_dir):
+        options["found_prev_result"] = True
+    else:
+        os.mkdir(output_dir)
+        if not os.path.exists(options["data_dir"]):
+            os.mkdir(options["data_dir"])
+
+    # 'fit_pixels' test is there to see if the user actually cares about pixel info
+    if not options["force_fit"] and options["found_prev_result"] and options["fit_pixels"]:
+        # i.e. we are going to try reloading the prev dataset
+        options["reloaded_prev_fit"] = True  # set for the record
+
+        # check ROI regions are the same
+        prev_options = get_prev_options(options)
+        check_ROI_compatibility(options, prev_options)
+
+
+# ============================================================================
+
+
+def check_ROI_compatibility(options, prev_options):
+    """
+    When re-loading, want to ensure we have the same ROI settings as what the
+    previous processing was run under. Allow user to override (i.e. copy old
+    ROI settings) with "copy_prev_ROI_options" option.
+    """
+    failure_string = """
+    Detected previous (similar) fit results. We would skip fitting the pixels
+    and load these previous results, but ROI options were not the same. To avoid issues with
+    plotting inconsistent PL/param arrays etc. and to remove ambiguity, the previous fit results
+    will not be loaded ("force_fit" has been set to True).
+     - If you intended to fit the data again (i.e. in different ROI) then don't worry about
+       this message.
+     - If you want to speed things up a bit and use this automatic reload feature, then try
+       setting "auto_match_prev_ROI_options" to True. It will not effect any other part of the
+       analysis process.
+    """
+
+    ROI_settings = ["ROI", "ROI_size", "ROI_centre", "ROI_rec_size"]
+    if options["auto_match_prev_ROI_options"]:
+        for key in ROI_settings:
+            options[key] = prev_options[key]
+    else:
+        for key in ROI_settings:
+            if options[key] != prev_options[key]:
+                warnings.warn(failure_string)
+                options["reloaded_prev_fit"] = False
+                options["force_fit"] = True
+                break
 
 
 # ============================================================================
@@ -147,6 +192,7 @@ def reshape_raw(options, raw_data, sweep_list):
                 "Detected that dataset has reference. "
                 + "Continuing processing using the reference."  # noqa: W503
             )
+            options["used_ref"] = True
     # Transpose the dataset to get the correct x and y orientations
     # will work for non-square images
     return image.transpose([0, 2, 1]).copy()
@@ -220,13 +266,7 @@ def define_roi(options, image_rebinned):
     if options["ROI"] == "Full":
         ROI = define_area_roi(0, 0, size_w - 1, size_h - 1)
     elif options["ROI"] == "Square":
-        ROI = define_area_roi_centre(options["ROI_centre"], 2 * options["ROI_radius"])
-    # might be better to add ellipse etc. masks later?
-    # realistically, not going to do FFT etc. on circular mask,
-    # -- won't save that much time
-    # elif options["ROI"] == "Circle":
-    #     ROI = define_area_roi_centre(
-    #           options["ROI_centre"], 2 * options["ROI_radius"])
+        ROI = define_area_roi_centre(options["ROI_centre"], 2 * options["ROI_size"])
     elif options["ROI"] == "Rectangle":
         start_x = options["ROI_centre"][0] - options["ROI_rect_size"][0]
         start_y = options["ROI_centre"][1] - options["ROI_rect_size"][1]

@@ -8,6 +8,7 @@ import misc
 import re
 import pathlib
 import warnings
+from multiprocessing import cpu_count
 
 
 DIR_PATH = pathlib.Path(__file__).parent.absolute()
@@ -31,11 +32,25 @@ class System:
     def get_raw_pixel_size(self):
         raise NotImplementedError
 
+    def get_default_options(self):
+        raise NotImplementedError
+
     def option_choices(self, option_name):
         raise NotImplementedError
 
     def available_options(self):
         raise NotImplementedError
+
+    def system_specific_option_update(self, options):
+        # set some things that cannot be stored in the json
+
+        # most systems will need these {you need to copy to your subclass method}
+        # need to know number of threads to call (might be parallel fitting)
+        options["threads"] = cpu_count() - options["sub_threads"]
+        if "base_dir" in options and options["base_dir"] != "":
+            options["filepath"] = options["base_dir"] + options["filepath"]
+            if "filepath_ref" in options:
+                options["filepath_ref"] = options["filepath_ref"]
 
 
 # Institute or university level
@@ -72,6 +87,12 @@ class UniMelb(System):
             metadata = {a: misc.failfloat(b) for (a, b) in matches}
         return metadata
 
+    def get_default_options(self):
+        ret = {}
+        for key, val in self.options_dict.items():
+            ret[key] = val["option_default"]
+        return ret
+
     def option_choices(self, option_name):
         return self.options_dict[option_name]["option_choices"]
 
@@ -80,6 +101,23 @@ class UniMelb(System):
 
     def available_options(self):
         return self.options_dict.keys()
+
+    def system_specific_option_update(self, options):
+        # set some things that cannot be stored in the json
+
+        # need to know number of threads to call (might be parallel fitting)
+        options["threads"] = cpu_count() - options["sub_threads"]
+        if "filepath" not in options:
+            options["filepath"] = os.getcwd()
+        options["filepath"] = os.path.normpath(options["filepath"])
+        if "fit_method" in options:
+            # ensure only useful (scipy) loss method is used
+            if options["fit_method"] == "lm":
+                options["loss"] = "linear"
+        if "base_dir" in options and options["base_dir"] != "":
+            options["filepath"] = options["base_dir"] + options["filepath"]
+            if "filepath_ref" in options:
+                options["filepath_ref"] = options["filepath_ref"]
 
 
 # 'system' level, inherits from broader institute class
@@ -94,7 +132,7 @@ class Zyla(UniMelb):
         # ensure all values default to None (at all levels of reading in json)
         self.option_dict = misc.json_to_dict(self.config_path, hook="dd")
 
-    def get_pixel_size(self):
+    def get_raw_pixel_size(self):
         return self._raw_pixel_size
 
 
@@ -151,4 +189,4 @@ def clean_options(options):
         check_options(options)
 
 
-systems_dict = {"zyla": Zyla}
+systems_dict = {"Zyla": Zyla}

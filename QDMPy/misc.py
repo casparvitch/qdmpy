@@ -15,7 +15,7 @@ import warnings
 from collections import OrderedDict, defaultdict
 import re
 import json
-from multiprocessing import cpu_count
+
 
 # ============================================================================
 
@@ -58,21 +58,6 @@ def json_to_dict(filename, hook="od"):
             raise RuntimeError("bad choice for dict hook")
 
         dct = json.loads(json_remove_comments(fp.read()), object_pairs_hook=oph)
-        # set some things that cannot be stored in the json
-        if "plt" not in filename:
-            # need to know number of threads to call (might be parallel fitting)
-            dct["threads"] = cpu_count() - dct["sub_threads"]
-        if "filepath" not in dct:
-            dct["filepath"] = os.getcwd()
-        dct["filepath"] = os.path.normpath(dct["filepath"])
-        if "fit_method" in dct:
-            # ensure only useful (scipy) loss method is used
-            if dct["fit_method"] == "lm":
-                dct["loss"] = "linear"
-        if "base_dir" in dct:
-            dct["filepath"] = dct["base_dir"] + dct["filepath"]
-            if "filepath_ref" in dct:
-                dct["filepath_ref"] = dct["filepath_ref"]
         return dct.copy()
 
 

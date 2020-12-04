@@ -1,0 +1,502 @@
+{
+	// NOT COMPLETE
+
+	// ===========================================================================================
+	// ============================ General Parameters ===========================================
+	// ===========================================================================================
+	"base_dir": {},
+    "filepath": {},
+    
+    // binning should be fixed now, num_bins = 1 will do nothing (and 0 as well)
+    
+    // if true the reference measurement is ignored
+    "ignore_ref": {
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false,
+    		],
+    },
+    "additional_bins": {
+    	"option_default": 0,
+    	"option_charac": {
+    		"multiple_of": 2, 
+    		"additional_choices": [0, 1]
+    	},
+    },
+    "old_binning_convention": {
+    	"option_default": false,
+    	"option_choices":
+    		[
+    			true,
+    			false,
+    		],
+    },
+
+    "system_name": {
+    	"option_default": null,
+    	"option_choices":
+    		[
+    			"Zyla",
+    		],
+    },
+	// ===========================================================================================
+    // ======================== Region Of Interest (ROI) params ==================================
+	// ===========================================================================================
+    // For taking a region of interest and ignoring the rest qof the data set
+    "ROI": {
+    	"option_default": "Full",
+    	"option_choices":
+    		[
+    			"Full",
+    			"Rectangle",
+    			"Square"
+    		],
+    },
+    // half the size of the Square
+    "ROI_size": {
+    	"option_default": 1,
+    	"option_characs": {
+    		"type": "Int",
+    	},
+    },
+    // centre pixel
+    "ROI_centre": {
+    	"option_default": [3, 3],
+    	"option_characs": {
+    		"type": "List",
+    		"len": 2,
+    	}
+    },
+    // Used for the rectangle size only
+    "ROI_rect_size": {
+    	"option_default": [1, 1],
+    	"option_characs": {
+    		"type": "List",
+    		"len": 2,
+    	}
+    },
+
+    // Removes data points from the start and end of each pixel data
+    "remove_start_sweep": {
+    	"option_default": 1,
+    	"option_characs": {
+    		"type": "Int",
+    	},
+    },
+    "remove_end_sweep": {
+    	"option_default": 0,
+    	"option_characs": {
+    		"type": "Int",
+    	},
+    },
+
+    // Style of the reference normalisation used. div = division and sub = subtraction
+    "normalisation": {
+    	"option_default": "div",
+    	"option_choices":
+    		[
+    			"div",
+    			"sub",
+    		],
+    },
+
+    // ========== Regions for spectra comparision, before full pixel fitting ==========
+    // single pixel location that is used
+    "single_pixel_check": {
+    	"option_default": [1, 1],
+    	"option_characs": {
+    		"type": "List",
+    		"len": 2,
+    	}
+    },
+    // centre pixel of area 1
+    "area_1_centre": {
+    	"option_default": [1, 1],
+    	"option_characs": {
+    		"type": "List",
+    		"len": 2,
+    	}
+    },
+    // size of the square region of area 1
+    "area_1_size": {
+    	"option_default": 1,
+    	"option_characs": {
+    		"type": "Int",
+    	},
+    },
+    "area_2_centre": {
+    	"option_default": [1, 1],
+    	"option_characs": {
+    		"type": "List",
+    		"len": 2,
+    	}
+    },
+    "area_2_size": {
+    	"option_default": 1,
+    	"option_characs": {
+    		"type": "Int",
+    	},
+    },
+    // NOTE these need to be copied/extended below if you want more AOIs
+
+
+    // ========== Fitting Parameters ==========
+    // overrides automatic reloading of previous fit results
+    "force_fit": {
+    	"option_default": false,
+    	"option_choices":
+    		[
+    			true,
+    			false,
+    		],
+    }, 
+     // fits all of the required pixels, false ignores the pixel fitting
+    "fit_pixels": {
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false,
+    		],
+    },
+    // fit pixels in a random order to give more accurate ETA
+    "scramble_pixels": {
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false,
+    		],
+    },
+    // if 'false', uses init guesses below on each pixel, 'true' uses best fit to ROI average
+    "use_ROI_avg_fit_res_for_all_pixels": {
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false,
+    		],
+    },
+    // number of threads to *not* use for fitting
+    "sub_threads": {
+    	"option_default": 0,
+    	"option_characs": {
+    		"type": "Int",
+    	},
+    },
+    "fit_functions": {}, // user must set this one
+
+    // All parameters can either have a range or a bound.
+    // The code automatically detects this by the name of the dictionary key.x
+    // range results in bounds of min = guess - range, max = guess + range
+    // bounds directly gives these values
+
+    // Position guess for lorentzian (in MHz)
+    "pos_guess": {
+    	"option_default": null,
+    	"option_characs": {
+    		"type": ["Int", "List"],
+    	},
+    },
+    "pos_range": {
+    	"option_default": 25,
+    	"option_characs":
+    		{"type": ["Int", "List"]}
+    },
+
+    // Amplitude of the peak
+    "amp_guess": {
+    	"option_default": -0.0015,
+    	"option_characs":
+    		{"type": ["Float", "List"]},
+    },
+
+    "amp_bounds": {
+    	"option_default": [-0.0100, -0.0003],
+    	"option_characs": {
+    		"type": "List",
+    		"len": 2,
+    	}
+    },
+
+    // Full width half maximum of the peaks
+    "fwhm_guess": {
+    	"option_default": -0.0015,
+    	"option_characs":
+    		{"type": ["Float", "List"]},
+    },
+
+    "fwhm_bounds": {
+    	"option_default": [5, 20],
+    	"option_characs": {
+    		"type": "List",
+    		"len": 2,
+    	}
+    },
+
+
+    // linear function (background)
+    "c_guess": {
+    	"option_default": 1,
+    	"option_characs":
+    		{"type": ["Float", "List"]},
+    },
+    "c_bounds": {
+    	"option_default": [0.999,1.0001],
+    	"option_characs": {
+    		"type": "List",
+    		"len": 2,
+    	}
+    },
+
+    "bg_guess": {
+    	"option_default": 0,
+    	"option_characs":
+    		{"type": ["Float", "List"]},
+    },
+    "bg_bounds": {
+    	"option_default": [-1e-8, 1e-8],
+    	"option_characs": {
+    		"type": "List",
+    		"len": 2,
+    	}
+    },
+
+    // Other fit parameters (hyperfine functions)
+    "amp_1_hyp_guess": {
+    	"option_default": -0.015,
+    	"option_characs":
+    		{"type": ["Float", "List"]},
+    },
+    "amp_1_hyp_bounds": {
+    	"option_default": [-0.1, -0.001],
+    	"option_characs": {
+    		"type": "List",
+    		"len": 2,
+    	}
+    },
+    "amp_2_hyp_guess": {
+    	"option_default": -0.015,
+    	"option_characs":
+    		{"type": ["Float", "List"]},
+    },
+    "amp_2_hyp_bounds": {
+    	"option_default": [-0.1, -0.001],
+    	"option_characs": {
+    		"type": "List",
+    		"len": 2,
+    	}
+    },
+    "amp_3_hyp_guess": {
+    	"option_default": -0.015,
+    	"option_characs":
+    		{"type": ["Float", "List"]},
+    },
+    "amp_3_hyp_bounds": {
+    	"option_default": [-0.1, -0.001],
+    	"option_characs": {
+    		"type": "List",
+    		"len": 2,
+    	}
+    },
+
+    "fwhm_1_hyp_guess": {
+    	"option_default": 2,
+    	"option_characs":
+    		{"type": ["Float", "List"]},
+    },
+    "fwhm_1_hyp_bounds": {
+    	"option_default": [1.5, 40],
+    	"option_characs": {
+    		"type": "List",
+    		"len": 2,
+    	}
+    },
+    "fwhm_2_hyp_guess": {
+    	"option_default": 2,
+    	"option_characs":
+    		{"type": ["Float", "List"]},
+    },
+    "fwhm_2_hyp_bounds": {
+    	"option_default": [1.5, 40],
+    	"option_characs": {
+    		"type": "List",
+    		"len": 2,
+    	}
+    },
+    "fwhm_3_hyp_guess": {
+    	"option_default": 2,
+    	"option_characs":
+    		{"type": ["Float", "List"]},
+    },
+    "fwhm_3_hyp_bounds": {
+    	"option_default": [1.5, 40],
+    	"option_characs": {
+    		"type": "List",
+    		"len": 2,
+    	}
+    },
+
+
+
+    // ========== scipy least means square options ===========
+    // Method for scipy least means square,
+    // lm (fast but doesn't use bounds),
+    // trf (uses bounds and the most reliable fit method but can be very slow)
+    // dogbox (uses bounds and is faster than trf)
+    "fit_method": {
+    	"option_default": "trf",
+    	"option_choices":
+    		[
+    			"lm",
+    			"trf",
+    			"dogbox",
+    		],
+    },
+     // display progress bar during fitting
+    "show_progressbar": {
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false,
+    		],
+    },
+    // uses an analytically determined Jacobian, This should be faster but hasn't been implemented 
+    // for every function
+    // - note it gives different fit results (should be more accurate than a finite-diff method)
+    "use_analytic_jac": {
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false,
+    		],
+    },
+    // verbose fitting 0 = silent, 1 = term report, 2 display iterations
+    "verbose_fitting": {
+    	"option_default": 0,
+    	"option_choices": 
+    		[
+    			0, 
+    			1,
+    			2
+    		],
+    },
+    // The scheme ‘3-point’ is more accurate, but requires twice as many operations 
+    // as ‘2-point’ (default).
+    // The scheme ‘cs’ uses complex steps, and while potentially the most accurate, it is
+    // applicable only when fun correctly handles complex inputs and can be analytically
+    // continued to the complex plane.
+    "fit_jac_acc":  {
+    	"option_default": "2-point",
+    	"option_choices": 
+    		[
+    			"2-point", 
+    			"3-point", 
+    			"cs"
+    		],
+    },
+    // Tolerance settings, the exact condition depends on method used - see scipy documentation
+    // Tolerance for termination by the change of the independent variables.
+    "fit_gtol":  {
+    	"option_default": 1e-12,
+    },
+    // Tolerance for termination by the norm of the gradient.
+    "fit_xtol":  {
+    	"option_default": 1e-12,
+    },
+    // Tolerance for termination by the change of the cost function.
+    "fit_ftol": {
+    	"option_default": 1e-12,
+    },
+    // Rescales the x by the units of the Jacobian (doesn't seem to make a difference)
+    "scale_x": {
+    	"option_default": true,
+    	"options_choices":
+    		[
+    			true,
+    			false,
+    		],
+    },
+    // Determines the loss function. This in non trivial check the scipy documnetation
+    "loss_fn": {
+    	"option_default": "linear",
+    	"option_choices": 
+    		[
+    			"linear", 
+    			"soft_l1", 
+    			"huber", 
+    			"cauchy",
+    			"arctan"
+    		], 
+    },
+
+	// ===========================================================================================
+    // =============================== Plotting Parameters =======================================
+	// ===========================================================================================
+    "make_plots": {
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false,
+    		],
+    },
+    "save_plots": {
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false,
+    		],
+    },
+    "show_plots": {
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false,
+    		],
+    },
+    "annotate_plots": {
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false,
+    		],
+    },
+    "dpi": {
+    	"option_default": 600,
+    	"option_characs": {
+    		"number": true,
+    	},
+    },
+    "save_fig_type":  {
+    	"option_default": "png",
+    	"option_choices":
+    		[
+    			"png",
+    			"svg",
+    			"pdf",
+    		],
+    },
+
+    // ===========================================================================================
+    // Things set internally, allow to be anything
+    "cleaned": {},
+    "system": {},
+    "used_ref": {},
+    "AOIHeight": {},
+    "AOIWidth": {},
+    "reloaded_prev_fit": {},
+    "found_prev_result": {},
+    "fit_param_defn": {},
+    "output_dir": {},
+    "data_dir": {},
+    "fit_param_defn": {},
+    "fit_parameter_unit": {},
+}
