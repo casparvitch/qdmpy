@@ -30,7 +30,7 @@ import data_loading
 # careful -> don't want overlapping param definitions!!!
 AVAILABLE_FNS = {
     "lorentzian": fit_functions.Lorentzian,
-    "lorentzian_hyperfine_14": fit_functions.Lorentfitzian_hyperfine_14,
+    "lorentzian_hyperfine_14": fit_functions.Lorentzian_hyperfine_14,
     "lorentzian_hyperfine_15": fit_functions.Lorentzian_hyperfine_15,
     "gaussian": fit_functions.Gaussian,
     "gaussian_hyperfine_14": fit_functions.Gaussian_hyperfine_14,
@@ -50,16 +50,22 @@ class FitResultROIAvg:
         self,
         fit_options,
         pl_roi,
-        sweep_vector,
+        sweep_list,
         best_fit_result,
+        best_fit_pl_vals,
         scipy_best_fit,
         init_fit,
         fit_sweep_vector,
     ):
         self.fit_options = fit_options  # options passed to scipy least_squares
+
         self.pl_roi = pl_roi  # pl data summed over FOV, 1D (as fn of sweep_vec)
-        self.sweep_vector = sweep_vector  # affine parameter i.e. tau or freq
+        self.sweep_list = sweep_list  # affine parameter i.e. tau or freq
+
         self.best_fit_result = best_fit_result  # scipy solution fit_params
+        self.best_fit_pl_vals = best_fit_pl_vals  # fit_model(sweep_list, best_fit_result)
+
+        # below: a higher res linspace of the above data.
         self.scipy_best_fit = scipy_best_fit  # scipy best fit (array of PL vals)
         self.init_fit = init_fit  # initial fit (array of PL vals)
 
@@ -99,7 +105,7 @@ def to_squares_wrapper(fun, p0, sweep_val, pl_val, kwargs={}):
 # ==========================================================================
 
 
-def fit_roi_avg(options, sig_norm, sweep_list, fit_model):
+def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
     systems.clean_options(options)
 
     # fit *all* pl data (i.e. summing over FOV)
@@ -140,15 +146,16 @@ def fit_roi_avg(options, sig_norm, sweep_list, fit_model):
     )
 
     best_fit_result = fitting_results.x
-    fit_sweep_vector = np.linespace(np.min(sweep_vector), np.max(sweep_vector), 10000)
+    fit_sweep_vector = np.linspace(np.min(sweep_vector), np.max(sweep_vector), 10000)
     scipy_best_fit = fit_model.fn_chain(fit_sweep_vector, best_fit_result)
     init_fit = fit_model.fn_chain(fit_sweep_vector, init_guess)
 
     return FitResultROIAvg(
         fit_options,
         pl_roi,
-        sweep_vector,
+        sweep_list,
         best_fit_result,
+        fit_model.fn_chain(sweep_list, best_fit_result),
         scipy_best_fit,
         init_fit,
         fit_sweep_vector,
@@ -410,10 +417,14 @@ class FitModel:
 
         fns = self.options["fit_functions"]  # format: {"linear": 1, "lorentzian": 8} etc.
         fn_chain = None
-        self.param_keys = []
+
         for fn_type in fns:
             fn_chain = AVAILABLE_FNS[fn_type](fns[fn_type], fn_chain)
-        self.fn_chain = fn_chain[::-1]  # reverse for simplicity, as chain is reversed
+
+        self.fn_chain = fn_chain
+
+        # NOTE below not used...? was supposed to be self.fn, self.num_fns... not useful?
+        # self.fn_chain = fn_chain[::-1]  # reverse for simplicity, as chain is reversed
 
     # =================================
 
@@ -489,7 +500,7 @@ class FitModel:
         for fn_type, num in self.options["fit_functions"].items():
             for n in range(num):
 
-                for pos, key in enumerate(fn_type.param_defn):
+                for pos, key in enumerate(AVAILABLE_FNS[fn_type].param_defn):
                     try:
                         param_lst.append(self.init_guesses[key][n])
                     except (TypeError, KeyError):

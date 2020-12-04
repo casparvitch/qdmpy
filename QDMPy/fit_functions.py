@@ -37,7 +37,7 @@ class FitFunc:
     def __call__(self, sweep_vec, fit_params):
         """
         Returns the value of the fit function at sweep_val (i.e. freq, tau)
-        for given fit_options.
+        for given fit_options. Vectorised (sweep_vec may be vector or number).
         """
         chain_params, these_params = np.split(fit_params, [self.chain_param_len])
         newoptions = these_params.reshape(self.num_fns, len(self.param_defn))

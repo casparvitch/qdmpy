@@ -7,7 +7,7 @@ import numpy as np
 import warnings
 import os
 import pathlib
-import json
+import simplejson as json
 
 import misc
 import systems
@@ -26,14 +26,15 @@ def load_options(path="options/fit_options.json", check_for_prev_result=False):
     prelim_options = misc.json_to_dict(path)  # requires main to be dir above opts
 
     sys = systems.choose_system(prelim_options["system_name"])
+
+    sys.system_specific_option_update(prelim_options)
+
     metadata = sys.read_metadata(prelim_options["filepath"])
 
-    prelim_options.update(metadata)  # add metadata to options dict
+    prelim_options["metadata"] = metadata  # add metadata to options dict
 
     options = sys.get_default_options()  # first load in default options
     options.update(prelim_options)  # now update with what has been decided upon by user
-
-    sys.system_specific_option_update(options)
 
     options["system"] = sys
 
@@ -45,6 +46,7 @@ def load_options(path="options/fit_options.json", check_for_prev_result=False):
     else:
         options["total_bin"] = options["original_bin"] * int(options["additional_bins"])
 
+    # don't always check for prev. results (so we can use this fn in other contexts)
     if check_for_prev_result:
         check_if_already_processed(options)
 
@@ -71,7 +73,7 @@ def reshape_dataset(options, raw_data, sweep_list):
     # ok now start transforming dataset (again should depend on processed/not processed)
     image = reshape_raw(options, raw_data, sweep_list)
     image_rebinned, sig, ref, sig_norm = rebin_image(options, image)
-    ROI = define_roi()
+    ROI = define_roi(options, image_rebinned)
 
     # somewhat important a lot of this isn't hidden, so we can adjust it later
     image_ROI, sig, ref, sig_norm, sweep_list = remove_unwanted_sweeps(
@@ -88,8 +90,16 @@ def reshape_dataset(options, raw_data, sweep_list):
 # ============================================================================
 
 
+def prev_option_exist(options):
+    prev_opt_path = os.path.normpath(options["output_dir"] / "saved_options.json")
+    return os.path.exists(prev_opt_path)
+
+
+# ============================================================================
+
+
 def get_prev_options(options):
-    prev_opt_path = os.path.normpath(options["output_dir"] + "/saved_options.json")
+    prev_opt_path = os.path.normpath(options["output_dir"] / "saved_options.json")
     f = open(prev_opt_path)
     json_str = f.read()
     return json.loads(json_str)
@@ -105,10 +115,11 @@ def check_if_already_processed(options):
     options["output_dir"] = output_dir
     options["data_dir"] = output_dir / "data"
 
-    if os.path.exists(output_dir):
+    if prev_option_exist(options):
         options["found_prev_result"] = True
     else:
-        os.mkdir(output_dir)
+        if not os.path.exists(output_dir):
+            os.mkdir(output_dir)
         if not os.path.exists(options["data_dir"]):
             os.mkdir(options["data_dir"])
 
@@ -170,7 +181,11 @@ def reshape_raw(options, raw_data, sweep_list):
             data_pts = len(sweep_list)
             image = np.reshape(
                 raw_data,
-                [data_pts, int(options["AOIHeight"]), int(options["AOIWidth"])],
+                [
+                    data_pts,
+                    int(options["metadata"]["AOIHeight"]),
+                    int(options["metadata"]["AOIWidth"]),
+                ],
             )
         else:
             raise ValueError
@@ -181,12 +196,20 @@ def reshape_raw(options, raw_data, sweep_list):
             # use every second element
             image = np.reshape(
                 raw_data[::2],
-                [data_pts, int(options["AOIHeight"]), int(options["AOIWidth"])],
+                [
+                    data_pts,
+                    int(options["metadata"]["AOIHeight"]),
+                    int(options["metadata"]["AOIWidth"]),
+                ],
             )
         else:
             image = np.reshape(
                 raw_data,
-                [data_pts, int(options["AOIHeight"]), int(options["AOIWidth"])],
+                [
+                    data_pts,
+                    int(options["metadata"]["AOIHeight"]),
+                    int(options["metadata"]["AOIWidth"]),
+                ],
             )
             warnings.warn(
                 "Detected that dataset has reference. "
@@ -209,7 +232,7 @@ def rebin_image(options, image):
     else:
         if options["additional_bins"] % 2:
             raise RuntimeError("The binning parameter needs to be a multiple of 2.")
-        # TODO add if_processed check here
+        # FIXME add if_processed check here
         if False:
             pass
         else:
@@ -222,9 +245,9 @@ def rebin_image(options, image):
                     [
                         data_pts,
                         int(height / options["additional_bins"]),
-                        data_pts,
+                        options["additional_bins"],
                         int(width / options["additional_bins"]),
-                        data_pts,
+                        options["additional_bins"],
                     ],
                 )
                 .sum(2)

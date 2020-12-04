@@ -14,7 +14,7 @@ import os
 import warnings
 from collections import OrderedDict, defaultdict
 import re
-import json
+import simplejson as json
 
 
 # ============================================================================
@@ -57,7 +57,8 @@ def json_to_dict(filename, hook="od"):
         else:
             raise RuntimeError("bad choice for dict hook")
 
-        dct = json.loads(json_remove_comments(fp.read()), object_pairs_hook=oph)
+        jstring = json_remove_comments(fp.read())
+        dct = json.loads(jstring, object_pairs_hook=oph)
         return dct.copy()
 
 

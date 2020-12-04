@@ -125,12 +125,12 @@ class UniMelb(System):
 class Zyla(UniMelb):
     _raw_pixel_size = 1
     name = "Zyla"
-    config_path = DIR_PATH + "options\\zyla_config.json"
+    config_path = DIR_PATH / "options/zyla_config.json"
 
     def __init__(self, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
         # ensure all values default to None (at all levels of reading in json)
-        self.option_dict = misc.json_to_dict(self.config_path, hook="dd")
+        self.options_dict = misc.json_to_dict(self.config_path, hook="dd")
 
     def get_raw_pixel_size(self):
         return self._raw_pixel_size
@@ -163,9 +163,7 @@ class OptionsError(Exception):
 
 def check_option(key, val, system):
     if key not in system.available_options():
-        raise warnings.warn(
-            f"Option {key} was not recognised by the {system.name} system, skipping."
-        )
+        warnings.warn(f"Option {key} was not recognised by the {system.name} system, skipping.")
     elif system.option_choices(key) is not None and val not in system.option_choices(key):
         OptionsError(key, val, system)
 

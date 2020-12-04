@@ -1,11 +1,9 @@
 {
-	// NOT COMPLETE
-
 	// ===========================================================================================
 	// ============================ General Parameters ===========================================
 	// ===========================================================================================
 	"base_dir": {},
-    "filepath": {},
+    "filepath": {}, 
     
     // binning should be fixed now, num_bins = 1 will do nothing (and 0 as well)
     
@@ -15,31 +13,31 @@
     	"option_choices":
     		[
     			true,
-    			false,
-    		],
+    			false
+    		]
     },
     "additional_bins": {
     	"option_default": 0,
     	"option_charac": {
     		"multiple_of": 2, 
     		"additional_choices": [0, 1]
-    	},
+    	}
     },
     "old_binning_convention": {
     	"option_default": false,
     	"option_choices":
     		[
     			true,
-    			false,
-    		],
+    			false
+    		]
     },
 
     "system_name": {
     	"option_default": null,
     	"option_choices":
     		[
-    			"Zyla",
-    		],
+    			"Zyla"
+    		]
     },
 	// ===========================================================================================
     // ======================== Region Of Interest (ROI) params ==================================
@@ -52,21 +50,21 @@
     			"Full",
     			"Rectangle",
     			"Square"
-    		],
+    		]
     },
     // half the size of the Square
     "ROI_size": {
     	"option_default": 1,
     	"option_characs": {
-    		"type": "Int",
-    	},
+    		"type": "Int"
+    	}
     },
     // centre pixel
     "ROI_centre": {
     	"option_default": [3, 3],
     	"option_characs": {
     		"type": "List",
-    		"len": 2,
+    		"len": 2
     	}
     },
     // Used for the rectangle size only
@@ -74,7 +72,7 @@
     	"option_default": [1, 1],
     	"option_characs": {
     		"type": "List",
-    		"len": 2,
+    		"len": 2
     	}
     },
 
@@ -82,14 +80,14 @@
     "remove_start_sweep": {
     	"option_default": 1,
     	"option_characs": {
-    		"type": "Int",
-    	},
+    		"type": "Int"
+    	}
     },
     "remove_end_sweep": {
     	"option_default": 0,
     	"option_characs": {
-    		"type": "Int",
-    	},
+    		"type": "Int"
+    	}
     },
 
     // Style of the reference normalisation used. div = division and sub = subtraction
@@ -98,8 +96,8 @@
     	"option_choices":
     		[
     			"div",
-    			"sub",
-    		],
+    			"sub"
+    		]
     },
 
     // ========== Regions for spectra comparision, before full pixel fitting ==========
@@ -108,7 +106,7 @@
     	"option_default": [1, 1],
     	"option_characs": {
     		"type": "List",
-    		"len": 2,
+    		"len": 2
     	}
     },
     // centre pixel of area 1
@@ -116,28 +114,28 @@
     	"option_default": [1, 1],
     	"option_characs": {
     		"type": "List",
-    		"len": 2,
+    		"len": 2
     	}
     },
     // size of the square region of area 1
     "area_1_size": {
     	"option_default": 1,
     	"option_characs": {
-    		"type": "Int",
-    	},
+    		"type": "Int"
+    	}
     },
     "area_2_centre": {
     	"option_default": [1, 1],
     	"option_characs": {
     		"type": "List",
-    		"len": 2,
+    		"len": 2
     	}
     },
     "area_2_size": {
     	"option_default": 1,
     	"option_characs": {
-    		"type": "Int",
-    	},
+    		"type": "Int"
+    	}
     },
     // NOTE these need to be copied/extended below if you want more AOIs
 
@@ -149,8 +147,8 @@
     	"option_choices":
     		[
     			true,
-    			false,
-    		],
+    			false
+    		]
     }, 
      // fits all of the required pixels, false ignores the pixel fitting
     "fit_pixels": {
@@ -158,8 +156,8 @@
     	"option_choices":
     		[
     			true,
-    			false,
-    		],
+    			false
+    		]
     },
     // fit pixels in a random order to give more accurate ETA
     "scramble_pixels": {
@@ -167,8 +165,8 @@
     	"option_choices":
     		[
     			true,
-    			false,
-    		],
+    			false
+    		]
     },
     // if 'false', uses init guesses below on each pixel, 'true' uses best fit to ROI average
     "use_ROI_avg_fit_res_for_all_pixels": {
@@ -176,15 +174,15 @@
     	"option_choices":
     		[
     			true,
-    			false,
-    		],
+    			false
+    		]
     },
     // number of threads to *not* use for fitting
     "sub_threads": {
     	"option_default": 0,
     	"option_characs": {
-    		"type": "Int",
-    	},
+    		"type": "Int"
+    	}
     },
     "fit_functions": {}, // user must set this one
 
@@ -197,8 +195,8 @@
     "pos_guess": {
     	"option_default": null,
     	"option_characs": {
-    		"type": ["Int", "List"],
-    	},
+    		"type": ["Int", "List"]
+    	}
     },
     "pos_range": {
     	"option_default": 25,
@@ -210,14 +208,14 @@
     "amp_guess": {
     	"option_default": -0.0015,
     	"option_characs":
-    		{"type": ["Float", "List"]},
+    		{"type": ["Float", "List"]}
     },
 
     "amp_bounds": {
     	"option_default": [-0.0100, -0.0003],
     	"option_characs": {
     		"type": "List",
-    		"len": 2,
+    		"len": 2
     	}
     },
 
@@ -225,14 +223,14 @@
     "fwhm_guess": {
     	"option_default": -0.0015,
     	"option_characs":
-    		{"type": ["Float", "List"]},
+    		{"type": ["Float", "List"]}
     },
 
     "fwhm_bounds": {
     	"option_default": [5, 20],
     	"option_characs": {
     		"type": "List",
-    		"len": 2,
+    		"len": 2
     	}
     },
 
@@ -241,26 +239,26 @@
     "c_guess": {
     	"option_default": 1,
     	"option_characs":
-    		{"type": ["Float", "List"]},
+    		{"type": ["Float", "List"]}
     },
     "c_bounds": {
     	"option_default": [0.999,1.0001],
     	"option_characs": {
     		"type": "List",
-    		"len": 2,
+    		"len": 2
     	}
     },
 
-    "bg_guess": {
+    "m_guess": {
     	"option_default": 0,
     	"option_characs":
-    		{"type": ["Float", "List"]},
+    		{"type": ["Float", "List"]}
     },
-    "bg_bounds": {
+    "m_bounds": {
     	"option_default": [-1e-8, 1e-8],
     	"option_characs": {
     		"type": "List",
-    		"len": 2,
+    		"len": 2
     	}
     },
 
@@ -268,74 +266,74 @@
     "amp_1_hyp_guess": {
     	"option_default": -0.015,
     	"option_characs":
-    		{"type": ["Float", "List"]},
+    		{"type": ["Float", "List"]}
     },
     "amp_1_hyp_bounds": {
     	"option_default": [-0.1, -0.001],
     	"option_characs": {
     		"type": "List",
-    		"len": 2,
+    		"len": 2
     	}
     },
     "amp_2_hyp_guess": {
     	"option_default": -0.015,
     	"option_characs":
-    		{"type": ["Float", "List"]},
+    		{"type": ["Float", "List"]}
     },
     "amp_2_hyp_bounds": {
     	"option_default": [-0.1, -0.001],
     	"option_characs": {
     		"type": "List",
-    		"len": 2,
+    		"len": 2
     	}
     },
     "amp_3_hyp_guess": {
     	"option_default": -0.015,
     	"option_characs":
-    		{"type": ["Float", "List"]},
+    		{"type": ["Float", "List"]}
     },
     "amp_3_hyp_bounds": {
     	"option_default": [-0.1, -0.001],
     	"option_characs": {
     		"type": "List",
-    		"len": 2,
+    		"len": 2
     	}
     },
 
     "fwhm_1_hyp_guess": {
     	"option_default": 2,
     	"option_characs":
-    		{"type": ["Float", "List"]},
+    		{"type": ["Float", "List"]}
     },
     "fwhm_1_hyp_bounds": {
     	"option_default": [1.5, 40],
     	"option_characs": {
     		"type": "List",
-    		"len": 2,
+    		"len": 2
     	}
     },
     "fwhm_2_hyp_guess": {
     	"option_default": 2,
     	"option_characs":
-    		{"type": ["Float", "List"]},
+    		{"type": ["Float", "List"]}
     },
     "fwhm_2_hyp_bounds": {
     	"option_default": [1.5, 40],
     	"option_characs": {
     		"type": "List",
-    		"len": 2,
+    		"len": 2
     	}
     },
     "fwhm_3_hyp_guess": {
     	"option_default": 2,
     	"option_characs":
-    		{"type": ["Float", "List"]},
+    		{"type": ["Float", "List"]}
     },
     "fwhm_3_hyp_bounds": {
     	"option_default": [1.5, 40],
     	"option_characs": {
     		"type": "List",
-    		"len": 2,
+    		"len": 2
     	}
     },
 
@@ -352,8 +350,8 @@
     		[
     			"lm",
     			"trf",
-    			"dogbox",
-    		],
+    			"dogbox"
+    		]
     },
      // display progress bar during fitting
     "show_progressbar": {
@@ -361,8 +359,8 @@
     	"option_choices":
     		[
     			true,
-    			false,
-    		],
+    			false
+    		]
     },
     // uses an analytically determined Jacobian, This should be faster but hasn't been implemented 
     // for every function
@@ -372,8 +370,8 @@
     	"option_choices":
     		[
     			true,
-    			false,
-    		],
+    			false
+    		]
     },
     // verbose fitting 0 = silent, 1 = term report, 2 display iterations
     "verbose_fitting": {
@@ -383,7 +381,7 @@
     			0, 
     			1,
     			2
-    		],
+    		]
     },
     // The scheme ‘3-point’ is more accurate, but requires twice as many operations 
     // as ‘2-point’ (default).
@@ -397,20 +395,20 @@
     			"2-point", 
     			"3-point", 
     			"cs"
-    		],
+    		]
     },
     // Tolerance settings, the exact condition depends on method used - see scipy documentation
     // Tolerance for termination by the change of the independent variables.
     "fit_gtol":  {
-    	"option_default": 1e-12,
+    	"option_default": 1e-12
     },
     // Tolerance for termination by the norm of the gradient.
     "fit_xtol":  {
-    	"option_default": 1e-12,
+    	"option_default": 1e-12
     },
     // Tolerance for termination by the change of the cost function.
     "fit_ftol": {
-    	"option_default": 1e-12,
+    	"option_default": 1e-12
     },
     // Rescales the x by the units of the Jacobian (doesn't seem to make a difference)
     "scale_x": {
@@ -418,8 +416,8 @@
     	"options_choices":
     		[
     			true,
-    			false,
-    		],
+    			false
+    		]
     },
     // Determines the loss function. This in non trivial check the scipy documnetation
     "loss_fn": {
@@ -431,7 +429,7 @@
     			"huber", 
     			"cauchy",
     			"arctan"
-    		], 
+    		]
     },
 
 	// ===========================================================================================
@@ -442,38 +440,38 @@
     	"option_choices":
     		[
     			true,
-    			false,
-    		],
+    			false
+    		]
     },
     "save_plots": {
     	"option_default": true,
     	"option_choices":
     		[
     			true,
-    			false,
-    		],
+    			false
+    		]
     },
     "show_plots": {
     	"option_default": true,
     	"option_choices":
     		[
     			true,
-    			false,
-    		],
+    			false
+    		]
     },
     "annotate_plots": {
     	"option_default": true,
     	"option_choices":
     		[
     			true,
-    			false,
-    		],
+    			false
+    		]
     },
     "dpi": {
     	"option_default": 600,
     	"option_characs": {
-    		"number": true,
-    	},
+    		"number": true
+    	}
     },
     "save_fig_type":  {
     	"option_default": "png",
@@ -481,17 +479,17 @@
     		[
     			"png",
     			"svg",
-    			"pdf",
-    		],
+    			"pdf"
+    		]
     },
 
     // ===========================================================================================
-    // Things set internally, allow to be anything
+    // Things set internally, allow to be anything {maybe place some contraints later}
     "cleaned": {},
     "system": {},
     "used_ref": {},
-    "AOIHeight": {},
-    "AOIWidth": {},
+    "metadata": {},
+    "threads": {},
     "reloaded_prev_fit": {},
     "found_prev_result": {},
     "fit_param_defn": {},
@@ -499,4 +497,6 @@
     "data_dir": {},
     "fit_param_defn": {},
     "fit_parameter_unit": {},
+    "total_bin": {},
+    "original_bin": {}
 }

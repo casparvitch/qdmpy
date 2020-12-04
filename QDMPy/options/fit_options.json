@@ -2,15 +2,15 @@
     //  ========== General Parameters ==========
     
     // here specify path to raw data. base_dir not required, if not "" it is prepended to filepath
-    "base_dir": "C:\\ExperimentalData\\2020\\2020-11\\2020-11-11_SiPV-18_SpTmp\\",
-    "filepath": "ODMR - Pulsed without IR_35",
+    "base_dir": "/home/samsc/Desktop/",
+    "filepath": "ODMR - Pulsed with IR_83",
     
 
     // if true the reference measurement is ignored
     "ignore_ref": false,
 
     // 0, 1 does nothing. Must be multiple of 2.
-    "additional_bins": 8, 
+    "additional_bins": 2, 
 
     "old_binning_convention": false,
 
@@ -94,8 +94,8 @@
     "c_guess": 1,
     "c_bounds": [0.999,1.0001],
 
-    "bg_guess": 0,
-    "bg_bounds": [-1e-8, 1e-8],
+    "m_guess": 0,
+    "m_bounds": [-1e-8, 1e-8],
 
     // Other fit parameters (hyperfine functions)
     "amp_1_hyp_guess": -0.015,
@@ -120,19 +120,21 @@
     // trf (uses bounds and the most reliable fit method but can be very slow)
     // dogbox (uses bounds and is faster than trf)
     "fit_method": "trf",
-    "show_progressbar": true, // display progress bar during fitting
+    // display progress bar during fitting
+    "show_progressbar": true, 
     // uses an analytically determined Jacobian, This should be faster but hasn't been implemented 
     // for every function
     // - note it gives different fit results (should be more accurate than a finite-diff method)
     "use_analytic_jac": true,
     // verbose fitting 0 = silent, 1 = term report, 2 display iterations
-    "verbose_fitting": 0, // {0, 1, 2},
+    "verbose_fitting": 0,
     // The scheme ‘3-point’ is more accurate, but requires twice as many operations 
     // as ‘2-point’ (default).
     // The scheme ‘cs’ uses complex steps, and while potentially the most accurate, it is
     // applicable only when fun correctly handles complex inputs and can be analytically
     // continued to the complex plane.
-    "fit_jac_acc": "2-point", // {‘2-point’, ‘3-point’, ‘cs’}
+     // {‘2-point’, ‘3-point’, ‘cs’}
+    "fit_jac_acc": "2-point",
     // Tolerance settings, the exact condition depends on method used - see scipy documentation
     // Tolerance for termination by the change of the independent variables.
     "fit_gtol": 1e-12, 
