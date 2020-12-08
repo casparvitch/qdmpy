@@ -25,21 +25,6 @@ import systems
 import fit_functions
 import data_loading
 
-# ==========================================================================
-
-# TODO add exponentials... consult T1, T2 people etc.
-# careful -> don't want overlapping param definitions!!!
-AVAILABLE_FNS = {
-    "lorentzian": fit_functions.Lorentzian,
-    "lorentzian_hyperfine_14": fit_functions.Lorentzian_hyperfine_14,
-    "lorentzian_hyperfine_15": fit_functions.Lorentzian_hyperfine_15,
-    "gaussian": fit_functions.Gaussian,
-    "gaussian_hyperfine_14": fit_functions.Gaussian_hyperfine_14,
-    "gaussian_hyperfine_15": fit_functions.Gaussian_hyperfine_15,
-    "constant": fit_functions.Constant,
-    "linear": fit_functions.Linear,
-    "circular": fit_functions.Circular,
-}
 
 # ==========================================================================
 
@@ -123,8 +108,10 @@ def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
 
     sweep_vector = np.linspace(min(sweep_list), max(sweep_list))  # not sure how this is useful?
 
-    init_guess = fit_model.fit_param_ar
-    fit_bounds = (fit_model.fit_param_bound_ar[:, 0], fit_model.fit_param_bound_ar[:, 1])
+    fit_param_ar, fit_param_bound_ar = _gen_fit_params(options, *_gen_init_guesses(options))
+
+    init_guess = fit_param_ar
+    fit_bounds = (fit_param_bound_ar[:, 0], fit_param_bound_ar[:, 1])
 
     fit_options = {
         "method": options["fit_method"],
@@ -234,7 +221,8 @@ def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
         init_params = roi_avg_fit_result.best_fit_result.copy()
     else:
-        init_params = fit_model.fit_param_ar.copy()
+        fit_param_ar, fit_param_bound_ar = _gen_fit_params(options, *_gen_init_guesses(options))
+        guess_params = fit_param_ar.copy()
 
     with concurrent.futures.ProcessPoolExecutor(
         max_workers=threads, initializer=limit_cpu
@@ -285,7 +273,8 @@ def fit_AOIs(options, sig_norm, sweep_list, fit_model, AOIs, roi_avg_fit_result)
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
         guess_params = roi_avg_fit_result.best_fit_result.copy()
     else:
-        guess_params = fit_model.fit_param_ar.copy()
+        fit_param_ar, fit_param_bound_ar = _gen_fit_params(options, *_gen_init_guesses(options))
+        guess_params = fit_param_ar.copy()
 
     fit_results_list = []
 
@@ -347,7 +336,7 @@ def get_pixel_fitting_results(fit_model, fit_results, roi_shape):
     # Populate the dictionary with the correct size empty arrays using np.zeros.
 
     for fn_type, num in fit_model.fit_functions.items():
-        fn_params = AVAILABLE_FNS[fn_type].param_defn
+        fn_params = fit_functions.AVAILABLE_FNS[fn_type].param_defn
         for param_key in fn_params:
             fit_image_results[param_key] = np.zeros((num, roi_shape[0], roi_shape[1])) * np.nan
 
@@ -357,7 +346,7 @@ def get_pixel_fitting_results(fit_model, fit_results, roi_shape):
         # num tracks position in the 1D array, as we loop over different fns
         # and parameters.
         for fn_type, num in fit_model.fit_functions.items():
-            fn_params = AVAILABLE_FNS[fn_type].param_defn
+            fn_params = fit_functions.AVAILABLE_FNS[fn_type].param_defn
             for idx in range(num):
                 for parameter_key in fn_params:
                     fit_image_results[parameter_key][idx, x, y] = result.x[num]
@@ -373,7 +362,7 @@ def load_prev_fit_results(options, fit_model):
     prev_options = data_loading.get_prev_options(options)
 
     a_fit_func = prev_options["fit_functions"].keys()[0]
-    a_fit_param = AVAILABLE_FNS[a_fit_func].param_defn[0]
+    a_fit_param = fit_functions.AVAILABLE_FNS[a_fit_func].param_defn[0]
 
     # read a random param to get the shape
     shape = read_processed_param(options, a_fit_func, a_fit_param + "_0").shape
@@ -382,14 +371,14 @@ def load_prev_fit_results(options, fit_model):
     fit_param_res_dict = {}
     for fn_type, num in prev_options["fit_functions"].items():
         for idx in num:
-            params = AVAILABLE_FNS[fn_type].param_defn
+            params = fit_functions.AVAILABLE_FNS[fn_type].param_defn
             for param_name in params:
                 fit_param_res_dict[param_name] = np.zeros((num, shape[0], shape[1]))
 
     # Read in the previous fitted data
     for fn_type, num in prev_options["fit_functions"].items():
         for idx in num:
-            params = AVAILABLE_FNS[fn_type].param_defn
+            params = fit_functions.AVAILABLE_FNS[fn_type].param_defn
             for param_name in params:
                 fit_param_res_dict[param_name][idx, :, :] = read_processed_param(
                     options, fn_type, param_name + "_" + str(idx)
@@ -409,15 +398,11 @@ def read_processed_param(options, fn_type, fit_param):
 def define_fit_model(options):
 
     fit_functions = options["fit_functions"]
-    init_guesses, init_bounds = _gen_init_guesses(options)
-    fit_param_ar, fit_param_bound_ar = _gen_fit_params(options, init_guesses, init_bounds)
 
-    fit_model = FitModel(
-        fit_functions, init_guesses, init_bounds, fit_param_ar, fit_param_bound_ar
-    )
+    fit_model = fit_functions.FitModel(fit_functions)
 
-    options["fit_param_defn"] = fit_model.fn_chain.param_defn
-    options["fit_param_units"] = fit_model.fn_chain.param_units
+    # for the record
+    options["fit_param_defn"] = fit_functions.get_param_odict(fit_model)
 
     return fit_model
 
@@ -425,44 +410,12 @@ def define_fit_model(options):
 # ==========================================================================
 
 
-class FitModel:
-    # this model isn't used for gpufit
-    def __init__(self, fit_functions, init_guesses, init_bounds, fit_param_ar, fit_param_bound_ar):
-        # fit_functions format: {"linear": 1, "lorentzian": 8} etc., i.e. options["fit_functions"]
-
-        self.fit_functions = fit_functions
-        self.init_guesses = init_guesses
-        self.init_bounds = init_bounds
-        self.fit_param_ar = fit_param_ar
-        self.fit_param_bound_ar = fit_param_bound_ar
-
-        fn_chain = None
-
-        for fn_type in fit_functions:
-            fn_chain = AVAILABLE_FNS[fn_type](fit_functions[fn_type], fn_chain)
-
-        self.fn_chain = fn_chain
-
-    # =================================
-
-    def residuals_scipy(self, fit_param_ar, sweep_val, pl_val):
-        return self.fn_chain(sweep_val, fit_param_ar) - pl_val
-
-    # =================================
-
-    def jacobian_scipy(self, fit_param_ar, sweep_val, pl_val):
-        return self.fn_chain.jacobian(sweep_val, fit_param_ar)
-
-
-# =================================
-
-
 def _gen_init_guesses(options):
     init_guesses = {}
     init_bounds = {}
 
     for fn_type, num in options["fit_functions"].items():
-        fit_func = AVAILABLE_FNS[fn_type](num)
+        fit_func = fit_functions.fit_functions.AVAILABLE_FNS[fn_type](num)
         for param_key in fit_func.param_defn:
             guess = options[param_key + "_guess"]
             if param_key + "_range" in options:
@@ -535,14 +488,14 @@ def _gen_fit_params(options, init_guesses, init_bounds):
     for fn_type, num in options["fit_functions"].items():
         for n in range(num):
 
-            for pos, key in enumerate(AVAILABLE_FNS[fn_type].param_defn):
+            for pos, key in enumerate(fit_functions.AVAILABLE_FNS[fn_type].param_defn):
                 try:
                     param_lst.append(init_guesses[key][n])
                 except (TypeError, KeyError):
                     param_lst.append(init_guesses[key])
                 if len(init_bounds[key].shape) == 2:
                     bound_lst.append(init_bounds[key][n])
-                else:
+                else:1
                     bound_lst.append(init_bounds[key])
 
     fit_param_ar = np.array(param_lst)  # shape: num_params
@@ -560,7 +513,7 @@ def save_param_fit_images(options, fit_model, fit_image_results):
 
     # NOTE untested
     for fn_type, num in options["fit_functions"].items():
-        fit_func = AVAILABLE_FNS[fn_type](num)
+        fit_func = fit_functions.AVAILABLE_FNS[fn_type](num)
         for param_key in fit_func.param_defn:
             for idx in range(num):
                 # TODO check this is consistent with reading in prev. data (and makes sense etc...)

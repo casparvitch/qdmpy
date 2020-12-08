@@ -9,6 +9,7 @@ import numpy as np
 import matplotlib.patches as patches
 
 import systems
+import fit_functions
 
 
 def plot_ROI_PL_image(options, PL_image):
@@ -307,7 +308,7 @@ def plot_param_image(options, fit_model, fit_results, param_name):
     c_map = "viridis"
     c_range = [np.nanmin(image), np.nanmax(image)]
     # c_label = fit_model.fn_chain.parameter_unit[parameter_key]
-    c_label = None  # TODO
+    c_label = fit_functions.get_param_unit(fit_model, param_name)
 
     fig, ax = plot_image(
         image, param_name, c_map, c_range, c_label, list(options["figure_size"]), None
