@@ -124,7 +124,7 @@ class ChainTerminator(FitFunc):
     """
 
     param_defn = []
-    parameter_unit = {}
+    param_units = {}
     fn_type = "terminator"
     chain_fitfunc = None
 
@@ -165,7 +165,7 @@ class Constant(FitFunc):
     """Constant"""
 
     param_defn = ["c"]
-    parameter_unit = {"c": "Amplitude (a.u.)"}
+    param_units = {"c": "Amplitude (a.u.)"}
     fn_type = "bground"
 
     # =================================
@@ -198,7 +198,7 @@ class Linear(FitFunc):
     """Constant"""
 
     param_defn = ["c", "m"]
-    parameter_unit = {"c": "Amplitude (a.u.)", "m": "Amplitude per Freq (a.u.)"}
+    param_units = {"c": "Amplitude (a.u.)", "m": "Amplitude per Freq (a.u.)"}
     fn_type = "bground"
 
     #    def __init__(self, num_peaks):
@@ -240,7 +240,7 @@ class Circular(FitFunc):
     """
 
     param_defn = ["rabi_freq", "pos", "amp"]
-    parameter_unit = {"rabi_freq": "Nu (Hz)", "pos": "Tau (s)", "amp": "Amp (a.u.)"}
+    param_units = {"rabi_freq": "Nu (Hz)", "pos": "Tau (s)", "amp": "Amp (a.u.)"}
     fn_type = "feature"
 
     @staticmethod
@@ -278,7 +278,7 @@ class Gaussian(FitFunc):
     """
 
     param_defn = ["fwhm", "pos", "amp"]
-    parameter_unit = {"fwhm": "Freq (MHz)", "pos": "Freq (MHz)", "amp": "Amp (a.u.)"}
+    param_units = {"fwhm": "Freq (MHz)", "pos": "Freq (MHz)", "amp": "Amp (a.u.)"}
     fn_type = "feature"
 
     # =================================
@@ -300,7 +300,7 @@ class Gaussian_hyperfine_14(FitFunc):
         "fwhm_2_hyp",
         "fwhm_3_hyp",
     ]
-    parameter_unit = {
+    param_units = {
         "pos": "Frequency (MHz)",
         "amp_1_hyp": "Amplitude (a.u.)",
         "amp_2_hyp": "Amplitude (a.u.)",
@@ -325,7 +325,7 @@ class Gaussian_hyperfine_14(FitFunc):
 class Gaussian_hyperfine_15(FitFunc):
 
     param_defn = ["pos", "amp_1_hyp", "amp_2_hyp", "fwhm_1_hyp", "fwhm_2_hyp"]
-    parameter_unit = {
+    param_units = {
         "pos": "Frequency (MHz)",
         "amp_1_hyp": "Amplitude (a.u.)",
         "amp_2_hyp": "Amplitude (a.u.)",
@@ -358,7 +358,7 @@ class Lorentzian(FitFunc):
     """
 
     param_defn = ["fwhm", "pos", "amp"]
-    parameter_unit = {"fwhm": "Freq (MHz)", "pos": "Freq (MHz)", "amp": "Amp (a.u.)"}
+    param_units = {"fwhm": "Freq (MHz)", "pos": "Freq (MHz)", "amp": "Amp (a.u.)"}
     fn_type = "feature"
 
     # =================================
@@ -409,7 +409,7 @@ class Lorentzian_hyperfine_14(FitFunc):
         "fwhm_2_hyp",
         "fwhm_3_hyp",
     ]
-    parameter_unit = {
+    param_units = {
         "pos": "Frequency (MHz)",
         "amp_1_hyp": "Amplitude (a.u.)",
         "amp_2_hyp": "Amplitude (a.u.)",
@@ -448,7 +448,7 @@ class Lorentzian_hyperfine_15(FitFunc):
     """
 
     param_defn = ["pos", "amp_1_hyp", "amp_2_hyp", "fwhm_1_hyp", "fwhm_2_hyp"]
-    parameter_unit = {
+    param_units = {
         "pos": "Frequency (MHz)",
         "amp_1_hyp": "Amplitude (a.u.)",
         "amp_2_hyp": "Amplitude (a.u.)",

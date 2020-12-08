@@ -327,8 +327,7 @@ def fit_AOIs(options, sig_norm, sweep_list, fit_model, AOIs, roi_avg_fit_result)
 
     AOI_fit_params = []
     for i, AOI_res in enumerate(fit_results_list):
-        # NOTE AOIs[i] as region_shape below NOT TESTED {~~~hopefully it works~~~}
-        AOI_fit_params.append(get_pixel_fitting_results(fit_model, AOI_res, AOIs[i]))
+        AOI_fit_params.append(get_pixel_fitting_results(fit_model, AOI_res, AOIs[i][0].shape))
 
     return AOI_fit_params
 
@@ -348,23 +347,22 @@ def get_pixel_fitting_results(fit_model, fit_results, roi_shape):
     fit_image_results = {}
     # Populate the dictionary with the correct size empty arrays using np.zeros.
 
-    for fn_type, num in fit_model.fns.items():
+    for fn_type, num in fit_model.fit_functions.items():
         fn_params = AVAILABLE_FNS[fn_type].param_defn
         for param_key in fn_params:
             fit_image_results[param_key] = np.zeros((num, roi_shape[0], roi_shape[1])) * np.nan
+
     # Fill the arrays element-wise from the results function, which returns a
     # 1D array of flattened best-fit parameters.
     for (x, y), result in fit_results:
         # num tracks position in the 1D array, as we loop over different fns
         # and parameters.
-        num = 0
-        for fn_type, num in fit_model.fns.items():
+        for fn_type, num in fit_model.fit_functions.items():
             # FIXME does the below work without insantiating the fit func?
             fn_params = AVAILABLE_FNS[fn_type].param_defn
             for idx in range(num):
                 for parameter_key in fn_params:
                     fit_image_results[parameter_key][idx, x, y] = result.x[num]
-                    num += 1
     return fit_image_results
 
 
@@ -414,10 +412,16 @@ def read_processed_param(options, fn_type, fit_param):
 
 def define_fit_model(options):
 
-    fit_model = FitModel(options)
+    fit_functions = options["fit_functions"]
+    init_guesses, init_bounds = _gen_init_guesses(options)
+    fit_param_ar, fit_param_bound_ar = _gen_fit_params(options, init_guesses, init_bounds)
+
+    fit_model = FitModel(
+        fit_functions, init_guesses, init_bounds, fit_param_ar, fit_param_bound_ar
+    )
 
     options["fit_param_defn"] = fit_model.fn_chain.param_defn
-    options["fit_parameter_unit"] = fit_model.fn_chain.parameter_unit
+    options["fit_param_units"] = fit_model.fn_chain.param_units
 
     return fit_model
 
@@ -427,111 +431,21 @@ def define_fit_model(options):
 
 class FitModel:
     # this model isn't used for gpufit
-    def __init__(self, options):
+    def __init__(self, fit_functions, init_guesses, init_bounds, fit_param_ar, fit_param_bound_ar):
+        # fit_functions format: {"linear": 1, "lorentzian": 8} etc., i.e. options["fit_functions"]
 
-        systems.clean_options(options)
-        self.options = options
+        self.fit_functions = fit_functions
+        self.init_guesses = init_guesses
+        self.init_bounds = init_bounds
+        self.fit_param_ar = fit_param_ar
+        self.fit_param_bound_ar = fit_param_bound_ar
 
-        self._gen_init_guesses()
-        self._gen_fit_params()
-
-        fns = self.options["fit_functions"]  # format: {"linear": 1, "lorentzian": 8} etc.
         fn_chain = None
 
-        for fn_type in fns:
-            fn_chain = AVAILABLE_FNS[fn_type](fns[fn_type], fn_chain)
+        for fn_type in fit_functions:
+            fn_chain = AVAILABLE_FNS[fn_type](fit_functions[fn_type], fn_chain)
 
         self.fn_chain = fn_chain
-
-        # NOTE below not used...? was supposed to be self.fn, self.num_fns... not useful?
-        # self.fn_chain = fn_chain[::-1]  # reverse for simplicity, as chain is reversed
-
-    # =================================
-
-    def _gen_init_guesses(self):
-        self.init_guesses = {}
-        self.init_bounds = {}
-
-        for fn_type, num in self.options["fit_functions"].items():
-            fit_func = AVAILABLE_FNS[fn_type](num)
-            for param_key in fit_func.param_defn:
-                guess = self.options[param_key + "_guess"]
-                if param_key + "_range" in self.options:
-                    bounds = self._bounds_from_range(param_key)
-                elif param_key + "_bounds" in self.options:
-                    # assumes bounds are passed in with correct formatatting
-                    bounds = self.options[param_key + "_bounds"]
-                else:
-                    raise RuntimeError(
-                        "Provide bounds for this param."
-                        + "\n"  # noqa: W503
-                        + "Note to maintainer: this should be handled in options cleaner"  # noqa: W503
-                    )
-
-                if guess is not None:
-                    self.init_guesses[param_key] = guess
-                    self.init_bounds[param_key] = np.array(bounds)
-                else:
-                    raise RuntimeError("Not sure why your guess is None?")
-
-    # =================================
-
-    def _bounds_from_range(self, param_key):
-        guess = self.options[param_key + "_guess"]
-        rang = self.options[param_key + "_range"]
-        if type(guess) is list and len(guess) > 1:
-
-            # separate bounds for each fn of this type
-            if type(rang) is list and len(rang) > 1:
-                bounds = [
-                    [each_guess - each_range, each_guess + each_range]
-                    for each_guess, each_range in zip(guess, rang)
-                ]
-            # separate guess for each fn of this type, all with same range
-            else:
-                bounds = [
-                    [
-                        each_guess - rang,
-                        each_guess + rang,
-                    ]
-                    for each_guess in guess
-                ]
-        else:
-            # handle this in options cleaner?
-            if type(rang) is list:
-                if len(rang) == 1:
-                    rang = rang[0]
-                else:
-                    raise RuntimeError("param range len should match guess len")
-            # param guess and range are just single vals (easy!)
-            else:
-                bounds = [
-                    guess - rang,
-                    guess + rang,
-                ]
-        return bounds
-
-    # =================================
-
-    def _gen_fit_params(self):
-        param_lst = []
-        bound_lst = []
-
-        for fn_type, num in self.options["fit_functions"].items():
-            for n in range(num):
-
-                for pos, key in enumerate(AVAILABLE_FNS[fn_type].param_defn):
-                    try:
-                        param_lst.append(self.init_guesses[key][n])
-                    except (TypeError, KeyError):
-                        param_lst.append(self.init_guesses[key])
-                    if len(self.init_bounds[key].shape) == 2:
-                        bound_lst.append(self.init_bounds[key][n])
-                    else:
-                        bound_lst.append(self.init_bounds[key])
-
-        self.fit_param_ar = np.array(param_lst)  # shape: num_params
-        self.fit_param_bound_ar = np.array(bound_lst)  # shape: num_params, 2
 
     # =================================
 
@@ -542,6 +456,102 @@ class FitModel:
 
     def jacobian_scipy(self, fit_param_ar, sweep_val, pl_val):
         return self.fn_chain.jacobian(sweep_val, fit_param_ar)
+
+
+# =================================
+
+
+def _gen_init_guesses(options):
+    init_guesses = {}
+    init_bounds = {}
+
+    for fn_type, num in options["fit_functions"].items():
+        fit_func = AVAILABLE_FNS[fn_type](num)
+        for param_key in fit_func.param_defn:
+            guess = options[param_key + "_guess"]
+            if param_key + "_range" in options:
+                bounds = _bounds_from_range(options, param_key)
+            elif param_key + "_bounds" in options:
+                # assumes bounds are passed in with correct formatatting
+                bounds = options[param_key + "_bounds"]
+            else:
+                raise RuntimeError(
+                    "Provide bounds for this param."
+                    + "\n"  # noqa: W503
+                    + "Note to maintainer: this should be handled in options cleaner"  # noqa: W503
+                )
+
+            if guess is not None:
+                init_guesses[param_key] = guess
+                init_bounds[param_key] = np.array(bounds)
+            else:
+                raise RuntimeError("Not sure why your guess is None?")
+
+    return init_guesses, init_bounds
+
+
+# =================================
+
+
+def _bounds_from_range(options, param_key):
+    guess = options[param_key + "_guess"]
+    rang = options[param_key + "_range"]
+    if type(guess) is list and len(guess) > 1:
+
+        # separate bounds for each fn of this type
+        if type(rang) is list and len(rang) > 1:
+            bounds = [
+                [each_guess - each_range, each_guess + each_range]
+                for each_guess, each_range in zip(guess, rang)
+            ]
+        # separate guess for each fn of this type, all with same range
+        else:
+            bounds = [
+                [
+                    each_guess - rang,
+                    each_guess + rang,
+                ]
+                for each_guess in guess
+            ]
+    else:
+        # handle this in options cleaner?
+        if type(rang) is list:
+            if len(rang) == 1:
+                rang = rang[0]
+            else:
+                raise RuntimeError("param range len should match guess len")
+        # param guess and range are just single vals (easy!)
+        else:
+            bounds = [
+                guess - rang,
+                guess + rang,
+            ]
+    return bounds
+
+
+# =================================
+
+
+def _gen_fit_params(options, init_guesses, init_bounds):
+    param_lst = []
+    bound_lst = []
+
+    for fn_type, num in options["fit_functions"].items():
+        for n in range(num):
+
+            for pos, key in enumerate(AVAILABLE_FNS[fn_type].param_defn):
+                try:
+                    param_lst.append(init_guesses[key][n])
+                except (TypeError, KeyError):
+                    param_lst.append(init_guesses[key])
+                if len(init_bounds[key].shape) == 2:
+                    bound_lst.append(init_bounds[key][n])
+                else:
+                    bound_lst.append(init_bounds[key])
+
+    fit_param_ar = np.array(param_lst)  # shape: num_params
+    fit_param_bound_ar = np.array(bound_lst)  # shape: num_params, 2
+    return fit_param_ar, fit_param_bound_ar
 
 
 # ================================================================================================

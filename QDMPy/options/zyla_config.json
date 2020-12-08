@@ -508,7 +508,7 @@
     "output_dir": {},
     "data_dir": {},
     "fit_param_defn": {},
-    "fit_parameter_unit": {},
+    "fit_param_units": {},
     "total_bin": {},
     "original_bin": {}
 }
