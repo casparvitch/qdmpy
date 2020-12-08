@@ -11,6 +11,7 @@ matplotlib = "*"
 tqdm = "*"
 simplejson = "*"
 psutil = "*"
+jupyterlab = "*"
 
 [dev-packages]
 

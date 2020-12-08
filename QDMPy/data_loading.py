@@ -73,14 +73,14 @@ def reshape_dataset(options, raw_data, sweep_list):
     # ok now start transforming dataset (again should depend on processed/not processed)
     image = reshape_raw(options, raw_data, sweep_list)
     image_rebinned, sig, ref, sig_norm = rebin_image(options, image)
-    ROI = define_roi(options, image_rebinned)
+    ROI = define_ROI(options, image_rebinned)
 
     # somewhat important a lot of this isn't hidden, so we can adjust it later
-    image_ROI, sig, ref, sig_norm, sweep_list = remove_unwanted_sweeps(
+    PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list = remove_unwanted_sweeps(
         options, image_rebinned, sweep_list, sig, ref, sig_norm, ROI
     )  # also cuts sig etc. down to ROI
 
-    return image_ROI, sig, ref, sig_norm, sweep_list
+    return PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list
 
 
 # ============================================================================
@@ -276,7 +276,7 @@ def rebin_image(options, image):
 # ============================================================================
 
 
-def define_roi(options, image_rebinned):
+def define_ROI(options, image_rebinned):
     systems.clean_options(options)
 
     # from old code, not sure what case it handles
@@ -284,17 +284,17 @@ def define_roi(options, image_rebinned):
         size_h, size_w = image_rebinned.shape[1:]
     except Exception:
         size_h, size_w = image_rebinned.shape
-        warnings.warn("Not sure what this try/except statement is checking. Clarify.")
+        warnings.warn("Not sure what this try/except statement is checking. Clarify for me.")
 
     if options["ROI"] == "Full":
         ROI = define_area_roi(0, 0, size_w - 1, size_h - 1)
     elif options["ROI"] == "Square":
         ROI = define_area_roi_centre(options["ROI_centre"], 2 * options["ROI_size"])
     elif options["ROI"] == "Rectangle":
-        start_x = options["ROI_centre"][0] - options["ROI_rect_size"][0]
-        start_y = options["ROI_centre"][1] - options["ROI_rect_size"][1]
-        end_x = options["ROI_centre"][0] + options["ROI_rect_size"][0]
-        end_y = options["ROI_centre"][1] + options["ROI_rect_size"][1]
+        start_x = int(options["ROI_centre"][0] - options["ROI_rect_size"][0] / 2)
+        start_y = int(options["ROI_centre"][1] - options["ROI_rect_size"][1] / 2)
+        end_x = int(options["ROI_centre"][0] + options["ROI_rect_size"][0] / 2)
+        end_y = int(options["ROI_centre"][1] + options["ROI_rect_size"][1] / 2)
         ROI = define_area_roi(start_x, start_y, end_x, end_y)
 
     return ROI
@@ -334,13 +334,14 @@ def remove_unwanted_sweeps(options, image_rebinned, sweep_list, sig, ref, sig_no
     # here ensure we have copies, not views
     rem_start = options["remove_start_sweep"]
     rem_end = options["remove_end_sweep"]
-    image_ROI = image_rebinned[:, ROI[0], ROI[1]].copy()
+    PL_image = np.sum(image_rebinned, axis=0)
+    PL_image_ROI = PL_image[ROI[0], ROI[1]].copy()
     sig = sig[rem_start : -1 - rem_end, ROI[0], ROI[1]].copy()  # noqa: E203
     ref = ref[rem_start : -1 - rem_end, ROI[0], ROI[1]].copy()  # noqa: E203
     sig_norm = sig_norm[rem_start : -1 - rem_end, ROI[0], ROI[1]].copy()  # noqa: E203
     sweep_list = np.asarray(sweep_list[rem_start : -1 - rem_end]).copy()  # noqa: E203
 
-    return image_ROI, sig, ref, sig_norm, sweep_list
+    return PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list
 
 
 # ============================================================================
@@ -355,9 +356,16 @@ def define_AOIs(options):
         try:
             centre = options["area_" + str(i) + "_centre"]
             size = 2 * options["area_" + str(i) + "_size"]
-            AOIs.append(define_area_roi(centre, size))
+
+            start_x = centre[0] - size
+            start_y = centre[1] - size
+            end_x = centre[0] + size
+            end_y = centre[1] + size
+
+            AOIs.append(define_area_roi(start_x, start_y, end_x, end_y))
         except KeyError:
             break
+    return AOIs
 
 
 # ============================================================================

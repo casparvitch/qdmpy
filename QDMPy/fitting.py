@@ -19,6 +19,7 @@ import os
 import concurrent.futures
 from itertools import repeat
 import warnings
+from sys import platform
 
 import systems
 import fit_functions
@@ -80,8 +81,15 @@ class FitResultROIAvg:
 def limit_cpu():
     """is called at every process start"""
     p = psutil.Process(os.getpid())
-    # set to lowest priority, this is windows only, on Unix use ps.nice(19)
-    p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+    # set to lowest priority, this is windows only, on Unix use p.nice(19)
+    if platform.startswith("linux"):  # linux
+        p.nice(19)
+    elif platform.startswith("win32"):  # windows
+        p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+    elif platform.startswith("darwin"):  # macOS
+        warnings.warn("Not sure what to use for macOS... skipping cpu limitting")
+    else:  # 'freebsd', 'aix', 'cygwin'...
+        warnings.warn(f"Not sure what to use for your OS: {platform}... skipping cpu limitting")
 
 
 # ==========================================================================
@@ -267,14 +275,18 @@ def fit_AOIs(options, sig_norm, sweep_list, fit_model, AOIs, roi_avg_fit_result)
 
     systems.clean_options(options)
 
+    fit_opts = {}
+    for key, val in roi_avg_fit_result.fit_options.items():
+        fit_opts[key] = val
+
     sweep_ar = np.array(sweep_list)
     threads = options["threads"]
     chunksize = 1
 
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
-        init_params = roi_avg_fit_result.best_fit_result.copy()
+        guess_params = roi_avg_fit_result.best_fit_result.copy()
     else:
-        init_params = fit_model.fit_param_ar.copy()
+        guess_params = fit_model.fit_param_ar.copy()
 
     fit_results_list = []
 
@@ -286,6 +298,7 @@ def fit_AOIs(options, sig_norm, sweep_list, fit_model, AOIs, roi_avg_fit_result)
         disable=(not options["show_progressbar"]),
     ):
         aoi_sig_norm = sig_norm[:, AOI[0], AOI[1]].copy()
+        data_length = np.shape(aoi_sig_norm)[1] * np.shape(aoi_sig_norm)[2]
         # ok now fit that AOI region
 
         with concurrent.futures.ProcessPoolExecutor(
@@ -293,14 +306,21 @@ def fit_AOIs(options, sig_norm, sweep_list, fit_model, AOIs, roi_avg_fit_result)
         ) as executor:
             fit_results_list.append(
                 list(
-                    executor.map(
-                        to_squares_wrapper,
-                        repeat(fit_model.residuals_scipy),
-                        repeat(init_params),
-                        repeat(sweep_ar),
-                        my_gen(aoi_sig_norm),
-                        repeat(roi_avg_fit_result.fit_options),
-                        chunksize=chunksize,
+                    tqdm(
+                        executor.map(
+                            to_squares_wrapper,
+                            repeat(fit_model.residuals_scipy),
+                            repeat(guess_params),
+                            repeat(sweep_ar),
+                            my_gen(aoi_sig_norm),
+                            repeat(fit_opts),
+                            chunksize=chunksize,
+                        ),
+                        ascii=True,
+                        mininterval=1,
+                        total=data_length,
+                        unit=" PX",
+                        disable=(not options["show_progressbar"]),
                     )
                 )
             )

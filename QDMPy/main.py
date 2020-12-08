@@ -6,6 +6,9 @@ __author__ = "Sam Scholten"
 # should only include our sub-packages really.
 import fitting
 import data_loading
+import fit_plots
+
+import matplotlib
 import matplotlib.pyplot as plt
 
 # NOTES
@@ -19,86 +22,37 @@ import matplotlib.pyplot as plt
 
 # package the below sections into clear functions.
 # think in terms of jupyter cells -> load_options, setup_system, reshape_data, etc.
+# TODO add widgets etc. for interactive plots
 
 
 def main(__spec__=None):
-
     options = data_loading.load_options(check_for_prev_result=True)
-    raw_data, sweep_list = data_loading.load_raw_and_sweep(options)
 
-    image_ROI, sig, ref, sig_norm, sweep_list = data_loading.reshape_dataset(
-        options, raw_data, sweep_list
+    raw_data, prelim_sweep_list = data_loading.load_raw_and_sweep(options)
+
+    PL_image, PL_image_ROI, _, _, sig_norm, sweep_list = data_loading.reshape_dataset(
+        options, raw_data, prelim_sweep_list
     )
-
     fit_model = fitting.define_fit_model(options)
 
     # roi_fit_result is a FitResultROI object,
     # see fitting file to see a nice explanation of contents
     roi_avg_fit_result = fitting.fit_ROI_avg(options, sig_norm, sweep_list, fit_model)
 
-    res = roi_avg_fit_result
+    fig = fit_plots.plot_ROI_avg_fit(options, roi_avg_fit_result)
 
-    fig = plt.figure(figsize=(8, 6))
-    # xstart, ystart, xend, yend [units are fraction of the image frame, from bottom left corner]
-    spectrum_frame = fig.add_axes((0.1, 0.3, 0.8, 0.6))
+    fig2 = fit_plots.plot_ROI_image(options, PL_image)
 
-    # ODMR spectrum
-    spectrum_frame.plot(
-        res.fit_sweep_vector,
-        res.init_fit,
-        linestyle=(0, (1, 1)),
-        label="init guess",
-        c="darkgreen",
-    )
-    spectrum_frame.plot(
-        res.fit_sweep_vector,
-        res.scipy_best_fit,
-        linestyle="--",
-        label="scipy best fit",
-        c="mediumblue",
-    )
-    spectrum_frame.plot(
-        res.sweep_list,
-        res.pl_roi,
-        label="raw data",
-        ls=" ",
-        marker="o",
-        ms=3.5,
-        mfc="w",
-        mec="firebrick",
-    )
-    spectrum_frame.set_xticklabels([])  # remove from first frame
-    spectrum_frame.legend()
-    spectrum_frame.grid()
+    AOIs = data_loading.define_AOIs(options)
 
-    # residual plot
-    residual_frame = fig.add_axes((0.1, 0.1, 0.8, 0.2))
-    res_xdata = res.sweep_list
-    res_ydata = res.best_fit_pl_vals - res.pl_roi
+    fig3 = fit_plots.plot_AOIs(options, PL_image_ROI, AOIs)
 
-    residual_frame.plot(
-        res_xdata,
-        res_ydata,
-        label="residual",
-        ls="dashed",
-        lw=1,
-        c="black",
-        marker="o",
-        ms=3.5,
-        mfc="w",
-        mec="k",
+    AOI_fit_params = fitting.fit_AOIs(
+        options, sig_norm, sweep_list, fit_model, AOIs, roi_avg_fit_result
     )
-    residual_frame.legend()
-    residual_frame.grid()
+    print(AOI_fit_params)
 
     if False:
-        # plot_ROI(sig_norm)
-
-        # plot_ROI_avg_fit(options, roi_fit_result) # residual!!!
-
-        # want to do this in a scaled manner? User select with cursor, run in real time etc.?
-        AOIs = data_loading.define_AOIs(options)
-        AOI_fit_params = fitting.fit_AOIs(options, fit_model, AOIs)
 
         # plot_AOI_comparison(options, AOI_fit_params, roi_fit_result) # residual, compare to ROI!!!
 
@@ -116,6 +70,8 @@ def main(__spec__=None):
 
     # Note on finishing, need to save options etc.
     # Remember to remove 'system' information i.e. all python objects etc.
+
+    plt.show()
 
 
 if __name__ == "__main__":

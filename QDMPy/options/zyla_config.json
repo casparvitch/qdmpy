@@ -3,7 +3,11 @@
 	// ============================ General Parameters ===========================================
 	// ===========================================================================================
 	"base_dir": {},
-    "filepath": {}, 
+    "filepath": {},
+    // 500e-6 / 2048. In metres
+    "raw_pixel_size": {
+        "option_default": 0.000000244140625
+    },
     
     // binning should be fixed now, num_bins = 1 will do nothing (and 0 as well)
     
@@ -459,13 +463,21 @@
     			false
     		]
     },
-    "annotate_plots": {
+    "annotate_image_regions": {
     	"option_default": true,
     	"option_choices":
     		[
     			true,
     			false
     		]
+    },
+    // NOTE add these to specific plot options...? Some general plotting option json...??
+    "figure_size": {
+        "option_default": [8, 6],
+        "option_characs": {
+            "type": "List",
+            "len": 2
+        }
     },
     "dpi": {
     	"option_default": 600,

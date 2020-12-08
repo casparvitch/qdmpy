@@ -18,3 +18,7 @@ Feature Requests
 	- can compare in AOI fits...
 
 - [ ] code profiling!
+
+- [ ] an additional script to compare the spectra (AOI or ROI) in two different images? Not just a subtraction thing...
+
+- [ ] select AOI or even ROI with cursor box etc. 

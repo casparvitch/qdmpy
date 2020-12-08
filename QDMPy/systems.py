@@ -123,7 +123,6 @@ class UniMelb(System):
 # 'system' level, inherits from broader institute class
 # --> this is what should be passed around!
 class Zyla(UniMelb):
-    _raw_pixel_size = 1
     name = "Zyla"
     config_path = DIR_PATH / "options/zyla_config.json"
 
@@ -133,7 +132,7 @@ class Zyla(UniMelb):
         self.options_dict = misc.json_to_dict(self.config_path, hook="dd")
 
     def get_raw_pixel_size(self):
-        return self._raw_pixel_size
+        return self.options_dict["raw_pixel_size"]["option_default"]
 
 
 def choose_system(name):
@@ -145,20 +144,22 @@ def choose_system(name):
 
 class OptionsError(Exception):
     def __init__(self, option_name, option_given, system, custom_msg=None):
-        self.option_name = option_name
-        self.option_given = option_given
+
         self.custom_msg = custom_msg
+
+        self.default_msg = (
+            f"Option {option_given} not a valid option for {option_name}"
+            + f", pick from: {system.option_choices(option_name)}"
+        )
+
         super().__init__(custom_msg)
 
     def __str__(self):
         if self.custom_msg is not None:
-            return str(self.custom_msg)
+            return str(self.custom_msg) + "\n" + self.default_msg
         else:
             # use system to get possible options (read specific json into dict etc.)
-            return (
-                f"Option {self.option_given} not a valid option for {self.option_name}"
-                + f", pick from: {self.system.option_choices[self.option_name]}"
-            )
+            return self.default_msg
 
 
 def check_option(key, val, system):

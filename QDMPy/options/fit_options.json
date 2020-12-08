@@ -20,16 +20,16 @@
     // For taking a region of interest and ignoring the rest of the data set
 
     // option: Full, Rectangle, Square, Circle
-    "ROI": "Full", 
+    "ROI": "Rectangle", 
     
     // half the size of the Square
     "ROI_size": 1, 
     
     // centre pixel
-    "ROI_centre": [50, 60],
+    "ROI_centre": [120, 120],
 
     // Used for the rectangle size only 
-    "ROI_rect_size": [5,5],
+    "ROI_rect_size": [240,240],
 
     // Removes data points from the start and end of each pixel data
     "remove_start_sweep": 1,
@@ -44,12 +44,12 @@
     "single_pixel_check": [1,1],
     
     // centre pixel of area 1
-    "area_1_centre": [50, 60], 
+    "area_1_centre": [30, 150], 
     
     // size of the square region of area 1
     "area_1_size": 3, 
     
-    "area_2_centre": [75, 80],
+    "area_2_centre": [150, 160],
     "area_2_size": 3,
 
     // ========== Fitting Parameters ==========
@@ -67,7 +67,7 @@
     "use_ROI_avg_fit_res_for_all_pixels": true,
     
     // number of threads to *not* use for fitting
-    "sub_threads": 5, 
+    "sub_threads": 2, 
 
     "fit_functions":  {"linear": 1, "lorentzian": 8},
 
@@ -145,13 +145,15 @@
     // Rescales the x by the units of the Jacobian (doesn't seem to make a difference)
     "scale_x": true,
     // Determines the loss function. This in non trivial check the scipy documnetation
-    "loss_fn": "linear", // {linear, soft_l1, huber, cauchy, arctan}
+     // {linear, soft_l1, huber, cauchy, arctan}
+    "loss_fn": "linear",
 
     // ========== Plotting Parameters ==========
     "make_plots": true,
     "save_plots": true,
     "show_plots": true,
-    "annotate_plots": true,
+    "annotate_image_regions": true,
+    "figure_size": [8, 6],
     "dpi": 600,
     "save_fig_type": "png"
 }
