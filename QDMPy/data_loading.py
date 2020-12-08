@@ -70,7 +70,6 @@ def load_raw_and_sweep(options):
 def reshape_dataset(options, raw_data, sweep_list):
     systems.clean_options(options)
 
-    # ok now start transforming dataset (again should depend on processed/not processed)
     image = reshape_raw(options, raw_data, sweep_list)
     image_rebinned, sig, ref, sig_norm = rebin_image(options, image)
     ROI = define_ROI(options, image_rebinned)
@@ -232,43 +231,39 @@ def rebin_image(options, image):
     else:
         if options["additional_bins"] % 2:
             raise RuntimeError("The binning parameter needs to be a multiple of 2.")
-        # FIXME add if_processed check here
-        if False:
-            pass
-        else:
-            data_pts = image.shape[0]
-            height = image.shape[1]
-            width = image.shape[2]
-            image_rebinned = (
-                np.reshape(
-                    image,
-                    [
-                        data_pts,
-                        int(height / options["additional_bins"]),
-                        options["additional_bins"],
-                        int(width / options["additional_bins"]),
-                        options["additional_bins"],
-                    ],
-                )
-                .sum(2)
-                .sum(3)
-            )
-    # define sig and ref differently if we're using a ref
-    # this 'True' is only if_processed
-    if True:
-        if options["used_ref"]:
-            sig = image_rebinned[::2, :, :]
-            ref = image_rebinned[1::2, :, :]
-            if options["normalisation"] == "sub":
-                sig_norm = sig - ref
-            elif options["normalisation"] == "div":
-                sig_norm = sig / ref
-            else:
-                raise KeyError("bad normalisation option, use: ['sub', 'div']")
-        else:
 
-            sig = ref = image_rebinned
-            sig_norm = sig / np.max(sig, 0)
+        data_pts = image.shape[0]
+        height = image.shape[1]
+        width = image.shape[2]
+        image_rebinned = (
+            np.reshape(
+                image,
+                [
+                    data_pts,
+                    int(height / options["additional_bins"]),
+                    options["additional_bins"],
+                    int(width / options["additional_bins"]),
+                    options["additional_bins"],
+                ],
+            )
+            .sum(2)
+            .sum(3)
+        )
+
+    # define sig and ref differently if we're using a ref
+    if options["used_ref"]:
+        sig = image_rebinned[::2, :, :]
+        ref = image_rebinned[1::2, :, :]
+        if options["normalisation"] == "sub":
+            sig_norm = sig - ref
+        elif options["normalisation"] == "div":
+            sig_norm = sig / ref
+        else:
+            raise KeyError("bad normalisation option, use: ['sub', 'div']")
+    else:
+
+        sig = ref = image_rebinned
+        sig_norm = sig / np.max(sig, 0)
 
     return image_rebinned, sig, ref, sig_norm
 

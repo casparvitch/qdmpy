@@ -28,12 +28,16 @@ import matplotlib.pyplot as plt
 def main(__spec__=None):
     options = data_loading.load_options(check_for_prev_result=True)
 
+    # here we would go on a different branch if_prev_result... TODO
+    # i.e. just load things quickly, plot
     raw_data, prelim_sweep_list = data_loading.load_raw_and_sweep(options)
 
     PL_image, PL_image_ROI, _, _, sig_norm, sweep_list = data_loading.reshape_dataset(
         options, raw_data, prelim_sweep_list
     )
     fit_model = fitting.define_fit_model(options)
+    print(fit_model.fn_chain.param_defn)
+    exit()
 
     # roi_fit_result is a FitResultROI object,
     # see fitting file to see a nice explanation of contents
@@ -41,16 +45,16 @@ def main(__spec__=None):
 
     fig = fit_plots.plot_ROI_avg_fit(options, roi_avg_fit_result)
 
-    fig2 = fit_plots.plot_ROI_image(options, PL_image)
+    fig2 = fit_plots.plot_ROI_PL_image(options, PL_image)
 
     AOIs = data_loading.define_AOIs(options)
 
-    fig3 = fit_plots.plot_AOIs(options, PL_image_ROI, AOIs)
+    fig3 = fit_plots.plot_AOI_PL_images(options, PL_image_ROI, AOIs)
 
+    # this is somewhat optional.
     AOI_fit_params = fitting.fit_AOIs(
         options, sig_norm, sweep_list, fit_model, AOIs, roi_avg_fit_result
     )
-    print(AOI_fit_params)
 
     if False:
 

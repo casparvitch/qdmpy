@@ -258,7 +258,6 @@ def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
             )
         )
 
-    # NOTE, roi_shape here untested...
     roi_shape = np.shape(sig_norm)
     res = get_pixel_fitting_results(fit_model, fit_results, (roi_shape[1], roi_shape[2]))
     if options["scramble_pixles"]:
@@ -358,7 +357,6 @@ def get_pixel_fitting_results(fit_model, fit_results, roi_shape):
         # num tracks position in the 1D array, as we loop over different fns
         # and parameters.
         for fn_type, num in fit_model.fit_functions.items():
-            # FIXME does the below work without insantiating the fit func?
             fn_params = AVAILABLE_FNS[fn_type].param_defn
             for idx in range(num):
                 for parameter_key in fn_params:
@@ -374,8 +372,6 @@ def load_prev_fit_results(options, fit_model):
 
     prev_options = data_loading.get_prev_options(options)
 
-    # FIXME does the below work without first instantiating the fit func? {can be done/fixed...}
-    #   if not, write a function to handle this in some way, as it shows up a lot!
     a_fit_func = prev_options["fit_functions"].keys()[0]
     a_fit_param = AVAILABLE_FNS[a_fit_func].param_defn[0]
 

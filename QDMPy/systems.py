@@ -53,6 +53,9 @@ class System:
                 options["filepath_ref"] = options["filepath_ref"]
 
 
+# ============================================================================
+
+
 # Institute or university level
 class UniMelb(System):
     name = "Unknown UniMelb System"
@@ -120,6 +123,9 @@ class UniMelb(System):
                 options["filepath_ref"] = options["filepath_ref"]
 
 
+# ============================================================================
+
+
 # 'system' level, inherits from broader institute class
 # --> this is what should be passed around!
 class Zyla(UniMelb):
@@ -162,6 +168,9 @@ class OptionsError(Exception):
             return self.default_msg
 
 
+# ===============================
+
+
 def check_option(key, val, system):
     if key not in system.available_options():
         warnings.warn(f"Option {key} was not recognised by the {system.name} system, skipping.")
@@ -174,11 +183,17 @@ def check_option(key, val, system):
     # e.g. check fit_funcs are appropriate form
 
 
+# ===============================
+
+
 def check_options(options):
     system = options["system"]
     for key, val in options.items():
         check_option(key, val, system)
     options["cleaned"] = True
+
+
+# ===============================
 
 
 def clean_options(options):

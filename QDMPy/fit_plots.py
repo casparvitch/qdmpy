@@ -11,7 +11,7 @@ import matplotlib.patches as patches
 import systems
 
 
-def plot_ROI_image(options, PL_image):
+def plot_ROI_PL_image(options, PL_image):
     # mmm plot o.g. image with ROI labelled
 
     # TODO grab all options from plot options etc...
@@ -19,12 +19,12 @@ def plot_ROI_image(options, PL_image):
     if options["make_plots"] is False:
         return None
 
-    fig, ax = plt.subplots(figsize=list(options["figure_size"]))
-
-    cmap = "Greys_r"
+    c_map = "Greys_r"
     c_range = [np.nanmin(PL_image), np.nanmax(PL_image)]
 
-    im = ax.imshow(PL_image, cmap=cmap, vmin=c_range[0], vmax=c_range[1])
+    fig, ax = plot_image(
+        PL_image, "PL - ROI", c_map, c_range, "Counts", list(options["figure_size"]), None
+    )
 
     # need to convert back to um?
     # pixel_size = options["system"].get_raw_pixel_size() * options["total_bin"]
@@ -32,17 +32,13 @@ def plot_ROI_image(options, PL_image):
     if options["annotate_image_regions"]:
         annotate_ROI_image(options, ax)
 
-    ax.set_title("PL - ROI")
-    ax.get_xaxis().set_ticks([])
-    ax.get_yaxis().set_ticks([])
-
-    cbar = add_colourbar(im, fig, ax)
-    cbar.ax.set_ylabel("Counts", rotation=270)
-
     # TODO implement elliptical/circular mask feature
     # --> make object that can be passed around, saved/pickled after being tested etc.
 
     return fig
+
+
+# ============================================================================
 
 
 def add_colourbar(im, fig, ax, aspect=20, pad_fraction=1, **kwargs):
@@ -58,6 +54,9 @@ def add_colourbar(im, fig, ax, aspect=20, pad_fraction=1, **kwargs):
     cbar.ax.linewidth = 0.5
     cbar.ax.tick_params(direction="in", labelsize=12, size=5)
     return cbar
+
+
+# ============================================================================
 
 
 def add_patch_square_centre(ax, area_c, area_size, label=None, edgecolor="b"):
@@ -82,6 +81,9 @@ def add_patch_square_centre(ax, area_c, area_size, label=None, edgecolor="b"):
         )
 
 
+# ============================================================================
+
+
 def add_patch_rect(ax, rect_corner_x, rect_corner_y, size_x, size_y, label=None, edgecolor="b"):
     """  add the ROI rectangle to an ax and label the rectangle if a label has been given """
     rect = patches.Rectangle(
@@ -100,6 +102,9 @@ def add_patch_rect(ax, rect_corner_x, rect_corner_y, size_x, size_y, label=None,
             label,
             {"color": edgecolor, "fontsize": 10, "ha": "center", "va": "bottom"},
         )
+
+
+# ============================================================================
 
 
 def annotate_ROI_image(options, ax):
@@ -129,7 +134,10 @@ def annotate_ROI_image(options, ax):
         )
 
 
-def annotate_AOIs_image(options, ax):
+# ============================================================================
+
+
+def annotate_AOI_PL_image(options, ax):
     binning = options["additional_bins"]
     if binning == 0:
         binning = 1
@@ -172,7 +180,10 @@ def annotate_AOIs_image(options, ax):
             break
 
 
-def plot_AOIs(options, PL_image_ROI, AOIs):
+# ============================================================================
+
+
+def plot_AOI_PL_images(options, PL_image_ROI, AOIs):
     # here plot image_ROI cut down, label AOIs on it
     # similar to roi, just more of em ->> loop through all 'i' AOIs given
     if AOIs == []:
@@ -183,30 +194,46 @@ def plot_AOIs(options, PL_image_ROI, AOIs):
     if options["make_plots"] is False:
         return None
 
-    fig, ax = plt.subplots(figsize=list(options["figure_size"]))
-
-    cmap = "Greys_r"
-    c_range = [np.nanmin(PL_image_ROI), np.nanmax(PL_image_ROI)]
-
-    im = ax.imshow(PL_image_ROI, cmap=cmap, vmin=c_range[0], vmax=c_range[1])
-
-    # need to convert back to um?
+    # need to convert back to um? TODO implement some sort of scalebar
     # pixel_size = options["system"].get_raw_pixel_size() * options["total_bin"]
 
+    c_map = "Greys_r"
+    c_range = [np.nanmin(PL_image_ROI), np.nanmax(PL_image_ROI)]
+
+    fig, ax = plot_image(
+        PL_image_ROI, "PL - AOIs", c_map, c_range, "Counts", list(options["figure_size"]), None
+    )
+
     if options["annotate_image_regions"]:
-        annotate_AOIs_image(options, ax)
-
-    ax.set_title("PL - AOIs")
-    ax.get_xaxis().set_ticks([])
-    ax.get_yaxis().set_ticks([])
-
-    cbar = add_colourbar(im, fig, ax)
-    cbar.ax.set_ylabel("Counts", rotation=270)
+        annotate_AOI_PL_image(options, ax)
 
     # TODO implement elliptical/circular mask feature
     # --> make object that can be passed around, saved/pickled after being tested etc.
 
     return fig
+
+
+# ============================================================================
+
+
+def plot_image(image_data, title, c_map, c_range, c_label, figure_size, pixel_size):
+    fig, ax = plt.subplots(figsize=figure_size)
+
+    cmap = c_map
+    c_range = [np.nanmin(image_data), np.nanmax(image_data)]
+
+    im = ax.imshow(image_data, cmap=c_map, vmin=c_range[0], vmax=c_range[1])
+
+    ax.set_title(title)
+    ax.get_xaxis().set_ticks([])
+    ax.get_yaxis().set_ticks([])
+
+    cbar = add_colourbar(im, fig, ax)
+    cbar.ax.set_ylabel(c_label, rotation=270)
+    return fig, ax
+
+
+# ============================================================================
 
 
 def plot_ROI_avg_fit(options, roi_avg_fit_result):
@@ -268,3 +295,23 @@ def plot_ROI_avg_fit(options, roi_avg_fit_result):
     residual_frame.grid()
 
     return fig
+
+
+# ============================================================================
+
+
+def plot_param_image(options, fit_model, fit_results, param_name):
+    # get plotting options from somewhere...
+
+    image = fit_results[param_name]
+    c_map = "viridis"
+    c_range = [np.nanmin(image), np.nanmax(image)]
+    # c_label = fit_model.fn_chain.parameter_unit[parameter_key]
+    c_label = None  # TODO
+
+    fig, ax = plot_image(
+        image, param_name, c_map, c_range, c_label, list(options["figure_size"]), None
+    )
+
+    # plot_image(image_data, title, c_map, c_range, c_label, figure_size, pixel_size):
+    pass
