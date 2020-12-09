@@ -1,6 +1,14 @@
 # -*- coding: utf-8 -*-
+"""
+Module docstring
+"""
+
+
+# ============================================================================
 
 __author__ = "Sam Scholten"
+
+# ============================================================================
 
 import numpy as np
 import os
@@ -9,6 +17,8 @@ import re
 import pathlib
 import warnings
 from multiprocessing import cpu_count
+
+# ============================================================================
 
 
 DIR_PATH = pathlib.Path(__file__).parent.absolute()

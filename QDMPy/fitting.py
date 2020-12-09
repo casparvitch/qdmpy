@@ -1,12 +1,11 @@
 # -*- coding: utf-8 -*-
+"""
+Module docstring
+"""
+
+# ============================================================================
 
 __author__ = "Sam Scholten"
-
-# Notes
-# -----
-# This is the meat of where we want to do more work.
-# importantly: this doesn't abstract nicely to gpu_fit
-# -> write differently for gpu (including ROI fit etc.! different file completely...)
 
 # ==========================================================================
 
@@ -21,12 +20,21 @@ from itertools import repeat
 import warnings
 from sys import platform
 
+# ============================================================================
+
+
 import systems
-import fit_functions
+import fit_models
 import data_loading
 
 
 # ==========================================================================
+
+# Notes
+# -----
+# This is the meat of where we want to do more work.
+# importantly: this doesn't abstract nicely to gpu_fit
+# -> write differently for gpu (including ROI fit etc.! different file completely...)
 
 
 class FitResultROIAvg:
@@ -49,7 +57,7 @@ class FitResultROIAvg:
         self.sweep_list = sweep_list  # affine parameter i.e. tau or freq
 
         self.best_fit_result = best_fit_result  # scipy solution fit_params
-        self.best_fit_pl_vals = best_fit_pl_vals  # fit_model(sweep_list, best_fit_result)
+        self.best_fit_pl_vals = best_fit_pl_vals  # fit_model(best_fit_result, sweep_list)
 
         # below: a higher res linspace of the above data.
         self.scipy_best_fit = scipy_best_fit  # scipy best fit (array of PL vals)
@@ -63,41 +71,6 @@ class FitResultROIAvg:
 # ==========================================================================
 
 
-def limit_cpu():
-    """is called at every process start"""
-    p = psutil.Process(os.getpid())
-    # set to lowest priority, this is windows only, on Unix use p.nice(19)
-    if platform.startswith("linux"):  # linux
-        p.nice(19)
-    elif platform.startswith("win32"):  # windows
-        p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
-    elif platform.startswith("darwin"):  # macOS
-        warnings.warn("Not sure what to use for macOS... skipping cpu limitting")
-    else:  # 'freebsd', 'aix', 'cygwin'...
-        warnings.warn(f"Not sure what to use for your OS: {platform}... skipping cpu limitting")
-
-
-# ==========================================================================
-
-
-# simple generator to shape data as expected by least_squares in concurrent method
-def my_gen(our_array):
-    len_z, len_x, len_y = np.shape(our_array)
-    for x in range(len_x):
-        for y in range(len_y):
-            yield [x, y, our_array[:, x, y]]
-
-
-# ==========================================================================
-
-
-def to_squares_wrapper(fun, p0, sweep_val, pl_val, kwargs={}):
-    return ((pl_val[0], pl_val[1]), least_squares(fun, p0, args=(sweep_val, pl_val[2]), **kwargs))
-
-
-# ==========================================================================
-
-
 def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
     systems.clean_options(options)
 
@@ -106,10 +79,8 @@ def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
     pl_roi = np.nansum(np.nansum(sig_norm, 2), 1)
     pl_roi = (pl_roi / np.max(pl_roi)).copy()  # .copy() untested 2020-11-27
 
-    sweep_vector = np.linspace(min(sweep_list), max(sweep_list))  # not sure how this is useful?
-
+    # this is just constructing the initial parameter guesses and bounds in the right format
     fit_param_ar, fit_param_bound_ar = _gen_fit_params(options, *_gen_init_guesses(options))
-
     init_guess = fit_param_ar
     fit_bounds = (fit_param_bound_ar[:, 0], fit_param_bound_ar[:, 1])
 
@@ -141,19 +112,122 @@ def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
     )
 
     best_fit_result = fitting_results.x
-    fit_sweep_vector = np.linspace(np.min(sweep_vector), np.max(sweep_vector), 10000)
-    scipy_best_fit = fit_model.fn_chain(fit_sweep_vector, best_fit_result)
-    init_fit = fit_model.fn_chain(fit_sweep_vector, init_guess)
+    fit_sweep_vector = np.linspace(np.min(sweep_list), np.max(sweep_list), 10000)
+    scipy_best_fit = fit_model(best_fit_result, fit_sweep_vector)
+    init_fit = fit_model(init_guess, fit_sweep_vector)
 
     return FitResultROIAvg(
         fit_options,
         pl_roi,
         sweep_list,
         best_fit_result,
-        fit_model.fn_chain(sweep_list, best_fit_result),
+        fit_model(best_fit_result, sweep_list),
         scipy_best_fit,
         init_fit,
         fit_sweep_vector,
+    )
+
+
+# ==========================================================================
+
+
+def fit_single_pixel(options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result):
+    " fit single pixel and return best_fit_resul t"
+
+    fit_opts = {}
+    for key, val in roi_avg_fit_result.fit_options.items():
+        fit_opts[key] = val
+
+    sweep_ar = np.array(sweep_list)
+
+    if options["use_ROI_avg_fit_res_for_all_pixels"]:
+        guess_params = roi_avg_fit_result.best_fit_result.copy()
+    else:
+        # this is just constructing the initial parameter guesses and bounds in the right format
+        fit_param_ar, fit_param_bound_ar = _gen_fit_params(options, *_gen_init_guesses(options))
+        guess_params = fit_param_ar.copy()
+
+    fitting_results = least_squares(
+        fit_model.residuals_scipy, guess_params, args=(sweep_list, pixel_pl_ar), **fit_opts
+    )
+    return fitting_results.x
+
+
+# ==========================================================================
+
+
+def fit_AOIs(options, sig_norm, sweep_list, fit_model, AOIs, roi_avg_fit_result):
+    # TODO: implement pixel scrambler here too.
+
+    systems.clean_options(options)
+
+    fit_opts = {}
+    for key, val in roi_avg_fit_result.fit_options.items():
+        fit_opts[key] = val
+
+    sweep_ar = np.array(sweep_list)
+
+    if options["use_ROI_avg_fit_res_for_all_pixels"]:
+        guess_params = roi_avg_fit_result.best_fit_result.copy()
+    else:
+        # this is just constructing the initial parameter guesses and bounds in the right format
+        fit_param_ar, fit_param_bound_ar = _gen_fit_params(options, *_gen_init_guesses(options))
+        guess_params = fit_param_ar.copy()
+
+    AOI_avg_best_fit_results_lst = []
+
+    for AOI in AOIs:
+        aoi_sig_norm = sig_norm[:, AOI[0], AOI[1]]
+        aoi_avg = np.nansum(np.nansum(aoi_sig_norm, 2), 1)
+        aoi_avg = (aoi_avg / np.max(aoi_avg)).copy()
+
+        fitting_results = least_squares(
+            fit_model.residuals_scipy, guess_params, args=(sweep_list, aoi_avg), **fit_opts
+        )
+        AOI_avg_best_fit_results_lst.append(fitting_results.x)
+
+    return AOI_avg_best_fit_results_lst
+
+
+# ==========================================================================
+
+
+def limit_cpu():
+    """is called at every process start"""
+    p = psutil.Process(os.getpid())
+    # set to lowest priority, this is windows only, on Unix use p.nice(19)
+    if platform.startswith("linux"):  # linux
+        p.nice(19)
+    elif platform.startswith("win32"):  # windows
+        p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+    elif platform.startswith("darwin"):  # macOS
+        warnings.warn("Not sure what to use for macOS... skipping cpu limitting")
+    else:  # 'freebsd', 'aix', 'cygwin'...
+        warnings.warn(f"Not sure what to use for your OS: {platform}... skipping cpu limitting")
+
+
+# ==========================================================================
+
+
+# simple generator to shape data as expected by least_squares in concurrent method
+# allows us to keep track of *where* (i.e. which pixel location) each result corresponds to
+# (see also: to_squares wrapper)
+def my_gen(our_array):
+    len_z, len_x, len_y = np.shape(our_array)
+    for x in range(len_x):
+        for y in range(len_y):
+            yield [x, y, our_array[:, x, y]]
+
+
+# ==========================================================================
+
+
+def to_squares_wrapper(fun, p0, sweep_val, shaped_data, kwargs={}):
+    # shaped_data: [x, y, pl]
+    # output: (x, y), result_params
+    return (
+        (shaped_data[0], shaped_data[1]),
+        least_squares(fun, p0, args=(sweep_val, shaped_data[2]), **kwargs).x,
     )
 
 
@@ -221,8 +295,8 @@ def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
         init_params = roi_avg_fit_result.best_fit_result.copy()
     else:
+        # this is just constructing the initial parameter guesses and bounds in the right format
         fit_param_ar, fit_param_bound_ar = _gen_fit_params(options, *_gen_init_guesses(options))
-        guess_params = fit_param_ar.copy()
 
     with concurrent.futures.ProcessPoolExecutor(
         max_workers=threads, initializer=limit_cpu
@@ -249,75 +323,10 @@ def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
     roi_shape = np.shape(sig_norm)
     res = get_pixel_fitting_results(fit_model, fit_results, (roi_shape[1], roi_shape[2]))
     if options["scramble_pixles"]:
+        # I don't think this is required as we keep track of posn' with to_squares_wrapper
         return unshuffle_fit_results(res, unshuffler)
     else:
         return res
-
-
-# ==========================================================================
-
-
-def fit_AOIs(options, sig_norm, sweep_list, fit_model, AOIs, roi_avg_fit_result):
-    # TODO: implement pixel scrambler here too.
-
-    systems.clean_options(options)
-
-    fit_opts = {}
-    for key, val in roi_avg_fit_result.fit_options.items():
-        fit_opts[key] = val
-
-    sweep_ar = np.array(sweep_list)
-    threads = options["threads"]
-    chunksize = 1
-
-    if options["use_ROI_avg_fit_res_for_all_pixels"]:
-        guess_params = roi_avg_fit_result.best_fit_result.copy()
-    else:
-        fit_param_ar, fit_param_bound_ar = _gen_fit_params(options, *_gen_init_guesses(options))
-        guess_params = fit_param_ar.copy()
-
-    fit_results_list = []
-
-    for AOI in tqdm(
-        AOIs,
-        ascii=True,
-        mininterval=1,
-        unit=" AOI",
-        disable=(not options["show_progressbar"]),
-    ):
-        aoi_sig_norm = sig_norm[:, AOI[0], AOI[1]].copy()
-        data_length = np.shape(aoi_sig_norm)[1] * np.shape(aoi_sig_norm)[2]
-        # ok now fit that AOI region
-
-        with concurrent.futures.ProcessPoolExecutor(
-            max_workers=threads, initializer=limit_cpu
-        ) as executor:
-            fit_results_list.append(
-                list(
-                    tqdm(
-                        executor.map(
-                            to_squares_wrapper,
-                            repeat(fit_model.residuals_scipy),
-                            repeat(guess_params),
-                            repeat(sweep_ar),
-                            my_gen(aoi_sig_norm),
-                            repeat(fit_opts),
-                            chunksize=chunksize,
-                        ),
-                        ascii=True,
-                        mininterval=1,
-                        total=data_length,
-                        unit=" PX",
-                        disable=(not options["show_progressbar"]),
-                    )
-                )
-            )
-
-    AOI_fit_params = []
-    for i, AOI_res in enumerate(fit_results_list):
-        AOI_fit_params.append(get_pixel_fitting_results(fit_model, AOI_res, AOIs[i][0].shape))
-
-    return AOI_fit_params
 
 
 # ==========================================================================
@@ -332,24 +341,33 @@ def get_pixel_fitting_results(fit_model, fit_results, roi_shape):
     handled by this in the same way.  I.e. with a linear background there will
     be 'm' and 'c' keys with a shape (1,x,y).
     """
-    fit_image_results = {}
-    # Populate the dictionary with the correct size empty arrays using np.zeros.
+    # NOTE look closely at fit_results, this seems like a slow way to extract?
 
-    for fn_type, num in fit_model.fit_functions.items():
-        fn_params = fit_functions.AVAILABLE_FNS[fn_type].param_defn
-        for param_key in fn_params:
-            fit_image_results[param_key] = np.zeros((num, roi_shape[0], roi_shape[1])) * np.nan
+    # initialise dictionary with key: val = param_name: param_units
+    fit_image_results = fit_models.get_param_odict(fit_model)
+
+    # override with correct size empty arrays using np.zeros.
+    for key in fit_image_results.keys():
+        fit_image_results[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
     # Fill the arrays element-wise from the results function, which returns a
     # 1D array of flattened best-fit parameters.
+
     for (x, y), result in fit_results:
-        # num tracks position in the 1D array, as we loop over different fns
-        # and parameters.
-        for fn_type, num in fit_model.fit_functions.items():
-            fn_params = fit_functions.AVAILABLE_FNS[fn_type].param_defn
-            for idx in range(num):
-                for parameter_key in fn_params:
-                    fit_image_results[parameter_key][idx, x, y] = result.x[num]
+        filled_params = {}  # keep track of index, i.e. pos_0, for this pixel
+        for fn in fit_model.fn_chain:
+            for param_num, param_name in enumerate(fn.param_defn):
+
+                # keep track of what index we're up to, i.e. pos_1
+                if param_name not in filled_params.keys():
+                    key = param_name + "_0"
+                    filled_params[param_name] = 1
+                else:
+                    key = param_name + "_" + str(filled_params[param_name])
+                    filled_params[param_name] += 1
+
+                fit_image_results[key][x, y] = result[fn.this_fn_param_indices[param_num]]
+
     return fit_image_results
 
 
@@ -362,23 +380,26 @@ def load_prev_fit_results(options, fit_model):
     prev_options = data_loading.get_prev_options(options)
 
     a_fit_func = prev_options["fit_functions"].keys()[0]
-    a_fit_param = fit_functions.AVAILABLE_FNS[a_fit_func].param_defn[0]
+    a_fit_param = fit_models.AVAILABLE_FNS[a_fit_func].param_defn[0]
 
     # read a random param to get the shape
     shape = read_processed_param(options, a_fit_func, a_fit_param + "_0").shape
 
     # init the results dict
+    # FIXME idx doesn't do anything now! -> follow get_pixel_fitting_results
     fit_param_res_dict = {}
     for fn_type, num in prev_options["fit_functions"].items():
-        for idx in num:
-            params = fit_functions.AVAILABLE_FNS[fn_type].param_defn
+        for idx in range(num):
+            params = fit_models.AVAILABLE_FNS[fn_type].param_defn
             for param_name in params:
-                fit_param_res_dict[param_name] = np.zeros((num, shape[0], shape[1]))
+                fit_param_res_dict[param_name + "_" + str(idx)] = np.zeros(
+                    (num, shape[0], shape[1])
+                )
 
     # Read in the previous fitted data
     for fn_type, num in prev_options["fit_functions"].items():
         for idx in num:
-            params = fit_functions.AVAILABLE_FNS[fn_type].param_defn
+            params = fit_models.AVAILABLE_FNS[fn_type].param_defn
             for param_name in params:
                 fit_param_res_dict[param_name][idx, :, :] = read_processed_param(
                     options, fn_type, param_name + "_" + str(idx)
@@ -399,10 +420,10 @@ def define_fit_model(options):
 
     fit_functions = options["fit_functions"]
 
-    fit_model = fit_functions.FitModel(fit_functions)
+    fit_model = fit_models.FitModel(fit_functions)
 
     # for the record
-    options["fit_param_defn"] = fit_functions.get_param_odict(fit_model)
+    options["fit_param_defn"] = fit_models.get_param_odict(fit_model)
 
     return fit_model
 
@@ -415,7 +436,7 @@ def _gen_init_guesses(options):
     init_bounds = {}
 
     for fn_type, num in options["fit_functions"].items():
-        fit_func = fit_functions.fit_functions.AVAILABLE_FNS[fn_type](num)
+        fit_func = fit_models.AVAILABLE_FNS[fn_type](num)
         for param_key in fit_func.param_defn:
             guess = options[param_key + "_guess"]
             if param_key + "_range" in options:
@@ -488,14 +509,14 @@ def _gen_fit_params(options, init_guesses, init_bounds):
     for fn_type, num in options["fit_functions"].items():
         for n in range(num):
 
-            for pos, key in enumerate(fit_functions.AVAILABLE_FNS[fn_type].param_defn):
+            for pos, key in enumerate(fit_models.AVAILABLE_FNS[fn_type].param_defn):
                 try:
                     param_lst.append(init_guesses[key][n])
                 except (TypeError, KeyError):
                     param_lst.append(init_guesses[key])
                 if len(init_bounds[key].shape) == 2:
                     bound_lst.append(init_bounds[key][n])
-                else:1
+                else:
                     bound_lst.append(init_bounds[key])
 
     fit_param_ar = np.array(param_lst)  # shape: num_params
@@ -512,8 +533,9 @@ def save_param_fit_images(options, fit_model, fit_image_results):
     systems.clean_options(options)
 
     # NOTE untested
+    # FIXME idx doesn't do anything now, rewrite this bad boi
     for fn_type, num in options["fit_functions"].items():
-        fit_func = fit_functions.AVAILABLE_FNS[fn_type](num)
+        fit_func = fit_models.AVAILABLE_FNS[fn_type](num)
         for param_key in fit_func.param_defn:
             for idx in range(num):
                 # TODO check this is consistent with reading in prev. data (and makes sense etc...)

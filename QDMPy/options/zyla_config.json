@@ -95,6 +95,7 @@
     },
 
     // Style of the reference normalisation used. div = division and sub = subtraction
+
     "normalisation": {
     	"option_default": "div",
     	"option_choices":
@@ -121,25 +122,28 @@
     		"len": 2
     	}
     },
-    // size of the square region of area 1
-    "area_1_size": {
+    // halfsize of the square region of area 1
+    "area_1_halfsize": {
     	"option_default": 1,
     	"option_characs": {
     		"type": "Int"
     	}
     },
     "area_2_centre": {
-    	"option_default": [1, 1],
-    	"option_characs": {
-    		"type": "List",
-    		"len": 2
-    	}
     },
-    "area_2_size": {
-    	"option_default": 1,
-    	"option_characs": {
-    		"type": "Int"
-    	}
+    "area_2_halfsize": {
+    },
+    "area_3_centre": {
+    },
+    "area_3_halfsize": {
+    },
+    "area_4_centre": {
+    },
+    "area_4_halfsize": {
+    },
+    "area_5_centre": {
+    },
+    "area_5_halfsize": {
     },
     // NOTE these need to be copied/extended below if you want more AOIs
 
@@ -246,7 +250,7 @@
     		{"type": ["Float", "List"]}
     },
     "c_bounds": {
-    	"option_default": [0.999,1.0001],
+    	"option_default": [0.9995,1.0005],
     	"option_characs": {
     		"type": "List",
     		"len": 2

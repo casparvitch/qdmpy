@@ -1,6 +1,13 @@
 # -*- coding: utf-8 -*-
+"""
+Module docstring
+"""
+
+# ============================================================================
 
 __author__ = "Sam Scholten"
+
+# ============================================================================
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -8,8 +15,31 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
 import numpy as np
 import matplotlib.patches as patches
 
+# ============================================================================
+
 import systems
-import fit_functions
+import fit_models
+import fitting
+import data_loading
+
+
+"""
+NOTES
+
+- MHz has been hardcoded in some places for the plots here, how to generalise?
+"""
+
+COLORS = [
+    "blue",
+    "saddlebrown",
+    "darkslategrey",
+    "magenta",
+    "olive",
+    "cyan",
+    "purple",
+]
+
+# ===========================================================================
 
 
 def plot_ROI_PL_image(options, PL_image):
@@ -74,9 +104,9 @@ def add_patch_square_centre(ax, area_c, area_size, label=None, edgecolor="b"):
     ax.add_patch(rect)
     if label:
         # Add label for the square
-        plt.text(
-            area_c[0] + 0.95 * area_size,  # label posn.: top right, 5% from square corner
-            area_c[1] + 0.05 * area_size,
+        ax.text(
+            area_c[0] + 0.95 * area_size,  # label posn.: top right
+            area_c[1],
             label,
             {"color": edgecolor, "fontsize": 10, "ha": "center", "va": "center"},
         )
@@ -97,9 +127,9 @@ def add_patch_rect(ax, rect_corner_x, rect_corner_y, size_x, size_y, label=None,
     )
     ax.add_patch(rect)
     if label:
-        plt.text(
-            rect_corner_x + 0.95 * size_x,  # label posn.: top right, 5% from rectangle corner
-            rect_corner_y + 0.05 * size_y,
+        ax.text(
+            rect_corner_x + 0.95 * size_x,  # label posn.: top right
+            rect_corner_y,
             label,
             {"color": edgecolor, "fontsize": 10, "ha": "center", "va": "bottom"},
         )
@@ -143,29 +173,25 @@ def annotate_AOI_PL_image(options, ax):
     if binning == 0:
         binning = 1
 
-    edgecolors = [
-        "tab:blue",
-        "tab:orange",
-        "tab:green",
-        "tab:purple",
-        "tab:pink",
-        "tab:olive",
-        "tab:cyan",
-        "tab:brown",
-        "tab:gray",
-        "tab:red",
-    ]
+    # annotate single pixel check
+    corner = (options["single_pixel_check"][0], options["single_pixel_check"][1])
+    size = 1
+    add_patch_rect(ax, corner[0], corner[1], size, size, label="PX check", edgecolor=COLORS[0])
 
     i = 0
     while True:
         i += 1
         try:
-            centre = options["area_" + str(i) + "_centre"] * binning
-            size = options["area_" + str(i) + "_size"] * binning
+            centre = options["area_" + str(i) + "_centre"]
+            size = options["area_" + str(i) + "_halfsize"]
+            if centre is None or size is None:
+                break
+            centre *= binning
+            size *= binning
 
             corner = [
-                centre[0] - size / 2,
-                centre[1] - size / 2,
+                centre[0] - size,
+                centre[1] - size,
             ]
 
             add_patch_rect(
@@ -175,7 +201,7 @@ def annotate_AOI_PL_image(options, ax):
                 size,
                 size,
                 label="AOI " + str(i),
-                edgecolor=edgecolors[i],
+                edgecolor=COLORS[i],
             )
         except KeyError:
             break
@@ -274,6 +300,7 @@ def plot_ROI_avg_fit(options, roi_avg_fit_result):
     spectrum_frame.set_xticklabels([])  # remove from first frame
     spectrum_frame.legend()
     spectrum_frame.grid()
+    spectrum_frame.set_ylabel("PL (a.u.)")
 
     # residual plot
     residual_frame = fig.add_axes((0.1, 0.1, 0.8, 0.2))
@@ -294,6 +321,8 @@ def plot_ROI_avg_fit(options, roi_avg_fit_result):
     )
     residual_frame.legend()
     residual_frame.grid()
+    residual_frame.set_xlabel("MW Frequency (MHz)")
+    residual_frame.set_ylabel("PL (a.u.)")
 
     return fig
 
@@ -301,18 +330,351 @@ def plot_ROI_avg_fit(options, roi_avg_fit_result):
 # ============================================================================
 
 
-def plot_param_image(options, fit_model, fit_results, param_name):
+def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
+
+    # pre-process data to plot
+    sig_avgs = []
+    ref_avgs = []
+    for i, AOI in enumerate(AOIs):
+        sig_avg = np.nansum(np.nansum(sig[:, AOI[0], AOI[1]], 2), 1)
+        sig_avg = sig_avg / np.max(sig_avg)
+        ref_avg = np.nansum(np.nansum(ref[:, AOI[0], AOI[1]], 2), 1)
+        ref_avg = ref_avg / np.max(ref_avg)
+        sig_avgs.append(sig_avg)
+        ref_avgs.append(ref_avg)
+
+    figsize = list(options["figure_size"])
+    figsize[0] *= len(AOIs)
+    figsize[1] *= 2
+    fig, axs = plt.subplots(2, len(AOIs), sharex=True, sharey=False, figsize=figsize)
+
+    for i, AOI in enumerate(AOIs):
+
+        # plot sig
+        axs[0, i].plot(
+            sweep_list,
+            sig_avgs[i],
+            label="sig",
+            c="blue",
+            ls="dashed",
+            lw=1,
+            marker="o",
+            ms=3.5,
+            mfc="cornflowerblue",
+            mec="mediumblue",
+        )
+        # plot ref
+        axs[0, i].plot(
+            sweep_list,
+            ref_avgs[i],
+            label="ref",
+            c="green",
+            ls="dashed",
+            lw=1,
+            marker="o",
+            ms=3.5,
+            mfc="limegreen",
+            mec="darkgreen",
+        )
+
+        axs[0, i].legend()
+        axs[0, i].grid(True)
+        axs[0, i].set_title(
+            "AOI " + str(i + 1),
+            fontdict={"color": COLORS[i + 1]},
+        )
+        axs[0, i].set_ylabel("PL (a.u.)")
+
+    linestyles = [
+        "--",
+        "-.",
+        (0, (1, 1)),
+        (0, (5, 10)),
+        (0, (5, 5)),
+        (0, (5, 1)),
+        (0, (3, 10, 1, 10)),
+        (0, (3, 5, 1, 5)),
+        (0, (3, 1, 1, 1)),
+        (0, (3, 5, 1, 5, 1, 5)),
+        (0, (3, 10, 1, 10, 1, 10)),
+        (0, (3, 1, 1, 1, 1, 1)),
+    ]
+
+    for i in range(len(AOIs)):
+        # plot subtraction norm
+        axs[1, 0].plot(
+            sweep_list,
+            1 + sig_avgs[i] - ref_avgs[i],
+            label="AOI " + str(i + 1),
+            c=COLORS[i + 1],
+            ls=linestyles[i],
+            lw=1,
+            marker="o",
+            ms=3.5,
+            mfc="w",
+            mec=COLORS[i + 1],
+        )
+        axs[1, 0].legend()
+        axs[1, 0].grid(True)
+        axs[1, 0].set_title("Subtraction Normalisation")
+        axs[1, 0].set_xlabel("MW Frequency (MHz)")
+        axs[1, 0].set_ylabel("PL (a.u.)")
+
+        # plot division norm
+        axs[1, 1].plot(
+            sweep_list,
+            sig_avgs[i] / ref_avgs[i],
+            label="AOI " + str(i + 1),
+            c=COLORS[i + 1],
+            ls=linestyles[i],
+            lw=1,
+            marker="o",
+            ms=3.5,
+            mfc="w",
+            mec=COLORS[i + 1],
+        )
+
+        axs[1, 1].legend()
+        axs[1, 1].grid(True)
+        axs[1, 1].set_title("Division Normalisation")
+        axs[1, 1].set_xlabel("MW Frequency (MHz)")
+        axs[1, 1].set_ylabel("PL (a.u.)")
+
+    return fig
+
+
+# ============================================================================
+
+
+def plot_AOI_spectra_fit(
+    options,
+    sig,
+    ref,
+    sweep_list,
+    AOIs,
+    AOI_avg_best_fit_results_lst,
+    roi_avg_fit_result,
+    fit_model,
+):
+    # from PL version:
+    # best_fit_result = fitting_results.x
+    # fit_sweep_vector = np.linspace(np.min(sweep_vector), np.max(sweep_vector), 10000)
+    # scipy_best_fit = fit_model(best_fit_result, fit_sweep_vector)
+    # init_fit = fit_model(init_guess, fit_sweep_vector)
+
+    # rows:
+    # ROI avg, single pixel, then each AOI
+    # columns:
+    # sig & ref, sub & div norm, fit -> compared to ROI {raw, fit, ROI_avg_fit}
+
+    figsize = list(options["figure_size"])
+    figsize[0] *= 3  # number of columns
+    figsize[1] *= 2 + len(AOIs)  # number of rows
+    fig, axs = plt.subplots(2 + len(AOIs), 3, sharex=True, sharey=False, figsize=figsize)
+
+    # pre-process raw data to plot
+    sig_avgs = []
+    ref_avgs = []
+    # add roi data
+    sz_h = options["additional_bins"] * int(options["metadata"]["AOIHeight"])
+    sz_w = options["additional_bins"] * int(options["metadata"]["AOIWidth"])
+    ROI = data_loading.define_ROI(options, sz_h, sz_w)
+    roi_avg_sig = np.nansum(np.nansum(sig[:, ROI[0], ROI[1]], 2), 1)
+    roi_avg_sig = roi_avg_sig / np.max(roi_avg_sig)
+    roi_avg_ref = np.nansum(np.nansum(ref[:, ROI[0], ROI[1]], 2), 1)
+    roi_avg_ref = roi_avg_ref / np.max(roi_avg_ref)
+    sig_avgs.append(roi_avg_sig)
+    ref_avgs.append(roi_avg_ref)
+    # add single pixel check
+    pixel_sig = sig[:, options["single_pixel_check"][0], options["single_pixel_check"][1]]
+    pixel_sig = pixel_sig / np.max(pixel_sig)
+    pixel_ref = ref[:, options["single_pixel_check"][0], options["single_pixel_check"][1]]
+    pixel_ref = pixel_ref / np.max(pixel_ref)
+    sig_avgs.append(pixel_sig)
+    ref_avgs.append(pixel_ref)
+    for i, AOI in enumerate(AOIs):
+        sig_avg = np.nansum(np.nansum(sig[:, AOI[0], AOI[1]], 2), 1)
+        sig_avg = sig_avg / np.max(sig_avg)
+        ref_avg = np.nansum(np.nansum(ref[:, AOI[0], AOI[1]], 2), 1)
+        ref_avg = ref_avg / np.max(ref_avg)
+        sig_avgs.append(sig_avg)
+        ref_avgs.append(ref_avg)
+
+    # now pre-process fit params
+    fit_param_lst = []
+
+    # roi avg
+    fit_param_lst.append(roi_avg_fit_result.best_fit_result)
+
+    # single pixel
+    if options["normalisation"] == "div":
+        pixel_pl_ar = pixel_sig / pixel_ref
+    elif options["normalisation"] == "sub":
+        pixel_pl_ar = pixel_sig - pixel_ref
+    else:
+        RuntimeError(f"Not sure what normalisation value {options['normalisation']} is?")
+    pixel_fit_params = fitting.fit_single_pixel(
+        options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result
+    )
+    fit_param_lst.append(pixel_fit_params)
+
+    # aois
+    for AOI_best_fit_result in AOI_avg_best_fit_results_lst:
+        fit_param_lst.append(AOI_best_fit_result)
+
+    # plot sig, ref data as first column
+    for i, (sig, ref) in enumerate(zip(sig_avgs, ref_avgs)):
+
+        # plot sig
+        axs[i, 0].plot(
+            sweep_list,
+            sig,
+            label="sig",
+            c="blue",
+            ls="dashed",
+            lw=1,
+            marker="o",
+            ms=3.5,
+            mfc="cornflowerblue",
+            mec="mediumblue",
+        )
+        # plot ref
+        axs[i, 0].plot(
+            sweep_list,
+            ref,
+            label="ref",
+            c="green",
+            ls="dashed",
+            lw=1,
+            marker="o",
+            ms=3.5,
+            mfc="limegreen",
+            mec="darkgreen",
+        )
+
+        axs[i, 0].legend()
+        axs[i, 0].grid(True)
+        if not i:
+            axs[i, 0].set_title("ROI avg")
+        elif i == 1:
+            axs[i, 0].set_title("Single Pixel Check", fontdict={"color": COLORS[0]})
+        else:
+            axs[i, 0].set_title("AOI " + str(i - 1), fontdict={"color": COLORS[i - 1]})
+        axs[i, 0].set_ylabel("PL (a.u.)")
+    axs[-1, 0].set_xlabel("MW Frequency (MHz)")
+
+    # plot normalisation as second column
+    for i, (sig, ref) in enumerate(zip(sig_avgs, ref_avgs)):
+        axs[i, 1].plot(
+            sweep_list,
+            1 + sig - ref,
+            label="subtraction",
+            c="firebrick",
+            ls="dashed",
+            lw=1,
+            marker="o",
+            ms=3.5,
+            mfc="lightcoral",
+            mec="maroon",
+        )
+        axs[i, 1].plot(
+            sweep_list,
+            sig / ref,
+            label="division",
+            c="cadetblue",
+            ls="dashed",
+            lw=1,
+            marker="o",
+            ms=3.5,
+            mfc="powderblue",
+            mec="darkslategrey",
+        )
+
+        axs[i, 1].legend()
+        axs[i, 1].grid(True)
+        if not i:
+            axs[i, 1].set_title("ROI avg - Normalisation")
+        elif i == 1:
+            axs[i, 1].set_title(
+                "Single Pixel Check - Normalisation", fontdict={"color": COLORS[0]}
+            )
+        else:
+            axs[i, 1].set_title(
+                "AOI " + str(i - 1) + " - Normalisation", fontdict={"color": COLORS[i - 1]}
+            )
+        axs[i, 1].set_ylabel("PL (a.u.)")
+    axs[-1, 1].set_xlabel("MW Frequency (MHz)")  # this is meant to be less indented
+
+    # plot fits as third column
+    fit_sweep_vector = np.linspace(np.min(sweep_list), np.max(sweep_list), 10000)
+    roi_avg_best_fit_ar = fit_model(roi_avg_fit_result.best_fit_result, fit_sweep_vector)
+
+    for i, (fit_param_ar, sig, ref) in enumerate(zip(fit_param_lst, sig_avgs, ref_avgs)):
+        if options["normalisation"] == "div":
+            sig_norm = sig / ref
+        elif options["normalisation"] == "sub":
+            sig_norm = sig - ref
+
+        best_fit_ar = fit_model(fit_param_ar, fit_sweep_vector)
+
+        # raw data
+        axs[i, 2].plot(
+            sweep_list,
+            sig_norm,
+            label="raw data",
+            ls="",
+            marker="o",
+            ms=3.5,
+            mfc="goldenrod",
+            mec="k",
+        )
+        # best fit
+        axs[i, 2].plot(fit_sweep_vector, best_fit_ar, label="fit", ls="dashed", lw=1, c="indigo")
+        # roi avg fit (as comparison)
+        if i:
+            axs[i, 2].plot(
+                fit_sweep_vector,
+                roi_avg_best_fit_ar,
+                label="ROI avg fit",
+                c="crimson",
+                ls="dashed",
+                lw=1,
+            )
+        if not i:
+            axs[i, 2].set_title("ROI avg - Fit")
+        elif i == 1:
+            axs[i, 2].set_title("Single Pixel Check - Fit", fontdict={"color": COLORS[0]})
+        else:
+            axs[i, 2].set_title("AOI " + str(i - 1) + " - Fit", fontdict={"color": COLORS[i - 1]})
+
+        axs[i, 2].legend()
+        axs[i, 2].grid(True)
+        axs[i, 2].set_ylabel("PL (a.u.)")
+    axs[-1, 2].set_xlabel("MW Frequency (MHz)")  # this is meant to be less indented
+
+    return fig
+
+
+# ============================================================================
+
+
+def plot_param_image(options, fit_model, fit_results, param_name, param_number=0):
     # get plotting options from somewhere...
 
-    image = fit_results[param_name]
+    image = fit_results[param_name + "_" + str(param_number)]
     c_map = "viridis"
     c_range = [np.nanmin(image), np.nanmax(image)]
-    # c_label = fit_model.fn_chain.parameter_unit[parameter_key]
-    c_label = fit_functions.get_param_unit(fit_model, param_name)
+    c_label = fit_models.get_param_unit(fit_model, param_name, param_number)
 
     fig, ax = plot_image(
-        image, param_name, c_map, c_range, c_label, list(options["figure_size"]), None
+        image,
+        param_name + "_" + str(param_number),
+        c_map,
+        c_range,
+        c_label,
+        list(options["figure_size"]),
+        None,
     )
 
-    # plot_image(image_data, title, c_map, c_range, c_label, figure_size, pixel_size):
-    pass
+
+# TODO now write something to plot multiple images together

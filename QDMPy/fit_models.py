@@ -1,9 +1,21 @@
 # -*- coding: utf-8 -*-
 
+"""
+Module docstring
+"""
+
+# ============================================================================
+
+__author__ = "Sam Scholten"
+
+# ============================================================================
+
 import numpy as np
 from numba import njit, jit
-
 from collections import OrderedDict
+
+# ============================================================================
+
 
 # TODO... might want to go through and speed-test njit, jit again :)
 
@@ -39,27 +51,30 @@ class FitModel:
 
     # =================================
 
-    def __call__(self, sweep_vec, param_ar):
-        val = 0
+    def __call__(self, param_ar, sweep_vec):
+
+        out = np.zeros(np.shape(sweep_vec))
         for fn in self.fn_chain:
-            val += fn.eval(sweep_vec, param_ar)
-        return val
+            this_fn_params = param_ar[fn.this_fn_param_indices]
+            out += fn.eval(sweep_vec, *this_fn_params)
+
+        return out
 
     # =================================
 
-    def residuals_scipy(self, sweep_vec, param_ar, pl_val):
-        return self.__call__(sweep_vec, param_ar) - pl_val
+    def residuals_scipy(self, param_ar, sweep_vec, pl_val):
+        return self.__call__(param_ar, sweep_vec) - pl_val
 
     # =================================
 
-    def jacobian_scipy(self, sweep_vec, param_ar, pl_val):
+    def jacobian_scipy(self, param_ar, sweep_vec, pl_val):
 
         for i, fn in enumerate(self.fn_chain):
+            this_fn_params = param_ar[fn.this_fn_param_indices]
             if not i:
-                val = fn.grad_fn(sweep_vec, param_ar)
+                val = fn.grad_fn(sweep_vec, *this_fn_params)
             else:
-                # FIXME needs to be stacked in opposite order?
-                np.hstack((val, fn.grad_fn(sweep_vec, param_ar)))
+                val = np.hstack((val, fn.grad_fn(sweep_vec, *this_fn_params)))
         return val
 
 
@@ -76,13 +91,17 @@ def get_param_defn(fit_model):
 # =================================
 
 
-# get ordered dict of key: param name, val: param unit
+# get ordered dict of key: param name, val: param unit, for all parameters in chain
 def get_param_odict(fit_model):
     param_dict = OrderedDict()
-    for fn in fit_model.fn_chain():
+    for fn in fit_model.fn_chain:
         for i in range(len(fn.param_defn)):
-            param_name = fn.param_defn[i]
-            param_unit = fn.param_units[i]
+            param_name = fn.param_defn[i] + "_0"
+            param_unit = fn.param_units[fn.param_defn[i]]
+            # ensure no overlapping param names
+            while param_name in param_dict.keys():
+                param_name = param_name[:-1] + str(int(param_name[-1]) + 1)
+
             param_dict[param_name] = param_unit
     return param_dict
 
@@ -90,9 +109,9 @@ def get_param_odict(fit_model):
 # =================================
 
 
-def get_param_unit(fit_model, param_name):
+def get_param_unit(fit_model, param_name, param_number):
     param_dict = get_param_odict(fit_model)
-    return param_dict[param_name]
+    return param_dict[param_name + "_" + str(param_number)]
 
 
 # ====================================================================================
@@ -103,27 +122,7 @@ class FitFunc:
 
     # init should probably tell us where the params exist in the chain
     def __init__(self, param_indices):
-        self.our_param_indices = param_indices
-
-    # =================================
-
-    def __call__(self, sweep_vec, param_ar):
-        # tricky bit is: which params apply to this function?
-        our_params = param_ar[self.our_param_indices]
-        # FIXME does splatter work with np array?
-        return self.eval(sweep_vec, *our_params)
-
-    # =================================
-
-    def grad_fn(self, sweep_vec, param_ar):
-        """
-        Returns the value of the fit function's jacobian at sweep_vals for
-        given fit_params.
-        shape: (len(sweep_val), num_fns*len(param_defn))
-        """
-
-        our_params = param_ar[self.our_param_indices]
-        return self.grad_fn(sweep_vec, *param_ar)
+        self.this_fn_param_indices = param_indices
 
     # =================================
 
@@ -476,137 +475,3 @@ AVAILABLE_FNS = {
 
 # ==========================================================================
 # ==========================================================================
-
-
-# FIXME remove the below
-
-# class FitFunc:
-#     """
-#     Parent class for arbitary fit functions
-#     num_fns is the number of (base) functions in this FitFunc
-#     i.e. 8 lorentzians, each with independent params, bounds, guesses
-#     """
-
-#     param_defn = []
-
-#     def __init__(self, num_fns, chain_fitfunc=None):
-#         self.num_fns = num_fns
-#         if chain_fitfunc is None:
-#             self.chain_param_len = 0
-#             self.chain_fitfunc = ChainTerminator()
-#         else:
-#             self.chain_fitfunc = chain_fitfunc
-#             self.chain_params = chain_fitfunc.chain_params
-#             self.chain_params.extend(self.param_defn)
-#             self.chain_param_len = len(chain_fitfunc.get_param_defn())
-
-#     # =================================
-
-#     def __call__(self, sweep_vec, fit_params):
-#         """
-#         Returns the value of the fit function at sweep_val (i.e. freq, tau)
-#         for given fit_options. Vectorised (sweep_vec may be vector or number).
-#         """
-#         chain_params, these_params = np.split(fit_params, [self.chain_param_len])
-#         new_params = these_params.reshape(self.num_fns, len(self.param_defn))
-
-#         outx = np.zeros(np.shape(sweep_vec))
-#         for f_params in new_params:
-#             outx += self.eval(sweep_vec, *f_params)
-
-#         return outx + self.chain_fitfunc(sweep_vec, chain_params)
-
-#     # =================================
-
-#     def jacobian(self, sweep_vec, fit_params):
-#         """
-#         Returns the value of the fit function's jacobian at sweep_vals for
-#         given fit_params.
-#         shape: (len(sweep_val), num_fns*len(param_defn))
-#         """
-
-#         chain_params, params = np.split(fit_params, [self.chain_param_len])
-#         new_params = params.reshape(self.num_fns, len(self.param_defn))
-
-#         try:
-#             ftype = self.fn_type
-#         except AttributeError:
-#             # Just so we can check for chain termination (could be done more neatly)
-#             raise AttributeError("You need to define the type of your function.")
-
-#         for i, f_params in enumerate(new_params):
-#             if not i:
-#                 output = self.grad_fn(sweep_vec, *f_params)
-#             else:
-#                 # stack on next fn's grad to the jacobian
-#                 output = np.hstack((output, self.grad_fn(sweep_vec, *f_params)))
-
-#         # chain terminator here adds on PL jacobian term
-#         # this is the recursive exit case
-#         # stop hstacking onto jac matrix
-#         if self.chain_fitfunc.fn_type == "terminator":
-#             return output
-
-#         # stack on the next fit functions jacobian (recursively)
-#         # NOTE the chain fitfuncs have to be added at the start as that's how its defined
-#         # in fit_model (gen_fit_params),
-#         return np.hstack((self.chain_fitfunc.jacobian(sweep_vec, chain_params), output))
-
-#     # =================================
-
-#     def get_param_list(self):
-#         """
-#         Returns the chained parameter defintions.  Not sure if used and
-#         should be considered for removal or renaming as it is confusinigly similar
-#         to the static member variable param.defn which does not include chained
-#         functions.
-#         """
-#         try:
-#             return self.param_defn + self.chain_fitfunc.get_param_list()
-#         except (AttributeError):
-#             return self.param_defn
-
-#     # =================================
-
-#     @staticmethod
-#     def eval(sweep_vec, *fit_params):
-#         raise NotImplementedError("You MUST override eval, check your spelling.")
-
-#     # =================================
-
-#     @staticmethod
-#     def grad_fn(sweep_vec, *fit_params):
-#         """ if you want to use a grad_fn override this in the subclass """
-#         return None
-
-# ============================================================================
-
-
-# class ChainTerminator(FitFunc):
-#     """
-#     Ends the chain of arbitrary fit functions. This needs to be here as we don't want
-#     circular dependencies.
-#     """
-
-#     param_defn = []
-#     param_units = {}
-#     fn_type = "terminator"
-#     chain_fitfunc = None
-
-#     # override the init for FitFunc
-#     def __init__(self):
-#         self.chain_param_len = 0
-#         self.num_fns = 0
-
-#     def __call__(self, *anything):
-#         """ contributes nothing to the residual """
-#         return 0
-
-#     @staticmethod
-#     def eval(*anything):
-#         raise NotImplementedError("you shouldn't be here")
-
-#     @staticmethod
-#     def grad_fn(sweep_vec, *anything):
-#         """ hstack the PL term onto the jacobian """
-#         return -np.ones(sweep_vec.shape[0], dtype=np.float32).reshape(-1, 1)

@@ -36,8 +36,6 @@ def main(__spec__=None):
         options, raw_data, prelim_sweep_list
     )
     fit_model = fitting.define_fit_model(options)
-    print(fit_model.fn_chain.param_defn)
-    exit()
 
     # roi_fit_result is a FitResultROI object,
     # see fitting file to see a nice explanation of contents

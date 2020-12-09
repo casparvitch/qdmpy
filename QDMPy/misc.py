@@ -6,6 +6,9 @@ Collection of helper functions that don't belong anywhere in particular
 
 """
 
+# ============================================================================
+
+
 __author__ = "Sam Scholten"
 
 # ============================================================================
