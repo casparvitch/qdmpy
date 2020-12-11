@@ -1,6 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-Module docstring
+This module holds tools for loading raw data etc. and reshaping to a usable format
+
+Functions
+---------
+- `QMDMPy.data_loading.load_options`
 """
 
 # ============================================================================
@@ -18,9 +22,8 @@ import simplejson as json
 
 # ============================================================================
 
-
-import misc
-import systems
+import QDMPy.misc as misc
+import QDMPy.systems as systems
 
 # ============================================================================
 
@@ -32,7 +35,20 @@ import systems
 # ============================================================================
 
 
-def load_options(path="options/fit_options.json", check_for_prev_result=False):
+def load_options(path="QDMPy/options/fit_options.json", check_for_prev_result=False):
+    """
+    Blaa
+
+    Optional Arguments
+    -------------------
+    path : string
+        blaa
+
+    Returns
+    -------
+    options : dict
+        Generic options dict holding all the user options.
+    """
     prelim_options = misc.json_to_dict(path)  # requires main to be dir above opts
 
     sys = systems.choose_system(prelim_options["system_name"])
@@ -59,8 +75,27 @@ def load_options(path="options/fit_options.json", check_for_prev_result=False):
     # don't always check for prev. results (so we can use this fn in other contexts)
     if check_for_prev_result:
         check_if_already_processed(options)
+    else:
+        options["reloaded_prev_fit"] = False
+        options["found_prev_result"] = False
 
     return options
+
+
+# ============================================================================
+
+
+def save_options(options):
+
+    keys_to_remove = ["system"]
+    save_options = {}
+
+    for key, val in options.items():
+        if key.endswith("dir") or key == "filepath":
+            val = str(val).replace("\\", "\\\\")
+        if key not in keys_to_remove:
+            save_options[key] = val
+    misc.dict_to_json(save_options, "saved_options.json", path_to_dir=options["output_dir"])
 
 
 # ============================================================================
@@ -103,7 +138,7 @@ def reshape_dataset(options, raw_data, sweep_list):
 # ============================================================================
 
 
-def prev_option_exist(options):
+def prev_options_exist(options):
     prev_opt_path = os.path.normpath(options["output_dir"] / "saved_options.json")
     return os.path.exists(prev_opt_path)
 
@@ -128,7 +163,7 @@ def check_if_already_processed(options):
     options["output_dir"] = output_dir
     options["data_dir"] = output_dir / "data"
 
-    if prev_option_exist(options):
+    if prev_options_exist(options):
         options["found_prev_result"] = True
     else:
         if not os.path.exists(output_dir):
@@ -167,7 +202,7 @@ def check_ROI_compatibility(options, prev_options):
        analysis process.
     """
 
-    ROI_settings = ["ROI", "ROI_size", "ROI_centre", "ROI_rec_size"]
+    ROI_settings = ["ROI", "ROI_halfsize", "ROI_centre", "ROI_rect_size"]
     if options["auto_match_prev_ROI_options"]:
         for key in ROI_settings:
             options[key] = prev_options[key]
@@ -204,17 +239,19 @@ def reshape_raw(options, raw_data, sweep_list):
             raise ValueError
     except ValueError:
         # if the ref is used then there's 2* the number of sweeps
+        # i.e. auto-detect reference existence
         data_pts = 2 * len(sweep_list)
         if options["ignore_ref"]:
-            # use every second element
             image = np.reshape(
-                raw_data[::2],
+                raw_data,
                 [
                     data_pts,
                     int(options["metadata"]["AOIHeight"]),
                     int(options["metadata"]["AOIWidth"]),
                 ],
-            )
+            )[
+                ::2
+            ]  # hmmm disregard ref -> use every second element
         else:
             image = np.reshape(
                 raw_data,
@@ -236,7 +273,7 @@ def reshape_raw(options, raw_data, sweep_list):
 def rebin_image(options, image):
     systems.clean_options(options)
 
-    if options["additional_bins"] in [0, 1]:
+    if not options["additional_bins"]:
         image_rebinned = image
     else:
         if options["additional_bins"] % 2:
@@ -287,7 +324,7 @@ def define_ROI(options, full_size_h, full_size_w):
     if options["ROI"] == "Full":
         ROI = define_area_roi(0, 0, full_size_w - 1, full_size_h - 1)
     elif options["ROI"] == "Square":
-        ROI = define_area_roi_centre(options["ROI_centre"], 2 * options["ROI_size"])
+        ROI = define_area_roi_centre(options["ROI_centre"], 2 * options["ROI_halfsize"])
     elif options["ROI"] == "Rectangle":
         start_x = int(options["ROI_centre"][0] - options["ROI_rect_size"][0] / 2)
         start_y = int(options["ROI_centre"][1] - options["ROI_rect_size"][1] / 2)

@@ -9,19 +9,24 @@ __author__ = "Sam Scholten"
 
 # ============================================================================
 
-import matplotlib
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
+from matplotlib_scalebar.scalebar import ScaleBar
 import numpy as np
 import matplotlib.patches as patches
+import math
+import warnings
 
 # ============================================================================
 
-import systems
-import fit_models
-import fitting
-import data_loading
+import QDMPy.systems as systems
+import QDMPy.fit_models as fit_models
+import QDMPy.fitting as fitting
+import QDMPy.data_loading as data_loading
+import QDMPy.misc as misc
 
+# ============================================================================
 
 """
 NOTES
@@ -29,36 +34,29 @@ NOTES
 - MHz has been hardcoded in some places for the plots here, how to generalise?
 """
 
-COLORS = [
-    "blue",
-    "saddlebrown",
-    "darkslategrey",
-    "magenta",
-    "olive",
-    "cyan",
-    "purple",
-]
+# ===========================================================================
+
+
+def set_mpl_rcparams(options):
+    for optn, val in options["mpl_rcparams"].items():
+        if type(val) == list:
+            val = tuple(val)
+        mpl.rcParams[optn] = val
+
 
 # ===========================================================================
 
 
 def plot_ROI_PL_image(options, PL_image):
-    # mmm plot o.g. image with ROI labelled
+    c_map = options["colormaps"]["PL_images"]
+    c_range = get_colormap_range(options["colormap_range_dicts"]["PL_images"], PL_image)
 
-    # TODO grab all options from plot options etc...
+    fig, ax = plot_image(options, PL_image, "PL - ROI", c_map, c_range, "Counts", None)
 
-    if options["make_plots"] is False:
-        return None
-
-    c_map = "Greys_r"
-    c_range = [np.nanmin(PL_image), np.nanmax(PL_image)]
-
-    fig, ax = plot_image(
-        PL_image, "PL - ROI", c_map, c_range, "Counts", list(options["figure_size"]), None
-    )
-
-    # need to convert back to um?
-    # pixel_size = options["system"].get_raw_pixel_size() * options["total_bin"]
+    if options["show_scalebar"]:
+        pixel_size = options["system"].get_raw_pixel_size() * options["total_bin"]
+        scalebar = ScaleBar(pixel_size)
+        ax.add_artist(scalebar)
 
     if options["annotate_image_regions"]:
         annotate_ROI_image(options, ax)
@@ -78,12 +76,11 @@ def add_colourbar(im, fig, ax, aspect=20, pad_fraction=1, **kwargs):
     pad = axes_size.Fraction(pad_fraction, width)
     cax = divider.append_axes("right", size=width, pad=pad)
     cbar = fig.colorbar(im, cax=cax, **kwargs)
-    tick_locator = matplotlib.ticker.MaxNLocator(nbins=5)
+    tick_locator = mpl.ticker.MaxNLocator(nbins=5)
     cbar.locator = tick_locator
     cbar.update_ticks()
     cbar.ax.get_yaxis().labelpad = 15
     cbar.ax.linewidth = 0.5
-    cbar.ax.tick_params(direction="in", labelsize=12, size=5)
     return cbar
 
 
@@ -176,7 +173,9 @@ def annotate_AOI_PL_image(options, ax):
     # annotate single pixel check
     corner = (options["single_pixel_check"][0], options["single_pixel_check"][1])
     size = 1
-    add_patch_rect(ax, corner[0], corner[1], size, size, label="PX check", edgecolor=COLORS[0])
+    add_patch_rect(
+        ax, corner[0], corner[1], size, size, label="PX check", edgecolor=options["AOI_colors"][0]
+    )
 
     i = 0
     while True:
@@ -201,7 +200,7 @@ def annotate_AOI_PL_image(options, ax):
                 size,
                 size,
                 label="AOI " + str(i),
-                edgecolor=COLORS[i],
+                edgecolor=options["AOI_colors"][i],
             )
         except KeyError:
             break
@@ -212,24 +211,28 @@ def annotate_AOI_PL_image(options, ax):
 
 def plot_AOI_PL_images(options, PL_image_ROI, AOIs):
     # here plot image_ROI cut down, label AOIs on it
-    # similar to roi, just more of em ->> loop through all 'i' AOIs given
     if AOIs == []:
-        return None
-
-    # TODO grab all options from plot options etc...
-
-    if options["make_plots"] is False:
         return None
 
     # need to convert back to um? TODO implement some sort of scalebar
     # pixel_size = options["system"].get_raw_pixel_size() * options["total_bin"]
 
-    c_map = "Greys_r"
-    c_range = [np.nanmin(PL_image_ROI), np.nanmax(PL_image_ROI)]
+    c_map = options["colormaps"]["PL_images"]
+    c_range = get_colormap_range(options["colormap_range_dicts"]["PL_images"], PL_image_ROI)
 
     fig, ax = plot_image(
-        PL_image_ROI, "PL - AOIs", c_map, c_range, "Counts", list(options["figure_size"]), None
+        options,
+        PL_image_ROI,
+        "PL - AOIs",
+        c_map,
+        c_range,
+        "Counts",
+        None,
     )
+    if options["show_scalebar"]:
+        pixel_size = options["system"].get_raw_pixel_size() * options["total_bin"]
+        scalebar = ScaleBar(pixel_size)
+        ax.add_artist(scalebar)
 
     if options["annotate_image_regions"]:
         annotate_AOI_PL_image(options, ax)
@@ -243,11 +246,25 @@ def plot_AOI_PL_images(options, PL_image_ROI, AOIs):
 # ============================================================================
 
 
-def plot_image(image_data, title, c_map, c_range, c_label, figure_size, pixel_size):
-    fig, ax = plt.subplots(figsize=figure_size)
+def plot_image(options, image_data, title, c_map, c_range, c_label, pixel_size):
 
-    cmap = c_map
-    c_range = [np.nanmin(image_data), np.nanmax(image_data)]
+    fig, ax = plt.subplots(constrained_layout=True)
+
+    fig, ax = plot_image_on_ax(
+        fig, ax, options, image_data, title, c_map, c_range, c_label, pixel_size
+    )
+
+    np.savetxt(options["data_dir"] / f"{title}.txt", image_data)
+    if options["save_plots"]:
+        fig.savefig(options["output_dir"] / (f"{title}." + options["save_fig_type"]))
+
+    return fig, ax
+
+
+# ============================================================================
+
+
+def plot_image_on_ax(fig, ax, options, image_data, title, c_map, c_range, c_label, pixel_size):
 
     im = ax.imshow(image_data, cmap=c_map, vmin=c_range[0], vmax=c_range[1])
 
@@ -257,6 +274,12 @@ def plot_image(image_data, title, c_map, c_range, c_label, figure_size, pixel_si
 
     cbar = add_colourbar(im, fig, ax)
     cbar.ax.set_ylabel(c_label, rotation=270)
+
+    if options["show_scalebar"]:
+        pixel_size = options["system"].get_raw_pixel_size() * options["total_bin"]
+        scalebar = ScaleBar(pixel_size)
+        ax.add_artist(scalebar)
+
     return fig, ax
 
 
@@ -264,11 +287,9 @@ def plot_image(image_data, title, c_map, c_range, c_label, figure_size, pixel_si
 
 
 def plot_ROI_avg_fit(options, roi_avg_fit_result):
-    # options is unused here, but passing it in for future-proofing
-
     res = roi_avg_fit_result
 
-    fig = plt.figure(figsize=(list(options["figure_size"])))
+    fig = plt.figure(constrained_layout=False)  # constrained doesn't work well here
     # xstart, ystart, xend, yend [units are fraction of the image frame, from bottom left corner]
     spectrum_frame = fig.add_axes((0.1, 0.3, 0.8, 0.6))
 
@@ -293,7 +314,6 @@ def plot_ROI_avg_fit(options, roi_avg_fit_result):
         label="raw data",
         ls=" ",
         marker="o",
-        ms=3.5,
         mfc="w",
         mec="firebrick",
     )
@@ -312,17 +332,18 @@ def plot_ROI_avg_fit(options, roi_avg_fit_result):
         res_ydata,
         label="residual",
         ls="dashed",
-        lw=1,
         c="black",
         marker="o",
-        ms=3.5,
         mfc="w",
         mec="k",
     )
     residual_frame.legend()
     residual_frame.grid()
-    residual_frame.set_xlabel("MW Frequency (MHz)")
-    residual_frame.set_ylabel("PL (a.u.)")
+    residual_frame.set_xlabel("Sweep parameter")
+
+    roi_avg_fit_result.savejson("ROI_avg_fit.json", options["data_dir"])
+    if options["save_plots"]:
+        fig.savefig(options["output_dir"] / ("ROI_avg_fit." + options["save_fig_type"]))
 
     return fig
 
@@ -331,7 +352,6 @@ def plot_ROI_avg_fit(options, roi_avg_fit_result):
 
 
 def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
-
     # pre-process data to plot
     sig_avgs = []
     ref_avgs = []
@@ -343,10 +363,12 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
         sig_avgs.append(sig_avg)
         ref_avgs.append(ref_avg)
 
-    figsize = list(options["figure_size"])
+    figsize = mpl.rcParams["figure.figsize"].copy()
     figsize[0] *= len(AOIs)
     figsize[1] *= 2
-    fig, axs = plt.subplots(2, len(AOIs), sharex=True, sharey=False, figsize=figsize)
+    fig, axs = plt.subplots(
+        2, len(AOIs), figsize=figsize, sharex=True, sharey=False, constrained_layout=True
+    )
 
     for i, AOI in enumerate(AOIs):
 
@@ -357,9 +379,7 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
             label="sig",
             c="blue",
             ls="dashed",
-            lw=1,
             marker="o",
-            ms=3.5,
             mfc="cornflowerblue",
             mec="mediumblue",
         )
@@ -370,9 +390,7 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
             label="ref",
             c="green",
             ls="dashed",
-            lw=1,
             marker="o",
-            ms=3.5,
             mfc="limegreen",
             mec="darkgreen",
         )
@@ -381,7 +399,7 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
         axs[0, i].grid(True)
         axs[0, i].set_title(
             "AOI " + str(i + 1),
-            fontdict={"color": COLORS[i + 1]},
+            fontdict={"color": options["AOI_colors"][i + 1]},
         )
         axs[0, i].set_ylabel("PL (a.u.)")
 
@@ -406,18 +424,16 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
             sweep_list,
             1 + sig_avgs[i] - ref_avgs[i],
             label="AOI " + str(i + 1),
-            c=COLORS[i + 1],
+            c=options["AOI_colors"][i + 1],
             ls=linestyles[i],
-            lw=1,
             marker="o",
-            ms=3.5,
             mfc="w",
-            mec=COLORS[i + 1],
+            mec=options["AOI_colors"][i + 1],
         )
         axs[1, 0].legend()
         axs[1, 0].grid(True)
         axs[1, 0].set_title("Subtraction Normalisation")
-        axs[1, 0].set_xlabel("MW Frequency (MHz)")
+        axs[1, 0].set_xlabel("Sweep parameter")
         axs[1, 0].set_ylabel("PL (a.u.)")
 
         # plot division norm
@@ -425,21 +441,35 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
             sweep_list,
             sig_avgs[i] / ref_avgs[i],
             label="AOI " + str(i + 1),
-            c=COLORS[i + 1],
+            c=options["AOI_colors"][i + 1],
             ls=linestyles[i],
-            lw=1,
             marker="o",
-            ms=3.5,
             mfc="w",
-            mec=COLORS[i + 1],
+            mec=options["AOI_colors"][i + 1],
         )
 
         axs[1, 1].legend()
         axs[1, 1].grid(True)
         axs[1, 1].set_title("Division Normalisation")
-        axs[1, 1].set_xlabel("MW Frequency (MHz)")
+        axs[1, 1].set_xlabel("Sweep parameter")
         axs[1, 1].set_ylabel("PL (a.u.)")
 
+    # delete axes that we didn't use
+    for i in range(len(AOIs)):
+        if i < 2:  # we used these
+            continue
+        else:  # we didn't use these
+            fig.delaxes(axs[1, i])
+
+    output_dict = {}
+    for i in range(len(AOIs)):
+        output_dict["AOI_sig_avg" + "_" + str(i + 1)] = sig_avgs[i]
+        output_dict["AOI_ref_avg" + "_" + str(i + 1)] = ref_avgs[i]
+
+    misc.dict_to_json(output_dict, "AOI_spectra.json", options["data_dir"])
+
+    if options["save_plots"]:
+        fig.savefig(options["output_dir"] / ("AOI_spectra." + options["save_fig_type"]))
     return fig
 
 
@@ -456,28 +486,26 @@ def plot_AOI_spectra_fit(
     roi_avg_fit_result,
     fit_model,
 ):
-    # from PL version:
-    # best_fit_result = fitting_results.x
-    # fit_sweep_vector = np.linspace(np.min(sweep_vector), np.max(sweep_vector), 10000)
-    # scipy_best_fit = fit_model(best_fit_result, fit_sweep_vector)
-    # init_fit = fit_model(init_guess, fit_sweep_vector)
-
     # rows:
     # ROI avg, single pixel, then each AOI
     # columns:
     # sig & ref, sub & div norm, fit -> compared to ROI {raw, fit, ROI_avg_fit}
 
-    figsize = list(options["figure_size"])
+    figsize = mpl.rcParams["figure.figsize"].copy()
     figsize[0] *= 3  # number of columns
+    # figsize[0] *= 2  # the above was too big
     figsize[1] *= 2 + len(AOIs)  # number of rows
-    fig, axs = plt.subplots(2 + len(AOIs), 3, sharex=True, sharey=False, figsize=figsize)
+
+    fig, axs = plt.subplots(
+        2 + len(AOIs), 3, figsize=figsize, sharex=True, sharey=False, constrained_layout=True
+    )
 
     # pre-process raw data to plot
     sig_avgs = []
     ref_avgs = []
     # add roi data
-    sz_h = options["additional_bins"] * int(options["metadata"]["AOIHeight"])
-    sz_w = options["additional_bins"] * int(options["metadata"]["AOIWidth"])
+    sz_h = int(options["metadata"]["AOIHeight"] / options["additional_bins"])
+    sz_w = int(options["metadata"]["AOIWidth"] / options["additional_bins"])
     ROI = data_loading.define_ROI(options, sz_h, sz_w)
     roi_avg_sig = np.nansum(np.nansum(sig[:, ROI[0], ROI[1]], 2), 1)
     roi_avg_sig = roi_avg_sig / np.max(roi_avg_sig)
@@ -507,7 +535,9 @@ def plot_AOI_spectra_fit(
     fit_param_lst.append(roi_avg_fit_result.best_fit_result)
 
     # single pixel
-    if options["normalisation"] == "div":
+    if not options["used_ref"]:
+        pixel_pl_ar = pixel_sig
+    elif options["normalisation"] == "div":
         pixel_pl_ar = pixel_sig / pixel_ref
     elif options["normalisation"] == "sub":
         pixel_pl_ar = pixel_sig - pixel_ref
@@ -532,9 +562,7 @@ def plot_AOI_spectra_fit(
             label="sig",
             c="blue",
             ls="dashed",
-            lw=1,
             marker="o",
-            ms=3.5,
             mfc="cornflowerblue",
             mec="mediumblue",
         )
@@ -545,9 +573,7 @@ def plot_AOI_spectra_fit(
             label="ref",
             c="green",
             ls="dashed",
-            lw=1,
             marker="o",
-            ms=3.5,
             mfc="limegreen",
             mec="darkgreen",
         )
@@ -557,11 +583,13 @@ def plot_AOI_spectra_fit(
         if not i:
             axs[i, 0].set_title("ROI avg")
         elif i == 1:
-            axs[i, 0].set_title("Single Pixel Check", fontdict={"color": COLORS[0]})
+            axs[i, 0].set_title("Single Pixel Check", fontdict={"color": options["AOI_colors"][0]})
         else:
-            axs[i, 0].set_title("AOI " + str(i - 1), fontdict={"color": COLORS[i - 1]})
+            axs[i, 0].set_title(
+                "AOI " + str(i - 1) + " avg", fontdict={"color": options["AOI_colors"][i - 1]}
+            )
         axs[i, 0].set_ylabel("PL (a.u.)")
-    axs[-1, 0].set_xlabel("MW Frequency (MHz)")
+    axs[-1, 0].set_xlabel("Sweep parameter")
 
     # plot normalisation as second column
     for i, (sig, ref) in enumerate(zip(sig_avgs, ref_avgs)):
@@ -571,9 +599,7 @@ def plot_AOI_spectra_fit(
             label="subtraction",
             c="firebrick",
             ls="dashed",
-            lw=1,
             marker="o",
-            ms=3.5,
             mfc="lightcoral",
             mec="maroon",
         )
@@ -583,9 +609,7 @@ def plot_AOI_spectra_fit(
             label="division",
             c="cadetblue",
             ls="dashed",
-            lw=1,
             marker="o",
-            ms=3.5,
             mfc="powderblue",
             mec="darkslategrey",
         )
@@ -596,21 +620,26 @@ def plot_AOI_spectra_fit(
             axs[i, 1].set_title("ROI avg - Normalisation")
         elif i == 1:
             axs[i, 1].set_title(
-                "Single Pixel Check - Normalisation", fontdict={"color": COLORS[0]}
+                "Single Pixel Check - Normalisation", fontdict={"color": options["AOI_colors"][0]}
             )
         else:
             axs[i, 1].set_title(
-                "AOI " + str(i - 1) + " - Normalisation", fontdict={"color": COLORS[i - 1]}
+                "AOI " + str(i - 1) + " avg - Normalisation",
+                fontdict={"color": options["AOI_colors"][i - 1]},
             )
         axs[i, 1].set_ylabel("PL (a.u.)")
-    axs[-1, 1].set_xlabel("MW Frequency (MHz)")  # this is meant to be less indented
+    axs[-1, 1].set_xlabel(
+        "Sweep parameter"
+    )  # this is meant to be less indentednormalisationnormalisation
 
     # plot fits as third column
     fit_sweep_vector = np.linspace(np.min(sweep_list), np.max(sweep_list), 10000)
     roi_avg_best_fit_ar = fit_model(roi_avg_fit_result.best_fit_result, fit_sweep_vector)
 
     for i, (fit_param_ar, sig, ref) in enumerate(zip(fit_param_lst, sig_avgs, ref_avgs)):
-        if options["normalisation"] == "div":
+        if not options["used_ref"]:
+            sig_norm = sig
+        elif options["normalisation"] == "div":
             sig_norm = sig / ref
         elif options["normalisation"] == "sub":
             sig_norm = sig - ref
@@ -629,28 +658,37 @@ def plot_AOI_spectra_fit(
             mec="k",
         )
         # best fit
-        axs[i, 2].plot(fit_sweep_vector, best_fit_ar, label="fit", ls="dashed", lw=1, c="indigo")
+        axs[i, 2].plot(fit_sweep_vector, best_fit_ar, label="fit", ls="dashed", c="crimson")
         # roi avg fit (as comparison)
         if i:
             axs[i, 2].plot(
                 fit_sweep_vector,
                 roi_avg_best_fit_ar,
                 label="ROI avg fit",
-                c="crimson",
+                c="indigo",
                 ls="dashed",
-                lw=1,
             )
         if not i:
             axs[i, 2].set_title("ROI avg - Fit")
         elif i == 1:
-            axs[i, 2].set_title("Single Pixel Check - Fit", fontdict={"color": COLORS[0]})
+            axs[i, 2].set_title(
+                "Single Pixel Check - Fit", fontdict={"color": options["AOI_colors"][0]}
+            )
         else:
-            axs[i, 2].set_title("AOI " + str(i - 1) + " - Fit", fontdict={"color": COLORS[i - 1]})
+            axs[i, 2].set_title(
+                "AOI " + str(i - 1) + " avg - Fit",
+                fontdict={"color": options["AOI_colors"][i - 1]},
+            )
 
         axs[i, 2].legend()
         axs[i, 2].grid(True)
         axs[i, 2].set_ylabel("PL (a.u.)")
-    axs[-1, 2].set_xlabel("MW Frequency (MHz)")  # this is meant to be less indented
+    axs[-1, 2].set_xlabel("Sweep parameter")  # this is meant to be less indented
+
+    # currently not saving any of the data from this plot (not sure what the user would ever want)
+
+    if options["save_plots"]:
+        fig.savefig(options["output_dir"] / ("AOI_spectra_fits." + options["save_fig_type"]))
 
     return fig
 
@@ -658,23 +696,199 @@ def plot_AOI_spectra_fit(
 # ============================================================================
 
 
-def plot_param_image(options, fit_model, fit_results, param_name, param_number=0):
+def plot_param_image(options, fit_model, pixel_fit_params, param_name, param_number=0):
     # get plotting options from somewhere...
 
-    image = fit_results[param_name + "_" + str(param_number)]
-    c_map = "viridis"
-    c_range = [np.nanmin(image), np.nanmax(image)]
+    image = pixel_fit_params[param_name + "_" + str(param_number)]
+    c_map = options["colormaps"]["param_images"]
+    c_range = get_colormap_range(options["colormap_range_dicts"]["param_images"], image)
     c_label = fit_models.get_param_unit(fit_model, param_name, param_number)
 
     fig, ax = plot_image(
+        options,
         image,
         param_name + "_" + str(param_number),
         c_map,
         c_range,
         c_label,
-        list(options["figure_size"]),
         None,
     )
+    return fig
 
 
-# TODO now write something to plot multiple images together
+# ============================================================================
+
+
+def plot_param_images(options, fit_model, pixel_fit_params, param_name):
+
+    # plot 2 columns wide, as many rows as required
+
+    # first get keys we need
+    our_keys = []
+    for key in pixel_fit_params:
+        if key.startswith(param_name):
+            our_keys.append(key)
+
+    # this is an inner function so no one uses it elsewhere/protect namespace
+    def param_sorter(param):
+        param_name, num = param.split("_")
+        return int(num)
+
+    # sort based on number (just in case)
+    our_keys.sort(key=param_sorter)
+
+    if len(our_keys) == 1:
+        # just one image, so plot normally
+        fig = plot_param_image(options, fit_model, pixel_fit_params, param_name, 0)
+    else:
+        num_columns = 2
+        num_rows = math.ceil(len(our_keys) / 2)
+
+        figsize = mpl.rcParams["figure.figsize"].copy()
+        figsize[0] *= num_columns
+        figsize[1] *= num_rows
+
+        fig, axs = plt.subplots(
+            num_rows,
+            num_columns,
+            figsize=figsize,
+            sharex=False,
+            sharey=False,
+            constrained_layout=True,
+        )
+
+        c_map = options["colormaps"]["param_images"]
+
+        # plot 8-lorentzian peaks in a more helpful way (pairs: 0-7, 1-6, etc.)
+        if len(our_keys) == 8 and "lorentzian" in options["fit_functions"]:
+            param_axis_iterator = zip([0, 7, 1, 6, 2, 5, 3, 4], axs.flatten())
+        # otherwise plot in a more conventional order
+        else:
+            param_axis_iterator = enumerate(axs.flatten())
+
+        for param_number, ax in param_axis_iterator:
+
+            param_key = param_name + "_" + str(param_number)
+
+            try:
+                image_data = pixel_fit_params[param_key]
+            except KeyError:
+                # we have one too many axes (i.e. 7 params, 8 subplots), delete the axs
+                fig.delaxes(ax)  # UNTESTED
+
+            c_range = get_colormap_range(
+                options["colormap_range_dicts"]["param_images"], image_data
+            )
+            c_label = fit_models.get_param_unit(fit_model, param_name, param_number)
+
+            plot_image_on_ax(
+                fig,
+                ax,
+                options,
+                image_data,
+                param_key,
+                c_map,
+                c_range,
+                c_label,
+                None,
+            )
+
+            np.savetxt(options["data_dir"] / f"{param_key}.txt", image_data)
+
+        if options["save_plots"]:
+            fig.savefig(options["output_dir"] / (param_name + "." + options["save_fig_type"]))
+
+
+# ============================================================================
+
+
+def get_colormap_range(c_range_dict, image):
+
+    # mostly these are just checking that the input values are valid
+    # pretty badly written, I apoligise (there's a reason it's hidden all the way down here...)
+
+    warning_messages = {
+        "deviation_from_mean": "Invalid c_range_dict['vals'] encountered. For c_range type 'deviation_from_mean', c_range_dict['vals'] must be a float, between 0 and 1. Changing to 'min_max_symmetric_about_mean' c_range.",
+        "strict_range": "Invalid c_range_dict['vals'] encountered. For c_range type 'strict_range', c_range_dict['vals'] must be a float, between 0 and 1. Changing to 'min_max_symmetric_about_mean' c_range.",
+        "percentile": "Invalid c_range_dict['vals'] encountered. For c_range type 'percentile', c_range_dict['vals'] must be a list of length 2, with elements (preferably ints) between 0 and 100. Changing to 'min_max_symmetric_about_mean' c_range.",
+        "percentile_symmetric_about_zero": "Invalid c_range_dict['vals'] encountered. For c_range type 'percentile', c_range_dict['vals'] must be a list of length 2, with elements (preferably ints) between 0 and 100. Changing to 'min_max_symmetric_about_mean' c_range.",
+    }
+
+    c_range_type = c_range_dict["type"]
+    if "values" in c_range_dict:
+        c_range_values = c_range_dict["values"]
+    else:
+        c_range_values = None
+
+    range_calculator_dict = {
+        "min_max": min_max,
+        "deviation_from_mean": deviation_from_mean,
+        "min_max_symmetric_about_mean": min_max_sym_mean,
+        "min_max_symmetric_about_zero": min_max_sym_zero,
+        "percentile": percentile,
+        "percentile_symmetric_about_zero": percentile_sym_zero,
+        "strict_range": strict_range,
+    }
+
+    if c_range_type in ["deviation_from_mean", "strict_range"]:
+        if type(c_range_values) != list or len(c_range_values) != 2:
+            warnings.warn(warning_messages[c_range_type])
+            return min_max_sym_mean(image, c_range_values)
+
+    elif c_range_type.startswith("percentile"):
+        if (
+            type(c_range_values) != list
+            or len(c_range_values) != 2  # noqa: W503
+            or c_range_values[0] < 0  # noqa: W503
+            or c_range_values[0] >= 100  # noqa: W503
+            or c_range_values[1] < 0  # noqa: W503
+            or c_range_values[1] >= 100  # noqa: W503
+        ):
+            warnings.warn(warning_messages[c_range_type])
+            return min_max_sym_mean(image, c_range_values)
+
+    else:
+        return range_calculator_dict[c_range_type](image, c_range_values)
+
+
+# ============================
+
+
+def min_max(image, c_range_values):
+    return [np.nanmin(image), np.nanmax(image)]
+
+
+def strict_range(image, c_range_values):
+    return list(c_range_values)
+
+
+def min_max_sym_mean(image, c_range_values):
+    minimum = np.nanmin(image)
+    maximum = np.nanmax(image)
+    mean = np.mean(image)
+    max_distance_from_mean = np.max([abs(maximum - mean), abs(minimum - mean)])
+    return [mean - max_distance_from_mean, mean + max_distance_from_mean]
+
+
+def min_max_sym_zero(image, c_range_values):
+    min_abs = np.abs(np.nanmin(image))
+    max_abs = np.abs(np.nanmax(image))
+    larger = np.nanmax([min_abs, max_abs])
+    return [-larger, larger]
+
+
+def deviation_from_mean(image, c_range_values):
+    return ([(1 - c_range_values) * np.mean(image), (1 + c_range_values) * np.mean(image)],)
+
+
+def percentile(image, c_range_values):
+    return [np.nanpercentile(image, c_range_values)]
+
+
+def percentile_sym_zero(image, c_range_values):
+    plow, phigh = np.nanpercentile(image, c_range_values)  # e.g. [10, 90]
+    val = max(abs(plow), abs(phigh))
+    return [-val, val]
+
+
+# ============================================================================

@@ -12,11 +12,14 @@ __author__ = "Sam Scholten"
 
 import numpy as np
 import os
-import misc
 import re
 import pathlib
 import warnings
 from multiprocessing import cpu_count
+
+# ============================================================================
+
+import QDMPy.misc as misc
 
 # ============================================================================
 
@@ -163,10 +166,15 @@ class OptionsError(Exception):
 
         self.custom_msg = custom_msg
 
-        self.default_msg = (
-            f"Option {option_given} not a valid option for {option_name}"
-            + f", pick from: {system.option_choices(option_name)}"
-        )
+        choices = system.option_choices(option_name)
+
+        if choices is not None:
+            self.default_msg = (
+                f"Option {option_given} not a valid option for {option_name}"
+                + f", pick from: {choices}"
+            )
+        else:
+            self.default_msg = f"Option {option_given} not a valid option for {option_name}."
 
         super().__init__(custom_msg)
 
@@ -183,14 +191,9 @@ class OptionsError(Exception):
 
 def check_option(key, val, system):
     if key not in system.available_options():
-        warnings.warn(f"Option {key} was not recognised by the {system.name} system, skipping.")
+        warnings.warn(f"Option {key} was not recognised by the {system.name} system.")
     elif system.option_choices(key) is not None and val not in system.option_choices(key):
         OptionsError(key, val, system)
-
-    # TODO add here checks for specifics of each key etc. like list length etc.
-    # can build a very comprehensive check on options! {use option_characs}
-
-    # e.g. check fit_funcs are appropriate form
 
 
 # ===============================
@@ -214,3 +217,20 @@ def clean_options(options):
 
 
 systems_dict = {"Zyla": Zyla}
+
+
+# ============================================================================
+# colormap range option handling
+# ============================================================================
+
+
+def valid_c_range(typ, vals):
+    if typ == "min_max":
+        return
+    elif typ == "deviation_from_mean":
+        if type(vals) != float or not vals > 0 or not vals < 1:
+            warnings.warn(
+                "Invalid c_range_dict['vals'] encountered. "
+                + "For c_range type 'deviation_from_mean', c_range_dict['vals'] must be"
+                + " a float, between 0 and 1. Changing to 'min_max_symmetric_about_mean' c_range."
+            )

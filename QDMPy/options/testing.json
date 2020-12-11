@@ -1,0 +1,195 @@
+{
+    //  ========== General Parameters ==========
+    
+    // here specify path to raw data. base_dir not required, if not "" it is prepended to filepath
+    "base_dir": "/home/samsc/Desktop/",
+    "filepath": "ODMR - Pulsed with IR_83",
+    
+
+    // if true the reference measurement is ignored
+    "ignore_ref": false,
+
+    // 0, 1 does nothing. Must be multiple of 2.
+    "additional_bins": 8, 
+
+    "old_binning_convention": false,
+
+    "system_name": "Zyla",
+
+    // ====== Region Of Interest (ROI) params ======
+    // For taking a region of interest and ignoring the rest of the data set
+
+    // option: Full, Rectangle, Square, Circle
+    "ROI": "Full", 
+    
+    // half the size of the Square
+    "ROI_halfsize": 1, 
+    
+    // centre pixel
+    "ROI_centre": [120, 120],
+
+    // Used for the rectangle size only 
+    "ROI_rect_size": [240,240],
+
+    // Removes data points from the start and end of each pixel data
+    "remove_start_sweep": 1,
+    "remove_end_sweep": 0,
+
+    // Style of the reference normalisation used. div = division and sub = subtraction
+    // Note: subtraction adds '1', i.e. 1 + sig - ref
+    "normalisation": "div",
+
+    // ========== Regions for spectra comparision, before full pixel fitting ==========
+    
+    // single pixel location that is used
+    "single_pixel_check": [25, 25],
+    
+    // centre pixel of area 1
+    "area_1_centre": [60, 20], 
+    
+    // halfsize of the square region of area 1
+    "area_1_halfsize": 2, 
+    
+    "area_2_centre": [50, 40],
+    "area_2_halfsize": 2,
+
+
+    "area_3_centre": [20, 60],
+    "area_3_halfsize": 2,
+
+    // ========== Fitting Parameters ==========
+    
+    // overrides automatic reloading of previous fit results
+    "force_fit": false, 
+
+    // if loading previous fit, ensure ROIs are the same
+    "auto_match_prev_ROI_options": true,
+    
+    // fits all of the required pixels, false ignores the pixel fitting
+    "fit_pixels": true, 
+    
+    // fit pixels in a random order to give more accurate ETA
+    "scramble_pixels": true, 
+    
+    // if 'false', uses init guesses below on each pixel, 'true' uses best fit to ROI average
+    "use_ROI_avg_fit_res_for_all_pixels": true,
+    
+    // number of threads to *not* use for fitting
+    "sub_threads": 2, 
+
+    "fit_functions":  {"linear": 1, "lorentzian": 8},
+
+
+    // All parameters can either have a range or a bound.
+    // The code automatically detects this by the name of the dictionary key.x
+    // range results in bounds of min = guess - range, max = guess + range
+    // bounds directly gives these values
+
+    // Position guess for lorentzian (in MHz)
+    "pos_guess": [2618, 2703, 2800, 2874, 2958, 3020, 3092, 3143],
+    "pos_range": 25,
+
+    // Amplitude of the peak
+    "amp_guess": -0.0015,
+    "amp_bounds": [-0.0100, -0.0003],
+
+    // Full width half maximum of the peaks
+    "fwhm_guess": 9,
+    "fwhm_bounds": [5, 20],
+
+    // linear function (background)
+    "c_guess": 1,
+    "c_bounds": [0.9995,1.0005],
+
+    "m_guess": 0,
+    "m_bounds": [-1e-6, 1e-6],
+
+    // Other fit parameters (hyperfine functions)
+    "amp_1_hyp_guess": -0.015,
+    "amp_1_hyp_bounds": [-0.1, -0.001],
+    "amp_2_hyp_guess": -0.012,
+    "amp_2_hyp_bounds": [-0.1, -0.001],
+    "amp_3_hyp_guess": -0.015,
+    "amp_3_hyp_bounds": [-0.1, -0.001],
+
+    "fwhm_1_hyp_guess": 2,
+    "fwhm_1_hyp_bounds": [1.5, 40],
+    "fwhm_2_hyp_guess": 2,
+    "fwhm_2_hyp_bounds": [1.5, 40],
+    "fwhm_3_hyp_guess": 2,
+    "fwhm_3_hyp_bounds": [1.5, 40],
+
+
+
+    // ========== scipy least means square options ===========
+    // Method for scipy least means square,
+    // lm (fast but doesn't use bounds),
+    // trf (uses bounds and the most reliable fit method but can be very slow)
+    // dogbox (uses bounds and is faster than trf)
+    "fit_method": "trf",
+    // display progress bar during fitting
+    "show_progressbar": true, 
+    // uses an analytically determined Jacobian, This should be faster but hasn't been implemented 
+    // for every function
+    // - note it gives different fit results (should be more accurate than a finite-diff method)
+    "use_analytic_jac": true,
+    // verbose fitting 0 = silent, 1 = term report, 2 display iterations
+    "verbose_fitting": 0,
+    // The scheme ‘3-point’ is more accurate, but requires twice as many operations 
+    // as ‘2-point’ (default).
+    // The scheme ‘cs’ uses complex steps, and while potentially the most accurate, it is
+    // applicable only when fun correctly handles complex inputs and can be analytically
+    // continued to the complex plane.
+     // {‘2-point’, ‘3-point’, ‘cs’}
+    "fit_jac_acc": "2-point",
+    // Tolerance settings, the exact condition depends on method used - see scipy documentation
+    // Tolerance for termination by the change of the independent variables.
+    "fit_gtol": 1e-12, 
+    // Tolerance for termination by the norm of the gradient.
+    "fit_xtol": 1e-12, 
+    // Tolerance for termination by the change of the cost function.
+    "fit_ftol": 1e-12, 
+    // Rescales the x by the units of the Jacobian (doesn't seem to make a difference)
+    "scale_x": true,
+    // Determines the loss function. This in non trivial check the scipy documnetation
+     // {linear, soft_l1, huber, cauchy, arctan}
+    "loss_fn": "linear",
+
+    // ========== Plotting Parameters ==========
+    "save_plots": true,
+    "show_scalebar": true,
+    "annotate_image_regions": true,
+    "save_fig_type": "png",
+    "colormaps": {
+        "param_images": "viridis",
+        "PL_images": "Greys_r"
+    },
+    "colormap_range_dicts": {
+        "param_images": {
+            "type": "min_max_symmetric_about_mean"
+        },
+        "PL_images": {
+            "type": "min_max"
+        }
+    },
+    "mpl_rcparams":
+        {
+            "figure.figsize": [6.4, 4.8],
+            "figure.dpi": 80,
+            "lines.linewidth": 0.8,
+            "lines.markersize" : 3,
+            "xtick.labelsize": 10,
+            "xtick.major.size": 4,
+            "xtick.direction": "in",
+            "ytick.labelsize" : 10,
+            "ytick.direction": "in",
+            "ytick.major.size": 4,
+            "legend.fontsize": "small",
+            "legend.loc": "lower left",
+            "scalebar.location": "lower right",
+            "scalebar.height_fraction": 0.015,
+            "scalebar.box_alpha": 0.5,
+            "scalebar.scale_loc": "top",
+            "scalebar.sep": 1
+        }
+}

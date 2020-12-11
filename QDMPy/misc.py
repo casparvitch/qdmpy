@@ -71,11 +71,6 @@ def json_to_dict(filename, hook="od"):
 def dict_to_json(dictionary, filename, path_to_dir=None):
     """ save the dict as a json in a pretty way """
     # ensure json pattern
-    dictionary["output_dir"] = str(dictionary["output_dir"]).replace("\\", "\\\\")
-    dictionary["data_dir"] = str(dictionary["data_dir"]).replace("\\", "\\\\")
-    dictionary["filepath"] = str(dictionary["filepath"]).replace("\\", "\\\\")
-    if "base_dir" in dictionary:
-        dictionary["base_dir"] = str(dictionary["base_dir"]).replace("\\", "\\\\")
     root, pattern = os.path.splitext(filename)
     if pattern != ".json":
         warnings.warn("reformatted param save filename to '.json' pattern")

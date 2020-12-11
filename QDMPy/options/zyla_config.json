@@ -2,31 +2,29 @@
 	// ===========================================================================================
 	// ============================ General Parameters ===========================================
 	// ===========================================================================================
-	"base_dir": {},
-    "filepath": {},
+	"base_dir": {}, // base_dir not required, if not "" it is prepended to filepath
+    "filepath": {}, // specify path to raw data. 
     // 500e-6 / 2048. In metres
     "raw_pixel_size": {
         "option_default": 0.000000244140625
     },
-    
-    // binning should be fixed now, num_bins = 1 will do nothing (and 0 as well)
-    
+        
     // if true the reference measurement is ignored
     "ignore_ref": {
-    	"option_default": true,
+    	"option_default": false,
     	"option_choices":
     		[
     			true,
     			false
     		]
     },
+
+    // additional binning on dataset (local averaging), 0 does nothing. Must be multiple of 2
     "additional_bins": {
-    	"option_default": 0,
-    	"option_charac": {
-    		"multiple_of": 2, 
-    		"additional_choices": [0, 1]
-    	}
+    	"option_default": 0
     },
+
+    // legacy option
     "old_binning_convention": {
     	"option_default": false,
     	"option_choices":
@@ -36,6 +34,7 @@
     		]
     },
 
+    // Required - name of system used (see systems.py)
     "system_name": {
     	"option_default": null,
     	"option_choices":
@@ -56,46 +55,29 @@
     			"Square"
     		]
     },
-    // half the size of the Square
-    "ROI_size": {
-    	"option_default": 1,
-    	"option_characs": {
-    		"type": "Int"
-    	}
+    // half the size of the square (used for square only)
+    "ROI_halfsize": {
+    	"option_default": 1
     },
-    // centre pixel
+    // centre pixel (for rectangle or square)
     "ROI_centre": {
-    	"option_default": [3, 3],
-    	"option_characs": {
-    		"type": "List",
-    		"len": 2
-    	}
+    	"option_default": [3, 3]
     },
     // Used for the rectangle size only
     "ROI_rect_size": {
-    	"option_default": [1, 1],
-    	"option_characs": {
-    		"type": "List",
-    		"len": 2
-    	}
+    	"option_default": [1, 1]
     },
 
     // Removes data points from the start and end of each pixel data
     "remove_start_sweep": {
-    	"option_default": 1,
-    	"option_characs": {
-    		"type": "Int"
-    	}
+    	"option_default": 1
     },
     "remove_end_sweep": {
-    	"option_default": 0,
-    	"option_characs": {
-    		"type": "Int"
-    	}
+    	"option_default": 0
     },
 
     // Style of the reference normalisation used. div = division and sub = subtraction
-
+    // Note: subtraction adds '1', i.e. 1 + sig - ref
     "normalisation": {
     	"option_default": "div",
     	"option_choices":
@@ -108,27 +90,17 @@
     // ========== Regions for spectra comparision, before full pixel fitting ==========
     // single pixel location that is used
     "single_pixel_check": {
-    	"option_default": [1, 1],
-    	"option_characs": {
-    		"type": "List",
-    		"len": 2
-    	}
+    	"option_default": [1, 1]
     },
     // centre pixel of area 1
     "area_1_centre": {
-    	"option_default": [1, 1],
-    	"option_characs": {
-    		"type": "List",
-    		"len": 2
-    	}
+    	"option_default": [1, 1]
     },
     // halfsize of the square region of area 1
     "area_1_halfsize": {
-    	"option_default": 1,
-    	"option_characs": {
-    		"type": "Int"
-    	}
+    	"option_default": 1
     },
+    // etc. for as many as you like: need to be copied/extended below if you want more AOIs
     "area_2_centre": {
     },
     "area_2_halfsize": {
@@ -145,8 +117,6 @@
     },
     "area_5_halfsize": {
     },
-    // NOTE these need to be copied/extended below if you want more AOIs
-
 
     // ========== Fitting Parameters ==========
     // overrides automatic reloading of previous fit results
@@ -166,6 +136,15 @@
     			true,
     			false
     		]
+    },
+    // if loading previous fit, ensure ROIs are the same
+    "auto_match_prev_ROI_options": {
+        "option_default": false,
+        "option_choices":
+            [
+                true,
+                false
+            ]
     },
     // fit pixels in a random order to give more accurate ETA
     "scramble_pixels": {
@@ -187,162 +166,95 @@
     },
     // number of threads to *not* use for fitting
     "sub_threads": {
-    	"option_default": 0,
-    	"option_characs": {
-    		"type": "Int"
-    	}
+    	"option_default": 0
     },
-    "fit_functions": {}, // user must set this one
+     // user must set this one: the functions that make up your fit model
+    "fit_functions": {},
 
-    // All parameters can either have a range or a bound.
+    // All parameters below can either have a range or a bound.
     // The code automatically detects this by the name of the dictionary key.x
     // range results in bounds of min = guess - range, max = guess + range
     // bounds directly gives these values
 
-    // Position guess for lorentzian (in MHz)
+    // Position guess for lorentzian (or other) (in MHz)
     "pos_guess": {
-    	"option_default": null,
-    	"option_characs": {
-    		"type": ["Int", "List"]
-    	}
+    	"option_default": null
     },
     "pos_range": {
-    	"option_default": 25,
-    	"option_characs":
-    		{"type": ["Int", "List"]}
+    	"option_default": 25
     },
 
-    // Amplitude of the peak
+    // Amplitude of peak (trough)
     "amp_guess": {
-    	"option_default": -0.0015,
-    	"option_characs":
-    		{"type": ["Float", "List"]}
+    	"option_default": -0.0015
     },
 
     "amp_bounds": {
-    	"option_default": [-0.0100, -0.0003],
-    	"option_characs": {
-    		"type": "List",
-    		"len": 2
-    	}
+    	"option_default": [-0.0100, -0.0003]
     },
 
     // Full width half maximum of the peaks
     "fwhm_guess": {
-    	"option_default": -0.0015,
-    	"option_characs":
-    		{"type": ["Float", "List"]}
+    	"option_default": -0.0015
     },
 
     "fwhm_bounds": {
-    	"option_default": [5, 20],
-    	"option_characs": {
-    		"type": "List",
-    		"len": 2
-    	}
+    	"option_default": [5, 20]
     },
 
 
     // linear function (background)
     "c_guess": {
-    	"option_default": 1,
-    	"option_characs":
-    		{"type": ["Float", "List"]}
+    	"option_default": 1
     },
     "c_bounds": {
-    	"option_default": [0.9995,1.0005],
-    	"option_characs": {
-    		"type": "List",
-    		"len": 2
-    	}
+    	"option_default": [0.9995,1.0005]
     },
 
     "m_guess": {
-    	"option_default": 0,
-    	"option_characs":
-    		{"type": ["Float", "List"]}
+    	"option_default": 0
     },
     "m_bounds": {
-    	"option_default": [-1e-8, 1e-8],
-    	"option_characs": {
-    		"type": "List",
-    		"len": 2
-    	}
+    	"option_default": [-1e-8, 1e-8]
     },
 
     // Other fit parameters (hyperfine functions)
     "amp_1_hyp_guess": {
-    	"option_default": -0.015,
-    	"option_characs":
-    		{"type": ["Float", "List"]}
+    	"option_default": -0.015
     },
     "amp_1_hyp_bounds": {
-    	"option_default": [-0.1, -0.001],
-    	"option_characs": {
-    		"type": "List",
-    		"len": 2
-    	}
+    	"option_default": [-0.1, -0.001]
     },
     "amp_2_hyp_guess": {
-    	"option_default": -0.015,
-    	"option_characs":
-    		{"type": ["Float", "List"]}
+    	"option_default": -0.015
     },
     "amp_2_hyp_bounds": {
-    	"option_default": [-0.1, -0.001],
-    	"option_characs": {
-    		"type": "List",
-    		"len": 2
-    	}
+    	"option_default": [-0.1, -0.001]
     },
     "amp_3_hyp_guess": {
-    	"option_default": -0.015,
-    	"option_characs":
-    		{"type": ["Float", "List"]}
+    	"option_default": -0.015
     },
     "amp_3_hyp_bounds": {
-    	"option_default": [-0.1, -0.001],
-    	"option_characs": {
-    		"type": "List",
-    		"len": 2
-    	}
+    	"option_default": [-0.1, -0.001]
     },
 
     "fwhm_1_hyp_guess": {
-    	"option_default": 2,
-    	"option_characs":
-    		{"type": ["Float", "List"]}
+    	"option_default": 2
     },
     "fwhm_1_hyp_bounds": {
-    	"option_default": [1.5, 40],
-    	"option_characs": {
-    		"type": "List",
-    		"len": 2
-    	}
+    	"option_default": [1.5, 40]
     },
     "fwhm_2_hyp_guess": {
-    	"option_default": 2,
-    	"option_characs":
-    		{"type": ["Float", "List"]}
+    	"option_default": 2
     },
     "fwhm_2_hyp_bounds": {
-    	"option_default": [1.5, 40],
-    	"option_characs": {
-    		"type": "List",
-    		"len": 2
-    	}
+    	"option_default": [1.5, 40]
     },
     "fwhm_3_hyp_guess": {
-    	"option_default": 2,
-    	"option_characs":
-    		{"type": ["Float", "List"]}
+    	"option_default": 2
     },
     "fwhm_3_hyp_bounds": {
-    	"option_default": [1.5, 40],
-    	"option_characs": {
-    		"type": "List",
-    		"len": 2
-    	}
+    	"option_default": [1.5, 40]
     },
 
 
@@ -443,14 +355,6 @@
 	// ===========================================================================================
     // =============================== Plotting Parameters =======================================
 	// ===========================================================================================
-    "make_plots": {
-    	"option_default": true,
-    	"option_choices":
-    		[
-    			true,
-    			false
-    		]
-    },
     "save_plots": {
     	"option_default": true,
     	"option_choices":
@@ -459,14 +363,15 @@
     			false
     		]
     },
-    "show_plots": {
-    	"option_default": true,
-    	"option_choices":
-    		[
-    			true,
-    			false
-    		]
+    "show_scalebar": {
+        "option_default": true,
+        "option_choices":
+            [
+                true,
+                false
+            ]
     },
+    // for ROI/AOI PL plots only
     "annotate_image_regions": {
     	"option_default": true,
     	"option_choices":
@@ -474,20 +379,6 @@
     			true,
     			false
     		]
-    },
-    // NOTE add these to specific plot options...? Some general plotting option json...??
-    "figure_size": {
-        "option_default": [8, 6],
-        "option_characs": {
-            "type": "List",
-            "len": 2
-        }
-    },
-    "dpi": {
-    	"option_default": 600,
-    	"option_characs": {
-    		"number": true
-    	}
     },
     "save_fig_type":  {
     	"option_default": "png",
@@ -498,21 +389,83 @@
     			"pdf"
     		]
     },
-
+    // choose colormap used for each 'type' of image
+    "colormaps": {
+        "option_default": {
+            "param_images": "viridis",
+            "PL_images": "Greys_r"
+        }
+    },
+    // choose range of values mapped across to the colormap limits, for each 'type' of image
+    "colormap_range_dicts": {
+        "option_default": {
+            "param_images": {
+                "type": "min_max_symmetric_about_mean"
+            },
+            "PL_images": {
+                "type": "min_max"
+            }
+        }
+    },
+    // extra parameters sent to matplotlib to define plotting stylesheet
+    "mpl_rcparams": {
+        "option_default": {
+            "figure.figsize": [6.4, 4.8],
+            "figure.dpi": 80,
+            "lines.linewidth": 0.8,
+            "lines.markersize" : 3,
+            "xtick.labelsize": 10,
+            "xtick.major.size": 4,
+            "xtick.direction": "in",
+            "ytick.labelsize" : 10,
+            "ytick.direction": "in",
+            "ytick.major.size": 4,
+            "legend.fontsize": "small",
+            "legend.loc": "lower left",
+            "scalebar.location": "lower right",
+            "scalebar.height_fraction": 0.015,
+            "scalebar.box_alpha": 0.5,
+            "scalebar.scale_loc": "top",
+            "scalebar.sep": 1
+        }
+    },
+    // colors to identify with each AOI region
+    "AOI_colors": {
+        "option_default": [
+            "blue",
+            "tab:brown",
+            "purple",
+            "darkslategrey",
+            "magenta",
+            "olive",
+            "cyan"
+        ]
+    },
     // ===========================================================================================
     // Things set internally, allow to be anything {maybe place some contraints later}
+
+    // was the options dict (after being read from .json) checked/cleaned?
     "cleaned": {},
+    // pointer to system object
     "system": {},
+    // flag that we used a reference
     "used_ref": {},
+    // metadata dict read in
     "metadata": {},
+    // for multiprocessing: # threads to use
     "threads": {},
+    // did we automatically reload a previous fit result?
     "reloaded_prev_fit": {},
+    // did we find a previous fit result?
     "found_prev_result": {},
-    "fit_param_defn": {},
+    // directory to save results (directly in this dir: images)
     "output_dir": {},
+    // directory within output to save data (output_dir/data_dir)
     "data_dir": {},
+    // for the record, the parameters (and units) used in this fit model
     "fit_param_defn": {},
-    "fit_param_units": {},
+    // total (i.e. net) binning used
     "total_bin": {},
+    // i.e. labview binning
     "original_bin": {}
 }

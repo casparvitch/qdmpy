@@ -12,6 +12,10 @@ tqdm = "*"
 simplejson = "*"
 psutil = "*"
 jupyterlab = "*"
+ipympl = "*"
+matplotlib-scalebar = "*"
+sphinx = "*"
+pdoc3 = "*"
 
 [dev-packages]
 
