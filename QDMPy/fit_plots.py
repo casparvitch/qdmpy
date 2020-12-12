@@ -1,6 +1,33 @@
-# -*- coding: utf-8 -*-
+# - coding: utf-8 -*-
 """
-Module docstring
+This module holds functions for plotting initial processing images and fit results.
+
+Functions
+---------
+ - `QDMPy.fit_plots.set_mpl_rcparams`
+ - `QDMPy.fit_plots.plot_ROI_PL_image`
+ - `QDMPy.fit_plots.add_colorbar`
+ - `QDMPy.fit_plots.add_patch_square_centre`
+ - `QDMPy.fit_plots.add_patch_rect`
+ - `QDMPy.fit_plots.annotate_ROI_image`
+ - `QDMPy.fit_plots.annotate_AOI_image`
+ - `QDMPy.fit_plots.plot_AOI_PL_images`
+ - `QDMPy.fit_plots.plot_image`
+ - `QDMPy.fit_plots.plot_image_on_ax`
+ - `QDMPy.fit_plots.plot_ROI_avg_fit`
+ - `QDMPy.fit_plots.plot_AOI_spectra`
+ - `QDMPy.fit_plots.plot_AOI_spectra_fit`
+ - `QDMPy.fit_plots.plot_param_image`
+ - `QDMPy.fit_plots.plot_param_images`
+ - `QDMPy.fit_plots.get_colormap_range`
+ - `QDMPy.fit_plots.min_max`
+ - `QDMPy.fit_plots.strict_range`
+ - `QDMPy.fit_plots.min_max_sym_mean`
+ - `QDMPy.fit_plots.min_max_sym_zero`
+ - `QDMPy.fit_plots.deviation_from_mean`
+ - `QDMPy.fit_plots.percentile`
+ - `QDMPy.fit_plots.percentile_sym_zero`
+
 """
 
 # ============================================================================
@@ -38,6 +65,7 @@ NOTES
 
 
 def set_mpl_rcparams(options):
+    """Reads matplotlib-relevant parameters in options and used to define matplotlib rcParams"""
     for optn, val in options["mpl_rcparams"].items():
         if type(val) == list:
             val = tuple(val)
@@ -48,6 +76,23 @@ def set_mpl_rcparams(options):
 
 
 def plot_ROI_PL_image(options, PL_image):
+    """
+    Plots full PL image with ROI region annotated.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    PL_image : np array, 2D.
+        Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned but
+        not cut down to ROI.
+
+    Returns
+    -------
+    fig : matplotlib Figure object
+    """
+
     c_map = options["colormaps"]["PL_images"]
     c_range = get_colormap_range(options["colormap_range_dicts"]["PL_images"], PL_image)
 
@@ -70,7 +115,34 @@ def plot_ROI_PL_image(options, PL_image):
 # ============================================================================
 
 
-def add_colourbar(im, fig, ax, aspect=20, pad_fraction=1, **kwargs):
+def add_colorbar(im, fig, ax, aspect=20, pad_fraction=1, **kwargs):
+    """
+    Adds a colorbar to matplotlib axis
+
+    Arguments
+    ---------
+    im : image as returned by ax.imshow
+
+    fig : matplotlib Figure object
+
+    ax : matplotlib Axis object
+
+
+    Optional arguments
+    ------------------
+    aspect : int
+        Reciprocal of aspect ratio passed to new colorbar axis width. Default: 20.
+
+    pad_fraction : int
+        Fraction of new colorbar axis width to pad from image. Default: 1.
+
+    **kwargs : other keyword arguments
+        Passed to fig.colorbar.
+
+    Returns
+    -------
+    cbar : matplotlib colorbar object
+    """
     divider = make_axes_locatable(ax)
     width = axes_size.AxesY(ax, aspect=1.0 / aspect)
     pad = axes_size.Fraction(pad_fraction, width)
@@ -88,7 +160,32 @@ def add_colourbar(im, fig, ax, aspect=20, pad_fraction=1, **kwargs):
 
 
 def add_patch_square_centre(ax, area_c, area_size, label=None, edgecolor="b"):
-    """  add the ROI rectangles"""
+    """
+    Annotates square onto image figure.
+
+    Arguments
+    ---------
+    ax : matplotlib Axis object
+
+    area_c : int
+        Location of centre of area you want to annotate.
+
+    area_size : int
+        Size of area you want to annotate.
+
+
+    Optional arguments
+    ------------------
+    label : str
+        Text to label annotated square with. Color is defined by edgecolor. Default: None.
+
+    edgecolor : str
+        Color of label and edge of annotation. Default: "b".
+
+    Returns
+    -------
+    Nothing.
+    """
     rect_corner = [int(area_c[0] - area_size / 2), int(area_c[1] - area_size / 2)]
     rect = patches.Rectangle(
         (rect_corner[0], rect_corner[1]),
@@ -113,7 +210,36 @@ def add_patch_square_centre(ax, area_c, area_size, label=None, edgecolor="b"):
 
 
 def add_patch_rect(ax, rect_corner_x, rect_corner_y, size_x, size_y, label=None, edgecolor="b"):
-    """  add the ROI rectangle to an ax and label the rectangle if a label has been given """
+    """
+    Same as `QDMPy.fit_plots.add_patch_square_centre` but a rectangular annotation.
+
+    Arguments
+    ---------
+    ax : matplotlib Axis object
+
+    rect_corner_x : int
+        Location of top left corner of area you want to annotate, x component.
+
+    rect_corner_y : int
+        Location of top left corner of area you want to annotate, y component.
+
+    size_x : int
+        Size of area along x (horizontal axis) you want to annotate.
+    size_y : int
+        Size of area along y (vertical) axis you want to annotate.
+
+    Optional arguments
+    ------------------
+    label : str
+        Text to label annotated square with. Color is defined by edgecolor. Default: None.
+
+    edgecolor : str
+        Color of label and edge of annotation. Default: "b".
+
+    Returns
+    -------
+    Nothing.
+    """
     rect = patches.Rectangle(
         (rect_corner_x, rect_corner_y),
         int(size_x),
@@ -136,6 +262,9 @@ def add_patch_rect(ax, rect_corner_x, rect_corner_y, size_x, size_y, label=None,
 
 
 def annotate_ROI_image(options, ax):
+    """
+    Annotates ROI onto a given Axis object. Generally used on a PL image.
+    """
     binning = options["additional_bins"]
     if binning == 0:
         binning = 1
@@ -165,7 +294,10 @@ def annotate_ROI_image(options, ax):
 # ============================================================================
 
 
-def annotate_AOI_PL_image(options, ax):
+def annotate_AOI_image(options, ax):
+    """
+    Annotates AOI onto a given Axis object. Generally used on PL image.
+    """
     binning = options["additional_bins"]
     if binning == 0:
         binning = 1
@@ -210,7 +342,29 @@ def annotate_AOI_PL_image(options, ax):
 
 
 def plot_AOI_PL_images(options, PL_image_ROI, AOIs):
-    # here plot image_ROI cut down, label AOIs on it
+    """
+    Plots PL image cut down to ROI, with annotated AOI regions.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    PL_image_ROI : np array, 2D.
+        Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
+        cut down to ROI.
+
+    AOIs : list
+        List of AOI regions. Much like ROI object, these are a length-2 list of np meshgrids
+        that can be used to directly index into image to provide a view into just the AOI
+        part of the image. E.g. sig_AOI = sig[:, AOI[0], AOI[1]]. Returns a list as in
+        general we have more than one area of interest.
+        I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]
+
+    Returns
+    -------
+    fig : matplotlib Figure object
+    """
     if AOIs == []:
         return None
 
@@ -235,7 +389,7 @@ def plot_AOI_PL_images(options, PL_image_ROI, AOIs):
         ax.add_artist(scalebar)
 
     if options["annotate_image_regions"]:
-        annotate_AOI_PL_image(options, ax)
+        annotate_AOI_image(options, ax)
 
     # TODO implement elliptical/circular mask feature
     # --> make object that can be passed around, saved/pickled after being tested etc.
@@ -247,6 +401,38 @@ def plot_AOI_PL_images(options, PL_image_ROI, AOIs):
 
 
 def plot_image(options, image_data, title, c_map, c_range, c_label, pixel_size):
+    """
+    Plots an image given by image_data. Saves image_data as txt file as well as the figure.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    image_data : np array, 3D
+        Data that is plot.
+
+    title : str
+        Title of figure, as well as name for save files
+
+    c_map : str
+        Colormap object used to map image_data values to a color.
+
+    c_range : str
+        Range of values in image_data to map to colors
+
+    c_label : str
+        Label for colormap axis
+
+    pixel_size : str
+        Size of each pixel in metres, used to define a scalebar.
+
+    Returns
+    -------
+    fig : matplotlib Figure object
+
+    ax : matplotlib Axis object
+    """
 
     fig, ax = plt.subplots(constrained_layout=True)
 
@@ -265,6 +451,44 @@ def plot_image(options, image_data, title, c_map, c_range, c_label, pixel_size):
 
 
 def plot_image_on_ax(fig, ax, options, image_data, title, c_map, c_range, c_label, pixel_size):
+    """
+    Plots an image given by image_data onto given figure and ax.
+
+    Does not save any data.
+
+    Arguments
+    ---------
+    fig : matplotlib Figure object
+
+    ax : matplotlib Axis object
+
+    options : dict
+        Generic options dict holding all the user options.
+
+    image_data : np array, 3D
+        Data that is plot.
+
+    title : str
+        Title of figure, as well as name for save files
+
+    c_map : str
+        Colormap object used to map image_data values to a color.
+
+    c_range : str
+        Range of values in image_data to map to colors
+
+    c_label : str
+        Label for colormap axis
+
+    pixel_size : str
+        Size of each pixel in metres, used to define a scalebar.
+
+    Returns
+    -------
+    fig : matplotlib Figure object
+
+    ax : matplotlib Axis object
+    """
 
     im = ax.imshow(image_data, cmap=c_map, vmin=c_range[0], vmax=c_range[1])
 
@@ -272,7 +496,7 @@ def plot_image_on_ax(fig, ax, options, image_data, title, c_map, c_range, c_labe
     ax.get_xaxis().set_ticks([])
     ax.get_yaxis().set_ticks([])
 
-    cbar = add_colourbar(im, fig, ax)
+    cbar = add_colorbar(im, fig, ax)
     cbar.ax.set_ylabel(c_label, rotation=270)
 
     if options["show_scalebar"]:
@@ -287,6 +511,21 @@ def plot_image_on_ax(fig, ax, options, image_data, title, c_map, c_range, c_labe
 
 
 def plot_ROI_avg_fit(options, roi_avg_fit_result):
+    """
+    Plots fit of spectrum averaged across ROI, as well as corresponding residual values.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    roi_avg_fit_result : `QDMPy.fitting.FitResultROIAvg`
+        `QDMPy.fitting.FitResultROIAvg` object, to pull fit_options from.
+
+    Returns
+    -------
+    fig : matplotlib Figure object
+    """
     res = roi_avg_fit_result
 
     fig = plt.figure(constrained_layout=False)  # constrained doesn't work well here
@@ -352,6 +591,38 @@ def plot_ROI_avg_fit(options, roi_avg_fit_result):
 
 
 def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
+    """
+    Plots spectra from each AOI, as well as subtraction and division norms.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    AOIs : list
+        List of AOI regions. Much like ROI object, these are a length-2 list of np meshgrids
+        that can be used to directly index into image to provide a view into just the AOI
+        part of the image. E.g. sig_AOI = sig[:, AOI[0], AOI[1]]. Returns a list as in
+        general we have more than one area of interest.
+        I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]
+
+    sig : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+        Cut down to ROI.
+        Format: [sweep_vals, x, y]
+
+    ref : np array, 3D
+        Reference component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+        Cut down to ROI.
+        Format: [sweep_vals, x, y]
+    sweep_list : list
+        List of sweep parameter values (with removed unwanted sweeps at start/end)
+
+    Returns
+    -------
+    fig : matplotlib Figure object
+    """
+
     # pre-process data to plot
     sig_avgs = []
     ref_avgs = []
@@ -486,6 +757,49 @@ def plot_AOI_spectra_fit(
     roi_avg_fit_result,
     fit_model,
 ):
+    """
+    Plots sig and ref spectra, sub and div normalisation and fit for the ROI average, a single
+    pixel, and each of the AOIs. All stacked on top of each other for comparison. The ROI
+    average fit is plot against the fit of all of the others for comparison.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    sig : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+        Cut down to ROI.
+        Format: [sweep_vals, x, y]
+
+    ref : np array, 3D
+        Reference component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+        Cut down to ROI.
+        Format: [sweep_vals, x, y]
+    sweep_list : list
+        List of sweep parameter values (with removed unwanted sweeps at start/end)
+
+
+    AOIs : list
+        List of AOI regions. Much like ROI object, these are a length-2 list of np meshgrids
+        that can be used to directly index into image to provide a view into just the AOI
+        part of the image. E.g. sig_AOI = sig[:, AOI[0], AOI[1]]. Returns a list as in
+        general we have more than one area of interest.
+        I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]
+
+    AOI_avg_best_fit_results_lst : list
+        List of fit_result.x arrays (i.e. list of best fit parameters)
+
+    roi_avg_fit_result : `fitting.FitResultROIAvg`
+        `QDMPy.fitting.FitResultROIAvg` object.
+
+    fit_model : `fit_models.FitModel` object.
+
+    Returns
+    -------
+    fig : matplotlib Figure object
+    """
+
     # rows:
     # ROI avg, single pixel, then each AOI
     # columns:
@@ -697,7 +1011,34 @@ def plot_AOI_spectra_fit(
 
 
 def plot_param_image(options, fit_model, pixel_fit_params, param_name, param_number=0):
-    # get plotting options from somewhere...
+    """
+    Plots an image corresponding to a single parameter in pixel_fit_params.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    fit_model : `fit_models.FitModel` object.
+
+    pixel_fit_params : dict
+        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
+
+    param_name : str
+        Name of parameter you want to plot, e.g. 'fwhm'.
+
+
+    Optional arguments
+    ------------------
+    param_number : int
+        Which version of the parameter you want. I.e. there might be 8 independent parameters
+        in the fit model called 'pos', each labeled 'pos_0', 'pos_1' etc. Default: 0.
+
+
+    Returns
+    -------
+    fig : matplotlib Figure object
+    """
 
     image = pixel_fit_params[param_name + "_" + str(param_number)]
     c_map = options["colormaps"]["param_images"]
@@ -720,6 +1061,26 @@ def plot_param_image(options, fit_model, pixel_fit_params, param_name, param_num
 
 
 def plot_param_images(options, fit_model, pixel_fit_params, param_name):
+    """
+    Plots images for all independent versions of a single parameter type in pixel_fit_params.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    fit_model : `fit_models.FitModel` object.
+
+    pixel_fit_params : dict
+        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
+
+    param_name : str
+        Name of parameter you want to plot, e.g. 'fwhm'.
+
+    Returns
+    -------
+    fig : matplotlib Figure object
+    """
 
     # plot 2 columns wide, as many rows as required
 
@@ -803,15 +1164,55 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
 
 
 def get_colormap_range(c_range_dict, image):
+    """
+    Produce a colormap range to plot image from, using the options in c_range_dict.
+
+    Arguments
+    ---------
+    c_range_dict : dict
+        dictionary with key 'values', used to accompany some of the options below,
+        as well as a 'type', one of :
+         - "min_max" : map between minimum and maximum values in image.
+         - "deviation_from_mean" : requires c_range_dict["values"] be a float
+           between 0 and 1 'dev'. Maps between (1 - dev) * mean and (1 + dev) * mean.
+         - "min_max_symmetric_about_mean" : map symmetrically about zero, capturing all values
+           in image (default).
+         - "min_max_symmetric_about_zero" : map symmetrically about zero, capturing all values
+           in image.
+         - "percentile" : requires c_range_dict["values"] be a list of two numbers between 0 and
+           100. Maps the range between those percentiles of the data.
+         - "percentile_symmetric_about_zero" : requires c_range_dict["values"] be a list of two
+           numbers between 0 and 100. Maps symmetrically about zero, capturing all values between
+           those percentile in the data (plus perhaps a bit more to ensure symmety)
+         - "strict_range" : requires c_range_dict["values"] be an int of float. Maps colors
+           between the values given.
+        as well as accompanying 'values' key, used for some of the options below
+
+    Returns
+    -------
+    c_range : list length 2
+        i.e. [min value to map to a color, max value to map to a color]
+    """
 
     # mostly these are just checking that the input values are valid
     # pretty badly written, I apoligise (there's a reason it's hidden all the way down here...)
 
     warning_messages = {
-        "deviation_from_mean": "Invalid c_range_dict['vals'] encountered. For c_range type 'deviation_from_mean', c_range_dict['vals'] must be a float, between 0 and 1. Changing to 'min_max_symmetric_about_mean' c_range.",
-        "strict_range": "Invalid c_range_dict['vals'] encountered. For c_range type 'strict_range', c_range_dict['vals'] must be a float, between 0 and 1. Changing to 'min_max_symmetric_about_mean' c_range.",
-        "percentile": "Invalid c_range_dict['vals'] encountered. For c_range type 'percentile', c_range_dict['vals'] must be a list of length 2, with elements (preferably ints) between 0 and 100. Changing to 'min_max_symmetric_about_mean' c_range.",
-        "percentile_symmetric_about_zero": "Invalid c_range_dict['vals'] encountered. For c_range type 'percentile', c_range_dict['vals'] must be a list of length 2, with elements (preferably ints) between 0 and 100. Changing to 'min_max_symmetric_about_mean' c_range.",
+        "deviation_from_mean": """Invalid c_range_dict['vals'] encountered.
+        For c_range type 'deviation_from_mean', c_range_dict['vals'] must be a float,
+        between 0 and 1. Changing to 'min_max_symmetric_about_mean' c_range.""",
+        "strict_range": """Invalid c_range_dict['vals'] encountered.
+        For c_range type 'strict_range', c_range_dict['vals'] must be a a list of length 2,
+        with elements that are floats or ints.
+        Changing to 'min_max_symmetric_about_mean' c_range.""",
+        "percentile": """Invalid c_range_dict['vals'] encountered.
+        For c_range type 'percentile', c_range_dict['vals'] must be a list of length 2,
+         with elements (preferably ints) between 0 and 100.
+         Changing to 'min_max_symmetric_about_mean' c_range.""",
+        "percentile_symmetric_about_zero": """Invalid c_range_dict['vals'] encountered.
+        For c_range type 'percentile', c_range_dict['vals'] must be a list of length 2,
+         with elements (preferably ints) between 0 and 100.
+         Changing to 'min_max_symmetric_about_mean' c_range.""",
     }
 
     c_range_type = c_range_dict["type"]
@@ -830,8 +1231,22 @@ def get_colormap_range(c_range_dict, image):
         "strict_range": strict_range,
     }
 
-    if c_range_type in ["deviation_from_mean", "strict_range"]:
-        if type(c_range_values) != list or len(c_range_values) != 2:
+    if c_range_type == "strict_range":
+        if (
+            type(c_range_values) != list
+            or len(c_range_values) != 2  # noqa: W503
+            or (type(c_range_values[0]) != float and type(c_range_values[0]) != int)  # noqa: W503
+            or (type(c_range_values[1]) != float and type(c_range_values[1]) != int)  # noqa: W503
+            or c_range_values[0] > c_range_values[1]  # noqa: W503
+        ):
+            warnings.warn(warning_messages[c_range_type])
+            return min_max_sym_mean(image, c_range_values)
+    elif c_range_type == "deviation_from_mean":
+        if (
+            (type(c_range_values) != float and type(c_range_values) != float)
+            or c_range_values < 0  # noqa: W503
+            or c_range_values > 1  # noqa: W503
+        ):
             warnings.warn(warning_messages[c_range_type])
             return min_max_sym_mean(image, c_range_values)
 
@@ -839,6 +1254,8 @@ def get_colormap_range(c_range_dict, image):
         if (
             type(c_range_values) != list
             or len(c_range_values) != 2  # noqa: W503
+            or (type(c_range_values[0]) != float and type(c_range_values[0]) != int)  # noqa: W503
+            or (type(c_range_values[1]) != float and type(c_range_values[1]) != int)  # noqa: W503
             or c_range_values[0] < 0  # noqa: W503
             or c_range_values[0] >= 100  # noqa: W503
             or c_range_values[1] < 0  # noqa: W503
@@ -855,14 +1272,47 @@ def get_colormap_range(c_range_dict, image):
 
 
 def min_max(image, c_range_values):
+    """
+    Map between minimum and maximum values in image
+
+    Arguments
+    ---------
+    image : np array, 3D
+        image data being shown as ax.imshow
+
+    c_range_values : unknown (depends on user settings)
+        See `QDMPy.fit_plots.get_colormap_range`
+    """
     return [np.nanmin(image), np.nanmax(image)]
 
 
 def strict_range(image, c_range_values):
+    """
+    Map between c_range_values
+
+    Arguments
+    ---------
+    image : np array, 3D
+        image data being shown as ax.imshow
+
+    c_range_values : unknown (depends on user settings)
+        See `QDMPy.fit_plots.get_colormap_range`
+    """
     return list(c_range_values)
 
 
 def min_max_sym_mean(image, c_range_values):
+    """
+    Map symmetrically about mean, capturing all values in image.
+
+    Arguments
+    ---------
+    image : np array, 3D
+        image data being shown as ax.imshow
+
+    c_range_values : unknown (depends on user settings)
+        See `QDMPy.fit_plots.get_colormap_range`
+    """
     minimum = np.nanmin(image)
     maximum = np.nanmax(image)
     mean = np.mean(image)
@@ -871,6 +1321,17 @@ def min_max_sym_mean(image, c_range_values):
 
 
 def min_max_sym_zero(image, c_range_values):
+    """
+    Map symmetrically about zero, capturing all values in image.
+
+    Arguments
+    ---------
+    image : np array, 3D
+        image data being shown as ax.imshow
+
+    c_range_values : unknown (depends on user settings)
+        See `QDMPy.fit_plots.get_colormap_range`
+    """
     min_abs = np.abs(np.nanmin(image))
     max_abs = np.abs(np.nanmax(image))
     larger = np.nanmax([min_abs, max_abs])
@@ -878,14 +1339,47 @@ def min_max_sym_zero(image, c_range_values):
 
 
 def deviation_from_mean(image, c_range_values):
+    """
+    Map a (decimal) deviation from mean, i.e. between (1 - dev) * mean and (1 + dev) * mean
+
+    Arguments
+    ---------
+    image : np array, 3D
+        image data being shown as ax.imshow
+
+    c_range_values : unknown (depends on user settings)
+        See `QDMPy.fit_plots.get_colormap_range`
+    """
     return ([(1 - c_range_values) * np.mean(image), (1 + c_range_values) * np.mean(image)],)
 
 
 def percentile(image, c_range_values):
+    """
+    Maps the range between two percentiles of the data.
+
+    Arguments
+    ---------
+    image : np array, 3D
+        image data being shown as ax.imshow
+
+    c_range_values : unknown (depends on user settings)
+        See `QDMPy.fit_plots.get_colormap_range`
+    """
     return [np.nanpercentile(image, c_range_values)]
 
 
 def percentile_sym_zero(image, c_range_values):
+    """
+    Maps the range between two percentiles of the data, but ensuring symmetry about zero
+
+    Arguments
+    ---------
+    image : np array, 3D
+        image data being shown as ax.imshow
+
+    c_range_values : unknown (depends on user settings)
+        See `QDMPy.fit_plots.get_colormap_range`
+    """
     plow, phigh = np.nanpercentile(image, c_range_values)  # e.g. [10, 90]
     val = max(abs(plow), abs(phigh))
     return [-val, val]

@@ -4,7 +4,20 @@ This module holds tools for loading raw data etc. and reshaping to a usable form
 
 Functions
 ---------
-- `QMDMPy.data_loading.load_options`
+ - `QDMPy.data_loading.load_options`
+ - `QDMPy.data_loading.save_options`
+ - `QDMPy.data_loading.reshape_dataset`
+ - `QDMPy.data_loading.prev_options_exist`
+ - `QDMPy.data_loading.get_prev_options`
+ - `QDMPy.data_loading.check_if_already_processed`
+ - `QDMPy.data_loading.check_ROI_compatibility`
+ - `QDMPy.data_loading.reshape_raw`
+ - `QDMPy.data_loading.rebin_image`
+ - `QDMPy.data_loading.define_ROI`
+ - `QDMPy.data_loading.define_area_roi`
+ - `QDMPy.data_loading.define_area_roi_centre`
+ - `QDMPy.data_loading.remove_unwanted_sweeps`
+ - `QDMPy.data_loading.define_AOIs`
 """
 
 # ============================================================================
@@ -18,7 +31,6 @@ import numpy as np
 import warnings
 import os
 import pathlib
-import simplejson as json
 
 # ============================================================================
 
@@ -37,12 +49,19 @@ import QDMPy.systems as systems
 
 def load_options(path="QDMPy/options/fit_options.json", check_for_prev_result=False):
     """
-    Blaa
+    Reads options json file and loads into generic options dictionary used elsewhere in module.
+
+    Also handles directory creation etc. to put results in.
 
     Optional Arguments
     -------------------
     path : string
-        blaa
+        Path to fit options .json file. Can be absolute, or from QDMPy.
+        Default: "QDMPy/options/fit_options.json"
+
+    check_for_prev_result : bool
+        Check to see if there's a previous fit result for these options.
+        Default: False
 
     Returns
     -------
@@ -72,6 +91,18 @@ def load_options(path="QDMPy/options/fit_options.json", check_for_prev_result=Fa
     else:
         options["total_bin"] = options["original_bin"] * int(options["additional_bins"])
 
+    # create output directories
+    output_dir = pathlib.PurePosixPath(
+        options["filepath"] + "_processed" + "_bin_" + str(options["total_bin"])
+    )
+    options["output_dir"] = output_dir
+    options["data_dir"] = output_dir / "data"
+
+    if not os.path.exists(output_dir):
+        os.mkdir(output_dir)
+    if not os.path.exists(options["data_dir"]):
+        os.mkdir(options["data_dir"])
+
     # don't always check for prev. results (so we can use this fn in other contexts)
     if check_for_prev_result:
         check_if_already_processed(options)
@@ -86,6 +117,14 @@ def load_options(path="QDMPy/options/fit_options.json", check_for_prev_result=Fa
 
 
 def save_options(options):
+    """
+    Saves generic options dict to harddrive as json file (in options["output_dir"])
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    """
 
     keys_to_remove = ["system"]
     save_options = {}
@@ -102,6 +141,22 @@ def save_options(options):
 
 
 def load_raw_and_sweep(options):
+    """
+    Reads raw image data and sweep_list (affine parameters) using system methods
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    raw_data : np array, 1D (unshaped)
+        Raw unshaped data read from binary file
+
+    sweep_list : list
+        List of sweep parameter values
+    """
     systems.clean_options(options)
 
     raw_data = options["system"].read_raw(options["filepath"])
@@ -113,6 +168,50 @@ def load_raw_and_sweep(options):
 
 
 def reshape_dataset(options, raw_data, sweep_list):
+    """
+    Reshapes and re-bins raw data into more useful format.
+
+    Cuts down to ROI and removes nwanted sweeps.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    raw_data : np array, 1D (unshaped)
+        Raw unshaped data read from binary file
+
+    sweep_list : list
+        List of sweep parameter values
+
+    Returns
+    -------
+    PL_image : np array, 2D.
+        Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
+        cut down to ROI.
+
+    PL_image_ROI : np array, 2D
+        Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
+        cut down to ROI.
+
+    sig : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+        Cut down to ROI.
+        Format: [sweep_vals, x, y]
+
+    ref : np array, 3D
+        Reference component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+        Cut down to ROI.
+        Format: [sweep_vals, x, y]
+
+    sig_norm : np array, 3D
+        Signal normalised by reference (via subtraction or normalisation, chosen in options),
+        reshaped and rebinned. Unwanted sweeps removed. Cut down to ROI.
+        Format: [sweep_vals, x, y]
+
+    sweep_list : list
+        List of sweep parameter values (with removed unwanted sweeps at start/end)
+    """
     systems.clean_options(options)
 
     image = reshape_raw(options, raw_data, sweep_list)
@@ -139,6 +238,9 @@ def reshape_dataset(options, raw_data, sweep_list):
 
 
 def prev_options_exist(options):
+    """
+    Checks if options file from previous result can be found in default location, returns Bool.
+    """
     prev_opt_path = os.path.normpath(options["output_dir"] / "saved_options.json")
     return os.path.exists(prev_opt_path)
 
@@ -147,29 +249,32 @@ def prev_options_exist(options):
 
 
 def get_prev_options(options):
-    prev_opt_path = os.path.normpath(options["output_dir"] / "saved_options.json")
-    f = open(prev_opt_path)
-    json_str = f.read()
-    return json.loads(json_str)
+    """
+    Reads options file from previous fit result (.json), returns a dictionary.
+    """
+    return misc.json_to_dict(options["output_dir"] / "saved_options.json")
+
+    # old version:
+    # prev_opt_path = os.path.normpath(options["output_dir"] / "saved_options.json")
+    # f = open(prev_opt_path)
+    # json_str = f.read()
+    # return json.loads(json_str)
 
 
 # ============================================================================
 
 
 def check_if_already_processed(options):
-    output_dir = pathlib.PurePosixPath(
-        options["filepath"] + "_processed" + "_bin_" + str(options["total_bin"])
-    )
-    options["output_dir"] = output_dir
-    options["data_dir"] = output_dir / "data"
+    """
+    Looks for previous fit result.
+
+    If previous fit result exists, checks for compatibility between ROI option choices.
+
+    Returns nothing.
+    """
 
     if prev_options_exist(options):
         options["found_prev_result"] = True
-    else:
-        if not os.path.exists(output_dir):
-            os.mkdir(output_dir)
-        if not os.path.exists(options["data_dir"]):
-            os.mkdir(options["data_dir"])
 
     # 'fit_pixels' test is there to see if the user actually cares about pixel info
     if not options["force_fit"] and options["found_prev_result"] and options["fit_pixels"]:
@@ -186,9 +291,23 @@ def check_if_already_processed(options):
 
 def check_ROI_compatibility(options, prev_options):
     """
+    Check if ROI option in current options and previous options are compatible.
+
     When re-loading, want to ensure we have the same ROI settings as what the
     previous processing was run under. Allow user to override (i.e. copy old
     ROI settings) with "copy_prev_ROI_options" option.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    prev_options : ndict
+        Generic options dict from previous fit result.
+
+    Returns
+    -------
+    Nothing
     """
     failure_string = """
     Detected previous (similar) fit results. We would skip fitting the pixels
@@ -219,6 +338,27 @@ def check_ROI_compatibility(options, prev_options):
 
 
 def reshape_raw(options, raw_data, sweep_list):
+    """
+    Reshapes raw data into more useful shape, according to image size in metadata.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    raw_data : np array, 1D (unshaped)
+        Raw unshaped data read from binary file
+
+    sweep_list : list
+        List of sweep parameter values
+
+    Returns
+    -------
+    image : np array, 3D
+        Format: [sweep values, x, y]. Has not been seperated into sig/ref etc. and has
+        not been rebinned. Unwanted sweep values not removed.
+
+    """
 
     systems.clean_options(options)
 
@@ -271,6 +411,37 @@ def reshape_raw(options, raw_data, sweep_list):
 
 
 def rebin_image(options, image):
+    """
+    Reshapes raw data into more useful shape, according to image size in metadata.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    image : np array, 3D
+        Format: [sweep values, x, y]. Has not been seperated into sig/ref etc. and has
+        not been rebinned.
+
+    Returns
+    -------
+    image_rebinned : np array, 3D
+        Format: [sweep values, x, y]. Same as image, but now rebinned (x size and y size
+        have changed). Not cut down to ROI.
+
+    sig : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
+        Format: [sweep_vals, x, y]. Not cut down to ROI.
+
+    ref : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
+        Not cut down to ROI. Format: [sweep_vals, x, y].
+
+    sig_norm : np array, 3D
+        Signal normalised by reference (via subtraction or normalisation, chosen in options),
+        reshaped and rebinned.  Unwanted sweeps not removed yet.
+        Not cut down to ROI. Format: [sweep_vals, x, y].
+    """
     systems.clean_options(options)
 
     if not options["additional_bins"]:
@@ -319,6 +490,26 @@ def rebin_image(options, image):
 
 
 def define_ROI(options, full_size_h, full_size_w):
+    """
+    Defines meshgrids that can be used to slice image into smaller region of interest (ROI).
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    full_size_h : int
+        Height of image.
+
+    full_size_w : int
+        Width of image.
+
+    Returns
+    -------
+    ROI : length 2 list of np meshgrids.
+        Defines an ROI that can be applied to the 3D image through direct indexing.
+        E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
+    """
     systems.clean_options(options)
 
     if options["ROI"] == "Full":
@@ -339,10 +530,20 @@ def define_ROI(options, full_size_h, full_size_w):
 
 
 def define_area_roi(start_x, start_y, end_x, end_y):
-    """Makes a list with a mesh that defines the an ROI
-    This ROI can be simply applied to the 2D image through direct
-    indexing, e.g new_image = image(:,ROI[0],ROI[1]) with shink the
-    ROI of the image.
+    """
+    Makes a list with of meshgrids that defines the ROI. Rectangular ROI
+
+    Arguments
+    ---------
+    start_x, start_y, end_x, end_y : int
+        Positions of ROI vertices as coordinates of indices.
+        Defines a rectangle between (start_x, start_y) and (end_x, end_y).
+
+    Returns
+    -------
+    ROI : length 2 list of np meshgrids.
+        Defines an ROI that can be applied to the 3D image through direct indexing.
+        E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
     """
     x = [np.linspace(start_x, end_x, end_x - start_x + 1, dtype=int)]
     y = [np.linspace(start_y, end_y, end_y - start_y + 1, dtype=int)]
@@ -354,6 +555,20 @@ def define_area_roi(start_x, start_y, end_x, end_y):
 
 
 def define_area_roi_centre(centre, size):
+    """
+    Makes a list with of meshgrids that defines the ROI. Square ROI.
+
+    Arguments
+    ---------
+    centre, size : int
+        Defines centre and size of ROI square.
+
+    Returns
+    -------
+    ROI : length 2 list of np meshgrids.
+        Defines an ROI that can be applied to the 3D image through direct indexing.
+        E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
+    """
     x = [np.linspace(centre[0] - size / 2, centre[0] + size / 2, size + 1, dtype=int)]
     y = [np.linspace(centre[1] - size / 2, centre[1] + size / 2, size + 1, dtype=int)]
     xv, yv = np.meshgrid(x, y)
@@ -364,6 +579,66 @@ def define_area_roi_centre(centre, size):
 
 
 def remove_unwanted_sweeps(options, image_rebinned, sweep_list, sig, ref, sig_norm, ROI):
+    """
+    Removes unwanted sweep values (i.e. freq values or tau values) for all of the data arrays.
+
+    Also cuts data down to ROI.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    image_rebinned : np array, 3D
+        Format: [sweep values, x, y]. Same as image, but rebinned (x size and y size
+        have changed).
+
+    sweep_list : list
+        List of sweep parameter values
+
+    sig : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
+        Format: [sweep_vals, x, y]
+
+    ref : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
+        Format: [sweep_vals, x, y]
+
+    sig_norm : np array, 3D
+        Signal normalised by reference (via subtraction or normalisation, chosen in options),
+        reshaped and rebinned.  Unwanted sweeps not removed yet.
+        Format: [sweep_vals, x, y]
+
+    ROI : length 2 list of np meshgrids.
+        Defines an ROI that can be applied to the 3D image through direct indexing.
+        E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
+
+    Returns
+    -------
+    PL_image : np array, 2D.
+        Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
+        cut down to ROI
+
+    PL_image_ROI : np array, 2D
+        Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped and rebinned as
+        well as cut down to ROI.
+
+    sig : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+        Format: [sweep_vals, x, y]
+
+    ref : np array, 3D
+        Reference component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+        Format: [sweep_vals, x, y]
+
+    sig_norm : np array, 3D
+        Signal normalised by reference (via subtraction or normalisation, chosen in options),
+        reshaped and rebinned. Unwanted sweeps removed.
+        Format: [sweep_vals, x, y]
+
+    sweep_list : list
+        List of sweep parameter values (with removed unwanted sweeps at start/end)
+    """
     systems.clean_options(options)
 
     # here ensure we have copies, not views
@@ -383,6 +658,26 @@ def remove_unwanted_sweeps(options, image_rebinned, sweep_list, sig, ref, sig_no
 
 
 def define_AOIs(options):
+    """
+    Defines areas of interest (AOIs).
+
+    Returns list of AOIs that can be used to directly index into image array, e.g.:
+    sig_AOI = sig[:, AOI[0], AOI[1]].
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    AOIs : list
+        List of AOI regions. Much like ROI object, these are a length-2 list of np meshgrids
+        that can be used to directly index into image to provide a view into just the AOI
+        part of the image. E.g. sig_AOI = sig[:, AOI[0], AOI[1]]. Returns a list as in
+        general we have more than one area of interest.
+        I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]
+    """
     AOIs = []
 
     i = 0
@@ -391,14 +686,11 @@ def define_AOIs(options):
         try:
             centre = options["area_" + str(i) + "_centre"]
             halfsize = options["area_" + str(i) + "_halfsize"]
+
             if centre is None or halfsize is None:
                 break
-            start_x = centre[0] - halfsize
-            start_y = centre[1] - halfsize
-            end_x = centre[0] + halfsize
-            end_y = centre[1] + halfsize
 
-            AOIs.append(define_area_roi(start_x, start_y, end_x, end_y))
+            AOIs.append(define_area_roi_centre(centre, 2 * halfsize))
         except KeyError:
             break
     return AOIs

@@ -1,9 +1,21 @@
 # -*- coding: utf-8 -*-
 
 """
+Collection of helper functions that don't belong anywhere else.
 
-Collection of helper functions that don't belong anywhere in particular
+Currently functions for loading json files to dicts and the inverse.
 
+Functions
+---------
+ - `QMDMPy.misc.failfloat`
+ - `QMDMPy.misc.default_dict_from_d`
+ - `QMDMPy.misc.json_to_dict`
+ - `QMDMPy.misc.dict_to_json`
+ - `QMDMPy.misc.prettyjson`
+ - `QMDMPy.misc.getsubitems`
+ - `QMDMPy.misc.basictype2str`
+ - `QMDMPy.misc.indentitems`
+ - `QMDMPy.misc.json_remove_comments`
 """
 
 # ============================================================================
@@ -46,13 +58,13 @@ def defaultdict_from_d(d):
 # ============================================================================
 
 
-def json_to_dict(filename, hook="od"):
-    """ read the json file at filepath (in cwd) into a dict """
-    _, pattern = os.path.splitext(filename)
+def json_to_dict(filepath, hook="od"):
+    """ read the json file at filepath into a dict """
+    _, pattern = os.path.splitext(filepath)
     if pattern != ".json":
         warnings.warn("input options file did not have a json pattern/suffix")
 
-    with open(filename, "r", encoding="utf-8") as fp:
+    with open(filepath, "r", encoding="utf-8") as fp:
         if hook == "od":
             oph = OrderedDict
         elif hook == "dd":
@@ -104,6 +116,9 @@ def prettyjson(obj, indent=4, maxlinelength=80):
     items, _ = getsubitems(obj, itemkey="", islast=True, maxlinelength=maxlinelength)
     res = indentitems(items, indent, indentcurrent=0)
     return res
+
+
+# ============================================================================
 
 
 def getsubitems(obj, itemkey, islast, maxlinelength):
@@ -191,6 +206,9 @@ def getsubitems(obj, itemkey, islast, maxlinelength):
     return items, can_concat
 
 
+# ============================================================================
+
+
 def basictype2str(obj):
     """This is a filter on objects that get sent to the json. Some types
     can't be stored literally in json files, so we can adjust for that here.
@@ -206,6 +224,9 @@ def basictype2str(obj):
     return strobj
 
 
+# ============================================================================
+
+
 def indentitems(items, indent, indentcurrent):
     """Recursively traverses the list of json lines, adds indentation based
     on the current depth"""
@@ -217,6 +238,9 @@ def indentitems(items, indent, indentcurrent):
         else:
             res += indentstr + item + "\n"
     return res
+
+
+# ============================================================================
 
 
 def json_remove_comments(string, strip_space=True):

@@ -310,10 +310,10 @@ def fit_single_pixel(options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_re
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `fit_models.FitModel` object.
+    fit_model : `QDMPy.fit_models.FitModel` object.
 
-    roi_avg_fit_result : `fitting.FitResultROIAvg`
-        `fitting.FitResultROIAvg` object, to pull fit_options from.
+    roi_avg_fit_result : `QDMPy.fitting.FitResultROIAvg`
+        `QDMPy.fitting.FitResultROIAvg` object, to pull fit_options from.
 
     Returns
     -------
@@ -362,7 +362,8 @@ def fit_AOIs(options, sig_norm, sweep_list, fit_model, AOIs, roi_avg_fit_result)
         into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].
 
     roi_avg_fit_result : `fitting.FitResultROIAvg`
-        `QDMPy.fitting.FitResultROIAvg` object, to pull `QDMPy.fitting.FitResultROIAvg.fit_options` from.
+        `QDMPy.fitting.FitResultROIAvg` object, to pull `QDMPy.fitting.FitResultROIAvg.fit_options`
+        from.
 
     Returns
     -------
@@ -590,7 +591,7 @@ def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
     Returns
     -------
     fit_result_dict : dict
-        Dictionary, key: param_names, val: image (2D) of param values across FOV.
+        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
     &#34;&#34;&#34;
     systems.clean_options(options)
 
@@ -674,7 +675,7 @@ def get_pixel_fitting_results(fit_model, fit_results, roi_shape):
     Returns
     -------
     fit_image_results : dict
-        Dictionary, key: param_names, val: image (2D) of param values across FOV.
+        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
     &#34;&#34;&#34;
     # initialise dictionary with key: val = param_name: param_units
     fit_image_results = fit_models.get_param_odict(fit_model)
@@ -981,7 +982,8 @@ def gen_fit_params(options, init_guesses, init_bounds):
 <dd>List of AOI specifications - each a length-2 iterable that can be used to directly index
 into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].</dd>
 <dt><strong><code>roi_avg_fit_result</code></strong> :&ensp;<code>fitting.FitResultROIAvg</code></dt>
-<dd><code><a title="QDMPy.fitting.FitResultROIAvg" href="#QDMPy.fitting.FitResultROIAvg">FitResultROIAvg</a></code> object, to pull <code><a title="QDMPy.fitting.FitResultROIAvg.fit_options" href="#QDMPy.fitting.FitResultROIAvg.fit_options">FitResultROIAvg.fit_options</a></code> from.</dd>
+<dd><code><a title="QDMPy.fitting.FitResultROIAvg" href="#QDMPy.fitting.FitResultROIAvg">FitResultROIAvg</a></code> object, to pull <code><a title="QDMPy.fitting.FitResultROIAvg.fit_options" href="#QDMPy.fitting.FitResultROIAvg.fit_options">FitResultROIAvg.fit_options</a></code>
+from.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <dl>
@@ -1014,7 +1016,8 @@ into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].</dd>
         into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].
 
     roi_avg_fit_result : `fitting.FitResultROIAvg`
-        `QDMPy.fitting.FitResultROIAvg` object, to pull `QDMPy.fitting.FitResultROIAvg.fit_options` from.
+        `QDMPy.fitting.FitResultROIAvg` object, to pull `QDMPy.fitting.FitResultROIAvg.fit_options`
+        from.
 
     Returns
     -------
@@ -1145,7 +1148,7 @@ into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].</dd>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>fit_result_dict</code></strong> :&ensp;<code>dict</code></dt>
-<dd>Dictionary, key: param_names, val: image (2D) of param values across FOV.</dd>
+<dd>Dictionary, key: param_keys, val: image (2D) of param values across FOV.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -1174,7 +1177,7 @@ into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].</dd>
     Returns
     -------
     fit_result_dict : dict
-        Dictionary, key: param_names, val: image (2D) of param values across FOV.
+        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
     &#34;&#34;&#34;
     systems.clean_options(options)
 
@@ -1246,10 +1249,10 @@ into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].</dd>
 <dt><strong><code>sweep_list</code></strong> :&ensp;<code>np array, 1D</code></dt>
 <dd>Affine parameter list (e.g. tau or freq)</dd>
 </dl>
-<p>fit_model : <code>fit_models.FitModel</code> object.</p>
+<p>fit_model : <code><a title="QDMPy.fit_models.FitModel" href="fit_models.html#QDMPy.fit_models.FitModel">FitModel</a></code> object.</p>
 <dl>
-<dt><strong><code>roi_avg_fit_result</code></strong> :&ensp;<code>fitting.FitResultROIAvg</code></dt>
-<dd><code>fitting.FitResultROIAvg</code> object, to pull fit_options from.</dd>
+<dt><strong><code>roi_avg_fit_result</code></strong> :&ensp;<code><a title="QDMPy.fitting.FitResultROIAvg" href="#QDMPy.fitting.FitResultROIAvg">FitResultROIAvg</a></code></dt>
+<dd><code><a title="QDMPy.fitting.FitResultROIAvg" href="#QDMPy.fitting.FitResultROIAvg">FitResultROIAvg</a></code> object, to pull fit_options from.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
 <p><code>fitting.FitResultROIAvg</code> object containing the fit result (see class specifics)</p></div>
@@ -1272,10 +1275,10 @@ into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].</dd>
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `fit_models.FitModel` object.
+    fit_model : `QDMPy.fit_models.FitModel` object.
 
-    roi_avg_fit_result : `fitting.FitResultROIAvg`
-        `fitting.FitResultROIAvg` object, to pull fit_options from.
+    roi_avg_fit_result : `QDMPy.fitting.FitResultROIAvg`
+        `QDMPy.fitting.FitResultROIAvg` object, to pull fit_options from.
 
     Returns
     -------
@@ -1470,7 +1473,7 @@ This is probably a little useless, we could extract from any of the results.</dd
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>fit_image_results</code></strong> :&ensp;<code>dict</code></dt>
-<dd>Dictionary, key: param_names, val: image (2D) of param values across FOV.</dd>
+<dd>Dictionary, key: param_keys, val: image (2D) of param values across FOV.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -1499,7 +1502,7 @@ This is probably a little useless, we could extract from any of the results.</dd
     Returns
     -------
     fit_image_results : dict
-        Dictionary, key: param_names, val: image (2D) of param values across FOV.
+        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
     &#34;&#34;&#34;
     # initialise dictionary with key: val = param_name: param_units
     fit_image_results = fit_models.get_param_odict(fit_model)

@@ -176,7 +176,7 @@
     // range results in bounds of min = guess - range, max = guess + range
     // bounds directly gives these values
 
-    // Position guess for lorentzian (or other) (in MHz)
+    // Position guess for lorentzian(in MHz)
     "pos_guess": {
     	"option_default": null
     },
@@ -202,6 +202,27 @@
     	"option_default": [5, 20]
     },
 
+    // As above but for Gaussian
+    "pos_gauss_guess": {
+        "option_default": null
+    },
+    "pos_gauss_range": {
+        "option_default": 25
+    },
+    "amp_gauss_guess": {
+        "option_default": -0.0015
+    },
+
+    "amp_gauss_bounds": {
+        "option_default": [-0.0100, -0.0003]
+    },
+    "fwhm_gauss_guess": {
+        "option_default": -0.0015
+    },
+
+    "fwhm_gauss_bounds": {
+        "option_default": [5, 20]
+    },
 
     // linear function (background)
     "c_guess": {
@@ -218,45 +239,115 @@
     	"option_default": [-1e-8, 1e-8]
     },
 
+    // constant background
+    "constant_guess": {
+        "option_default": 1
+    },
+    "constant_bounds": {
+        "option_default": [0.9995, 1.0005]
+    },
+
+    // circular function (haven't defined useful defaults)
+    "rabi_freq_guess": {
+        "option_default": null
+    },
+    "rabi_freq_bounds": {
+        "option_default": [null, null]
+    },
+    "pos_circ_guess": {
+        "option_default": null
+    },
+    "pos_circ_bounds": {
+        "option_default": [null, null]
+    },
+    "amp_circ_guess": {
+        "option_default": null
+    },
+    "amp_circ_bounds": {
+        "option_default": [null, null]
+    },
+
     // Other fit parameters (hyperfine functions)
-    "amp_1_hyp_guess": {
+    "pos_h14_guess": {
+        "option_default": null
+    },
+    "pos_h15_guess": {
+        "option_default": null
+    },    
+    "pos_h14_range": {
+        "option_default": 25
+    },
+    "pos_h15_range": {
+        "option_default": 25
+    },
+
+    "amp_h15_hyp_1_guess": {
     	"option_default": -0.015
     },
-    "amp_1_hyp_bounds": {
+    "amp_h15_hyp_2_guess": {
+        "option_default": -0.015
+    },
+
+    "amp_h15_hyp_1_bounds": {
     	"option_default": [-0.1, -0.001]
     },
-    "amp_2_hyp_guess": {
-    	"option_default": -0.015
-    },
-    "amp_2_hyp_bounds": {
-    	"option_default": [-0.1, -0.001]
-    },
-    "amp_3_hyp_guess": {
-    	"option_default": -0.015
-    },
-    "amp_3_hyp_bounds": {
+    "amp_h15_hyp_2_bounds": {
     	"option_default": [-0.1, -0.001]
     },
 
-    "fwhm_1_hyp_guess": {
-    	"option_default": 2
+    "amp_h14_hyp_1_guess": {
+        "option_default": -0.015
     },
-    "fwhm_1_hyp_bounds": {
-    	"option_default": [1.5, 40]
+    "amp_h14_hyp_2_guess": {
+        "option_default": -0.015
     },
-    "fwhm_2_hyp_guess": {
-    	"option_default": 2
-    },
-    "fwhm_2_hyp_bounds": {
-    	"option_default": [1.5, 40]
-    },
-    "fwhm_3_hyp_guess": {
-    	"option_default": 2
-    },
-    "fwhm_3_hyp_bounds": {
-    	"option_default": [1.5, 40]
+    "amp_h14_hyp_3_guess": {
+        "option_default": -0.015
     },
 
+    "amp_h14_hyp_1_bounds": {
+        "option_default": [-0.1, -0.001]
+    },
+    "amp_h14_hyp_2_bounds": {
+        "option_default": [-0.1, -0.001]
+    },
+    "amp_h14_hyp_3_bounds": {
+        "option_default": [-0.1, -0.001]
+    },
+
+    "fwhm_h15_hyp_1_guess": {
+        "option_default": -0.015
+    },
+    "fwhm_h15_hyp_2_guess": {
+        "option_default": -0.015
+    },
+
+    "fwhm_h15_hyp_1_bounds": {
+        "option_default": [-0.1, -0.001]
+    },
+    "fwhm_h15_hyp_2_bounds": {
+        "option_default": [-0.1, -0.001]
+    },
+
+    "fwhm_h14_hyp_1_guess": {
+        "option_default": -0.015
+    },
+    "fwhm_h14_hyp_2_guess": {
+        "option_default": -0.015
+    },
+    "fwhm_h14_hyp_3_guess": {
+        "option_default": -0.015
+    },
+
+    "fwhm_h14_hyp_1_bounds": {
+        "option_default": [-0.1, -0.001]
+    },
+    "fwhm_h14_hyp_2_bounds": {
+        "option_default": [-0.1, -0.001]
+    },
+    "fwhm_h14_hyp_3_bounds": {
+        "option_default": [-0.1, -0.001]
+    },
 
 
     // ========== scipy least means square options ===========

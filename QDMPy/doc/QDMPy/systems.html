@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
 <title>QDMPy.systems API documentation</title>
-<meta name="description" content="Module docstring" />
+<meta name="description" content="This module holds classes and functions to define different systems …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,14 +22,70 @@
 <h1 class="title">Module <code>QDMPy.systems</code></h1>
 </header>
 <section id="section-intro">
-<p>Module docstring</p>
+<p>This module holds classes and functions to define different systems.</p>
+<p>This module allows users with different data saving/loading procedures to use
+this package. Also defined are variables such as raw_pixel_size which may be
+different for different systems at the same institution.</p>
+<p>Also defined are functions to handle the checking/cleaning of the json options
+file (and then dict) to ensure it is valid etc.</p>
+<p><em>Make sure</em> that any valid systems you define here are placed
+in the SYSTEMS_DICT defined near the bottom.</p>
+<h2 id="classes">Classes</h2>
+<ul>
+<li><code><a title="QDMPy.systems.System" href="#QDMPy.systems.System">System</a></code></li>
+<li><code><a title="QDMPy.systems.UniMelb" href="#QDMPy.systems.UniMelb">UniMelb</a></code></li>
+<li><code><a title="QDMPy.systems.Zyla" href="#QDMPy.systems.Zyla">Zyla</a></code></li>
+<li><code><a title="QDMPy.systems.OptionsError" href="#QDMPy.systems.OptionsError">OptionsError</a></code></li>
+</ul>
+<h2 id="functions">Functions</h2>
+<ul>
+<li><code><a title="QDMPy.systems.check_option" href="#QDMPy.systems.check_option">check_option()</a></code></li>
+<li><code><a title="QDMPy.systems.check_options" href="#QDMPy.systems.check_options">check_options()</a></code></li>
+<li><code><a title="QDMPy.systems.clean_options" href="#QDMPy.systems.clean_options">clean_options()</a></code></li>
+</ul>
+<h2 id="module-variables">Module Variables</h2>
+<ul>
+<li><code><a title="QDMPy.systems.DIR_PATH" href="#QDMPy.systems.DIR_PATH">DIR_PATH</a></code></li>
+<li><code><a title="QDMPy.systems.SYSTEMS_DICT" href="#QDMPy.systems.SYSTEMS_DICT">SYSTEMS_DICT</a></code></li>
+</ul>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
 &#34;&#34;&#34;
-Module docstring
+This module holds classes and functions to define different systems.
+
+This module allows users with different data saving/loading procedures to use
+this package. Also defined are variables such as raw_pixel_size which may be
+different for different systems at the same institution.
+
+Also defined are functions to handle the checking/cleaning of the json options
+file (and then dict) to ensure it is valid etc.
+
+_Make sure_ that any valid systems you define here are placed
+in the SYSTEMS_DICT defined near the bottom.
+
+Classes
+-------
+ - `QDMPy.systems.System`
+ - `QDMPy.systems.UniMelb`
+ - `QDMPy.systems.Zyla`
+ - `QDMPy.systems.OptionsError`
+
+
+Functions
+---------
+ - `QDMPy.systems.check_option`
+ - `QDMPy.systems.check_options`
+ - `QDMPy.systems.clean_options`
+
+
+Module variables
+----------------
+ - `QDMPy.systems.DIR_PATH`
+ - `QDMPy.systems.SYSTEMS_DICT`
+
 &#34;&#34;&#34;
 
 
@@ -54,38 +110,74 @@ import QDMPy.misc as misc
 
 
 DIR_PATH = pathlib.Path(__file__).parent.absolute()
+&#34;&#34;&#34;
+Path to QDMPy directory, so you can navigate to options directory (e.g. to read config json files)
+&#34;&#34;&#34;
 
 
 class System:
+    &#34;&#34;&#34;Abstract class defining what is expected for a system.&#34;&#34;&#34;
+
     name = &#34;Unknown System&#34;
+    &#34;&#34;&#34; &#34;&#34;&#34;
+
+    options_dict = None
+    &#34;&#34;&#34; &#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
+        &#34;&#34;&#34;
+        Initialisation of system. Must set options_dict.
+        &#34;&#34;&#34;
         pass
 
     def read_raw(self, filepath, **kwargs):
+        &#34;&#34;&#34;
+        Method that must be defined to read raw data in from filepath.
+        &#34;&#34;&#34;
         raise NotImplementedError
 
     def read_sweep_list(self, filepath, **kwargs):
+        &#34;&#34;&#34;
+        Method that must be defined to read sweep_list in from filepath.
+        &#34;&#34;&#34;
         raise NotImplementedError
 
     def read_metadata(self, filepath, **kwargs):
+        &#34;&#34;&#34;
+        Method that must be defined to read metadata in from filepath.
+        &#34;&#34;&#34;
         raise NotImplementedError
 
     def get_raw_pixel_size(self):
+        &#34;&#34;&#34;
+        Method that must be defined to return a raw_pixel_size.
+        &#34;&#34;&#34;
         raise NotImplementedError
 
     def get_default_options(self):
+        &#34;&#34;&#34;
+        Method that must be defined to return an options dictionary of default values.
+        &#34;&#34;&#34;
         raise NotImplementedError
 
     def option_choices(self, option_name):
+        &#34;&#34;&#34;
+        Method that must be defined to return the available option choices for a given option_name
+        &#34;&#34;&#34;
         raise NotImplementedError
 
     def available_options(self):
+        &#34;&#34;&#34;
+        Method that must be defined to return what options are available for this system.
+        &#34;&#34;&#34;
         raise NotImplementedError
 
     def system_specific_option_update(self, options):
-        # set some things that cannot be stored in the json
+        &#34;&#34;&#34;
+        Hardcoded method that allows updating of the options at runtime with a custom script.
 
+        In particular this defines some things that cannot be stored in a json.
+        &#34;&#34;&#34;
         # most systems will need these {you need to copy to your subclass method}
         # need to know number of threads to call (might be parallel fitting)
         options[&#34;threads&#34;] = cpu_count() - options[&#34;sub_threads&#34;]
@@ -100,6 +192,12 @@ class System:
 
 # Institute or university level
 class UniMelb(System):
+    &#34;&#34;&#34;
+    University of Melbourne-wide properties of our systems.
+
+    Inherited by specific systems defined as sub-classes.
+    &#34;&#34;&#34;
+
     name = &#34;Unknown UniMelb System&#34;
 
     def __init__(self, *args, **kwargs):
@@ -116,8 +214,6 @@ class UniMelb(System):
         return [float(i) for i in sweep_str]
 
     def read_metadata(self, filepath, **kwargs):
-        # TODO want to add a process here to read &#39;old bin conversion&#39; option etc.
-        # to change binning
 
         # skip over sweep list
         with open(os.path.normpath(filepath + &#34;_metaSpool.txt&#34;), &#34;r&#34;) as fid:
@@ -171,6 +267,10 @@ class UniMelb(System):
 # &#39;system&#39; level, inherits from broader institute class
 # --&gt; this is what should be passed around!
 class Zyla(UniMelb):
+    &#34;&#34;&#34;
+    Specific system details for the Zyla QDM.
+    &#34;&#34;&#34;
+
     name = &#34;Zyla&#34;
     config_path = DIR_PATH / &#34;options/zyla_config.json&#34;
 
@@ -184,13 +284,17 @@ class Zyla(UniMelb):
 
 
 def choose_system(name):
-    return systems_dict[name]()
+    return SYSTEMS_DICT[name]()
 
 
 # ============================================================================
 
 
 class OptionsError(Exception):
+    &#34;&#34;&#34;
+    Exception with custom messages for errors to do with options dictionary.
+    &#34;&#34;&#34;
+
     def __init__(self, option_name, option_given, system, custom_msg=None):
 
         self.custom_msg = custom_msg
@@ -245,29 +349,29 @@ def clean_options(options):
         check_options(options)
 
 
-systems_dict = {&#34;Zyla&#34;: Zyla}
+SYSTEMS_DICT = {&#34;Zyla&#34;: Zyla}
+&#34;&#34;&#34;
+Dictionary that defines systems available for use.
 
-
-# ============================================================================
-# colormap range option handling
-# ============================================================================
-
-
-def valid_c_range(typ, vals):
-    if typ == &#34;min_max&#34;:
-        return
-    elif typ == &#34;deviation_from_mean&#34;:
-        if type(vals) != float or not vals &gt; 0 or not vals &lt; 1:
-            warnings.warn(
-                &#34;Invalid c_range_dict[&#39;vals&#39;] encountered. &#34;
-                + &#34;For c_range type &#39;deviation_from_mean&#39;, c_range_dict[&#39;vals&#39;] must be&#34;
-                + &#34; a float, between 0 and 1. Changing to &#39;min_max_symmetric_about_mean&#39; c_range.&#34;
-            )</code></pre>
+Add any systems you define here so you can use them.
+&#34;&#34;&#34;</code></pre>
 </details>
 </section>
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-variables">Global variables</h2>
+<dl>
+<dt id="QDMPy.systems.DIR_PATH"><code class="name">var <span class="ident">DIR_PATH</span></code></dt>
+<dd>
+<div class="desc"><p>Path to QDMPy directory, so you can navigate to options directory (e.g. to read config json files)</p></div>
+</dd>
+<dt id="QDMPy.systems.SYSTEMS_DICT"><code class="name">var <span class="ident">SYSTEMS_DICT</span></code></dt>
+<dd>
+<div class="desc"><p>Dictionary that defines systems available for use.</p>
+<p>Add any systems you define here so you can use them.</p></div>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
@@ -314,7 +418,7 @@ def valid_c_range(typ, vals):
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def choose_system(name):
-    return systems_dict[name]()</code></pre>
+    return SYSTEMS_DICT[name]()</code></pre>
 </details>
 </dd>
 <dt id="QDMPy.systems.clean_options"><code class="name flex">
@@ -333,27 +437,6 @@ def valid_c_range(typ, vals):
         check_options(options)</code></pre>
 </details>
 </dd>
-<dt id="QDMPy.systems.valid_c_range"><code class="name flex">
-<span>def <span class="ident">valid_c_range</span></span>(<span>typ, vals)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def valid_c_range(typ, vals):
-    if typ == &#34;min_max&#34;:
-        return
-    elif typ == &#34;deviation_from_mean&#34;:
-        if type(vals) != float or not vals &gt; 0 or not vals &lt; 1:
-            warnings.warn(
-                &#34;Invalid c_range_dict[&#39;vals&#39;] encountered. &#34;
-                + &#34;For c_range type &#39;deviation_from_mean&#39;, c_range_dict[&#39;vals&#39;] must be&#34;
-                + &#34; a float, between 0 and 1. Changing to &#39;min_max_symmetric_about_mean&#39; c_range.&#34;
-            )</code></pre>
-</details>
-</dd>
 </dl>
 </section>
 <section>
@@ -364,12 +447,16 @@ def valid_c_range(typ, vals):
 <span>(</span><span>option_name, option_given, system, custom_msg=None)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Common base class for all non-exit exceptions.</p></div>
+<div class="desc"><p>Exception with custom messages for errors to do with options dictionary.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class OptionsError(Exception):
+    &#34;&#34;&#34;
+    Exception with custom messages for errors to do with options dictionary.
+    &#34;&#34;&#34;
+
     def __init__(self, option_name, option_given, system, custom_msg=None):
 
         self.custom_msg = custom_msg
@@ -404,41 +491,75 @@ def valid_c_range(typ, vals):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Abstract class defining what is expected for a system.</p>
+<p>Initialisation of system. Must set options_dict.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class System:
+    &#34;&#34;&#34;Abstract class defining what is expected for a system.&#34;&#34;&#34;
+
     name = &#34;Unknown System&#34;
+    &#34;&#34;&#34; &#34;&#34;&#34;
+
+    options_dict = None
+    &#34;&#34;&#34; &#34;&#34;&#34;
 
     def __init__(self, *args, **kwargs):
+        &#34;&#34;&#34;
+        Initialisation of system. Must set options_dict.
+        &#34;&#34;&#34;
         pass
 
     def read_raw(self, filepath, **kwargs):
+        &#34;&#34;&#34;
+        Method that must be defined to read raw data in from filepath.
+        &#34;&#34;&#34;
         raise NotImplementedError
 
     def read_sweep_list(self, filepath, **kwargs):
+        &#34;&#34;&#34;
+        Method that must be defined to read sweep_list in from filepath.
+        &#34;&#34;&#34;
         raise NotImplementedError
 
     def read_metadata(self, filepath, **kwargs):
+        &#34;&#34;&#34;
+        Method that must be defined to read metadata in from filepath.
+        &#34;&#34;&#34;
         raise NotImplementedError
 
     def get_raw_pixel_size(self):
+        &#34;&#34;&#34;
+        Method that must be defined to return a raw_pixel_size.
+        &#34;&#34;&#34;
         raise NotImplementedError
 
     def get_default_options(self):
+        &#34;&#34;&#34;
+        Method that must be defined to return an options dictionary of default values.
+        &#34;&#34;&#34;
         raise NotImplementedError
 
     def option_choices(self, option_name):
+        &#34;&#34;&#34;
+        Method that must be defined to return the available option choices for a given option_name
+        &#34;&#34;&#34;
         raise NotImplementedError
 
     def available_options(self):
+        &#34;&#34;&#34;
+        Method that must be defined to return what options are available for this system.
+        &#34;&#34;&#34;
         raise NotImplementedError
 
     def system_specific_option_update(self, options):
-        # set some things that cannot be stored in the json
+        &#34;&#34;&#34;
+        Hardcoded method that allows updating of the options at runtime with a custom script.
 
+        In particular this defines some things that cannot be stored in a json.
+        &#34;&#34;&#34;
         # most systems will need these {you need to copy to your subclass method}
         # need to know number of threads to call (might be parallel fitting)
         options[&#34;threads&#34;] = cpu_count() - options[&#34;sub_threads&#34;]
@@ -457,6 +578,10 @@ def valid_c_range(typ, vals):
 <dd>
 <div class="desc"></div>
 </dd>
+<dt id="QDMPy.systems.System.options_dict"><code class="name">var <span class="ident">options_dict</span></code></dt>
+<dd>
+<div class="desc"></div>
+</dd>
 </dl>
 <h3>Methods</h3>
 <dl>
@@ -464,12 +589,15 @@ def valid_c_range(typ, vals):
 <span>def <span class="ident">available_options</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Method that must be defined to return what options are available for this system.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def available_options(self):
+    &#34;&#34;&#34;
+    Method that must be defined to return what options are available for this system.
+    &#34;&#34;&#34;
     raise NotImplementedError</code></pre>
 </details>
 </dd>
@@ -477,12 +605,15 @@ def valid_c_range(typ, vals):
 <span>def <span class="ident">get_default_options</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Method that must be defined to return an options dictionary of default values.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_default_options(self):
+    &#34;&#34;&#34;
+    Method that must be defined to return an options dictionary of default values.
+    &#34;&#34;&#34;
     raise NotImplementedError</code></pre>
 </details>
 </dd>
@@ -490,12 +621,15 @@ def valid_c_range(typ, vals):
 <span>def <span class="ident">get_raw_pixel_size</span></span>(<span>self)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Method that must be defined to return a raw_pixel_size.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_raw_pixel_size(self):
+    &#34;&#34;&#34;
+    Method that must be defined to return a raw_pixel_size.
+    &#34;&#34;&#34;
     raise NotImplementedError</code></pre>
 </details>
 </dd>
@@ -503,12 +637,15 @@ def valid_c_range(typ, vals):
 <span>def <span class="ident">option_choices</span></span>(<span>self, option_name)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Method that must be defined to return the available option choices for a given option_name</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def option_choices(self, option_name):
+    &#34;&#34;&#34;
+    Method that must be defined to return the available option choices for a given option_name
+    &#34;&#34;&#34;
     raise NotImplementedError</code></pre>
 </details>
 </dd>
@@ -516,12 +653,15 @@ def valid_c_range(typ, vals):
 <span>def <span class="ident">read_metadata</span></span>(<span>self, filepath, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Method that must be defined to read metadata in from filepath.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def read_metadata(self, filepath, **kwargs):
+    &#34;&#34;&#34;
+    Method that must be defined to read metadata in from filepath.
+    &#34;&#34;&#34;
     raise NotImplementedError</code></pre>
 </details>
 </dd>
@@ -529,12 +669,15 @@ def valid_c_range(typ, vals):
 <span>def <span class="ident">read_raw</span></span>(<span>self, filepath, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Method that must be defined to read raw data in from filepath.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def read_raw(self, filepath, **kwargs):
+    &#34;&#34;&#34;
+    Method that must be defined to read raw data in from filepath.
+    &#34;&#34;&#34;
     raise NotImplementedError</code></pre>
 </details>
 </dd>
@@ -542,12 +685,15 @@ def valid_c_range(typ, vals):
 <span>def <span class="ident">read_sweep_list</span></span>(<span>self, filepath, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Method that must be defined to read sweep_list in from filepath.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def read_sweep_list(self, filepath, **kwargs):
+    &#34;&#34;&#34;
+    Method that must be defined to read sweep_list in from filepath.
+    &#34;&#34;&#34;
     raise NotImplementedError</code></pre>
 </details>
 </dd>
@@ -555,14 +701,18 @@ def valid_c_range(typ, vals):
 <span>def <span class="ident">system_specific_option_update</span></span>(<span>self, options)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Hardcoded method that allows updating of the options at runtime with a custom script.</p>
+<p>In particular this defines some things that cannot be stored in a json.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def system_specific_option_update(self, options):
-    # set some things that cannot be stored in the json
+    &#34;&#34;&#34;
+    Hardcoded method that allows updating of the options at runtime with a custom script.
 
+    In particular this defines some things that cannot be stored in a json.
+    &#34;&#34;&#34;
     # most systems will need these {you need to copy to your subclass method}
     # need to know number of threads to call (might be parallel fitting)
     options[&#34;threads&#34;] = cpu_count() - options[&#34;sub_threads&#34;]
@@ -579,12 +729,20 @@ def valid_c_range(typ, vals):
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>University of Melbourne-wide properties of our systems.</p>
+<p>Inherited by specific systems defined as sub-classes.</p>
+<p>Initialisation of system. Must set options_dict.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class UniMelb(System):
+    &#34;&#34;&#34;
+    University of Melbourne-wide properties of our systems.
+
+    Inherited by specific systems defined as sub-classes.
+    &#34;&#34;&#34;
+
     name = &#34;Unknown UniMelb System&#34;
 
     def __init__(self, *args, **kwargs):
@@ -601,8 +759,6 @@ def valid_c_range(typ, vals):
         return [float(i) for i in sweep_str]
 
     def read_metadata(self, filepath, **kwargs):
-        # TODO want to add a process here to read &#39;old bin conversion&#39; option etc.
-        # to change binning
 
         # skip over sweep list
         with open(os.path.normpath(filepath + &#34;_metaSpool.txt&#34;), &#34;r&#34;) as fid:
@@ -666,35 +822,6 @@ def valid_c_range(typ, vals):
 </dl>
 <h3>Methods</h3>
 <dl>
-<dt id="QDMPy.systems.UniMelb.available_options"><code class="name flex">
-<span>def <span class="ident">available_options</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def available_options(self):
-    return self.options_dict.keys()</code></pre>
-</details>
-</dd>
-<dt id="QDMPy.systems.UniMelb.get_default_options"><code class="name flex">
-<span>def <span class="ident">get_default_options</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_default_options(self):
-    ret = {}
-    for key, val in self.options_dict.items():
-        ret[key] = val[&#34;option_default&#34;]
-    return ret</code></pre>
-</details>
-</dd>
 <dt id="QDMPy.systems.UniMelb.option_characs"><code class="name flex">
 <span>def <span class="ident">option_characs</span></span>(<span>self, option_name)</span>
 </code></dt>
@@ -708,116 +835,39 @@ def valid_c_range(typ, vals):
     return self.options_dict[option_name][&#34;option_characs&#34;]</code></pre>
 </details>
 </dd>
-<dt id="QDMPy.systems.UniMelb.option_choices"><code class="name flex">
-<span>def <span class="ident">option_choices</span></span>(<span>self, option_name)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def option_choices(self, option_name):
-    return self.options_dict[option_name][&#34;option_choices&#34;]</code></pre>
-</details>
-</dd>
-<dt id="QDMPy.systems.UniMelb.read_metadata"><code class="name flex">
-<span>def <span class="ident">read_metadata</span></span>(<span>self, filepath, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_metadata(self, filepath, **kwargs):
-    # TODO want to add a process here to read &#39;old bin conversion&#39; option etc.
-    # to change binning
-
-    # skip over sweep list
-    with open(os.path.normpath(filepath + &#34;_metaSpool.txt&#34;), &#34;r&#34;) as fid:
-        _ = fid.readline().rstrip().split(&#34;\t&#34;)
-        # ok now read the metadata
-        rest_str = fid.read()
-        matches = re.findall(
-            r&#34;^([a-zA-Z0-9_ _/+()#-]+):([a-zA-Z0-9_ _/+()#-]+)&#34;,
-            rest_str,
-            re.MULTILINE,
-        )
-        metadata = {a: misc.failfloat(b) for (a, b) in matches}
-    return metadata</code></pre>
-</details>
-</dd>
-<dt id="QDMPy.systems.UniMelb.read_raw"><code class="name flex">
-<span>def <span class="ident">read_raw</span></span>(<span>self, filepath, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_raw(self, filepath, **kwargs):
-    with open(os.path.normpath(filepath), &#34;r&#34;) as fid:
-        raw_data = np.fromfile(fid, dtype=np.float32())[2:]
-    return raw_data</code></pre>
-</details>
-</dd>
-<dt id="QDMPy.systems.UniMelb.read_sweep_list"><code class="name flex">
-<span>def <span class="ident">read_sweep_list</span></span>(<span>self, filepath, **kwargs)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def read_sweep_list(self, filepath, **kwargs):
-    with open(os.path.normpath(filepath + &#34;_metaSpool.txt&#34;), &#34;r&#34;) as fid:
-        sweep_str = fid.readline().rstrip().split(&#34;\t&#34;)
-    return [float(i) for i in sweep_str]</code></pre>
-</details>
-</dd>
-<dt id="QDMPy.systems.UniMelb.system_specific_option_update"><code class="name flex">
-<span>def <span class="ident">system_specific_option_update</span></span>(<span>self, options)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def system_specific_option_update(self, options):
-    # set some things that cannot be stored in the json
-
-    # need to know number of threads to call (might be parallel fitting)
-    options[&#34;threads&#34;] = cpu_count() - options[&#34;sub_threads&#34;]
-    if &#34;filepath&#34; not in options:
-        options[&#34;filepath&#34;] = os.getcwd()
-    options[&#34;filepath&#34;] = os.path.normpath(options[&#34;filepath&#34;])
-    if &#34;fit_method&#34; in options:
-        # ensure only useful (scipy) loss method is used
-        if options[&#34;fit_method&#34;] == &#34;lm&#34;:
-            options[&#34;loss&#34;] = &#34;linear&#34;
-    if &#34;base_dir&#34; in options and options[&#34;base_dir&#34;] != &#34;&#34;:
-        options[&#34;filepath&#34;] = options[&#34;base_dir&#34;] + options[&#34;filepath&#34;]
-        if &#34;filepath_ref&#34; in options:
-            options[&#34;filepath_ref&#34;] = options[&#34;filepath_ref&#34;]</code></pre>
-</details>
-</dd>
 </dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="QDMPy.systems.System" href="#QDMPy.systems.System">System</a></b></code>:
+<ul class="hlist">
+<li><code><a title="QDMPy.systems.System.available_options" href="#QDMPy.systems.System.available_options">available_options</a></code></li>
+<li><code><a title="QDMPy.systems.System.get_default_options" href="#QDMPy.systems.System.get_default_options">get_default_options</a></code></li>
+<li><code><a title="QDMPy.systems.System.get_raw_pixel_size" href="#QDMPy.systems.System.get_raw_pixel_size">get_raw_pixel_size</a></code></li>
+<li><code><a title="QDMPy.systems.System.option_choices" href="#QDMPy.systems.System.option_choices">option_choices</a></code></li>
+<li><code><a title="QDMPy.systems.System.read_metadata" href="#QDMPy.systems.System.read_metadata">read_metadata</a></code></li>
+<li><code><a title="QDMPy.systems.System.read_raw" href="#QDMPy.systems.System.read_raw">read_raw</a></code></li>
+<li><code><a title="QDMPy.systems.System.read_sweep_list" href="#QDMPy.systems.System.read_sweep_list">read_sweep_list</a></code></li>
+<li><code><a title="QDMPy.systems.System.system_specific_option_update" href="#QDMPy.systems.System.system_specific_option_update">system_specific_option_update</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 <dt id="QDMPy.systems.Zyla"><code class="flex name class">
 <span>class <span class="ident">Zyla</span></span>
 <span>(</span><span>*args, **kwargs)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Specific system details for the Zyla QDM.</p>
+<p>Initialisation of system. Must set options_dict.</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Zyla(UniMelb):
+    &#34;&#34;&#34;
+    Specific system details for the Zyla QDM.
+    &#34;&#34;&#34;
+
     name = &#34;Zyla&#34;
     config_path = DIR_PATH / &#34;options/zyla_config.json&#34;
 
@@ -845,22 +895,21 @@ def valid_c_range(typ, vals):
 <div class="desc"></div>
 </dd>
 </dl>
-<h3>Methods</h3>
-<dl>
-<dt id="QDMPy.systems.Zyla.get_raw_pixel_size"><code class="name flex">
-<span>def <span class="ident">get_raw_pixel_size</span></span>(<span>self)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def get_raw_pixel_size(self):
-    return self.options_dict[&#34;raw_pixel_size&#34;][&#34;option_default&#34;]</code></pre>
-</details>
-</dd>
-</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="QDMPy.systems.UniMelb" href="#QDMPy.systems.UniMelb">UniMelb</a></b></code>:
+<ul class="hlist">
+<li><code><a title="QDMPy.systems.UniMelb.available_options" href="#QDMPy.systems.System.available_options">available_options</a></code></li>
+<li><code><a title="QDMPy.systems.UniMelb.get_default_options" href="#QDMPy.systems.System.get_default_options">get_default_options</a></code></li>
+<li><code><a title="QDMPy.systems.UniMelb.get_raw_pixel_size" href="#QDMPy.systems.System.get_raw_pixel_size">get_raw_pixel_size</a></code></li>
+<li><code><a title="QDMPy.systems.UniMelb.option_choices" href="#QDMPy.systems.System.option_choices">option_choices</a></code></li>
+<li><code><a title="QDMPy.systems.UniMelb.read_metadata" href="#QDMPy.systems.System.read_metadata">read_metadata</a></code></li>
+<li><code><a title="QDMPy.systems.UniMelb.read_raw" href="#QDMPy.systems.System.read_raw">read_raw</a></code></li>
+<li><code><a title="QDMPy.systems.UniMelb.read_sweep_list" href="#QDMPy.systems.System.read_sweep_list">read_sweep_list</a></code></li>
+<li><code><a title="QDMPy.systems.UniMelb.system_specific_option_update" href="#QDMPy.systems.System.system_specific_option_update">system_specific_option_update</a></code></li>
+</ul>
+</li>
+</ul>
 </dd>
 </dl>
 </section>
@@ -868,12 +917,22 @@ def valid_c_range(typ, vals):
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul></ul>
+<ul>
+<li><a href="#classes">Classes</a></li>
+<li><a href="#functions">Functions</a></li>
+<li><a href="#module-variables">Module variables</a></li>
+</ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="QDMPy" href="index.html">QDMPy</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-variables">Global variables</a></h3>
+<ul class="">
+<li><code><a title="QDMPy.systems.DIR_PATH" href="#QDMPy.systems.DIR_PATH">DIR_PATH</a></code></li>
+<li><code><a title="QDMPy.systems.SYSTEMS_DICT" href="#QDMPy.systems.SYSTEMS_DICT">SYSTEMS_DICT</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
@@ -882,7 +941,6 @@ def valid_c_range(typ, vals):
 <li><code><a title="QDMPy.systems.check_options" href="#QDMPy.systems.check_options">check_options</a></code></li>
 <li><code><a title="QDMPy.systems.choose_system" href="#QDMPy.systems.choose_system">choose_system</a></code></li>
 <li><code><a title="QDMPy.systems.clean_options" href="#QDMPy.systems.clean_options">clean_options</a></code></li>
-<li><code><a title="QDMPy.systems.valid_c_range" href="#QDMPy.systems.valid_c_range">valid_c_range</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-classes">Classes</a></h3>
@@ -898,6 +956,7 @@ def valid_c_range(typ, vals):
 <li><code><a title="QDMPy.systems.System.get_raw_pixel_size" href="#QDMPy.systems.System.get_raw_pixel_size">get_raw_pixel_size</a></code></li>
 <li><code><a title="QDMPy.systems.System.name" href="#QDMPy.systems.System.name">name</a></code></li>
 <li><code><a title="QDMPy.systems.System.option_choices" href="#QDMPy.systems.System.option_choices">option_choices</a></code></li>
+<li><code><a title="QDMPy.systems.System.options_dict" href="#QDMPy.systems.System.options_dict">options_dict</a></code></li>
 <li><code><a title="QDMPy.systems.System.read_metadata" href="#QDMPy.systems.System.read_metadata">read_metadata</a></code></li>
 <li><code><a title="QDMPy.systems.System.read_raw" href="#QDMPy.systems.System.read_raw">read_raw</a></code></li>
 <li><code><a title="QDMPy.systems.System.read_sweep_list" href="#QDMPy.systems.System.read_sweep_list">read_sweep_list</a></code></li>
@@ -907,22 +966,14 @@ def valid_c_range(typ, vals):
 <li>
 <h4><code><a title="QDMPy.systems.UniMelb" href="#QDMPy.systems.UniMelb">UniMelb</a></code></h4>
 <ul class="">
-<li><code><a title="QDMPy.systems.UniMelb.available_options" href="#QDMPy.systems.UniMelb.available_options">available_options</a></code></li>
-<li><code><a title="QDMPy.systems.UniMelb.get_default_options" href="#QDMPy.systems.UniMelb.get_default_options">get_default_options</a></code></li>
 <li><code><a title="QDMPy.systems.UniMelb.name" href="#QDMPy.systems.UniMelb.name">name</a></code></li>
 <li><code><a title="QDMPy.systems.UniMelb.option_characs" href="#QDMPy.systems.UniMelb.option_characs">option_characs</a></code></li>
-<li><code><a title="QDMPy.systems.UniMelb.option_choices" href="#QDMPy.systems.UniMelb.option_choices">option_choices</a></code></li>
-<li><code><a title="QDMPy.systems.UniMelb.read_metadata" href="#QDMPy.systems.UniMelb.read_metadata">read_metadata</a></code></li>
-<li><code><a title="QDMPy.systems.UniMelb.read_raw" href="#QDMPy.systems.UniMelb.read_raw">read_raw</a></code></li>
-<li><code><a title="QDMPy.systems.UniMelb.read_sweep_list" href="#QDMPy.systems.UniMelb.read_sweep_list">read_sweep_list</a></code></li>
-<li><code><a title="QDMPy.systems.UniMelb.system_specific_option_update" href="#QDMPy.systems.UniMelb.system_specific_option_update">system_specific_option_update</a></code></li>
 </ul>
 </li>
 <li>
 <h4><code><a title="QDMPy.systems.Zyla" href="#QDMPy.systems.Zyla">Zyla</a></code></h4>
 <ul class="">
 <li><code><a title="QDMPy.systems.Zyla.config_path" href="#QDMPy.systems.Zyla.config_path">config_path</a></code></li>
-<li><code><a title="QDMPy.systems.Zyla.get_raw_pixel_size" href="#QDMPy.systems.Zyla.get_raw_pixel_size">get_raw_pixel_size</a></code></li>
 <li><code><a title="QDMPy.systems.Zyla.name" href="#QDMPy.systems.Zyla.name">name</a></code></li>
 </ul>
 </li>

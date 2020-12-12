@@ -1,6 +1,37 @@
 # -*- coding: utf-8 -*-
 """
-Module docstring
+This module holds classes and functions to define different systems.
+
+This module allows users with different data saving/loading procedures to use
+this package. Also defined are variables such as raw_pixel_size which may be
+different for different systems at the same institution.
+
+Also defined are functions to handle the checking/cleaning of the json options
+file (and then dict) to ensure it is valid etc.
+
+_Make sure_ that any valid systems you define here are placed
+in the SYSTEMS_DICT defined near the bottom.
+
+Classes
+-------
+ - `QDMPy.systems.System`
+ - `QDMPy.systems.UniMelb`
+ - `QDMPy.systems.Zyla`
+ - `QDMPy.systems.OptionsError`
+
+
+Functions
+---------
+ - `QDMPy.systems.check_option`
+ - `QDMPy.systems.check_options`
+ - `QDMPy.systems.clean_options`
+
+
+Module variables
+----------------
+ - `QDMPy.systems.DIR_PATH`
+ - `QDMPy.systems.SYSTEMS_DICT`
+
 """
 
 
@@ -25,38 +56,74 @@ import QDMPy.misc as misc
 
 
 DIR_PATH = pathlib.Path(__file__).parent.absolute()
+"""
+Path to QDMPy directory, so you can navigate to options directory (e.g. to read config json files)
+"""
 
 
 class System:
+    """Abstract class defining what is expected for a system."""
+
     name = "Unknown System"
+    """ """
+
+    options_dict = None
+    """ """
 
     def __init__(self, *args, **kwargs):
+        """
+        Initialisation of system. Must set options_dict.
+        """
         pass
 
     def read_raw(self, filepath, **kwargs):
+        """
+        Method that must be defined to read raw data in from filepath.
+        """
         raise NotImplementedError
 
     def read_sweep_list(self, filepath, **kwargs):
+        """
+        Method that must be defined to read sweep_list in from filepath.
+        """
         raise NotImplementedError
 
     def read_metadata(self, filepath, **kwargs):
+        """
+        Method that must be defined to read metadata in from filepath.
+        """
         raise NotImplementedError
 
     def get_raw_pixel_size(self):
+        """
+        Method that must be defined to return a raw_pixel_size.
+        """
         raise NotImplementedError
 
     def get_default_options(self):
+        """
+        Method that must be defined to return an options dictionary of default values.
+        """
         raise NotImplementedError
 
     def option_choices(self, option_name):
+        """
+        Method that must be defined to return the available option choices for a given option_name
+        """
         raise NotImplementedError
 
     def available_options(self):
+        """
+        Method that must be defined to return what options are available for this system.
+        """
         raise NotImplementedError
 
     def system_specific_option_update(self, options):
-        # set some things that cannot be stored in the json
+        """
+        Hardcoded method that allows updating of the options at runtime with a custom script.
 
+        In particular this defines some things that cannot be stored in a json.
+        """
         # most systems will need these {you need to copy to your subclass method}
         # need to know number of threads to call (might be parallel fitting)
         options["threads"] = cpu_count() - options["sub_threads"]
@@ -71,6 +138,12 @@ class System:
 
 # Institute or university level
 class UniMelb(System):
+    """
+    University of Melbourne-wide properties of our systems.
+
+    Inherited by specific systems defined as sub-classes.
+    """
+
     name = "Unknown UniMelb System"
 
     def __init__(self, *args, **kwargs):
@@ -87,8 +160,6 @@ class UniMelb(System):
         return [float(i) for i in sweep_str]
 
     def read_metadata(self, filepath, **kwargs):
-        # TODO want to add a process here to read 'old bin conversion' option etc.
-        # to change binning
 
         # skip over sweep list
         with open(os.path.normpath(filepath + "_metaSpool.txt"), "r") as fid:
@@ -142,6 +213,10 @@ class UniMelb(System):
 # 'system' level, inherits from broader institute class
 # --> this is what should be passed around!
 class Zyla(UniMelb):
+    """
+    Specific system details for the Zyla QDM.
+    """
+
     name = "Zyla"
     config_path = DIR_PATH / "options/zyla_config.json"
 
@@ -155,13 +230,17 @@ class Zyla(UniMelb):
 
 
 def choose_system(name):
-    return systems_dict[name]()
+    return SYSTEMS_DICT[name]()
 
 
 # ============================================================================
 
 
 class OptionsError(Exception):
+    """
+    Exception with custom messages for errors to do with options dictionary.
+    """
+
     def __init__(self, option_name, option_given, system, custom_msg=None):
 
         self.custom_msg = custom_msg
@@ -216,21 +295,9 @@ def clean_options(options):
         check_options(options)
 
 
-systems_dict = {"Zyla": Zyla}
+SYSTEMS_DICT = {"Zyla": Zyla}
+"""
+Dictionary that defines systems available for use.
 
-
-# ============================================================================
-# colormap range option handling
-# ============================================================================
-
-
-def valid_c_range(typ, vals):
-    if typ == "min_max":
-        return
-    elif typ == "deviation_from_mean":
-        if type(vals) != float or not vals > 0 or not vals < 1:
-            warnings.warn(
-                "Invalid c_range_dict['vals'] encountered. "
-                + "For c_range type 'deviation_from_mean', c_range_dict['vals'] must be"
-                + " a float, between 0 and 1. Changing to 'min_max_symmetric_about_mean' c_range."
-            )
+Add any systems you define here so you can use them.
+"""

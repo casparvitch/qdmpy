@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.2" />
 <title>QDMPy.fit_models API documentation</title>
-<meta name="description" content="Module docstring" />
+<meta name="description" content="This module defines the fit model used. Currently only supports scipy least_squares on CPU …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -22,7 +22,33 @@
 <h1 class="title">Module <code>QDMPy.fit_models</code></h1>
 </header>
 <section id="section-intro">
-<p>Module docstring</p>
+<p>This module defines the fit model used. Currently only supports scipy least_squares on CPU.</p>
+<p>Ensure any fit functions you define are added to the AVAILABLE_FNS module variable.
+Try not to have overlapping parameter names in the same fit.</p>
+<h2 id="classes">Classes</h2>
+<ul>
+<li><code><a title="QDMPy.fit_models.FitModel" href="#QDMPy.fit_models.FitModel">FitModel</a></code></li>
+<li><code><a title="QDMPy.fit_models.FitFunc" href="#QDMPy.fit_models.FitFunc">FitFunc</a></code></li>
+<li><code><a title="QDMPy.fit_models.Constant" href="#QDMPy.fit_models.Constant">Constant</a></code></li>
+<li><code><a title="QDMPy.fit_models.Linear" href="#QDMPy.fit_models.Linear">Linear</a></code></li>
+<li><code><a title="QDMPy.fit_models.Circular" href="#QDMPy.fit_models.Circular">Circular</a></code></li>
+<li><code><a title="QDMPy.fit_models.Gaussian" href="#QDMPy.fit_models.Gaussian">Gaussian</a></code></li>
+<li><code><a title="QDMPy.fit_models.Gaussian_hyperfine_14" href="#QDMPy.fit_models.Gaussian_hyperfine_14">Gaussian_hyperfine_14</a></code></li>
+<li><code><a title="QDMPy.fit_models.Gaussian_hyperfine_15" href="#QDMPy.fit_models.Gaussian_hyperfine_15">Gaussian_hyperfine_15</a></code></li>
+<li><code><a title="QDMPy.fit_models.Lorentzian" href="#QDMPy.fit_models.Lorentzian">Lorentzian</a></code></li>
+<li><code><a title="QDMPy.fit_models.Lorentzian_hyperfine_14" href="#QDMPy.fit_models.Lorentzian_hyperfine_14">Lorentzian_hyperfine_14</a></code></li>
+<li><code><a title="QDMPy.fit_models.Lorentzian_hyperfine_15" href="#QDMPy.fit_models.Lorentzian_hyperfine_15">Lorentzian_hyperfine_15</a></code></li>
+</ul>
+<h2 id="functions">Functions</h2>
+<ul>
+<li><code><a title="QDMPy.fit_models.get_param_defn" href="#QDMPy.fit_models.get_param_defn">get_param_defn()</a></code></li>
+<li><code><a title="QDMPy.fit_models.get_param_odict" href="#QDMPy.fit_models.get_param_odict">get_param_odict()</a></code></li>
+<li><code><a title="QDMPy.fit_models.get_param_unit" href="#QDMPy.fit_models.get_param_unit">get_param_unit()</a></code></li>
+</ul>
+<h2 id="module-variables">Module Variables</h2>
+<ul>
+<li><code><a title="QDMPy.fit_models.AVAILABLE_FNS" href="#QDMPy.fit_models.AVAILABLE_FNS">AVAILABLE_FNS</a></code></li>
+</ul>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -30,7 +56,34 @@
 <pre><code class="python"># -*- coding: utf-8 -*-
 
 &#34;&#34;&#34;
-Module docstring
+This module defines the fit model used. Currently only supports scipy least_squares on CPU.
+
+Ensure any fit functions you define are added to the AVAILABLE_FNS module variable.
+Try not to have overlapping parameter names in the same fit.
+
+Classes
+-------
+ - `QDMPy.fit_models.FitModel`
+ - `QDMPy.fit_models.FitFunc`
+ - `QDMPy.fit_models.Constant`
+ - `QDMPy.fit_models.Linear`
+ - `QDMPy.fit_models.Circular`
+ - `QDMPy.fit_models.Gaussian`
+ - `QDMPy.fit_models.Gaussian_hyperfine_14`
+ - `QDMPy.fit_models.Gaussian_hyperfine_15`
+ - `QDMPy.fit_models.Lorentzian`
+ - `QDMPy.fit_models.Lorentzian_hyperfine_14`
+ - `QDMPy.fit_models.Lorentzian_hyperfine_15`
+
+Functions
+---------
+ - `QDMPy.fit_models.get_param_defn`
+ - `QDMPy.fit_models.get_param_odict`
+ - `QDMPy.fit_models.get_param_unit`
+
+Module variables
+----------------
+ - `QDMPy.fit_models.AVAILABLE_FNS`
 &#34;&#34;&#34;
 
 # ============================================================================
@@ -40,28 +93,31 @@ __author__ = &#34;Sam Scholten&#34;
 # ============================================================================
 
 import numpy as np
-from numba import njit, jit
+from numba import njit
 from collections import OrderedDict
-
-# ============================================================================
-
-
-# TODO... might want to go through and speed-test njit, jit again :)
 
 
 # ================================================================================================
 # ================================================================================================
 #
-# FitFunc Class
+# FitModel Class
 #
 # ================================================================================================
 # ================================================================================================
 
 
 class FitModel:
-    # this model isn&#39;t used for gpufit
+    &#34;&#34;&#34;FitModel used to fit to data.&#34;&#34;&#34;
+
     def __init__(self, fit_functions):
-        # fit_functions format: {&#34;linear&#34;: 1, &#34;lorentzian&#34;: 8} etc., i.e. options[&#34;fit_functions&#34;]
+        &#34;&#34;&#34;
+        Arguments
+        ---------
+        fit_functions: dict
+            Dict of functions to makeup the fit model, key: fitfunc name, val: number of
+            independent copies of that fitfunc.
+            format: {&#34;linear&#34;: 1, &#34;lorentzian&#34;: 8} etc., i.e. options[&#34;fit_functions&#34;]
+        &#34;&#34;&#34;
 
         self.fit_functions = fit_functions
 
@@ -81,6 +137,21 @@ class FitModel:
     # =================================
 
     def __call__(self, param_ar, sweep_vec):
+        &#34;&#34;&#34;
+        Evaluates fitmodel for given parameter values and sweep (affine) parameter values.
+
+        Arguments
+        ---------
+        param_ar : np array, 1D
+            Array of parameters fed into each fitfunc (these are what are fit by sc)
+
+        sweep_vec : np array, 1D or number
+            Affine parameter where the fit model is evaluated
+
+        Returns
+        -------
+        Fit model evaluates at sweep_vec (output is same format as sweep_vec input)
+        &#34;&#34;&#34;
 
         out = np.zeros(np.shape(sweep_vec))
         for fn in self.fn_chain:
@@ -92,11 +163,13 @@ class FitModel:
     # =================================
 
     def residuals_scipy(self, param_ar, sweep_vec, pl_val):
+        &#34;&#34;&#34;Evaluates residual: fit model - PL value &#34;&#34;&#34;
         return self.__call__(param_ar, sweep_vec) - pl_val
 
     # =================================
 
     def jacobian_scipy(self, param_ar, sweep_vec, pl_val):
+        &#34;&#34;&#34;Evaluates jacobian of fitmodel in format expected by scipy least_squares&#34;&#34;&#34;
 
         for i, fn in enumerate(self.fn_chain):
             this_fn_params = param_ar[fn.this_fn_param_indices]
@@ -111,6 +184,7 @@ class FitModel:
 
 
 def get_param_defn(fit_model):
+    &#34;&#34;&#34;Returns list of parameters in fit_model&#34;&#34;&#34;
     param_defn_ar = []
     for fn in fit_model.fn_chain:
         param_defn_ar.extend(fn.param_defn)
@@ -122,6 +196,9 @@ def get_param_defn(fit_model):
 
 # get ordered dict of key: param name, val: param unit, for all parameters in chain
 def get_param_odict(fit_model):
+    &#34;&#34;&#34;
+    get ordered dict of key: param_key (param_name), val: param_unit for all parameters in fit_model
+    &#34;&#34;&#34;
     param_dict = OrderedDict()
     for fn in fit_model.fn_chain:
         for i in range(len(fn.param_defn)):
@@ -139,18 +216,32 @@ def get_param_odict(fit_model):
 
 
 def get_param_unit(fit_model, param_name, param_number):
+    &#34;&#34;&#34;
+    Get unit for a given param_key (given by param_name + &#34;_&#34; + param_number)
+    &#34;&#34;&#34;
     param_dict = get_param_odict(fit_model)
     return param_dict[param_name + &#34;_&#34; + str(param_number)]
 
 
-# ====================================================================================
-# ====================================================================================
+# ================================================================================================
+# ================================================================================================
+#
+# FitFunc Class
+#
+# ================================================================================================
+# ================================================================================================
 
 
 class FitFunc:
+    &#34;&#34;&#34;Singular fit function&#34;&#34;&#34;
 
-    # init should probably tell us where the params exist in the chain
     def __init__(self, param_indices):
+        &#34;&#34;&#34;
+        Argument
+        --------
+        param_indices : np array
+            where the parameters for this fitfunc are located within broader fitmodel param array
+        &#34;&#34;&#34;
         self.this_fn_param_indices = param_indices
 
     # =================================
@@ -184,8 +275,8 @@ class FitFunc:
 class Constant(FitFunc):
     &#34;&#34;&#34;Constant&#34;&#34;&#34;
 
-    param_defn = [&#34;c&#34;]
-    param_units = {&#34;c&#34;: &#34;Amplitude (a.u.)&#34;}
+    param_defn = [&#34;constant&#34;]
+    param_units = {&#34;constant&#34;: &#34;Amplitude (a.u.)&#34;}
 
     # =================================
 
@@ -214,7 +305,7 @@ class Constant(FitFunc):
 
 
 class Linear(FitFunc):
-    &#34;&#34;&#34;Constant&#34;&#34;&#34;
+    &#34;&#34;&#34;Linear function, y=mx+c&#34;&#34;&#34;
 
     param_defn = [&#34;c&#34;, &#34;m&#34;]
     param_units = {&#34;c&#34;: &#34;Amplitude (a.u.)&#34;, &#34;m&#34;: &#34;Amplitude per Freq (a.u.)&#34;}
@@ -251,14 +342,11 @@ class Linear(FitFunc):
 
 class Circular(FitFunc):
     &#34;&#34;&#34;
-    Call instance as instance(x, inital_paramater_list) where
-    inital_parameter_list is a list of inital guesses for each Gaussian&#39;s
-    _, _, _ in that order, i.e. [].
-    fwhm, pos, amp in that order, i.e [fwhm, pos, amp, fwhm2, pos2, amp2...].
+    Circular function (sine)
     &#34;&#34;&#34;
 
-    param_defn = [&#34;rabi_freq&#34;, &#34;pos&#34;, &#34;amp&#34;]
-    param_units = {&#34;rabi_freq&#34;: &#34;Nu (Hz)&#34;, &#34;pos&#34;: &#34;Tau (s)&#34;, &#34;amp&#34;: &#34;Amp (a.u.)&#34;}
+    param_defn = [&#34;rabi_freq&#34;, &#34;pos_circ&#34;, &#34;amp_circ&#34;]
+    param_units = {&#34;rabi_freq&#34;: &#34;Nu (Hz)&#34;, &#34;pos_circ&#34;: &#34;Tau (s)&#34;, &#34;amp_circ&#34;: &#34;Amp (a.u.)&#34;}
 
     @staticmethod
     @njit
@@ -286,16 +374,14 @@ SCALE_SIGMA = 4 * np.log(2)
 
 
 class Gaussian(FitFunc):
-    &#34;&#34;&#34;
-    Sum of abitary number of Gaussian Class.
-    Define number of Gaussians on instansiation.
-    Call instance as instance(x, inital_paramater_list) where
-    inital_parameter_list is a list of inital guesses for each Gaussian&#39;s
-    fwhm, pos, amp in that order, i.e [fwhm, pos, amp, fwhm2, pos2, amp2...].
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Gaussian function&#34;&#34;&#34;
 
-    param_defn = [&#34;fwhm&#34;, &#34;pos&#34;, &#34;amp&#34;]
-    param_units = {&#34;fwhm&#34;: &#34;Freq (MHz)&#34;, &#34;pos&#34;: &#34;Freq (MHz)&#34;, &#34;amp&#34;: &#34;Amp (a.u.)&#34;}
+    param_defn = [&#34;fwhm_gauss&#34;, &#34;pos_gauss&#34;, &#34;amp_gauss&#34;]
+    param_units = {
+        &#34;fwhm_gauss&#34;: &#34;Freq (MHz)&#34;,
+        &#34;pos_gauss&#34;: &#34;Freq (MHz)&#34;,
+        &#34;amp_gauss&#34;: &#34;Amp (a.u.)&#34;,
+    }
 
     # =================================
 
@@ -308,24 +394,23 @@ class Gaussian(FitFunc):
 class Gaussian_hyperfine_14(FitFunc):
 
     param_defn = [
-        &#34;pos&#34;,
-        &#34;amp_1_hyp&#34;,
-        &#34;amp_2_hyp&#34;,
-        &#34;amp_3_hyp&#34;,
-        &#34;fwhm_1_hyp&#34;,
-        &#34;fwhm_2_hyp&#34;,
-        &#34;fwhm_3_hyp&#34;,
+        &#34;pos_gauss_h14&#34;,
+        &#34;amp_gauss_h14_hyp_1&#34;,
+        &#34;amp_gauss_h14_hyp_2&#34;,
+        &#34;amp_gauss_h14_hyp_3&#34;,
+        &#34;fwhm_gauss_h14_hyp_1&#34;,
+        &#34;fwhm_gauss_h14_hyp_2&#34;,
+        &#34;fwhm_gauss_h14_hyp_3&#34;,
     ]
     param_units = {
-        &#34;pos&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;amp_1_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;amp_2_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;amp_3_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;fwhm_1_hyp&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;fwhm_2_hyp&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;fwhm_3_hyp&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;pos_gauss_h14&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;amp_gauss_h14_hyp_1&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;amp_gauss_h14_hyp_2&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;amp_gauss_h14_hyp_3&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;fwhm_gauss_h14_hyp_1&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;fwhm_gauss_h14_hyp_2&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;fwhm_gauss_h14_hyp_23&#34;: &#34;Frequency (MHz)&#34;,
     }
-    fn_type = &#34;feature&#34;
 
     # A14 para = -2.14 MHz
     @staticmethod
@@ -340,13 +425,19 @@ class Gaussian_hyperfine_14(FitFunc):
 
 class Gaussian_hyperfine_15(FitFunc):
 
-    param_defn = [&#34;pos&#34;, &#34;amp_1_hyp&#34;, &#34;amp_2_hyp&#34;, &#34;fwhm_1_hyp&#34;, &#34;fwhm_2_hyp&#34;]
+    param_defn = [
+        &#34;pos_gauss_h15&#34;,
+        &#34;amp_gauss_h15_hyp_1&#34;,
+        &#34;amp_gauss_h15_hyp_2&#34;,
+        &#34;fwhm_gauss_h15_hyp_1&#34;,
+        &#34;fwhm_gauss_h15_hyp_2&#34;,
+    ]
     param_units = {
-        &#34;pos&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;amp_1_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;amp_2_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;fwhm_1_hyp&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;fwhm_2_hyp&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;pos_gauss_h15&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;amp_gauss_h15_hyp_1&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;amp_gauss_h15_hyp_2&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;fwhm_gauss_h15_hyp_1&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;fwhm_gauss_h15_hyp_2&#34;: &#34;Frequency (MHz)&#34;,
     }
 
     # A15 para = 3.03 MHz
@@ -364,13 +455,7 @@ class Gaussian_hyperfine_15(FitFunc):
 
 
 class Lorentzian(FitFunc):
-    &#34;&#34;&#34;
-    Sum of abitary number of lorentzian Class.
-    Define number of lorentzians on instansiation.
-    Call instance as instance(x, inital_paramater_list) where
-    inital_parameter_list is a list of inital guesses for each lorenzian&#39;s
-    fwhm, pos, amp in that order, i.e [fwhm, pos, amp, fwhm2, pos2, amp2...].
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Lorentzian function&#34;&#34;&#34;
 
     param_defn = [&#34;fwhm&#34;, &#34;pos&#34;, &#34;amp&#34;]
     param_units = {&#34;fwhm&#34;: &#34;Freq (MHz)&#34;, &#34;pos&#34;: &#34;Freq (MHz)&#34;, &#34;amp&#34;: &#34;Amp (a.u.)&#34;}
@@ -406,37 +491,25 @@ class Lorentzian(FitFunc):
 
 
 class Lorentzian_hyperfine_14(FitFunc):
-    &#34;&#34;&#34;
-    Sum of abitary number of lorentzian Class.
-    Define number of lorentzians on instansiation.
-    Call instance as instance(x, inital_paramater_list) where
-    inital_parameter_list is a list of inital guesses for each lorenzian&#39;s
-    fwhm, pos, amp in that order, i.e [fwhm, pos, amp, fwhm2, pos2, amp2...].
-    &#34;&#34;&#34;
 
     param_defn = [
-        &#34;pos&#34;,
-        &#34;amp_1_hyp&#34;,
-        &#34;amp_2_hyp&#34;,
-        &#34;amp_3_hyp&#34;,
-        &#34;fwhm_1_hyp&#34;,
-        &#34;fwhm_2_hyp&#34;,
-        &#34;fwhm_3_hyp&#34;,
+        &#34;pos_h14&#34;,
+        &#34;amp_h14_hyp_1&#34;,
+        &#34;amp_h14_hyp_2&#34;,
+        &#34;amp_h14_hyp_3&#34;,
+        &#34;fwhm_h14_hyp_1&#34;,
+        &#34;fwhm_h14_hyp_2&#34;,
+        &#34;fwhm_h14_hyp_3&#34;,
     ]
     param_units = {
-        &#34;pos&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;amp_1_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;amp_2_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;amp_3_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;fwhm_1_hyp&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;fwhm_2_hyp&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;fwhm_3_hyp&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;pos_h14&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;amp_h14_hyp_1&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;amp_h14_hyp_2&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;amp_h14_hyp_3&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;fwhm_h14_hyp_1&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;fwhm_h14_hyp_2&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;fwhm_h14_hyp_23&#34;: &#34;Frequency (MHz)&#34;,
     }
-
-    # def __init__(self, num_peaks):
-    #     super().__initt_(num_peaks)t
-
-    # =================================
 
     # A14 para = -2.14 MHz
     @staticmethod
@@ -453,26 +526,15 @@ class Lorentzian_hyperfine_14(FitFunc):
 
 
 class Lorentzian_hyperfine_15(FitFunc):
-    &#34;&#34;&#34;Sum of abitary number of lorentzian Class.
-    Define number of lorentzians on instansiation.
-    Call instance as instance(x, inital_paramater_list) whereg
-    inital_parameter_list is a list of inital guesses for each lorenzian&#39;s
-    fwhm, pos, amp in that order, i.e [fwhm, pos, amp, fwhm2, pos2, amp2...].
-    &#34;&#34;&#34;
 
-    param_defn = [&#34;pos&#34;, &#34;amp_1_hyp&#34;, &#34;amp_2_hyp&#34;, &#34;fwhm_1_hyp&#34;, &#34;fwhm_2_hyp&#34;]
+    param_defn = [&#34;pos_h15&#34;, &#34;amp_h15_hyp_1&#34;, &#34;amp_h15_hyp_2&#34;, &#34;fwhm_h15_hyp_1&#34;, &#34;fwhm_h15_hyp_2&#34;]
     param_units = {
-        &#34;pos&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;amp_1_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;amp_2_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;fwhm_1_hyp&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;fwhm_2_hyp&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;pos_h15&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;amp_h15_hyp_1&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;amp_h15_hyp_2&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;fwhm_h15_hyp_1&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;fwhm_h15_hyp_2&#34;: &#34;Frequency (MHz)&#34;,
     }
-
-    # def __init__(self, num_peaks):
-    #     super().__init__(num_peaks)
-
-    # =================================
 
     # A15 para = 3.03 MHz
     @staticmethod
@@ -501,6 +563,14 @@ AVAILABLE_FNS = {
     &#34;linear&#34;: Linear,
     &#34;circular&#34;: Circular,
 }
+&#34;&#34;&#34;
+Dictionary that defines fit functions available for use.
+
+Add any functions you define here so you can use them.
+
+Try not to overlap function parameter names.
+&#34;&#34;&#34;
+
 
 # ==========================================================================
 # ==========================================================================</code></pre>
@@ -509,6 +579,15 @@ AVAILABLE_FNS = {
 <section>
 </section>
 <section>
+<h2 class="section-title" id="header-variables">Global variables</h2>
+<dl>
+<dt id="QDMPy.fit_models.AVAILABLE_FNS"><code class="name">var <span class="ident">AVAILABLE_FNS</span></code></dt>
+<dd>
+<div class="desc"><p>Dictionary that defines fit functions available for use.</p>
+<p>Add any functions you define here so you can use them.</p>
+<p>Try not to overlap function parameter names.</p></div>
+</dd>
+</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
@@ -517,12 +596,13 @@ AVAILABLE_FNS = {
 <span>def <span class="ident">get_param_defn</span></span>(<span>fit_model)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Returns list of parameters in fit_model</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_param_defn(fit_model):
+    &#34;&#34;&#34;Returns list of parameters in fit_model&#34;&#34;&#34;
     param_defn_ar = []
     for fn in fit_model.fn_chain:
         param_defn_ar.extend(fn.param_defn)
@@ -533,12 +613,15 @@ AVAILABLE_FNS = {
 <span>def <span class="ident">get_param_odict</span></span>(<span>fit_model)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>get ordered dict of key: param_key (param_name), val: param_unit for all parameters in fit_model</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_param_odict(fit_model):
+    &#34;&#34;&#34;
+    get ordered dict of key: param_key (param_name), val: param_unit for all parameters in fit_model
+    &#34;&#34;&#34;
     param_dict = OrderedDict()
     for fn in fit_model.fn_chain:
         for i in range(len(fn.param_defn)):
@@ -556,12 +639,15 @@ AVAILABLE_FNS = {
 <span>def <span class="ident">get_param_unit</span></span>(<span>fit_model, param_name, param_number)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Get unit for a given param_key (given by param_name + "_" + param_number)</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def get_param_unit(fit_model, param_name, param_number):
+    &#34;&#34;&#34;
+    Get unit for a given param_key (given by param_name + &#34;_&#34; + param_number)
+    &#34;&#34;&#34;
     param_dict = get_param_odict(fit_model)
     return param_dict[param_name + &#34;_&#34; + str(param_number)]</code></pre>
 </details>
@@ -576,24 +662,21 @@ AVAILABLE_FNS = {
 <span>(</span><span>param_indices)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Call instance as instance(x, inital_paramater_list) where
-inital_parameter_list is a list of inital guesses for each Gaussian's
-<em>, </em>, _ in that order, i.e. [].
-fwhm, pos, amp in that order, i.e [fwhm, pos, amp, fwhm2, pos2, amp2&hellip;].</p></div>
+<div class="desc"><p>Circular function (sine)</p>
+<h2 id="argument">Argument</h2>
+<p>param_indices : np array
+where the parameters for this fitfunc are located within broader fitmodel param array</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Circular(FitFunc):
     &#34;&#34;&#34;
-    Call instance as instance(x, inital_paramater_list) where
-    inital_parameter_list is a list of inital guesses for each Gaussian&#39;s
-    _, _, _ in that order, i.e. [].
-    fwhm, pos, amp in that order, i.e [fwhm, pos, amp, fwhm2, pos2, amp2...].
+    Circular function (sine)
     &#34;&#34;&#34;
 
-    param_defn = [&#34;rabi_freq&#34;, &#34;pos&#34;, &#34;amp&#34;]
-    param_units = {&#34;rabi_freq&#34;: &#34;Nu (Hz)&#34;, &#34;pos&#34;: &#34;Tau (s)&#34;, &#34;amp&#34;: &#34;Amp (a.u.)&#34;}
+    param_defn = [&#34;rabi_freq&#34;, &#34;pos_circ&#34;, &#34;amp_circ&#34;]
+    param_units = {&#34;rabi_freq&#34;: &#34;Nu (Hz)&#34;, &#34;pos_circ&#34;: &#34;Tau (s)&#34;, &#34;amp_circ&#34;: &#34;Amp (a.u.)&#34;}
 
     @staticmethod
     @njit
@@ -675,7 +758,10 @@ def grad_fn(x, rabi_freq, pos, amp):
 <span>(</span><span>param_indices)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Constant</p></div>
+<div class="desc"><p>Constant</p>
+<h2 id="argument">Argument</h2>
+<p>param_indices : np array
+where the parameters for this fitfunc are located within broader fitmodel param array</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -683,8 +769,8 @@ def grad_fn(x, rabi_freq, pos, amp):
 <pre><code class="python">class Constant(FitFunc):
     &#34;&#34;&#34;Constant&#34;&#34;&#34;
 
-    param_defn = [&#34;c&#34;]
-    param_units = {&#34;c&#34;: &#34;Amplitude (a.u.)&#34;}
+    param_defn = [&#34;constant&#34;]
+    param_units = {&#34;constant&#34;: &#34;Amplitude (a.u.)&#34;}
 
     # =================================
 
@@ -766,15 +852,24 @@ def grad_fn(x, c):
 <span>(</span><span>param_indices)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Singular fit function</p>
+<h2 id="argument">Argument</h2>
+<p>param_indices : np array
+where the parameters for this fitfunc are located within broader fitmodel param array</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class FitFunc:
+    &#34;&#34;&#34;Singular fit function&#34;&#34;&#34;
 
-    # init should probably tell us where the params exist in the chain
     def __init__(self, param_indices):
+        &#34;&#34;&#34;
+        Argument
+        --------
+        param_indices : np array
+            where the parameters for this fitfunc are located within broader fitmodel param array
+        &#34;&#34;&#34;
         self.this_fn_param_indices = param_indices
 
     # =================================
@@ -840,15 +935,30 @@ def grad_fn(sweep_vec, *fit_params):
 <span>(</span><span>fit_functions)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>FitModel used to fit to data.</p>
+<h2 id="arguments">Arguments</h2>
+<dl>
+<dt><strong><code>fit_functions</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Dict of functions to makeup the fit model, key: fitfunc name, val: number of
+independent copies of that fitfunc.
+format: {"linear": 1, "lorentzian": 8} etc., i.e. options["fit_functions"]</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class FitModel:
-    # this model isn&#39;t used for gpufit
+    &#34;&#34;&#34;FitModel used to fit to data.&#34;&#34;&#34;
+
     def __init__(self, fit_functions):
-        # fit_functions format: {&#34;linear&#34;: 1, &#34;lorentzian&#34;: 8} etc., i.e. options[&#34;fit_functions&#34;]
+        &#34;&#34;&#34;
+        Arguments
+        ---------
+        fit_functions: dict
+            Dict of functions to makeup the fit model, key: fitfunc name, val: number of
+            independent copies of that fitfunc.
+            format: {&#34;linear&#34;: 1, &#34;lorentzian&#34;: 8} etc., i.e. options[&#34;fit_functions&#34;]
+        &#34;&#34;&#34;
 
         self.fit_functions = fit_functions
 
@@ -868,6 +978,21 @@ def grad_fn(sweep_vec, *fit_params):
     # =================================
 
     def __call__(self, param_ar, sweep_vec):
+        &#34;&#34;&#34;
+        Evaluates fitmodel for given parameter values and sweep (affine) parameter values.
+
+        Arguments
+        ---------
+        param_ar : np array, 1D
+            Array of parameters fed into each fitfunc (these are what are fit by sc)
+
+        sweep_vec : np array, 1D or number
+            Affine parameter where the fit model is evaluated
+
+        Returns
+        -------
+        Fit model evaluates at sweep_vec (output is same format as sweep_vec input)
+        &#34;&#34;&#34;
 
         out = np.zeros(np.shape(sweep_vec))
         for fn in self.fn_chain:
@@ -879,11 +1004,13 @@ def grad_fn(sweep_vec, *fit_params):
     # =================================
 
     def residuals_scipy(self, param_ar, sweep_vec, pl_val):
+        &#34;&#34;&#34;Evaluates residual: fit model - PL value &#34;&#34;&#34;
         return self.__call__(param_ar, sweep_vec) - pl_val
 
     # =================================
 
     def jacobian_scipy(self, param_ar, sweep_vec, pl_val):
+        &#34;&#34;&#34;Evaluates jacobian of fitmodel in format expected by scipy least_squares&#34;&#34;&#34;
 
         for i, fn in enumerate(self.fn_chain):
             this_fn_params = param_ar[fn.this_fn_param_indices]
@@ -899,12 +1026,13 @@ def grad_fn(sweep_vec, *fit_params):
 <span>def <span class="ident">jacobian_scipy</span></span>(<span>self, param_ar, sweep_vec, pl_val)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Evaluates jacobian of fitmodel in format expected by scipy least_squares</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def jacobian_scipy(self, param_ar, sweep_vec, pl_val):
+    &#34;&#34;&#34;Evaluates jacobian of fitmodel in format expected by scipy least_squares&#34;&#34;&#34;
 
     for i, fn in enumerate(self.fn_chain):
         this_fn_params = param_ar[fn.this_fn_param_indices]
@@ -919,12 +1047,13 @@ def grad_fn(sweep_vec, *fit_params):
 <span>def <span class="ident">residuals_scipy</span></span>(<span>self, param_ar, sweep_vec, pl_val)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Evaluates residual: fit model - PL value</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def residuals_scipy(self, param_ar, sweep_vec, pl_val):
+    &#34;&#34;&#34;Evaluates residual: fit model - PL value &#34;&#34;&#34;
     return self.__call__(param_ar, sweep_vec) - pl_val</code></pre>
 </details>
 </dd>
@@ -935,26 +1064,23 @@ def grad_fn(sweep_vec, *fit_params):
 <span>(</span><span>param_indices)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Sum of abitary number of Gaussian Class.
-Define number of Gaussians on instansiation.
-Call instance as instance(x, inital_paramater_list) where
-inital_parameter_list is a list of inital guesses for each Gaussian's
-fwhm, pos, amp in that order, i.e [fwhm, pos, amp, fwhm2, pos2, amp2&hellip;].</p></div>
+<div class="desc"><p>Gaussian function</p>
+<h2 id="argument">Argument</h2>
+<p>param_indices : np array
+where the parameters for this fitfunc are located within broader fitmodel param array</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Gaussian(FitFunc):
-    &#34;&#34;&#34;
-    Sum of abitary number of Gaussian Class.
-    Define number of Gaussians on instansiation.
-    Call instance as instance(x, inital_paramater_list) where
-    inital_parameter_list is a list of inital guesses for each Gaussian&#39;s
-    fwhm, pos, amp in that order, i.e [fwhm, pos, amp, fwhm2, pos2, amp2...].
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Gaussian function&#34;&#34;&#34;
 
-    param_defn = [&#34;fwhm&#34;, &#34;pos&#34;, &#34;amp&#34;]
-    param_units = {&#34;fwhm&#34;: &#34;Freq (MHz)&#34;, &#34;pos&#34;: &#34;Freq (MHz)&#34;, &#34;amp&#34;: &#34;Amp (a.u.)&#34;}
+    param_defn = [&#34;fwhm_gauss&#34;, &#34;pos_gauss&#34;, &#34;amp_gauss&#34;]
+    param_units = {
+        &#34;fwhm_gauss&#34;: &#34;Freq (MHz)&#34;,
+        &#34;pos_gauss&#34;: &#34;Freq (MHz)&#34;,
+        &#34;amp_gauss&#34;: &#34;Amp (a.u.)&#34;,
+    }
 
     # =================================
 
@@ -1010,7 +1136,10 @@ def eval(x, fwhm, pos, amp):
 <span>(</span><span>param_indices)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Singular fit function</p>
+<h2 id="argument">Argument</h2>
+<p>param_indices : np array
+where the parameters for this fitfunc are located within broader fitmodel param array</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -1018,24 +1147,23 @@ def eval(x, fwhm, pos, amp):
 <pre><code class="python">class Gaussian_hyperfine_14(FitFunc):
 
     param_defn = [
-        &#34;pos&#34;,
-        &#34;amp_1_hyp&#34;,
-        &#34;amp_2_hyp&#34;,
-        &#34;amp_3_hyp&#34;,
-        &#34;fwhm_1_hyp&#34;,
-        &#34;fwhm_2_hyp&#34;,
-        &#34;fwhm_3_hyp&#34;,
+        &#34;pos_gauss_h14&#34;,
+        &#34;amp_gauss_h14_hyp_1&#34;,
+        &#34;amp_gauss_h14_hyp_2&#34;,
+        &#34;amp_gauss_h14_hyp_3&#34;,
+        &#34;fwhm_gauss_h14_hyp_1&#34;,
+        &#34;fwhm_gauss_h14_hyp_2&#34;,
+        &#34;fwhm_gauss_h14_hyp_3&#34;,
     ]
     param_units = {
-        &#34;pos&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;amp_1_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;amp_2_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;amp_3_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;fwhm_1_hyp&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;fwhm_2_hyp&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;fwhm_3_hyp&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;pos_gauss_h14&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;amp_gauss_h14_hyp_1&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;amp_gauss_h14_hyp_2&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;amp_gauss_h14_hyp_3&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;fwhm_gauss_h14_hyp_1&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;fwhm_gauss_h14_hyp_2&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;fwhm_gauss_h14_hyp_23&#34;: &#34;Frequency (MHz)&#34;,
     }
-    fn_type = &#34;feature&#34;
 
     # A14 para = -2.14 MHz
     @staticmethod
@@ -1053,10 +1181,6 @@ def eval(x, fwhm, pos, amp):
 </ul>
 <h3>Class variables</h3>
 <dl>
-<dt id="QDMPy.fit_models.Gaussian_hyperfine_14.fn_type"><code class="name">var <span class="ident">fn_type</span></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
 <dt id="QDMPy.fit_models.Gaussian_hyperfine_14.param_defn"><code class="name">var <span class="ident">param_defn</span></code></dt>
 <dd>
 <div class="desc"></div>
@@ -1102,20 +1226,29 @@ def eval(x, pos, amp_1_hyp, amp_2_hyp, amp_3_hyp, fwhm_1_hyp, fwhm_2_hyp, fwhm_3
 <span>(</span><span>param_indices)</span>
 </code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>Singular fit function</p>
+<h2 id="argument">Argument</h2>
+<p>param_indices : np array
+where the parameters for this fitfunc are located within broader fitmodel param array</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Gaussian_hyperfine_15(FitFunc):
 
-    param_defn = [&#34;pos&#34;, &#34;amp_1_hyp&#34;, &#34;amp_2_hyp&#34;, &#34;fwhm_1_hyp&#34;, &#34;fwhm_2_hyp&#34;]
+    param_defn = [
+        &#34;pos_gauss_h15&#34;,
+        &#34;amp_gauss_h15_hyp_1&#34;,
+        &#34;amp_gauss_h15_hyp_2&#34;,
+        &#34;fwhm_gauss_h15_hyp_1&#34;,
+        &#34;fwhm_gauss_h15_hyp_2&#34;,
+    ]
     param_units = {
-        &#34;pos&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;amp_1_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;amp_2_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;fwhm_1_hyp&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;fwhm_2_hyp&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;pos_gauss_h15&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;amp_gauss_h15_hyp_1&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;amp_gauss_h15_hyp_2&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;fwhm_gauss_h15_hyp_1&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;fwhm_gauss_h15_hyp_2&#34;: &#34;Frequency (MHz)&#34;,
     }
 
     # A15 para = 3.03 MHz
@@ -1175,13 +1308,16 @@ def eval(x, pos, amp_1_hyp, amp_2_hyp, fwhm_1_hyp, fwhm_2_hyp):
 <span>(</span><span>param_indices)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Constant</p></div>
+<div class="desc"><p>Linear function, y=mx+c</p>
+<h2 id="argument">Argument</h2>
+<p>param_indices : np array
+where the parameters for this fitfunc are located within broader fitmodel param array</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Linear(FitFunc):
-    &#34;&#34;&#34;Constant&#34;&#34;&#34;
+    &#34;&#34;&#34;Linear function, y=mx+c&#34;&#34;&#34;
 
     param_defn = [&#34;c&#34;, &#34;m&#34;]
     param_units = {&#34;c&#34;: &#34;Amplitude (a.u.)&#34;, &#34;m&#34;: &#34;Amplitude per Freq (a.u.)&#34;}
@@ -1270,23 +1406,16 @@ def grad_fn(x, c, m):
 <span>(</span><span>param_indices)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Sum of abitary number of lorentzian Class.
-Define number of lorentzians on instansiation.
-Call instance as instance(x, inital_paramater_list) where
-inital_parameter_list is a list of inital guesses for each lorenzian's
-fwhm, pos, amp in that order, i.e [fwhm, pos, amp, fwhm2, pos2, amp2&hellip;].</p></div>
+<div class="desc"><p>Lorentzian function</p>
+<h2 id="argument">Argument</h2>
+<p>param_indices : np array
+where the parameters for this fitfunc are located within broader fitmodel param array</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Lorentzian(FitFunc):
-    &#34;&#34;&#34;
-    Sum of abitary number of lorentzian Class.
-    Define number of lorentzians on instansiation.
-    Call instance as instance(x, inital_paramater_list) where
-    inital_parameter_list is a list of inital guesses for each lorenzian&#39;s
-    fwhm, pos, amp in that order, i.e [fwhm, pos, amp, fwhm2, pos2, amp2...].
-    &#34;&#34;&#34;
+    &#34;&#34;&#34;Lorentzian function&#34;&#34;&#34;
 
     param_defn = [&#34;fwhm&#34;, &#34;pos&#34;, &#34;amp&#34;]
     param_units = {&#34;fwhm&#34;: &#34;Freq (MHz)&#34;, &#34;pos&#34;: &#34;Freq (MHz)&#34;, &#34;amp&#34;: &#34;Amp (a.u.)&#34;}
@@ -1388,47 +1517,34 @@ def grad_fn(x, fwhm, pos, amp):
 <span>(</span><span>param_indices)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Sum of abitary number of lorentzian Class.
-Define number of lorentzians on instansiation.
-Call instance as instance(x, inital_paramater_list) where
-inital_parameter_list is a list of inital guesses for each lorenzian's
-fwhm, pos, amp in that order, i.e [fwhm, pos, amp, fwhm2, pos2, amp2&hellip;].</p></div>
+<div class="desc"><p>Singular fit function</p>
+<h2 id="argument">Argument</h2>
+<p>param_indices : np array
+where the parameters for this fitfunc are located within broader fitmodel param array</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Lorentzian_hyperfine_14(FitFunc):
-    &#34;&#34;&#34;
-    Sum of abitary number of lorentzian Class.
-    Define number of lorentzians on instansiation.
-    Call instance as instance(x, inital_paramater_list) where
-    inital_parameter_list is a list of inital guesses for each lorenzian&#39;s
-    fwhm, pos, amp in that order, i.e [fwhm, pos, amp, fwhm2, pos2, amp2...].
-    &#34;&#34;&#34;
 
     param_defn = [
-        &#34;pos&#34;,
-        &#34;amp_1_hyp&#34;,
-        &#34;amp_2_hyp&#34;,
-        &#34;amp_3_hyp&#34;,
-        &#34;fwhm_1_hyp&#34;,
-        &#34;fwhm_2_hyp&#34;,
-        &#34;fwhm_3_hyp&#34;,
+        &#34;pos_h14&#34;,
+        &#34;amp_h14_hyp_1&#34;,
+        &#34;amp_h14_hyp_2&#34;,
+        &#34;amp_h14_hyp_3&#34;,
+        &#34;fwhm_h14_hyp_1&#34;,
+        &#34;fwhm_h14_hyp_2&#34;,
+        &#34;fwhm_h14_hyp_3&#34;,
     ]
     param_units = {
-        &#34;pos&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;amp_1_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;amp_2_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;amp_3_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;fwhm_1_hyp&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;fwhm_2_hyp&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;fwhm_3_hyp&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;pos_h14&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;amp_h14_hyp_1&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;amp_h14_hyp_2&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;amp_h14_hyp_3&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;fwhm_h14_hyp_1&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;fwhm_h14_hyp_2&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;fwhm_h14_hyp_23&#34;: &#34;Frequency (MHz)&#34;,
     }
-
-    # def __init__(self, num_peaks):
-    #     super().__initt_(num_peaks)t
-
-    # =================================
 
     # A14 para = -2.14 MHz
     @staticmethod
@@ -1497,36 +1613,24 @@ def eval(x, pos, amp_1_hyp, amp_2_hyp, amp_3_hyp, fwhm_1_hyp, fwhm_2_hyp, fwhm_3
 <span>(</span><span>param_indices)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Sum of abitary number of lorentzian Class.
-Define number of lorentzians on instansiation.
-Call instance as instance(x, inital_paramater_list) whereg
-inital_parameter_list is a list of inital guesses for each lorenzian's
-fwhm, pos, amp in that order, i.e [fwhm, pos, amp, fwhm2, pos2, amp2&hellip;].</p></div>
+<div class="desc"><p>Singular fit function</p>
+<h2 id="argument">Argument</h2>
+<p>param_indices : np array
+where the parameters for this fitfunc are located within broader fitmodel param array</p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">class Lorentzian_hyperfine_15(FitFunc):
-    &#34;&#34;&#34;Sum of abitary number of lorentzian Class.
-    Define number of lorentzians on instansiation.
-    Call instance as instance(x, inital_paramater_list) whereg
-    inital_parameter_list is a list of inital guesses for each lorenzian&#39;s
-    fwhm, pos, amp in that order, i.e [fwhm, pos, amp, fwhm2, pos2, amp2...].
-    &#34;&#34;&#34;
 
-    param_defn = [&#34;pos&#34;, &#34;amp_1_hyp&#34;, &#34;amp_2_hyp&#34;, &#34;fwhm_1_hyp&#34;, &#34;fwhm_2_hyp&#34;]
+    param_defn = [&#34;pos_h15&#34;, &#34;amp_h15_hyp_1&#34;, &#34;amp_h15_hyp_2&#34;, &#34;fwhm_h15_hyp_1&#34;, &#34;fwhm_h15_hyp_2&#34;]
     param_units = {
-        &#34;pos&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;amp_1_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;amp_2_hyp&#34;: &#34;Amplitude (a.u.)&#34;,
-        &#34;fwhm_1_hyp&#34;: &#34;Frequency (MHz)&#34;,
-        &#34;fwhm_2_hyp&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;pos_h15&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;amp_h15_hyp_1&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;amp_h15_hyp_2&#34;: &#34;Amplitude (a.u.)&#34;,
+        &#34;fwhm_h15_hyp_1&#34;: &#34;Frequency (MHz)&#34;,
+        &#34;fwhm_h15_hyp_2&#34;: &#34;Frequency (MHz)&#34;,
     }
-
-    # def __init__(self, num_peaks):
-    #     super().__init__(num_peaks)
-
-    # =================================
 
     # A15 para = 3.03 MHz
     @staticmethod
@@ -1590,12 +1694,21 @@ def eval(x, pos, amp_1_hyp, amp_2_hyp, fwhm_1_hyp, fwhm_2_hyp):
 <nav id="sidebar">
 <h1>Index</h1>
 <div class="toc">
-<ul></ul>
+<ul>
+<li><a href="#classes">Classes</a></li>
+<li><a href="#functions">Functions</a></li>
+<li><a href="#module-variables">Module variables</a></li>
+</ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="QDMPy" href="index.html">QDMPy</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-variables">Global variables</a></h3>
+<ul class="">
+<li><code><a title="QDMPy.fit_models.AVAILABLE_FNS" href="#QDMPy.fit_models.AVAILABLE_FNS">AVAILABLE_FNS</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
@@ -1651,7 +1764,6 @@ def eval(x, pos, amp_1_hyp, amp_2_hyp, fwhm_1_hyp, fwhm_2_hyp):
 <h4><code><a title="QDMPy.fit_models.Gaussian_hyperfine_14" href="#QDMPy.fit_models.Gaussian_hyperfine_14">Gaussian_hyperfine_14</a></code></h4>
 <ul class="">
 <li><code><a title="QDMPy.fit_models.Gaussian_hyperfine_14.eval" href="#QDMPy.fit_models.Gaussian_hyperfine_14.eval">eval</a></code></li>
-<li><code><a title="QDMPy.fit_models.Gaussian_hyperfine_14.fn_type" href="#QDMPy.fit_models.Gaussian_hyperfine_14.fn_type">fn_type</a></code></li>
 <li><code><a title="QDMPy.fit_models.Gaussian_hyperfine_14.param_defn" href="#QDMPy.fit_models.Gaussian_hyperfine_14.param_defn">param_defn</a></code></li>
 <li><code><a title="QDMPy.fit_models.Gaussian_hyperfine_14.param_units" href="#QDMPy.fit_models.Gaussian_hyperfine_14.param_units">param_units</a></code></li>
 </ul>
