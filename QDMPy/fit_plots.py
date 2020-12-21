@@ -1072,6 +1072,14 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
     fig : matplotlib Figure object
     """
 
+    # if no fit completed
+    if pixel_fit_params is None:
+        warnings.warn(
+            "'pixel_fit_params' arg to function 'plot_param_images' is 'None'.\n"
+            + "Probably no pixel fitting completed."
+        )
+        return None
+
     # plot 2 columns wide, as many rows as required
 
     # first get keys we need
@@ -1082,7 +1090,10 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
 
     # this is an inner function so no one uses it elsewhere/protect namespace
     def param_sorter(param):
-        param_name, num = param.split("_")
+        strings = param.split("_")  # e.g. "amp_exp_2" -> ["amp", "exp", "2"]
+        # all we need here is the number at the end actually
+        # param_name_split = strings[:-1]  # list of 'words', e.g. ["amp", "exp"]
+        num = strings[-1]  # grab the number e.g. "2
         return int(num)
 
     # sort based on number (just in case)
@@ -1126,6 +1137,7 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
             except KeyError:
                 # we have one too many axes (i.e. 7 params, 8 subplots), delete the axs
                 fig.delaxes(ax)  # UNTESTED
+                break
 
             c_range = get_colormap_range(
                 options["colormap_range_dicts"]["param_images"], image_data

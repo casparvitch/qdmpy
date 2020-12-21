@@ -230,7 +230,9 @@ class Constant(FitFunc):
     @njit(fastmath=True)
     def eval(x, c):
         """ speed tested multiple methods, this was the fastest """
-        return np.empty(np.shape(x)).fill(c)
+        ret = np.empty(np.shape(x))
+        ret.fill(c)
+        return ret
 
     # =================================
 
@@ -241,7 +243,7 @@ class Constant(FitFunc):
         {output shape: (len(x), 1)}
         """
         J = np.empty((x.shape[0], 1))
-        J[:, 0] = 0
+        J[:, 0] = 1
         return J
 
 
@@ -273,7 +275,7 @@ class Linear(FitFunc):
     @njit(fastmath=True)
     def grad_fn(x, c, m):
         """Compute the grad of the residue, excluding PL as a param
-        {output shape: (len(x), 1)}
+        {output shape: (len(x), 2)}
         """
         J = np.empty((x.shape[0], 2))
         J[:, 0] = 1
@@ -513,7 +515,7 @@ class Stretched_exponential(FitFunc):
     # njit here not speed tested
     @njit
     def eval(x, charac_exp_t, amp_exp, power_exp):
-        amp_exp * np.exp(-((x / charac_exp_t) ** power_exp))
+        return amp_exp * np.exp(-((x / charac_exp_t) ** power_exp))
 
     # =================================
 

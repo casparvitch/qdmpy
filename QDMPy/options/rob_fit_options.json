@@ -28,10 +28,10 @@
     
     "sub_threads": 2, 
 
-    "fit_functions":  {"linear": 1, "stretched_exponential": 1},
+    "fit_functions":  {"constant": 1, "stretched_exponential": 1},
 
-    "c_guess": 1,
-    "c_bounds": [0.9, 1.1],
+    "constant_guess": 1,
+    "constant_bounds": [0.9, 1.1],
 
     "power_exp_guess": 0.7,
     "power_exp_bounds": [0.5, 1.0],
