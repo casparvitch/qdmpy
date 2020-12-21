@@ -4,9 +4,9 @@
 	// ===========================================================================================
 	"base_dir": {}, // base_dir not required, if not "" it is prepended to filepath
     "filepath": {}, // specify path to raw data. 
-    // 500e-6 / 2048. In metres
+    // In metres
     "raw_pixel_size": {
-        "option_default": 0.000000244140625
+        "option_default": 222e-9,
     },
         
     // if true the reference measurement is ignored
@@ -337,6 +337,16 @@
     },
     "fwhm_h14_hyp_3_guess": {
         "option_default": -0.015
+    },
+
+    "fwhm_h14_hyp_1_bounds": {
+        "option_default": [-0.1, -0.001]
+    },
+    "fwhm_h14_hyp_2_bounds": {
+        "option_default": [-0.1, -0.001]
+    },
+    "fwhm_h14_hyp_3_bounds": {
+        "option_default": [-0.1, -0.001]
     },
 
     "power_exp_guess": {

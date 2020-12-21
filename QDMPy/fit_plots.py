@@ -106,9 +106,6 @@ def plot_ROI_PL_image(options, PL_image):
     if options["annotate_image_regions"]:
         annotate_ROI_image(options, ax)
 
-    # TODO implement elliptical/circular mask feature
-    # --> make object that can be passed around, saved/pickled after being tested etc.
-
     return fig
 
 
@@ -368,9 +365,6 @@ def plot_AOI_PL_images(options, PL_image_ROI, AOIs):
     if AOIs == []:
         return None
 
-    # need to convert back to um? TODO implement some sort of scalebar
-    # pixel_size = options["system"].get_raw_pixel_size() * options["total_bin"]
-
     c_map = options["colormaps"]["PL_images"]
     c_range = get_colormap_range(options["colormap_range_dicts"]["PL_images"], PL_image_ROI)
 
@@ -390,9 +384,6 @@ def plot_AOI_PL_images(options, PL_image_ROI, AOIs):
 
     if options["annotate_image_regions"]:
         annotate_AOI_image(options, ax)
-
-    # TODO implement elliptical/circular mask feature
-    # --> make object that can be passed around, saved/pickled after being tested etc.
 
     return fig
 

@@ -19,6 +19,7 @@ Classes
  - `QDMPy.fit_models.Lorentzian`
  - `QDMPy.fit_models.Lorentzian_hyperfine_14`
  - `QDMPy.fit_models.Lorentzian_hyperfine_15`
+ - `QDMPy.fit_models.Stretched_exponential`
 
 Functions
 ---------
@@ -493,6 +494,57 @@ class Lorentzian_hyperfine_15(FitFunc):
 
 
 # ==========================================================================
+# Exponential fit functions
+# ==========================================================================
+
+
+class Stretched_exponential(FitFunc):
+
+    param_defn = ["charac_exp_t", "amp_exp", "power_exp"]
+    param_units = {
+        "charac_exp_t": "Time (s)",
+        "amp_exp": "Amplitude (a.u.)",
+        "power_exp": "Unitless",
+    }
+
+    # =================================
+
+    @staticmethod
+    # njit here not speed tested
+    @njit
+    def eval(x, charac_exp_t, amp_exp, power_exp):
+        amp_exp * np.exp(-((x / charac_exp_t) ** power_exp))
+
+    # =================================
+
+    @staticmethod
+    @njit
+    def grad_fn(x, charac_exp_t, amp_exp, power_exp):
+        """Compute the grad of the residue, excluding PL as a param
+        {output shape: (len(x), 3)}
+        """
+
+        J = np.empty((x.shape[0], 3), dtype=np.float32)
+        # stretched exponential = a * e ^ ((x / t) ^ p)
+        J[:, 0] = np.exp(-((x / charac_exp_t) ** power_exp))
+        # -(a p e^((x/t)^p) (x/t)^p)/t
+        J[:, 1] = (1 / charac_exp_t) * (
+            amp_exp
+            * power_exp
+            * np.exp(-((x / charac_exp_t) ** power_exp))
+            * (x / charac_exp_t) ** power_exp
+        )
+        # a e^((x/t)^p) (x/t)^p log(x/t)
+        J[:, 2] = (
+            -amp_exp
+            * np.exp(-((x / charac_exp_t) ** power_exp))
+            * (x / charac_exp_t) ** power_exp
+            * np.log(x / charac_exp_t)
+        )
+        return J
+
+
+# ==========================================================================
 # ==========================================================================
 
 # TODO add exponentials... consult T1, T2 people etc.
@@ -507,6 +559,7 @@ AVAILABLE_FNS = {
     "constant": Constant,
     "linear": Linear,
     "circular": Circular,
+    "stretched_exponential": Stretched_exponential,
 }
 """
 Dictionary that defines fit functions available for use.

@@ -229,6 +229,23 @@ class Zyla(UniMelb):
         return self.options_dict["raw_pixel_size"]["option_default"]
 
 
+class LiamsWidefield(UniMelb):
+    """
+    Specific system details for Liam's Widefield QDM.
+    """
+
+    name = "Zyla"
+    config_path = DIR_PATH / "options/liam_widefield_config.json"
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(self, *args, **kwargs)
+        # ensure all values default to None (at all levels of reading in json)
+        self.options_dict = misc.json_to_dict(self.config_path, hook="dd")
+
+    def get_raw_pixel_size(self):
+        return self.options_dict["raw_pixel_size"]["option_default"]
+
+
 def choose_system(name):
     return SYSTEMS_DICT[name]()
 
@@ -295,7 +312,7 @@ def clean_options(options):
         check_options(options)
 
 
-SYSTEMS_DICT = {"Zyla": Zyla}
+SYSTEMS_DICT = {"Zyla": Zyla, "Liams_Widefield": LiamsWidefield}
 """
 Dictionary that defines systems available for use.
 
