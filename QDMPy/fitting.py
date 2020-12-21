@@ -212,8 +212,8 @@ def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
 
     # fit *all* pl data (i.e. summing over FOV)
     # collapse to just pl_ar (as function of sweep, 1D)
-    pl_roi = np.nansum(np.nansum(sig_norm, 2), 1)
-    pl_roi = (pl_roi / np.max(pl_roi)).copy()  # .copy() untested 2020-11-27
+    pl_roi = np.nanmean(np.nanmean(sig_norm, axis=2), axis=1)
+    # pl_roi = (pl_roi / np.max(pl_roi)).copy()  # .copy() untested 2020-11-27
 
     fit_options, init_guess = prepare_fit_options(options, fit_model)
 
@@ -334,8 +334,8 @@ def fit_AOIs(options, sig_norm, sweep_list, fit_model, AOIs, roi_avg_fit_result)
 
     for AOI in AOIs:
         aoi_sig_norm = sig_norm[:, AOI[0], AOI[1]]
-        aoi_avg = np.nansum(np.nansum(aoi_sig_norm, 2), 1)
-        aoi_avg = (aoi_avg / np.max(aoi_avg)).copy()
+        aoi_avg = np.nanmean(np.nanmean(aoi_sig_norm, axis=2), axis=1)
+        # aoi_avg = (aoi_avg / np.max(aoi_avg)).copy()
 
         fitting_results = least_squares(
             fit_model.residuals_scipy, guess_params, args=(sweep_list, aoi_avg), **fit_opts

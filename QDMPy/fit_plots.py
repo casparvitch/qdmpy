@@ -27,7 +27,6 @@ Functions
  - `QDMPy.fit_plots.deviation_from_mean`
  - `QDMPy.fit_plots.percentile`
  - `QDMPy.fit_plots.percentile_sym_zero`
-
 """
 
 # ============================================================================
@@ -618,10 +617,10 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
     sig_avgs = []
     ref_avgs = []
     for i, AOI in enumerate(AOIs):
-        sig_avg = np.nansum(np.nansum(sig[:, AOI[0], AOI[1]], 2), 1)
-        sig_avg = sig_avg / np.max(sig_avg)
-        ref_avg = np.nansum(np.nansum(ref[:, AOI[0], AOI[1]], 2), 1)
-        ref_avg = ref_avg / np.max(ref_avg)
+        sig_avg = np.nanmean(np.nanmean(sig[:, AOI[0], AOI[1]], axis=2), axis=1)
+        # sig_avg = sig_avg / np.max(sig_avg)
+        ref_avg = np.nanmean(np.nanmean(ref[:, AOI[0], AOI[1]], axis=2), axis=1)
+        # ref_avg = ref_avg / np.max(ref_avg)
         sig_avgs.append(sig_avg)
         ref_avgs.append(ref_avg)
 
@@ -812,24 +811,24 @@ def plot_AOI_spectra_fit(
     sz_h = int(options["metadata"]["AOIHeight"] / options["additional_bins"])
     sz_w = int(options["metadata"]["AOIWidth"] / options["additional_bins"])
     ROI = data_loading.define_ROI(options, sz_h, sz_w)
-    roi_avg_sig = np.nansum(np.nansum(sig[:, ROI[0], ROI[1]], 2), 1)
-    roi_avg_sig = roi_avg_sig / np.max(roi_avg_sig)
-    roi_avg_ref = np.nansum(np.nansum(ref[:, ROI[0], ROI[1]], 2), 1)
-    roi_avg_ref = roi_avg_ref / np.max(roi_avg_ref)
+    roi_avg_sig = np.nanmean(np.nanmean(sig[:, ROI[0], ROI[1]], axis=2), axis=1)
+    # roi_avg_sig = roi_avg_sig / np.max(roi_avg_sig)
+    roi_avg_ref = np.nanmean(np.nanmean(ref[:, ROI[0], ROI[1]], axis=2), axis=1)
+    # roi_avg_ref = roi_avg_ref / np.max(roi_avg_ref)
     sig_avgs.append(roi_avg_sig)
     ref_avgs.append(roi_avg_ref)
     # add single pixel check
     pixel_sig = sig[:, options["single_pixel_check"][0], options["single_pixel_check"][1]]
-    pixel_sig = pixel_sig / np.max(pixel_sig)
+    # pixel_sig = pixel_sig / np.max(pixel_sig)
     pixel_ref = ref[:, options["single_pixel_check"][0], options["single_pixel_check"][1]]
-    pixel_ref = pixel_ref / np.max(pixel_ref)
+    # pixel_ref = pixel_ref / np.max(pixel_ref)
     sig_avgs.append(pixel_sig)
     ref_avgs.append(pixel_ref)
     for i, AOI in enumerate(AOIs):
-        sig_avg = np.nansum(np.nansum(sig[:, AOI[0], AOI[1]], 2), 1)
-        sig_avg = sig_avg / np.max(sig_avg)
-        ref_avg = np.nansum(np.nansum(ref[:, AOI[0], AOI[1]], 2), 1)
-        ref_avg = ref_avg / np.max(ref_avg)
+        sig_avg = np.nanmean(np.nanmean(sig[:, AOI[0], AOI[1]], axis=2), axis=1)
+        # sig_avg = sig_avg / np.max(sig_avg)
+        ref_avg = np.nanmean(np.nanmean(ref[:, AOI[0], AOI[1]], axis=2), axis=1)
+        # ref_avg = ref_avg / np.max(ref_avg)
         sig_avgs.append(sig_avg)
         ref_avgs.append(ref_avg)
 

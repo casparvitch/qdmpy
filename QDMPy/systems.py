@@ -231,10 +231,10 @@ class Zyla(UniMelb):
 
 class LiamsWidefield(UniMelb):
     """
-    Specific system details for Liam's Widefield QDM.
+    Specific system details for Liam's Widefield QDM. Currently a copy of Zyla
     """
 
-    name = "Zyla"
+    name = "Liams Widefield"
     config_path = DIR_PATH / "options/liam_widefield_config.json"
 
     def __init__(self, *args, **kwargs):

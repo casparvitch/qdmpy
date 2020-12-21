@@ -1,6 +1,6 @@
 {
     "base_dir": "/home/samsc/Desktop/",
-    "filepath": "ODMR - Pulsed with IR_83",
+    "filepath": "Spin relaxation (T1)_19",
     
     "additional_bins": 4, 
 
@@ -13,11 +13,11 @@
     "normalisation": "div",
     
     "single_pixel_check": [30, 30],
-    "area_1_centre": [15, 75], 
+    "area_1_centre": [15, 23], 
     "area_1_halfsize": 3, 
-    "area_2_centre": [75, 80],
+    "area_2_centre": [23, 18],
     "area_2_halfsize": 3,
-    "area_3_centre": [95, 25],
+    "area_3_centre": [50, 50],
     "area_3_halfsize": 3,
 
 
@@ -28,30 +28,17 @@
     
     "sub_threads": 2, 
 
-    "fit_functions":  {"linear": 1, "stretched_exponetial": 1},
+    "fit_functions":  {"linear": 1, "stretched_exponential": 1},
 
     "c_guess": 1,
-    "c_bounds": [1, 1],
+    "c_bounds": [0.9, 1.1],
 
-    "power_exp_guess": {
-        "option_default": 0.7
-    },
-    "power_exp_bounds": {
-        "option_default": [0.5, 1.0]
-    },
+    "power_exp_guess": 0.7,
+    "power_exp_bounds": [0.5, 1.0],
 
-    "charac_exp_t_guess": {
-        "option_default": 1e-3
-    },
-    "charac_exp_t_bounds": {
-        "option_default": [100e-6, 30e-3]
-    },
+    "charac_exp_t_guess": 1e-3,
+    "charac_exp_t_bounds": [100e-6, 30e-3],
 
-    "amp_exp_guess": {
-        "option_default": -0.07
-
-    },
-    "amp_exp_bounds": {
-        "option_default": [-0.001, -0.2]
-    },
+    "amp_exp_guess": 0.07,
+    "amp_exp_bounds": [0.001, 0.2]
 }

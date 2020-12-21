@@ -526,14 +526,15 @@ class Stretched_exponential(FitFunc):
 
         J = np.empty((x.shape[0], 3), dtype=np.float32)
         # stretched exponential = a * e ^ ((x / t) ^ p)
-        J[:, 0] = np.exp(-((x / charac_exp_t) ** power_exp))
         # -(a p e^((x/t)^p) (x/t)^p)/t
-        J[:, 1] = (1 / charac_exp_t) * (
+        J[:, 0] = (1 / charac_exp_t) * (
             amp_exp
             * power_exp
             * np.exp(-((x / charac_exp_t) ** power_exp))
             * (x / charac_exp_t) ** power_exp
         )
+        # just lose the 'a'
+        J[:, 1] = np.exp(-((x / charac_exp_t) ** power_exp))
         # a e^((x/t)^p) (x/t)^p log(x/t)
         J[:, 2] = (
             -amp_exp
