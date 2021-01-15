@@ -34,7 +34,7 @@
 <li><code><a title="QDMPy.fitting.fit_single_pixel" href="#QDMPy.fitting.fit_single_pixel">fit_single_pixel()</a></code></li>
 <li><code><a title="QDMPy.fitting.fit_AOIs" href="#QDMPy.fitting.fit_AOIs">fit_AOIs()</a></code></li>
 <li><code><a title="QDMPy.fitting.limit_cpu" href="#QDMPy.fitting.limit_cpu">limit_cpu()</a></code></li>
-<li><code><a title="QDMPy.fitting.my_gen" href="#QDMPy.fitting.my_gen">my_gen()</a></code></li>
+<li><code><a title="QDMPy.fitting.scipy_generator" href="#QDMPy.fitting.scipy_generator">scipy_generator()</a></code></li>
 <li><code><a title="QDMPy.fitting.to_squares_wrapper" href="#QDMPy.fitting.to_squares_wrapper">to_squares_wrapper()</a></code></li>
 <li><code><a title="QDMPy.fitting.shuffle_pixels" href="#QDMPy.fitting.shuffle_pixels">shuffle_pixels()</a></code></li>
 <li><code><a title="QDMPy.fitting.unshuffle_pixels" href="#QDMPy.fitting.unshuffle_pixels">unshuffle_pixels()</a></code></li>
@@ -67,7 +67,7 @@ Functions
  - `QDMPy.fitting.fit_single_pixel`
  - `QDMPy.fitting.fit_AOIs`
  - `QDMPy.fitting.limit_cpu`
- - `QDMPy.fitting.my_gen`
+ - `QDMPy.fitting.scipy_generator`
  - `QDMPy.fitting.to_squares_wrapper`
  - `QDMPy.fitting.shuffle_pixels`
  - `QDMPy.fitting.unshuffle_pixels`
@@ -419,7 +419,7 @@ def limit_cpu():
 # ==========================================================================
 
 
-def my_gen(our_array):
+def scipy_generator(our_array):
     &#34;&#34;&#34;
     Simple generator to shape data as expected by least_squares in concurrent method.
 
@@ -461,7 +461,7 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, kwargs={}):
         Array (or I guess single value, anything iterable) of affine parameter (tau/freq)
 
     shaped_data : list (3 elements)
-        array returned by `fitting.my_gen`: [x, y, sig_norm[:, x, y]]
+        array returned by `fitting.scipy_generator`: [x, y, sig_norm[:, x, y]]
 
     kwargs : dict
         Other options (dict) passed to least_squares, i.e. fit_options
@@ -628,7 +628,7 @@ def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
                     repeat(fit_model.residuals_scipy),
                     repeat(init_params),
                     repeat(sweep_ar),
-                    my_gen(pixel_data),
+                    scipy_generator(pixel_data),
                     repeat(roi_avg_fit_result.fit_options),
                     chunksize=chunksize,
                 ),
@@ -1214,7 +1214,7 @@ from.</dd>
                     repeat(fit_model.residuals_scipy),
                     repeat(init_params),
                     repeat(sweep_ar),
-                    my_gen(pixel_data),
+                    scipy_generator(pixel_data),
                     repeat(roi_avg_fit_result.fit_options),
                     chunksize=chunksize,
                 ),
@@ -1593,8 +1593,8 @@ This is probably a little useless, we could extract from any of the results.</dd
     return fit_param_res_dict</code></pre>
 </details>
 </dd>
-<dt id="QDMPy.fitting.my_gen"><code class="name flex">
-<span>def <span class="ident">my_gen</span></span>(<span>our_array)</span>
+<dt id="QDMPy.fitting.scipy_generator"><code class="name flex">
+<span>def <span class="ident">scipy_generator</span></span>(<span>our_array)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Simple generator to shape data as expected by least_squares in concurrent method.</p>
@@ -1611,7 +1611,7 @@ See also: <code>fitting.to_squares_wrapper</code></p>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def my_gen(our_array):
+<pre><code class="python">def scipy_generator(our_array):
     &#34;&#34;&#34;
     Simple generator to shape data as expected by least_squares in concurrent method.
 
@@ -1775,7 +1775,7 @@ solution is which (or where).</p>
 <dt><strong><code>sweep_vec</code></strong> :&ensp;<code>np array</code></dt>
 <dd>Array (or I guess single value, anything iterable) of affine parameter (tau/freq)</dd>
 <dt><strong><code>shaped_data</code></strong> :&ensp;<code>list (3 elements)</code></dt>
-<dd>array returned by <code>fitting.my_gen</code>: [x, y, sig_norm[:, x, y]]</dd>
+<dd>array returned by <code>fitting.scipy_generator</code>: [x, y, sig_norm[:, x, y]]</dd>
 <dt><strong><code>kwargs</code></strong> :&ensp;<code>dict</code></dt>
 <dd>Other options (dict) passed to least_squares, i.e. fit_options</dd>
 </dl>
@@ -1803,7 +1803,7 @@ I.e. the position of the fit result, and then the fit result parameters array.</
         Array (or I guess single value, anything iterable) of affine parameter (tau/freq)
 
     shaped_data : list (3 elements)
-        array returned by `fitting.my_gen`: [x, y, sig_norm[:, x, y]]
+        array returned by `fitting.scipy_generator`: [x, y, sig_norm[:, x, y]]
 
     kwargs : dict
         Other options (dict) passed to least_squares, i.e. fit_options
@@ -2078,7 +2078,7 @@ Options passed to scipy least_squares.</p></div>
 <li><code><a title="QDMPy.fitting.limit_cpu" href="#QDMPy.fitting.limit_cpu">limit_cpu</a></code></li>
 <li><code><a title="QDMPy.fitting.load_fit_param" href="#QDMPy.fitting.load_fit_param">load_fit_param</a></code></li>
 <li><code><a title="QDMPy.fitting.load_prev_fit_results" href="#QDMPy.fitting.load_prev_fit_results">load_prev_fit_results</a></code></li>
-<li><code><a title="QDMPy.fitting.my_gen" href="#QDMPy.fitting.my_gen">my_gen</a></code></li>
+<li><code><a title="QDMPy.fitting.scipy_generator" href="#QDMPy.fitting.scipy_generator">scipy_generator</a></code></li>
 <li><code><a title="QDMPy.fitting.prepare_fit_options" href="#QDMPy.fitting.prepare_fit_options">prepare_fit_options</a></code></li>
 <li><code><a title="QDMPy.fitting.shuffle_pixels" href="#QDMPy.fitting.shuffle_pixels">shuffle_pixels</a></code></li>
 <li><code><a title="QDMPy.fitting.to_squares_wrapper" href="#QDMPy.fitting.to_squares_wrapper">to_squares_wrapper</a></code></li>

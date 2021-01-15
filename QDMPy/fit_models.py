@@ -3,6 +3,8 @@
 """
 This module defines the fit model used. Currently only supports scipy least_squares on CPU.
 
+TODO rewrite, we do kind of use GPU, but we grab this fit model and work out what modelID automcly.
+
 Ensure any fit functions you define are added to the AVAILABLE_FNS module variable.
 Try not to have overlapping parameter names in the same fit.
 
@@ -41,6 +43,8 @@ __author__ = "Sam Scholten"
 import numpy as np
 from numba import njit
 from collections import OrderedDict
+
+# ============================================================================
 
 
 # ================================================================================================

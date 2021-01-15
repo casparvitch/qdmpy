@@ -1,0 +1,331 @@
+# -*- coding: utf-8 -*-
+"""
+This module holds ... TODO
+
+Classes
+-------
+ - `QDMPy.fit_shared.FitResultCollection`
+ - `QDMPy.fit_shared.ROIAvgFitResult`
+
+Functions
+---------
+ - `QDMPy.fit_shared.shuffle_pixels`
+ - `QDMPy.fit_shared.unshuffle_pixels`
+ - `QDMPy.fit_shared.unshuffle_fit_results`
+ - `QDMPy.fit_shared.pixel_generator`
+ - `QDMPy.fit_shared.gen_init_guesses`
+ - `QDMPy.fit_shared.bounds_from_range`
+"""
+# ============================================================================
+
+__author__ = "Sam Scholten"
+
+# ============================================================================
+
+
+import numpy as np
+
+# ============================================================================
+
+import QDMPy.fit_models as fit_models
+import QDMPy.misc as misc
+
+
+# ============================================================================
+
+
+class FitResultCollection:
+    """Object to hold AOI average fit results, and a place to define their names."""
+
+    def __init__(self, fit_backend, roi_avg_fit_result, single_pixel_result, AOI_fit_results_lst):
+        """
+        Arguments
+        ---------
+        fit_backend : str
+            Name of the fit backend (e.g. scipy, gpufit, etc.) used.
+
+        roi_avg_fit_result
+            `QDMPy.fit_shared.ROIAvgFitResult` object.
+
+        single_pixel_result
+            Best (optimal) fit/model parameters for single pixel check.
+
+        AOI_fit_results_lst : list of lists
+            List of (list of) best (optimal) parameters, for each AOI region (avg).
+        """
+        self.fit_backend = fit_backend
+        self.roi_avg_fit_result = roi_avg_fit_result
+        self.single_pixel_fit_result = single_pixel_result
+        self.AOI_fit_results_lst = AOI_fit_results_lst
+
+
+# ============================================================================
+
+
+class ROIAvgFitResult:
+    """Object to hold ROI average fit result, and a place to define result names."""
+
+    def __init__(
+        self,
+        fit_backend,
+        fit_options,
+        fit_model,
+        pl_roi,
+        sweep_list,
+        best_params,
+        init_param_guess,
+    ):
+        """
+        Arguments
+        ---------
+        fit_backend : string
+            Name of the fit backend (e.g. scipy, gpufit, etc.)
+
+        fit_options : dict
+            Options dictionary for this fit method, as will be passed to fitting function.
+            E.g. scipy least_squares is handed various options as a dictionary.
+
+        pl_roi : np array, 1D
+            PL data summed over FOV, as fn of sweep_vec.
+
+        sweep_list : np array, 1D
+            Affine parameter i.e. tau or frequency.
+
+        best_params : np array, 1D
+            Solution fit parameters array.
+        """
+
+        self.fit_backend = fit_backend
+        """
+        fit_backend : str
+            Name of the fit method (e.g. scipy, gpufit, etc.)
+        """
+
+        self.fit_options = fit_options
+        """
+        fit_options : dict
+            Options dictionary for this fit method, as will be passed to fitting function.
+            E.g. scipy least_squares is handed various options as a dictionary.
+        """
+        self.fit_model = fit_model
+
+        self.pl_roi = pl_roi
+        self.sweep_list = sweep_list
+
+        self.best_params = best_params
+        self.init_param_guess = init_param_guess
+
+    def savejson(self, filename, dir):
+        """ Save all attributes as a json file in dir/filename, via `misc.dict_to_json` """
+
+        output_dict = {
+            "fit_backend": self.fit_backend,
+            "pl_roi": self.pl_roi,
+            "sweep_list": self.sweep_list,
+            "best_params": self.best_params,
+            "init_param_guess": self.init_param_guess,
+        }
+        misc.dict_to_json(output_dict, filename, dir)
+
+
+# ============================================================================
+
+
+def shuffle_pixels(data_3d):
+    """
+    Simple shuffler
+
+    Arguments
+    ---------
+    data_3d : np array, 3D
+        i.e. sig_norm data, [affine param, x, y].
+
+    Returns
+    -------
+    shuffled_in_xy : np array, 3D
+        data_3d shuffled in 2nd, 3rd axis.
+
+    (x_unshuf, y_unshuf) : Both np arrays
+        Can be used to unshuffle shuffled_in_xy, i.e. through `fitting.unshuffled_pixels`.
+    """
+
+    rng = np.random.default_rng()
+
+    x_shuf = rng.permutation(data_3d.shape[1])
+    x_unshuf = np.argsort(x_shuf)
+    y_shuf = rng.permutation(data_3d.shape[2])
+    y_unshuf = np.argsort(y_shuf)
+
+    shuffled_in_x = data_3d[:, x_shuf, :]
+    shuffled_in_xy = shuffled_in_x[:, :, y_shuf]
+
+    # return shuffled pixels, and arrays to unshuffle
+    return shuffled_in_xy.copy(), (x_unshuf, y_unshuf)
+
+
+# =================================
+
+
+def unshuffle_pixels(data_2d, unshuffler):
+    """
+    Simple shuffler
+
+    Arguments
+    ---------
+    data_2d : np array, 2D
+        i.e. 'image' of a single fit parameter, all shuffled up!
+
+    unshuffler : (x_unshuf, y_unshuf)
+        Two arrays returned by fitting.shuffle_pixels that allow unshuffling of data_2d.
+
+    Returns
+    -------
+    unshuffled_in_xy: np array, 2D
+        data_2d but the inverse operation of `fitting.shuffle_pixels` has been applied
+    """
+    x_unshuf, y_unshuf = unshuffler
+    unshuffled_in_x = data_2d[x_unshuf, :]
+    unshuffled_in_xy = unshuffled_in_x[:, y_unshuf]
+    return unshuffled_in_xy.copy()
+
+
+# =================================
+
+
+def unshuffle_fit_results(fit_result_dict, unshuffler):
+    """
+    Simple shuffler
+
+    Arguments
+    ---------
+    fit_result_dict : dict
+        Dictionary, key: param_names, val: image (2D) of param values across FOV. Each image
+        requires reshuffling (which this function achieves).
+
+    unshuffler : (x_unshuf, y_unshuf)
+        Two arrays returned by fitting.shuffle_pixels that allow unshuffling of data_2d.
+
+    Returns
+    -------
+    fit_result_dict : same as input, but each fit parameter has been unshuffled.
+    """
+    for key, array in fit_result_dict.items():
+        fit_result_dict[key] = unshuffle_pixels(array, unshuffler)
+    return fit_result_dict
+
+
+# ============================================================================
+
+
+def pixel_generator(our_array):
+    """
+    Simple generator to shape data as expected by to_squares_wrapper in scipy concurrent method.
+
+    Also allows us to track *where* (i.e. which pixel location) each result corresponds to.
+    See also: `QDMPy.fit_scipy.to_squares_wrapper`
+
+    Arguments
+    ---------
+    our_array : np array, 3D
+        Shape: [sweep_list, x, y]
+
+    Returns
+    -------
+    [x, y, our_array[:, x, y]] : generator (yielded)
+    """
+    len_z, len_x, len_y = np.shape(our_array)
+    for x in range(len_x):
+        for y in range(len_y):
+            yield [x, y, our_array[:, x, y]]
+
+
+# ============================================================================
+
+
+def gen_init_guesses(options):
+    """
+    Generate initial guesses (and bounds) in fit parameters from options dictionary.
+
+    Both are returned as dictionaries, you need to use 'gen_{scipy/gpufit/...}_init_guesses'
+    to convert to the correct (array) format for each specific fitting backend.
+
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    init_guesses : dict
+        Dict holding guesses for each parameter, e.g. key -> list of guesses for each independent
+        version of that fn_type.
+
+    init_bounds : dict
+        Dict holding guesses for each parameter, e.g. key -> list of bounds for each independent
+        version of that fn_type.
+    """
+    init_guesses = {}
+    init_bounds = {}
+
+    for fn_type, num in options["fit_functions"].items():
+        fit_func = fit_models.AVAILABLE_FNS[fn_type](num)
+        for param_key in fit_func.param_defn:
+            guess = options[param_key + "_guess"]
+            if param_key + "_range" in options:
+                bounds = bounds_from_range(options, param_key)
+            elif param_key + "_bounds" in options:
+                # assumes bounds are passed in with correct formatatting
+                bounds = options[param_key + "_bounds"]
+            else:
+                raise RuntimeError(f"Provide bounds for the {fn_type}.{param_key} param.")
+
+            if guess is not None:
+                init_guesses[param_key] = guess
+                init_bounds[param_key] = np.array(bounds)
+            else:
+                raise RuntimeError(f"Not sure why your guess for {fn_type}.{param_key} is None?")
+
+    return init_guesses, init_bounds
+
+
+# ============================================================================
+
+
+def bounds_from_range(options, param_key):
+    """Generate parameter bounds (list, len 2) when given a range option."""
+    guess = options[param_key + "_guess"]
+    rang = options[param_key + "_range"]
+    if type(guess) is list and len(guess) > 1:
+
+        # separate bounds for each fn of this type
+        if type(rang) is list and len(rang) > 1:
+            bounds = [
+                [each_guess - each_range, each_guess + each_range]
+                for each_guess, each_range in zip(guess, rang)
+            ]
+        # separate guess for each fn of this type, all with same range
+        else:
+            bounds = [
+                [
+                    each_guess - rang,
+                    each_guess + rang,
+                ]
+                for each_guess in guess
+            ]
+    else:
+        if type(rang) is list:
+            if len(rang) == 1:
+                rang = rang[0]
+            else:
+                raise RuntimeError("param range len should match guess len")
+        # param guess and range are just single vals (easy!)
+        else:
+            bounds = [
+                guess - rang,
+                guess + rang,
+            ]
+    return bounds
+
+
+# ============================================================================

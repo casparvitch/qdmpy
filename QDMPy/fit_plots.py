@@ -14,7 +14,7 @@ Functions
  - `QDMPy.fit_plots.plot_AOI_PL_images`
  - `QDMPy.fit_plots.plot_image`
  - `QDMPy.fit_plots.plot_image_on_ax`
- - `QDMPy.fit_plots.plot_ROI_avg_fit`
+ - `QDMPy.fit_plots.plot_ROI_avg_fits`
  - `QDMPy.fit_plots.plot_AOI_spectra`
  - `QDMPy.fit_plots.plot_AOI_spectra_fit`
  - `QDMPy.fit_plots.plot_param_image`
@@ -48,17 +48,10 @@ import warnings
 
 import QDMPy.systems as systems
 import QDMPy.fit_models as fit_models
-import QDMPy.fitting as fitting
+
 import QDMPy.data_loading as data_loading
 import QDMPy.misc as misc
 
-# ============================================================================
-
-"""
-NOTES
-
-- MHz has been hardcoded in some places for the plots here, how to generalise?
-"""
 
 # ===========================================================================
 
@@ -500,7 +493,7 @@ def plot_image_on_ax(fig, ax, options, image_data, title, c_map, c_range, c_labe
 # ============================================================================
 
 
-def plot_ROI_avg_fit(options, roi_avg_fit_result):
+def plot_ROI_avg_fits(options, backend_ROI_results_lst):
     """
     Plots fit of spectrum averaged across ROI, as well as corresponding residual values.
 
@@ -509,70 +502,88 @@ def plot_ROI_avg_fit(options, roi_avg_fit_result):
     options : dict
         Generic options dict holding all the user options.
 
-    roi_avg_fit_result : `QDMPy.fitting.FitResultROIAvg`
-        `QDMPy.fitting.FitResultROIAvg` object, to pull fit_options from.
+    backend_ROI_results_lst : list of tuples
+        Format: (fit_backend, `QDMPy.fitting.FitResultROIAvg` objects), for each fit_backend
 
     Returns
     -------
     fig : matplotlib Figure object
     """
-    res = roi_avg_fit_result
 
     fig = plt.figure(constrained_layout=False)  # constrained doesn't work well here
     # xstart, ystart, xend, yend [units are fraction of the image frame, from bottom left corner]
     spectrum_frame = fig.add_axes((0.1, 0.3, 0.8, 0.6))
 
-    # ODMR spectrum
     spectrum_frame.plot(
-        res.fit_sweep_vector,
-        res.init_fit,
-        linestyle=(0, (1, 1)),
-        label="init guess",
-        c="darkgreen",
-    )
-    spectrum_frame.plot(
-        res.fit_sweep_vector,
-        res.scipy_best_fit,
-        linestyle="--",
-        label="scipy best fit",
-        c="mediumblue",
-    )
-    spectrum_frame.plot(
-        res.sweep_list,
-        res.pl_roi,
+        backend_ROI_results_lst[0].sweep_list,
+        backend_ROI_results_lst[0].pl_roi,
         label="raw data",
         ls=" ",
         marker="o",
         mfc="w",
         mec="firebrick",
     )
+    high_res_sweep_list = np.linspace(
+        np.min(backend_ROI_results_lst[0].sweep_list),
+        np.max(backend_ROI_results_lst[0].sweep_list),
+        10000,
+    )
+    high_res_init_fit = backend_ROI_results_lst[0].fit_model(
+        backend_ROI_results_lst[0].init_param_guess, high_res_sweep_list
+    )
+    spectrum_frame.plot(
+        high_res_sweep_list,
+        high_res_init_fit,
+        linestyle=(0, (1, 1)),
+        label="init guess",
+        c="darkgreen",
+    )
     spectrum_frame.set_xticklabels([])  # remove from first frame
-    spectrum_frame.legend()
     spectrum_frame.grid()
     spectrum_frame.set_ylabel("PL (a.u.)")
 
     # residual plot
     residual_frame = fig.add_axes((0.1, 0.1, 0.8, 0.2))
-    res_xdata = res.sweep_list
-    res_ydata = res.best_fit_pl_vals - res.pl_roi
 
-    residual_frame.plot(
-        res_xdata,
-        res_ydata,
-        label="residual",
-        ls="dashed",
-        c="black",
-        marker="o",
-        mfc="w",
-        mec="k",
-    )
-    residual_frame.legend()
     residual_frame.grid()
     residual_frame.set_xlabel("Sweep parameter")
 
-    roi_avg_fit_result.savejson("ROI_avg_fit.json", options["data_dir"])
+    for res in backend_ROI_results_lst:
+
+        # ODMR spectrum_frame
+        high_res_best_fit = res.fit_model(res.best_params, high_res_sweep_list)
+
+        spectrum_frame.plot(
+            high_res_sweep_list,
+            high_res_best_fit,
+            linestyle="--",
+            label=f"{res.fit_backend} best fit",
+            c=options["fit_backend_colors"][res.fit_backend]["roifit_linecolor"],
+        )
+
+        residual_xdata = res.sweep_list
+        residual_ydata = res.fit_model(res.best_params, res.sweep_list) - res.pl_roi
+
+        residual_frame.plot(
+            residual_xdata,
+            residual_ydata,
+            label=f"{res.fit_backend} residual",
+            ls="dashed",
+            c=options["fit_backend_colors"][res.fit_backend]["residual_linecolor"],
+            marker="o",
+            mfc="w",
+            mec=options["fit_backend_colors"][res.fit_backend]["residual_linecolor"],
+        )
+
+        res.savejson(f"ROI_avg_fit_{res.fit_backend}.json", options["data_dir"])
+
+    residual_frame.legend()
+    spectrum_frame.legend()
+
     if options["save_plots"]:
-        fig.savefig(options["output_dir"] / ("ROI_avg_fit." + options["save_fig_type"]))
+        fig.savefig(
+            options["output_dir"] / (f"ROI_avg_fit_{res.fit_backend}." + options["save_fig_type"])
+        )
 
     return fig
 
@@ -618,9 +629,7 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
     ref_avgs = []
     for i, AOI in enumerate(AOIs):
         sig_avg = np.nanmean(np.nanmean(sig[:, AOI[0], AOI[1]], axis=2), axis=1)
-        # sig_avg = sig_avg / np.max(sig_avg)
         ref_avg = np.nanmean(np.nanmean(ref[:, AOI[0], AOI[1]], axis=2), axis=1)
-        # ref_avg = ref_avg / np.max(ref_avg)
         sig_avgs.append(sig_avg)
         ref_avgs.append(ref_avg)
 
@@ -743,14 +752,16 @@ def plot_AOI_spectra_fit(
     ref,
     sweep_list,
     AOIs,
-    AOI_avg_best_fit_results_lst,
-    roi_avg_fit_result,
+    fit_result_collection_lst,
+    backend_ROI_results_lst,
     fit_model,
 ):
     """
     Plots sig and ref spectra, sub and div normalisation and fit for the ROI average, a single
     pixel, and each of the AOIs. All stacked on top of each other for comparison. The ROI
     average fit is plot against the fit of all of the others for comparison.
+
+    Note here and elsewhere the single pixel check is the first element of the AOI array.
 
     Arguments
     ---------
@@ -777,11 +788,11 @@ def plot_AOI_spectra_fit(
         general we have more than one area of interest.
         I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]
 
-    AOI_avg_best_fit_results_lst : list
-        List of fit_result.x arrays (i.e. list of best fit parameters)
+    fit_result_collection_lst : list
+        List of `QDMPy.fit_shared.FitResultCollection` objects (one for each fit_backend)
 
-    roi_avg_fit_result : `fitting.FitResultROIAvg`
-        `QDMPy.fitting.FitResultROIAvg` object.
+    backend_ROI_results_lst : list of `fitting.FitResultROIAvg`
+        `QDMPy.fitting.FitResultROIAvg` object, each element for each fit backend
 
     fit_model : `fit_models.FitModel` object.
 
@@ -812,49 +823,20 @@ def plot_AOI_spectra_fit(
     sz_w = int(options["metadata"]["AOIWidth"] / options["additional_bins"])
     ROI = data_loading.define_ROI(options, sz_h, sz_w)
     roi_avg_sig = np.nanmean(np.nanmean(sig[:, ROI[0], ROI[1]], axis=2), axis=1)
-    # roi_avg_sig = roi_avg_sig / np.max(roi_avg_sig)
     roi_avg_ref = np.nanmean(np.nanmean(ref[:, ROI[0], ROI[1]], axis=2), axis=1)
-    # roi_avg_ref = roi_avg_ref / np.max(roi_avg_ref)
     sig_avgs.append(roi_avg_sig)
     ref_avgs.append(roi_avg_ref)
     # add single pixel check
     pixel_sig = sig[:, options["single_pixel_check"][0], options["single_pixel_check"][1]]
-    # pixel_sig = pixel_sig / np.max(pixel_sig)
     pixel_ref = ref[:, options["single_pixel_check"][0], options["single_pixel_check"][1]]
-    # pixel_ref = pixel_ref / np.max(pixel_ref)
     sig_avgs.append(pixel_sig)
     ref_avgs.append(pixel_ref)
+    # add AOI data
     for i, AOI in enumerate(AOIs):
         sig_avg = np.nanmean(np.nanmean(sig[:, AOI[0], AOI[1]], axis=2), axis=1)
-        # sig_avg = sig_avg / np.max(sig_avg)
         ref_avg = np.nanmean(np.nanmean(ref[:, AOI[0], AOI[1]], axis=2), axis=1)
-        # ref_avg = ref_avg / np.max(ref_avg)
         sig_avgs.append(sig_avg)
         ref_avgs.append(ref_avg)
-
-    # now pre-process fit params
-    fit_param_lst = []
-
-    # roi avg
-    fit_param_lst.append(roi_avg_fit_result.best_fit_result)
-
-    # single pixel
-    if not options["used_ref"]:
-        pixel_pl_ar = pixel_sig
-    elif options["normalisation"] == "div":
-        pixel_pl_ar = pixel_sig / pixel_ref
-    elif options["normalisation"] == "sub":
-        pixel_pl_ar = pixel_sig - pixel_ref
-    else:
-        RuntimeError(f"Not sure what normalisation value {options['normalisation']} is?")
-    pixel_fit_params = fitting.fit_single_pixel(
-        options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result
-    )
-    fit_param_lst.append(pixel_fit_params)
-
-    # aois
-    for AOI_best_fit_result in AOI_avg_best_fit_results_lst:
-        fit_param_lst.append(AOI_best_fit_result)
 
     # plot sig, ref data as first column
     for i, (sig, ref) in enumerate(zip(sig_avgs, ref_avgs)):
@@ -934,60 +916,86 @@ def plot_AOI_spectra_fit(
         axs[i, 1].set_ylabel("PL (a.u.)")
     axs[-1, 1].set_xlabel(
         "Sweep parameter"
-    )  # this is meant to be less indentednormalisationnormalisation
+    )  # this is meant to be less indented than the line above
+
+    high_res_xdata = np.linspace(
+        np.min(backend_ROI_results_lst[0].sweep_list),
+        np.max(backend_ROI_results_lst[0].sweep_list),
+        10000,
+    )
 
     # plot fits as third column
-    fit_sweep_vector = np.linspace(np.min(sweep_list), np.max(sweep_list), 10000)
-    roi_avg_best_fit_ar = fit_model(roi_avg_fit_result.best_fit_result, fit_sweep_vector)
+    for fit_backend_number, fit_backend_fit_result in enumerate(fit_result_collection_lst):
+        fit_backend_name = fit_backend_fit_result.fit_backend
 
-    for i, (fit_param_ar, sig, ref) in enumerate(zip(fit_param_lst, sig_avgs, ref_avgs)):
-        if not options["used_ref"]:
-            sig_norm = sig
-        elif options["normalisation"] == "div":
-            sig_norm = sig / ref
-        elif options["normalisation"] == "sub":
-            sig_norm = sig - ref
+        fit_params_lst = [
+            fit_backend_fit_result.roi_avg_fit_result.best_params,
+            fit_backend_fit_result.single_pixel_fit_result,
+            *fit_backend_fit_result.AOI_fit_results_lst,
+        ]
 
-        best_fit_ar = fit_model(fit_param_ar, fit_sweep_vector)
+        for i, (fit_param_ar, sig, ref) in enumerate(zip(fit_params_lst, sig_avgs, ref_avgs)):
+            if not options["used_ref"]:
+                sig_norm = sig
+            elif options["normalisation"] == "div":
+                sig_norm = sig / ref
+            elif options["normalisation"] == "sub":
+                sig_norm = sig - ref
 
-        # raw data
-        axs[i, 2].plot(
-            sweep_list,
-            sig_norm,
-            label="raw data",
-            ls="",
-            marker="o",
-            ms=3.5,
-            mfc="goldenrod",
-            mec="k",
-        )
-        # best fit
-        axs[i, 2].plot(fit_sweep_vector, best_fit_ar, label="fit", ls="dashed", c="crimson")
-        # roi avg fit (as comparison)
-        if i:
+            best_fit_ydata = fit_model(fit_param_ar, high_res_xdata)
+            roi_fit_ydata = fit_model(
+                fit_backend_fit_result.roi_avg_fit_result.best_params, high_res_xdata
+            )
+
+            # first loop over -> plot raw data, add titles
+            if not fit_backend_number:
+
+                # raw data
+                axs[i, 2].plot(
+                    sweep_list,
+                    sig_norm,
+                    label="raw data",
+                    ls="",
+                    marker="o",
+                    ms=3.5,
+                    mfc="goldenrod",
+                    mec="k",
+                )
+                if not i:
+                    axs[i, 2].set_title("ROI avg - Fit")
+                elif i == 1:
+                    axs[i, 2].set_title(
+                        "Single Pixel Check - Fit",
+                        fontdict={"color": options["AOI_colors"][0]},
+                    )
+                else:
+                    axs[i, 2].set_title(
+                        "AOI " + str(i - 1) + " avg - Fit",
+                        fontdict={"color": options["AOI_colors"][i - 1]},
+                    )
+            # roi avg fit (as comparison)
+            if i:
+                axs[i, 2].plot(
+                    high_res_xdata,
+                    roi_fit_ydata,
+                    label=f"ROI avg fit - {fit_backend_name}",
+                    ls="dashed",
+                    c=options["fit_backend_colors"][fit_backend_name]["aoi_roi_fit_linecolor"],
+                )
+            # best fit
             axs[i, 2].plot(
-                fit_sweep_vector,
-                roi_avg_best_fit_ar,
-                label="ROI avg fit",
-                c="indigo",
+                high_res_xdata,
+                best_fit_ydata,
+                label=f"fit - {fit_backend_name}",
                 ls="dashed",
-            )
-        if not i:
-            axs[i, 2].set_title("ROI avg - Fit")
-        elif i == 1:
-            axs[i, 2].set_title(
-                "Single Pixel Check - Fit", fontdict={"color": options["AOI_colors"][0]}
-            )
-        else:
-            axs[i, 2].set_title(
-                "AOI " + str(i - 1) + " avg - Fit",
-                fontdict={"color": options["AOI_colors"][i - 1]},
+                c=options["fit_backend_colors"][fit_backend_name]["aoi_best_fit_linecolor"],
             )
 
-        axs[i, 2].legend()
-        axs[i, 2].grid(True)
-        axs[i, 2].set_ylabel("PL (a.u.)")
-    axs[-1, 2].set_xlabel("Sweep parameter")  # this is meant to be less indented
+            axs[i, 2].legend()
+            axs[i, 2].grid(True)
+            axs[i, 2].set_ylabel("PL (a.u.)")
+
+    axs[-1, 2].set_xlabel("Sweep parameter")  # this is meant to be less indented than line above
 
     # currently not saving any of the data from this plot (not sure what the user would ever want)
 
@@ -1076,7 +1084,7 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
     if pixel_fit_params is None:
         warnings.warn(
             "'pixel_fit_params' arg to function 'plot_param_images' is 'None'.\n"
-            + "Probably no pixel fitting completed."
+            + "Probably no pixel fitting completed."  # noqa: W503
         )
         return None
 

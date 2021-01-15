@@ -36,7 +36,7 @@
 
     // Required - name of system used (see systems.py)
     "system_name": {
-    	"option_default": null,
+        "option_default": "LiamsWidefield",
     	"option_choices":
     		[
     			"Zyla",
@@ -120,6 +120,20 @@
     },
 
     // ========== Fitting Parameters ==========
+    // Backend used for pixel fitting (required)
+    "fit_backend": {
+        "option_default": "scipy",
+        "option_choices":
+            [
+                "scipy"
+            ]
+    },
+    // Backends compared in ROI/AOI spectra comparisons
+    "fit_backend_comparison": {
+        "option_default": [
+            "scipy"
+        ]
+    },
     // overrides automatic reloading of previous fit results
     "force_fit": {
     	"option_default": false,
@@ -555,6 +569,22 @@
             "cyan"
         ]
     },
+    "fit_backend_colors": {
+        "option_default": {
+            "scipy": {
+                "roifit_linecolor": "mediumblue",
+                "residual_linecolor": "black",
+                "aoi_roi_fit_linecolor": "indigo",
+                "aoi_best_fit_linecolor": "crimson"
+            },
+            "gpufit": {
+                "roifit_linecolor": "cornflowerblue",
+                "residual_linecolor": "dimgrey",
+                "aoi_roi_fit_linecolor": "mediumpurple",
+                "aoi_best_fit_linecolor": "coral"
+            }
+        }
+    },
     // ===========================================================================================
     // Things set internally, allow to be anything {maybe place some contraints later}
 
@@ -581,5 +611,10 @@
     // total (i.e. net) binning used
     "total_bin": {},
     // i.e. labview binning
-    "original_bin": {}
+    "original_bin": {},
+    // modelID sent to gpufit (only used if gpufit selected as backend)
+    "ModelID": {},
+    // CUDA information, stored for the record
+    "CUDA_version_runtime": {},
+    "CUDA_version_driver": {}
 }

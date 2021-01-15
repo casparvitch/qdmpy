@@ -127,10 +127,12 @@ class System:
         # most systems will need these {you need to copy to your subclass method}
         # need to know number of threads to call (might be parallel fitting)
         options["threads"] = cpu_count() - options["sub_threads"]
-        if "base_dir" in options and options["base_dir"] != "":
-            options["filepath"] = options["base_dir"] + options["filepath"]
-            if "filepath_ref" in options:
-                options["filepath_ref"] = options["filepath_ref"]
+        if "base_dir" in options:
+            if options["base_dir"] == "test_datasets":
+                # find tests path in this repo and prepend
+                options["filepath"] = DIR_PATH / "tests/test_datasets/" / options["filepath"]
+            elif options["base_dir"] != "":
+                options["filepath"] = options["base_dir"] / options["filepath"]
 
 
 # ============================================================================
@@ -155,14 +157,14 @@ class UniMelb(System):
         return raw_data
 
     def read_sweep_list(self, filepath, **kwargs):
-        with open(os.path.normpath(filepath + "_metaSpool.txt"), "r") as fid:
+        with open(os.path.normpath(str(filepath) + "_metaSpool.txt"), "r") as fid:
             sweep_str = fid.readline().rstrip().split("\t")
         return [float(i) for i in sweep_str]
 
     def read_metadata(self, filepath, **kwargs):
 
         # skip over sweep list
-        with open(os.path.normpath(filepath + "_metaSpool.txt"), "r") as fid:
+        with open(os.path.normpath(str(filepath) + "_metaSpool.txt"), "r") as fid:
             _ = fid.readline().rstrip().split("\t")
             # ok now read the metadata
             rest_str = fid.read()
@@ -183,9 +185,6 @@ class UniMelb(System):
     def option_choices(self, option_name):
         return self.options_dict[option_name]["option_choices"]
 
-    def option_characs(self, option_name):
-        return self.options_dict[option_name]["option_characs"]
-
     def available_options(self):
         return self.options_dict.keys()
 
@@ -201,10 +200,13 @@ class UniMelb(System):
             # ensure only useful (scipy) loss method is used
             if options["fit_method"] == "lm":
                 options["loss"] = "linear"
-        if "base_dir" in options and options["base_dir"] != "":
-            options["filepath"] = options["base_dir"] + options["filepath"]
-            if "filepath_ref" in options:
-                options["filepath_ref"] = options["filepath_ref"]
+        options["threads"] = cpu_count() - options["sub_threads"]
+        if "base_dir" in options:
+            if options["base_dir"] == "test_datasets":
+                # find tests path in this repo and prepend
+                options["filepath"] = DIR_PATH / "tests/test_datasets/" / options["filepath"]
+            elif options["base_dir"] != "":
+                options["filepath"] = options["base_dir"] / options["filepath"]
 
 
 # ============================================================================

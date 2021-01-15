@@ -31,6 +31,7 @@ import numpy as np
 import warnings
 import os
 import pathlib
+from collections import OrderedDict  # insertion order is guaranteed for py3.7+, but to be safe!
 
 # ============================================================================
 
@@ -39,6 +40,7 @@ import QDMPy.systems as systems
 
 # ============================================================================
 
+DIR_PATH = systems.DIR_PATH
 
 # ============================================================================
 #
@@ -47,17 +49,25 @@ import QDMPy.systems as systems
 # ============================================================================
 
 
-def load_options(path="QDMPy/options/fit_options.json", check_for_prev_result=False):
+def load_options(options_dict=None, options_path=None, check_for_prev_result=False):
     """
-    Reads options json file and loads into generic options dictionary used elsewhere in module.
+    Load and process options (from json file or dict) into generic options dict used everywhere.
 
     Also handles directory creation etc. to put results in.
+    Provide either options_dict OR options_path (must provide one!).
+
+    Note the system default options are loaded in, so you only need to set the things you need.
+    In particular, filepath, fit_functions and system_name must be set
 
     Optional Arguments
     -------------------
+    options_dict : dict
+        Directly pass in a dictionary of options.
+        Default: None
+
     path : string
         Path to fit options .json file. Can be absolute, or from QDMPy.
-        Default: "QDMPy/options/fit_options.json"
+        Default: None
 
     check_for_prev_result : bool
         Check to see if there's a previous fit result for these options.
@@ -68,7 +78,22 @@ def load_options(path="QDMPy/options/fit_options.json", check_for_prev_result=Fa
     options : dict
         Generic options dict holding all the user options.
     """
-    prelim_options = misc.json_to_dict(path)  # requires main to be dir above opts
+
+    # only options_dict OR options_path
+    if options_dict is not None and options_path is not None:
+        raise RuntimeError("pass either options_dict OR options_path to load_options")
+    if options_dict is None and options_path is None:
+        raise RuntimeError("pass one of options_dict OR options_path to load_options")
+
+    if options_path is not None:
+        prelim_options = misc.json_to_dict(options_path)
+    else:
+        prelim_options = OrderedDict(options_dict)  # unnescessary py3.7+, leave to describe intent
+
+    required_options = ["filepath", "fit_functions"]
+    for key in required_options:
+        if key not in prelim_options:
+            raise RuntimeError(f"Must provide these options: {required_options}")
 
     sys = systems.choose_system(prelim_options["system_name"])
 
@@ -93,7 +118,7 @@ def load_options(path="QDMPy/options/fit_options.json", check_for_prev_result=Fa
 
     # create output directories
     output_dir = pathlib.PurePosixPath(
-        options["filepath"] + "_processed" + "_bin_" + str(options["total_bin"])
+        str(options["filepath"]) + "_processed" + "_bin_" + str(options["total_bin"])
     )
     options["output_dir"] = output_dir
     options["data_dir"] = output_dir / "data"
@@ -171,7 +196,7 @@ def reshape_dataset(options, raw_data, sweep_list):
     """
     Reshapes and re-bins raw data into more useful format.
 
-    Cuts down to ROI and removes nwanted sweeps.
+    Cuts down to ROI and removes unwanted sweeps.
 
     Arguments
     ---------
@@ -209,6 +234,9 @@ def reshape_dataset(options, raw_data, sweep_list):
         reshaped and rebinned. Unwanted sweeps removed. Cut down to ROI.
         Format: [sweep_vals, x, y]
 
+    single_pixel_pl : np array, 1D
+        Normalised measurement array, for chosen single pixel check.
+
     sweep_list : list
         List of sweep parameter values (with removed unwanted sweeps at start/end)
     """
@@ -227,7 +255,12 @@ def reshape_dataset(options, raw_data, sweep_list):
         options, image_rebinned, sweep_list, sig, ref, sig_norm, ROI
     )  # also cuts sig etc. down to ROI
 
-    return PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list
+    # single pixel check
+    single_pixel_pl = sig_norm[
+        :, options["single_pixel_check"][0], options["single_pixel_check"][1]
+    ]
+
+    return PL_image, PL_image_ROI, sig, ref, sig_norm, single_pixel_pl, sweep_list
 
 
 # ============================================================================

@@ -16,6 +16,7 @@ ipympl = "*"
 matplotlib-scalebar = "*"
 sphinx = "*"
 pdoc3 = "*"
+pandoc = "*"
 
 [dev-packages]
 

@@ -1,5 +1,5 @@
 {
-    "base_dir": "/home/samsc/Desktop/",
+    "base_dir": "test_datasets",
     "filepath": "Spin relaxation (T1)_19",
     
     "additional_bins": 4, 
@@ -20,7 +20,7 @@
     "area_3_centre": [50, 50],
     "area_3_halfsize": 3,
 
-
+    "fit_backend": "scipy",
     "fit_pixels": true, 
     "force_fit": true, 
     "auto_match_prev_ROI_options": false,

@@ -1,5 +1,5 @@
 {
-    "base_dir": "/home/samsc/Desktop/",
+    "base_dir": "test_datasets",
     "filepath": "ODMR - Pulsed with IR_83",
     
     "additional_bins": 4, 

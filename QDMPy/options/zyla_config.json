@@ -2,9 +2,12 @@
 	// ===========================================================================================
 	// ============================ General Parameters ===========================================
 	// ===========================================================================================
-	"base_dir": {}, // base_dir not required, if not "" it is prepended to filepath
-    "filepath": {}, // specify path to raw data. 
-    // 500e-6 / 2048. In metres
+	// base_dir not required, if not "" it is prepended to filepath
+    //  option: if base_dir is "test_dataset", then will find tests path in this repo 
+    //          (QDMPy/tessts/test_datasets/) and prepend that to filepath
+    "base_dir": {}, 
+    "filepath": {}, // specify path to raw data. (required)
+    // 500e-6 / 2048. In metres. This is for the 4x objective.
     "raw_pixel_size": {
         "option_default": 0.000000244140625
     },
@@ -34,15 +37,16 @@
     		]
     },
 
-    // Required - name of system used (see systems.py)
+    // Name of system used (see systems.py)
     "system_name": {
-    	"option_default": null,
+        "option_default": "Zyla",
     	"option_choices":
     		[
     			"Zyla",
                 "Liams_Widefield"
     		]
     },
+
 	// ===========================================================================================
     // ======================== Region Of Interest (ROI) params ==================================
 	// ===========================================================================================
@@ -120,6 +124,20 @@
     },
 
     // ========== Fitting Parameters ==========
+    // Backend used for pixel fitting
+    "fit_backend": {
+        "option_default": "scipy",
+        "option_choices":
+            [
+                "scipy"
+            ]
+    },
+    // Backends compared in ROI/AOI spectra comparisons.
+    "fit_backend_comparison": {
+        "option_default": [
+            "scipy"
+        ]
+    },
     // overrides automatic reloading of previous fit results
     "force_fit": {
     	"option_default": false,
@@ -169,7 +187,7 @@
     "sub_threads": {
     	"option_default": 0
     },
-     // user must set this one: the functions that make up your fit model
+     // user must set this one: the functions that make up your fit model (required)
     "fit_functions": {},
 
     // All parameters below can either have a range or a bound.
@@ -545,6 +563,22 @@
             "cyan"
         ]
     },
+    "fit_backend_colors": {
+        "option_default": {
+            "scipy": {
+                "roifit_linecolor": "mediumblue",
+                "residual_linecolor": "black",
+                "aoi_roi_fit_linecolor": "indigo",
+                "aoi_best_fit_linecolor": "crimson"
+            },
+            "gpufit": {
+                "roifit_linecolor": "cornflowerblue",
+                "residual_linecolor": "dimgrey",
+                "aoi_roi_fit_linecolor": "mediumpurple",
+                "aoi_best_fit_linecolor": "coral"
+            }
+        }
+    },
     // ===========================================================================================
     // Things set internally, allow to be anything {maybe place some contraints later}
 
@@ -571,5 +605,10 @@
     // total (i.e. net) binning used
     "total_bin": {},
     // i.e. labview binning
-    "original_bin": {}
+    "original_bin": {},
+    // modelID sent to gpufit (only used if gpufit selected as backend)
+    "ModelID": {},
+    // CUDA information, stored for the record
+    "CUDA_version_runtime": {},
+    "CUDA_version_driver": {}
 }
