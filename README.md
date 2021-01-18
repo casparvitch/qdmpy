@@ -1,4 +1,5 @@
-# QDMPy
+Quantum Diamond MicroscoPy
+==========================
 
 
 
