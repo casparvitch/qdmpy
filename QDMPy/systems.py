@@ -126,7 +126,7 @@ class System:
         """
         # most systems will need these {you need to copy to your subclass method}
         # need to know number of threads to call (might be parallel fitting)
-        options["threads"] = cpu_count() - options["sub_threads"]
+        options["threads"] = cpu_count() - options["scipy_sub_threads"]
         if "base_dir" in options:
             if options["base_dir"] == "test_datasets":
                 # find tests path in this repo and prepend
@@ -192,7 +192,7 @@ class UniMelb(System):
         # set some things that cannot be stored in the json
 
         # need to know number of threads to call (might be parallel fitting)
-        options["threads"] = cpu_count() - options["sub_threads"]
+        options["threads"] = cpu_count() - options["scipy_sub_threads"]
         if "filepath" not in options:
             options["filepath"] = os.getcwd()
         options["filepath"] = os.path.normpath(options["filepath"])
@@ -200,7 +200,6 @@ class UniMelb(System):
             # ensure only useful (scipy) loss method is used
             if options["fit_method"] == "lm":
                 options["loss"] = "linear"
-        options["threads"] = cpu_count() - options["sub_threads"]
         if "base_dir" in options:
             if options["base_dir"] == "test_datasets":
                 # find tests path in this repo and prepend

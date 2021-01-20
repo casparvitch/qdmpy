@@ -30,6 +30,8 @@ import concurrent.futures
 from itertools import repeat
 import warnings
 from sys import platform
+from timeit import default_timer as timer
+from datetime import timedelta
 
 # ============================================================================
 
@@ -71,26 +73,26 @@ def prep_scipy_fit_options(options, fit_model):
 
     # see scipy.optimize.least_squares
     scipy_fit_options = {
-        "method": options["fit_method"],
-        "verbose": options["verbose_fitting"],
-        "gtol": options["fit_gtol"],
-        "xtol": options["fit_xtol"],
-        "ftol": options["fit_ftol"],
-        "loss": options["loss_fn"],
+        "method": options["scipy_fit_method"],
+        "verbose": options["scipy_verbose_fitting"],
+        "gtol": options["scipy_fit_gtol"],
+        "xtol": options["scipy_fit_xtol"],
+        "ftol": options["scipy_fit_ftol"],
+        "loss": options["scipy_loss_fn"],
     }
 
-    if options["fit_method"] != "lm":
+    if options["scipy_fit_method"] != "lm":
         scipy_fit_options["bounds"] = fit_bounds
-        scipy_fit_options["verbose"] = options["verbose_fitting"]
+        scipy_fit_options["verbose"] = options["scipy_verbose_fitting"]
 
-    if options["scale_x"]:
+    if options["scipy_scale_x"]:
         scipy_fit_options["x_scale"] = "jac"
     else:
-        options["scale_x"] = False
+        options["scipy_scale_x"] = False
 
     # define jacobian option for least_squares fitting
-    if fit_model.jacobian_scipy is None or not options["use_analytic_jac"]:
-        scipy_fit_options["jac"] = options["fit_jac_acc"]
+    if fit_model.jacobian_scipy is None or not options["scipy_use_analytic_jac"]:
+        scipy_fit_options["jac"] = options["scipy_fit_jac_acc"]
     else:
         scipy_fit_options["jac"] = fit_model.jacobian_scipy
     return scipy_fit_options, init_param_guess
@@ -428,7 +430,8 @@ def fit_pixels_scipy(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resul
         init_guess_params, _ = gen_scipy_init_guesses(
             options, *fit_shared.gen_init_guesses(options)
         )
-
+    # call into the library (measure time)
+    t0 = timer()
     with concurrent.futures.ProcessPoolExecutor(
         max_workers=threads, initializer=limit_cpu
     ) as executor:
@@ -447,9 +450,12 @@ def fit_pixels_scipy(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resul
                 mininterval=1,
                 total=num_pixels,
                 unit=" PX",
-                disable=(not options["show_progressbar"]),
+                disable=(not options["scipy_show_progressbar"]),
             )
         )
+    t1 = timer()
+    # for the record
+    options["fit_time_(s)"] = timedelta(seconds=t1-t0).total_seconds()
 
     roi_shape = np.shape(sig_norm)
     res = fit_interface.get_pixel_fitting_results(

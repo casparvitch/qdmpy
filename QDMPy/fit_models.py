@@ -102,7 +102,6 @@ class FitModel:
         -------
         Fit model evaluates at sweep_vec (output is same format as sweep_vec input)
         """
-
         out = np.zeros(np.shape(sweep_vec))
         for fn in self.fn_chain:
             this_fn_params = param_ar[fn.this_fn_param_indices]

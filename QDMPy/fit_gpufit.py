@@ -315,7 +315,7 @@ def fit_ROI_avg_gpufit(options, sig_norm, sweep_list, fit_model):
         pl_roi,
         sweep_list,
         best_params[0, :],  # only take one of the results
-        init_guess_params,
+        init_guess_params[0], # return the params un-repeated
     )
 
 
@@ -469,7 +469,7 @@ def fit_pixels_gpufit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
         params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
 
     # reshape sig_norm in a way that gpufit likes: (number_fits, number_points)
-    sig_norm_shaped, pixel_posns = gpufit_data_shape(sig_norm)
+    sig_norm_shaped, pixel_posns = gpufit_data_shape(pixel_data)
 
     fitting_results, _, _, _, execution_time = gf.fit_constrained(
         sig_norm_shaped,
