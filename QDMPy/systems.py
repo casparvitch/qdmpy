@@ -206,7 +206,7 @@ class UniMelb(System):
                 # find tests path in this repo and prepend
                 options["filepath"] = DIR_PATH / "tests/test_datasets/" / options["filepath"]
             elif options["base_dir"] != "":
-                options["filepath"] = options["base_dir"] / options["filepath"]
+                options["filepath"] = os.path.join(options["base_dir"], options["filepath"])
 
 
 # ============================================================================

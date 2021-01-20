@@ -27,6 +27,7 @@ import numpy as np
 
 import QDMPy.fit_models as fit_models
 import QDMPy.fit_shared as fit_shared
+import QDMPy.fit_interface as fit_interface
 
 # ============================================================================
 
@@ -147,7 +148,12 @@ def gen_gpufit_init_guesses(options, init_guesses, init_bounds):
 
     for fn_type, num in options["fit_functions"].items():
         # extract a guess/bounds for each of the copies of each fn_type (e.g. 8 lorentzians)
-        for n in range(8):
+        if fn_type == "lorentzian":
+            num_fns_required = 8
+        else:
+            num_fns_required = 1
+
+        for n in range(num_fns_required):
 
             if n < num:
                 for pos, key in enumerate(fit_models.AVAILABLE_FNS[fn_type].param_defn):
@@ -210,17 +216,19 @@ def fit_single_pixel_gpufit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg
         options, *fit_shared.gen_init_guesses(options)
     )
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
-        init_guess_params = np.repeat(
-            [roi_avg_fit_result.best_fit_result.copy()], repeats=2, axis=0
-        )
+        init_guess_params = roi_avg_fit_result.best_params.copy()
 
     # only fit the params we want to :)
     if options["ModelID"] == gf.ModelID.LORENTZ8:
-        params_to_fit = [1 for i in range(fit_models.get_param_defn(fit_model))]
+        params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
         while len(params_to_fit) < 26:
             params_to_fit.append(0)
     else:
-        params_to_fit = [1 for i in range(fit_models.get_param_defn(fit_model))]
+        params_to_fit = [1 for i in range((fit_models.get_param_defn(fit_model)))]
+
+    params_to_fit = np.array(params_to_fit, dtype=np.int32)
+    init_guess_params = np.repeat([init_guess_params], repeats=2, axis=0)
+    init_guess_params = init_guess_params.astype(dtype=np.float32)
 
     pixel_pl_ar_doubled = np.repeat([pixel_pl_ar], repeats=2, axis=0)
 
@@ -229,9 +237,9 @@ def fit_single_pixel_gpufit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg
         None,
         options["ModelID"],
         init_guess_params,
-        constraints=init_bounds,
-        constraint_types=[gf.ConstraintType.LOWER_UPPER for i in len(init_guess_params)],
-        user_info=sweep_list,
+        constraints=init_bounds.astype(np.float32),
+        constraint_types=np.array([gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))], dtype=np.int32),
+        user_info=np.array(sweep_list, dtype=np.float32),
         parameters_to_fit=params_to_fit,
     )
 
@@ -271,29 +279,32 @@ def fit_ROI_avg_gpufit(options, sig_norm, sweep_list, fit_model):
     pl_roi_doubled = np.repeat([pl_roi], repeats=2, axis=0)
 
     # this is just constructing the initial parameter guesses and bounds in the right format
-    init_params_guess, init_bounds = gen_gpufit_init_guesses(
+    init_guess_params, init_bounds = gen_gpufit_init_guesses(
         options, *fit_shared.gen_init_guesses(options)
     )
-    init_params_guess_doubled = np.repeat([init_params_guess], repeats=2, axis=0)
 
     # only fit the params we want to :)
     if options["ModelID"] == gf.ModelID.LORENTZ8:
-        params_to_fit = [1 for i in range(fit_models.get_param_defn(fit_model))]
+        params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
         while len(params_to_fit) < 26:
             params_to_fit.append(0)
     else:
-        params_to_fit = [1 for i in range(fit_models.get_param_defn(fit_model))]
+        params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
+
+    params_to_fit = np.array(params_to_fit, dtype=np.int32)
+    init_guess_params = np.repeat([init_guess_params], repeats=2, axis=0)
+    init_guess_params = init_guess_params.astype(dtype=np.float32)
 
     best_params, states, chi_squares, number_iterations, execution_time = gf.fit_constrained(
         pl_roi_doubled.astype(np.float32),
         None,
         options["ModelID"],
-        init_params_guess_doubled.astype(np.float32),
-        constraints=init_bounds.astype(np.float32),
+        init_guess_params,
+        constraints=np.array(init_bounds, dtype=np.float32),
         constraint_types=np.array(
-            [gf.ConstraintType.LOWER_UPPER for i in len(init_params_guess)], dtype=np.int32
+            [gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))], dtype=np.int32
         ),
-        user_info=sweep_list,
+        user_info=np.array(sweep_list, dtype=np.float32),
         parameters_to_fit=params_to_fit,
     )
 
@@ -304,7 +315,7 @@ def fit_ROI_avg_gpufit(options, sig_norm, sweep_list, fit_model):
         pl_roi,
         sweep_list,
         best_params[0, :],  # only take one of the results
-        init_params_guess,
+        init_guess_params,
     )
 
 
@@ -353,9 +364,8 @@ def fit_AOIs_gpufit(
         options, *fit_shared.gen_init_guesses(options)
     )
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
-        init_guess_params = roi_avg_fit_result.best_fit_result.copy()
+        init_guess_params = roi_avg_fit_result.best_params.copy()
 
-    init_guess_params_doubled = np.repeat([init_guess_params], repeats=2, axis=0)
 
     single_pixel_fit_params = fit_single_pixel_gpufit(
         options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result
@@ -365,25 +375,31 @@ def fit_AOIs_gpufit(
 
     # only fit the params we want to :)
     if options["ModelID"] == gf.ModelID.LORENTZ8:
-        params_to_fit = [1 for i in range(fit_models.get_param_defn(fit_model))]
+        params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
         while len(params_to_fit) < 26:
             params_to_fit.append(0)
     else:
-        params_to_fit = [1 for i in range(fit_models.get_param_defn(fit_model))]
+        params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
+
+    params_to_fit = np.array(params_to_fit, dtype=np.int32)
+    init_guess_params = np.repeat([init_guess_params], repeats=2, axis=0)
+    init_guess_params = init_guess_params.astype(dtype=np.float32)
 
     for AOI in AOIs:
         aoi_sig_norm = sig_norm[:, AOI[0], AOI[1]]
         aoi_avg = np.nanmean(np.nanmean(aoi_sig_norm, axis=2), axis=1)
         aoi_avg_doubled = np.repeat([aoi_avg], repeats=2, axis=0)
 
+
+
         fitting_results, _, _, _, _ = gf.fit_constrained(
             aoi_avg_doubled.astype(np.float32),
             None,
             options["ModelID"],
-            init_guess_params_doubled,
-            constraints=init_bounds,
-            constraint_types=[gf.ConstraintType.LOWER_UPPER for i in len(init_guess_params)],
-            user_info=sweep_list,
+            np.array(init_guess_params, dtype=np.float32),
+            constraints=np.array(init_bounds, dtype=np.float32),
+            constraint_types=np.array([gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))], dtype=np.int32),
+            user_info=np.array(sweep_list, dtype=np.float32),
             parameters_to_fit=params_to_fit,
         )
         AOI_avg_best_fit_results_lst.append(fitting_results[0, :])
@@ -436,42 +452,42 @@ def fit_pixels_gpufit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
         options, *fit_shared.gen_init_guesses(options)
     )
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
-        init_guess_params = roi_avg_fit_result.best_fit_result.copy()
+        init_guess_params = roi_avg_fit_result.best_params.copy()
 
     num_pixels = np.shape(sig_norm)[1] * np.shape(sig_norm)[2]
 
     # need to reshape init_guess_params, one for each pixel
-    guess_params = np.array([init_guess_params])
+    guess_params = np.array([init_guess_params], dtype=np.float32)
     init_guess_params_reshaped = np.repeat(guess_params, repeats=num_pixels, axis=0)
 
     # only fit the params we want to :)
     if options["ModelID"] == gf.ModelID.LORENTZ8:
-        params_to_fit = [1 for i in range(fit_models.get_param_defn(fit_model))]
+        params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
         while len(params_to_fit) < 26:
             params_to_fit.append(0)
     else:
-        params_to_fit = [1 for i in range(fit_models.get_param_defn(fit_model))]
+        params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
 
     # reshape sig_norm in a way that gpufit likes: (number_fits, number_points)
-    sig_norm_shaped, pixel_posns = gpufit_data_shape()
+    sig_norm_shaped, pixel_posns = gpufit_data_shape(sig_norm)
 
     fitting_results, _, _, _, execution_time = gf.fit_constrained(
         sig_norm_shaped,
         None,
         options["ModelID"],
-        init_guess_params,
-        constraints=init_bounds,
-        constraint_types=[gf.ConstraintType.LOWER_UPPER for i in len(init_guess_params)],
-        user_info=sweep_list,
-        parameters_to_fit=params_to_fit,
+        init_guess_params_reshaped,
+        constraints=np.array(init_bounds, dtype=np.float32),
+        constraint_types=np.array([gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))], dtype=np.int32),
+        user_info=np.array(sweep_list, dtype=np.float32),
+        parameters_to_fit=np.array(params_to_fit, dtype=np.int32),
     )
     # for the record
-    options["fit_time"] = execution_time
+    options["fit_time_(s)"] = execution_time
 
     fit_results = gpufit_reshape_result(fitting_results, pixel_posns)
 
     roi_shape = np.shape(sig_norm)
-    res = fit_shared.get_pixel_fitting_results(
+    res = fit_interface.get_pixel_fitting_results(
         fit_model, fit_results, (roi_shape[1], roi_shape[2])
     )
     if options["scramble_pixels"]:

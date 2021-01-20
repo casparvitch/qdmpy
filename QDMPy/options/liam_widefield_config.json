@@ -616,5 +616,7 @@
     "ModelID": {},
     // CUDA information, stored for the record
     "CUDA_version_runtime": {},
-    "CUDA_version_driver": {}
+    "CUDA_version_driver": {},
+    // time for gpu to fit image
+    "fit_time_(s)": {}
 }

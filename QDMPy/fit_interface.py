@@ -168,7 +168,7 @@ def prep_fit_backends(options, fit_model):
             # if user doesn't have the gpufit stuff installed
             global fit_gpufit
             _temp = __import__("QDMPy.fit_gpufit", globals(), locals())
-            fit_scipy = _temp.fit_gpufit
+            fit_gpufit = _temp.fit_gpufit
 
             fit_gpufit.prep_gpufit_backend(options, fit_model)
         else:
@@ -333,7 +333,7 @@ def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
             options, sig_norm, sweep_list, fit_model, roi_avg_fit_result
         )
     elif options["fit_backend"] == "gpufit":
-        return fit_gpufit, fit_pixels.gpufit(
+        return fit_gpufit.fit_pixels_gpufit(
             options, sig_norm, sweep_list, fit_model, roi_avg_fit_result
         )
     else:

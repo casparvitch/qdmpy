@@ -22,6 +22,8 @@ to start working (in virtual environment):
 
 # Installation
 
+NOPE Sam, SDK 8.1 for VS2015: https://developer.microsoft.com/en-us/windows/downloads/sdk-archive/
+
 ### Saving widget state
 
 In jupyterlab > settings > advanced settings editor > jupyter widgets > saveState: true

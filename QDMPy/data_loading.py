@@ -478,9 +478,11 @@ def rebin_image(options, image):
     systems.clean_options(options)
 
     if not options["additional_bins"]:
+        options["additional_bins"] = 1
+        warnings.warn("oiy fix up additional_bins = 0 to be handled more nicely...?")
         image_rebinned = image
     else:
-        if options["additional_bins"] % 2:
+        if options["additional_bins"] != 1 and options["additional_bins"] % 2:
             raise RuntimeError("The binning parameter needs to be a multiple of 2.")
 
         data_pts = image.shape[0]
