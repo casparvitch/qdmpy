@@ -812,6 +812,8 @@ def plot_AOI_spectra_fit(
     sig_avgs = []
     ref_avgs = []
     # add roi data
+    # FIXME this assumes our metadata style? Should call into systems then.
+    # FIXME sig not already cut down to ROI???
     sz_h = int(options["metadata"]["AOIHeight"] / options["additional_bins"])
     sz_w = int(options["metadata"]["AOIWidth"] / options["additional_bins"])
     ROI = data_loading.define_ROI(options, sz_h, sz_w)
