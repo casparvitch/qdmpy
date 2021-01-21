@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-This module holds ... TODO
+This module holds some functions and classes that are shared between different
+fitting backends, but are not a part of the user-facing fit_interface.
 
 Classes
 -------
@@ -145,8 +146,8 @@ def shuffle_pixels(data_3d):
     shuffled_in_xy : np array, 3D
         data_3d shuffled in 2nd, 3rd axis.
 
-    (x_unshuf, y_unshuf) : Both np arrays
-        Can be used to unshuffle shuffled_in_xy, i.e. through `fitting.unshuffled_pixels`.
+    unshuffler : (x_unshuf, y_unshuf)
+        Both np array. Can be used to unshuffle shuffled_in_xy, i.e. through `QDMPy.fit_shared.unshuffle_pixels`.
     """
 
     rng = np.random.default_rng()
@@ -176,12 +177,12 @@ def unshuffle_pixels(data_2d, unshuffler):
         i.e. 'image' of a single fit parameter, all shuffled up!
 
     unshuffler : (x_unshuf, y_unshuf)
-        Two arrays returned by fitting.shuffle_pixels that allow unshuffling of data_2d.
+        Two arrays returned by `QDMPy.fit_shared.shuffle_pixels that allow unshuffling of data_2d.
 
     Returns
     -------
     unshuffled_in_xy: np array, 2D
-        data_2d but the inverse operation of `fitting.shuffle_pixels` has been applied
+        data_2d but the inverse operation of `QDMPy.fit_shared.shuffle_pixels` has been applied
     """
     x_unshuf, y_unshuf = unshuffler
     unshuffled_in_x = data_2d[x_unshuf, :]
@@ -203,11 +204,12 @@ def unshuffle_fit_results(fit_result_dict, unshuffler):
         requires reshuffling (which this function achieves).
 
     unshuffler : (x_unshuf, y_unshuf)
-        Two arrays returned by fitting.shuffle_pixels that allow unshuffling of data_2d.
+        Two arrays returned by `QDMPy.fit_shared.shuffle_pixels` that allow unshuffling of data_2d.
 
     Returns
     -------
-    fit_result_dict : same as input, but each fit parameter has been unshuffled.
+    fit_result_dict : dict
+        Same as input, but each fit parameter has been unshuffled.
     """
     for key, array in fit_result_dict.items():
         fit_result_dict[key] = unshuffle_pixels(array, unshuffler)
@@ -231,7 +233,8 @@ def pixel_generator(our_array):
 
     Returns
     -------
-    [x, y, our_array[:, x, y]] : generator (yielded)
+    generator : list
+        [x, y, our_array[:, x, y]] generator (yielded)
     """
     len_z, len_x, len_y = np.shape(our_array)
     for x in range(len_x):

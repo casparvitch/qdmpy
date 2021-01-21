@@ -76,7 +76,7 @@ def plot_ROI_PL_image(options, PL_image):
     options : dict
         Generic options dict holding all the user options.
 
-    PL_image : np array, 2D.
+    PL_image : np array, 2D
         Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned but
         not cut down to ROI.
 
@@ -116,8 +116,12 @@ def add_colorbar(im, fig, ax, aspect=20, pad_fraction=1, **kwargs):
 
     ax : matplotlib Axis object
 
+    Returns
+    -------
+    cbar : matplotlib colorbar object
 
-    Optional arguments
+
+    Optional Arguments
     ------------------
     aspect : int
         Reciprocal of aspect ratio passed to new colorbar axis width. Default: 20.
@@ -128,9 +132,6 @@ def add_colorbar(im, fig, ax, aspect=20, pad_fraction=1, **kwargs):
     **kwargs : other keyword arguments
         Passed to fig.colorbar.
 
-    Returns
-    -------
-    cbar : matplotlib colorbar object
     """
     divider = make_axes_locatable(ax)
     width = axes_size.AxesY(ax, aspect=1.0 / aspect)
@@ -171,9 +172,6 @@ def add_patch_square_centre(ax, area_c, area_size, label=None, edgecolor="b"):
     edgecolor : str
         Color of label and edge of annotation. Default: "b".
 
-    Returns
-    -------
-    Nothing.
     """
     rect_corner = [int(area_c[0] - area_size / 2), int(area_c[1] - area_size / 2)]
     rect = patches.Rectangle(
@@ -225,9 +223,6 @@ def add_patch_rect(ax, rect_corner_x, rect_corner_y, size_x, size_y, label=None,
     edgecolor : str
         Color of label and edge of annotation. Default: "b".
 
-    Returns
-    -------
-    Nothing.
     """
     rect = patches.Rectangle(
         (rect_corner_x, rect_corner_y),
@@ -259,21 +254,14 @@ def annotate_ROI_image(options, ax):
         binning = 1
     if options["ROI"] == "Full":
         return None
-    elif options["ROI"] == "Square":
-        size = options["ROI_radius"] * binning * 2
-        corner = [
-            options["ROI_centre"][0] * binning - size / 2,
-            options["ROI_centre"][1] * binning - size / 2,
-        ]
+    elif options["ROI"] =="Rectangle":
+        full_size_w, full_size_h = *options["rebinned_image_size"]
 
-        add_patch_rect(ax, corner[0], corner[1], size, size, label="ROI", edgecolor="r")
-    elif options["ROI"] == "Rectangle":
-        start_x = options["ROI_centre"][0] - options["ROI_rect_size"][0] / 2
-        start_y = options["ROI_centre"][1] - options["ROI_rect_size"][1] / 2
-        size_x = options["ROI_rect_size"][0]
-        size_y = options["ROI_rect_size"][1]
+        start_x, start_y = options["ROI_start"]
+        end_x, end_y = options["ROI_end"]
 
-        add_patch_rect(ax, start_x, start_y, size_x, size_y, label="ROI", edgecolor="r")
+
+        add_patch_rect(ax, start_x, start_y, end_x - start_x + 1, end_y - start_y + 1, label="ROI", edgecolor="r")
     else:
         raise systems.OptionsError(
             "ROI", options["ROI"], options["system"], custom_msg="Unknown ROI encountered."
@@ -318,8 +306,8 @@ def annotate_AOI_image(options, ax):
                 ax,
                 corner[0],
                 corner[1],
-                size,
-                size,
+                2*size,
+                2*size,
                 label="AOI " + str(i),
                 edgecolor=options["AOI_colors"][i],
             )
@@ -339,7 +327,7 @@ def plot_AOI_PL_images(options, PL_image_ROI, AOIs):
     options : dict
         Generic options dict holding all the user options.
 
-    PL_image_ROI : np array, 2D.
+    PL_image_ROI : np array, 2D
         Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
         cut down to ROI.
 
@@ -503,7 +491,7 @@ def plot_ROI_avg_fits(options, backend_ROI_results_lst):
         Generic options dict holding all the user options.
 
     backend_ROI_results_lst : list of tuples
-        Format: (fit_backend, `QDMPy.fitting.FitResultROIAvg` objects), for each fit_backend
+        Format: (fit_backend, `QDMPy.fit_shared.ROIAvgFitResult` objects), for each fit_backend
 
     Returns
     -------
@@ -753,7 +741,6 @@ def plot_AOI_spectra_fit(
     sweep_list,
     AOIs,
     fit_result_collection_lst,
-    backend_ROI_results_lst,
     fit_model,
 ):
     """
@@ -790,12 +777,11 @@ def plot_AOI_spectra_fit(
 
     fit_result_collection_lst : list
         List of `QDMPy.fit_shared.FitResultCollection` objects (one for each fit_backend)
+        holding ROI, AOI fit results
 
-    backend_ROI_results_lst : list of `fitting.FitResultROIAvg`
-        `QDMPy.fitting.FitResultROIAvg` object, each element for each fit backend
-
-    fit_model : `fit_models.FitModel` object.
-
+    fit_model : `QDMPy.fit_models.FitModel`
+        Model we're fitting to.
+        
     Returns
     -------
     fig : matplotlib Figure object
@@ -819,11 +805,15 @@ def plot_AOI_spectra_fit(
     sig_avgs = []
     ref_avgs = []
     # add roi data
-    sz_h = int(options["metadata"]["AOIHeight"] / options["additional_bins"])
-    sz_w = int(options["metadata"]["AOIWidth"] / options["additional_bins"])
-    ROI = data_loading.define_ROI(options, sz_h, sz_w)
-    roi_avg_sig = np.nanmean(np.nanmean(sig[:, ROI[0], ROI[1]], axis=2), axis=1)
-    roi_avg_ref = np.nanmean(np.nanmean(ref[:, ROI[0], ROI[1]], axis=2), axis=1)
+    # FIXME this assumes our metadata style? Should call into systems then.
+    # # FIXME sig not already cut down to ROI???
+    # sz_h = int(options["metadata"]["AOIHeight"] / options["additional_bins"])
+    # sz_w = int(options["metadata"]["AOIWidth"] / options["additional_bins"])
+    # ROI = data_loading.define_ROI(options, sz_h, sz_w)
+    roi_avg_sig = np.nanmean(np.nanmean(sig, axis=2), axis=1)
+    roi_avg_ref = np.nanmean(np.nanmean(ref, axis=2), axis=1)
+    # roi_avg_sig = np.nanmean(np.nanmean(sig[:, ROI[0], ROI[1]], axis=2), axis=1)
+    # roi_avg_ref = np.nanmean(np.nanmean(ref[:, ROI[0], ROI[1]], axis=2), axis=1)
     sig_avgs.append(roi_avg_sig)
     ref_avgs.append(roi_avg_ref)
     # add single pixel check
@@ -919,8 +909,8 @@ def plot_AOI_spectra_fit(
     )  # this is meant to be less indented than the line above
 
     high_res_xdata = np.linspace(
-        np.min(backend_ROI_results_lst[0].sweep_list),
-        np.max(backend_ROI_results_lst[0].sweep_list),
+        np.min(fit_result_collection_lst[0].roi_avg_fit_result.sweep_list),
+        np.max(fit_result_collection_lst[0].roi_avg_fit_result.sweep_list),
         10000,
     )
 
@@ -1017,7 +1007,8 @@ def plot_param_image(options, fit_model, pixel_fit_params, param_name, param_num
     options : dict
         Generic options dict holding all the user options.
 
-    fit_model : `fit_models.FitModel` object.
+    fit_model : `QDMPy.fit_models.FitModel`
+        Model we're fitting to.
 
     pixel_fit_params : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
@@ -1067,7 +1058,8 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
     options : dict
         Generic options dict holding all the user options.
 
-    fit_model : `fit_models.FitModel` object.
+    fit_model : `QDMPy.fit_models.FitModel`
+        Model we're fitting to.
 
     pixel_fit_params : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.

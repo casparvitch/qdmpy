@@ -17,6 +17,9 @@ matplotlib-scalebar = "*"
 sphinx = "*"
 pdoc3 = "*"
 pandoc = "*"
+ipywidgets = "*"
+pygpufit = {path = "C:/src/gpufit-build/Release/pyGpufit/dist/pyGpufit-1.1.0-py2.py3-none-any.whl"}
+pyzmq = "*"
 
 [dev-packages]
 

@@ -7,15 +7,15 @@ Currently functions for loading json files to dicts and the inverse.
 
 Functions
 ---------
- - `QMDMPy.misc.failfloat`
- - `QMDMPy.misc.default_dict_from_d`
- - `QMDMPy.misc.json_to_dict`
- - `QMDMPy.misc.dict_to_json`
- - `QMDMPy.misc.prettyjson`
- - `QMDMPy.misc.getsubitems`
- - `QMDMPy.misc.basictype2str`
- - `QMDMPy.misc.indentitems`
- - `QMDMPy.misc.json_remove_comments`
+ - `QDMPy.misc.failfloat`
+ - `QDMPy.misc.defaultdict_from_d`
+ - `QDMPy.misc.json_to_dict`
+ - `QDMPy.misc.dict_to_json`
+ - `QDMPy.misc.prettyjson`
+ - `QDMPy.misc.getsubitems`
+ - `QDMPy.misc.basictype2str`
+ - `QDMPy.misc.indentitems`
+ - `QDMPy.misc.json_remove_comments`
 """
 
 # ============================================================================

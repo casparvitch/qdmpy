@@ -290,7 +290,7 @@ def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
 
     Returns
     -------
-    `QDMPy.fitting.FitResultROIAvg` object containing the fit result (see class specifics)
+    `QDMPy.fit_shared.ROIAvgFitResult` object containing the fit result (see class specifics)
     """
 ```
 
