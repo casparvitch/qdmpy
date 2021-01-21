@@ -335,7 +335,7 @@ def check_ROI_compatibility(options, prev_options):
     options : dict
         Generic options dict holding all the user options.
 
-    prev_options : ndict
+    prev_options : dict
         Generic options dict from previous fit result.
 
     Returns
@@ -541,7 +541,7 @@ def define_ROI(options, full_size_h, full_size_w):
 
     Returns
     -------
-    ROI : length 2 list of np meshgrids.
+    ROI : length 2 list of np meshgrids
         Defines an ROI that can be applied to the 3D image through direct indexing.
         E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
     """
@@ -576,7 +576,7 @@ def define_area_roi(start_x, start_y, end_x, end_y):
 
     Returns
     -------
-    ROI : length 2 list of np meshgrids.
+    ROI : length 2 list of np meshgrids
         Defines an ROI that can be applied to the 3D image through direct indexing.
         E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
     """
@@ -644,13 +644,13 @@ def remove_unwanted_sweeps(options, image_rebinned, sweep_list, sig, ref, sig_no
         reshaped and rebinned.  Unwanted sweeps not removed yet.
         Format: [sweep_vals, x, y]
 
-    ROI : length 2 list of np meshgrids.
+    ROI : length 2 list of np meshgrids
         Defines an ROI that can be applied to the 3D image through direct indexing.
         E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
 
     Returns
     -------
-    PL_image : np array, 2D.
+    PL_image : np array, 2D
         Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
         cut down to ROI
 

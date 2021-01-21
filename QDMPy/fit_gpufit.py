@@ -1,18 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-This module holds ... TODO
+This module holds tools for fitting raw data via gpufit. (gpufit backend)
 
 Functions
 ---------
- - `QDMPy.fit_gpufit.get_gpufit_modelID'
- - `QDMPy.fit_gpufit.prep_gpufit_backend'
- - `QDMPy.fit_gpufit.gen_gpufit_init_guesses'
- - `QDMPy.fit_gpufit.fit_single_pixel_gpufit'
- - `QDMPy.fit_gpufit.fit_ROI_avg_gpufit'
- - `QDMPy.fit_gpufit.fit_AOIs_gpufit'
- - `QDMPy.fit_gpufit.fit_pixels_gpufit'
- - `QDMPy.fit_gpufit.gpufit_data_shape'
- - `QDMPy.fit_gpufit.gpufit_reshape_result'
+ - `QDMPy.fit_gpufit.prep_gpufit_fit_options`
+ - `QDMPy.fit_gpufit.get_gpufit_modelID`
+ - `QDMPy.fit_gpufit.prep_gpufit_backend`
+ - `QDMPy.fit_gpufit.gen_gpufit_init_guesses`
+ - `QDMPy.fit_gpufit.fit_single_pixel_gpufit`
+ - `QDMPy.fit_gpufit.fit_ROI_avg_gpufit`
+ - `QDMPy.fit_gpufit.fit_AOIs_gpufit`
+ - `QDMPy.fit_gpufit.fit_pixels_gpufit`
+ - `QDMPy.fit_gpufit.gpufit_data_shape`
+ - `QDMPy.fit_gpufit.gpufit_reshape_result`
+
 """
 # ============================================================================
 
@@ -32,6 +34,40 @@ import QDMPy.fit_interface as fit_interface
 # ============================================================================
 
 
+def prep_gpufit_fit_options(options):
+    """
+    General options dict -> gpufit_fit_options
+    in format that scipy least_squares expects.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    gpufit_fit_options : dict
+        Dictionary with args that gpufit expects (i.e. expanded by **gpufit_fit_options).
+    """
+
+    gpufit_fit_options = {
+        "tolerance": options["gpufit_tolerance"],
+        "max_number_iterations": options["gpufit_max_iterations"]
+    }
+
+    if options["gpufit_estimator_id"] == "LSE":
+        gpufit_fit_options["estimator_id"] = gf.EstimatorID.LSE
+    elif options["gpufit_estimator_id"] == "MLE":
+        gpufit_fit_options["estimator_id"] = gf.EstimatorID.MLE
+    else:
+        raise RuntimeError(
+            f"Didn't know what to do with 'gpfit_estimator_id' = {options['gpufit_estimator_id']}, available options: 'LSE', 'MLE'"
+        )
+    return gpufit_fit_options
+
+# ============================================================================
+
+
 def get_gpufit_modelID(options, fit_model):
     """
     Find corresponding gpufit modelID for this fitmodel
@@ -41,7 +77,7 @@ def get_gpufit_modelID(options, fit_model):
     options : dict
         Generic options dict holding all the user options.
 
-    fit_model : `QDMPy.fit_models.FitModel` object.
+    fit_model : `QDMPy.fit_models.FitModel`
         Must be one of (in this exact order/format):
         for odmr, LORENTZ8: {'linear': 1, 'lorentzian': 1<=n<=8}
         for t1/etc., STRETCHED_EXP: {'constant': 1, 'stretched_exponential': 1}
@@ -92,14 +128,11 @@ def prep_gpufit_backend(options, fit_model):
     options : dict
         Generic options dict holding all the user options.
 
-    fit_model : `QDMPy.fit_models.FitModel` object.
+    fit_model : `QDMPy.fit_models.FitModel`
         Must be one of (in this exact order/format):
         for odmr, LORENTZ8: {'linear': 1, 'lorentzian': 1<=n<=8}
         for t1/etc., STRETCHED_EXP: {'constant': 1, 'stretched_exponential': 1}
 
-    Returns
-    -------
-    Nothing
     """
     if not gf.cuda_available():
         raise RuntimeError(f"CUDA error:\n{gf.get_last_error()}")
@@ -199,7 +232,8 @@ def fit_single_pixel_gpufit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `QDMPy.fit_models.FitModel` object.
+    fit_model : `QDMPy.fit_models.FitModel`
+        Model we're fitting to.
 
     roi_avg_fit_result : `QDMPy.fit_shared.ROIAvgFitResult`
         `QDMPy.fit_shared.ROIAvgFitResult` object, to pull fit_options from.
@@ -207,7 +241,7 @@ def fit_single_pixel_gpufit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg
     Returns
     -------
     pixel_parameters : np array, 1D
-        Best fit parameters, as determined by gpufit.
+        Best fit parameters, as determined by gpufit
     """
     # NOTE need to do the fit at least twice (gpufit requirements) so we do it twice here.
 
@@ -264,11 +298,12 @@ def fit_ROI_avg_gpufit(options, sig_norm, sweep_list, fit_model):
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `QDMPy.fit_models.FitModel` object.
+    fit_model : `QDMPy.fit_models.FitModel`
+        Model we're fitting to.
 
     Returns
     -------
-    `QDMPy.fitting.FitResultROIAvg` object containing the fit result (see class specifics)
+    `QDMPy.fit_shared.ROIAvgFitResult` object containing the fit result (see class specifics)
     """
 
     # NOTE need to do the fit at least twice (gpufit requirements) so we do it twice here.
@@ -282,6 +317,8 @@ def fit_ROI_avg_gpufit(options, sig_norm, sweep_list, fit_model):
     init_guess_params, init_bounds = gen_gpufit_init_guesses(
         options, *fit_shared.gen_init_guesses(options)
     )
+
+    gpufit_fit_options = prep_gpufit_fit_options(options)
 
     # only fit the params we want to :)
     if options["ModelID"] == gf.ModelID.LORENTZ8:
@@ -306,11 +343,12 @@ def fit_ROI_avg_gpufit(options, sig_norm, sweep_list, fit_model):
         ),
         user_info=np.array(sweep_list, dtype=np.float32),
         parameters_to_fit=params_to_fit,
+        **gpufit_fit_options
     )
 
     return fit_shared.ROIAvgFitResult(
         "gpufit",
-        {},
+        gpufit_fit_options,
         fit_model,
         pl_roi,
         sweep_list,
@@ -343,19 +381,21 @@ def fit_AOIs_gpufit(
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq).
 
-    fit_model : `fit_models.FitModel` object.
+    fit_model : `QDMPy.fit_models.FitModel`
+        Model we're fitting to.
 
     AOIs : list
         List of AOI specifications - each a length-2 iterable that can be used to directly index
         into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].
 
     roi_avg_fit_result : `QDMPy.fit_shared.ROIAvgFitResult`
-        `QDMPy.fit_shared.ROIAvgFitResult` object, to pull `QDMPy.fitting.FitResultROIAvg.fit_options`
+        `QDMPy.fit_shared.ROIAvgFitResult` object, to pull `QDMPy.fit_shared.ROIAvgFitResult.fit_options`
         from.
 
     Returns
     -------
-    fit_result_collection : `QDMPy.fit_shared.FitResultCollection` object
+    fit_result_collection : `QDMPy.fit_shared.FitResultCollection`
+        `QDMPy.fit_shared.FitResultCollection` object
     """
     # NOTE need to do the fit at least twice (gpufit requirements) so we do it twice per AOI here.
 
@@ -427,10 +467,11 @@ def fit_pixels_gpufit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `fit_models.FitModel` object.
+    fit_model : `QDMPy.fit_models.FitModel`
+        Model we're fitting to.
 
-    roi_avg_fit_result : `fitting.FitResultROIAvg`
-        `fitting.FitResultROIAvg` object, to pull fit_options from.
+    roi_avg_fit_result : `QDMPy.fit_shared.ROIAvgFitResult`
+        `QDMPy.fit_shared..ROIAvgFitResult` object, to pull fit_options from.
 
     Returns
     -------
@@ -539,8 +580,9 @@ def gpufit_reshape_result(pixel_param_results, pixel_posns):
     pixel_param_results : np array, 2D
         parameter results as returned from gpufit. Shape: (num fits, num parameters)
 
-    pixel_posns : list of pixel positions (x,y) as returned by `QDMPy.fit_gpufit.gpufit_data_shape`
-        position of pixel positions (associated with rows of pixel_param_results)
+    pixel_posns : list
+        List of pixel positions (x,y) as returned by `QDMPy.fit_gpufit.gpufit_data_shape`.
+        I.e. the position of pixel positions associated with rows of pixel_param_results.
 
     Returns
     -------

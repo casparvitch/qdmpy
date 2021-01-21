@@ -22,6 +22,7 @@ __author__ = "Sam Scholten"
 # ============================================================================
 
 import numpy as np
+import warnings
 
 # ============================================================================
 
@@ -40,7 +41,8 @@ def get_pixel_fitting_results(fit_model, fit_results, roi_shape):
 
     Arguments
     ---------
-    fit_model : `QDMPy.fit_models.FitModel` object.
+    fit_model : `QDMPy.fit_models.FitModel`
+        Model we're fitting to.
 
     fit_results : list of [(x, y), result] objects
         (see `QDMPy.fit_scipy.to_squares_wrapper`, or `QDMPy.fit_gpufit.gpufit_reshape_result`)
@@ -145,15 +147,12 @@ def prep_fit_backends(options, fit_model):
     options : dict
         Generic options dict holding all the user options.
 
-    fit_model : `QDMPy.fit_models.FitModel` object.
-
-    Returns
-    -------
-    None
-
+    fit_model : `QDMPy.fit_models.FitModel`
+        Model we're fitting to.
     """
     # ensure backend we want to use for pixel fittings is in comparison!
     if options["fit_backend"] not in options["fit_backend_comparison"]:
+        warnings.warn("Your chosen fit backend wasn't in the fit backend comparison list, so it has been added for you.")
         options["fit_backend_comparison"].append(options["fit_backend"])
 
     for fit_backend in options["fit_backend_comparison"]:
@@ -196,12 +195,13 @@ def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `QDMPy.fit_models.FitModel` object.
+    fit_model : `QDMPy.fit_models.FitModel`
+        Model we're fitting to.
 
     Returns
     -------
     backend_ROI_results_lst : list
-        List of `QDMPy.fitting.FitResultROIAvg` objects containing the fit result
+        List of `QDMPy.fit_shared.ROIAvgFitResult` objects containing the fit result
         (see class specifics) for each fit backend selected for comparison
 
     """
@@ -249,19 +249,21 @@ def fit_AOIs(
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq).
 
-    fit_model : `fit_models.FitModel` object.
+    fit_model : `QDMPy.fit_models.FitModel`
+        Model we're fitting to.
 
     AOIs : list
         List of AOI specifications - each a length-2 iterable that can be used to directly index
         into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].
 
     roi_avg_fit_result : `QDMPy.fit_shared.ROIAvgFitResult`
-        `QDMPy.fit_shared.ROIAvgFitResult` object, to pull `QDMPy.fitting.FitResultROIAvg.fit_options`
+        `QDMPy.fit_shared.ROIAvgFitResult` object, to pull `QDMPy.fit_shared.ROIAvgFitResult.fit_options`
         from.
 
     Returns
     -------
-    fit_result_collection : `QDMPy.fit_shared.FitResultCollection` object
+    fit_result_collection : `QDMPy.fit_shared.FitResultCollection`
+        `QDMPy.fit_shared.FitResultCollection` object.
     """
 
     fit_result_collection_lst = []  # list of FitResultCollection objects
@@ -316,10 +318,11 @@ def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `fit_models.FitModel` object.
+    fit_model : `QDMPy.fit_models.FitModel`
+        Model we're fitting to.
 
-    roi_avg_fit_result : `fitting.FitResultROIAvg`
-        `fitting.FitResultROIAvg` object, to pull fit_options from.
+    roi_avg_fit_result : `QDMPy.fit_shared.ROIAvgFitResult`
+        `QDMPy.fit_shared.ROIAvgFitResult` object, to pull fit_options from.
 
     Returns
     -------

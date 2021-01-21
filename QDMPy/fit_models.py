@@ -1,9 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-This module defines the fit model used. Currently only supports scipy least_squares on CPU.
-
-TODO rewrite, we do kind of use GPU, but we grab this fit model and work out what modelID automcly.
+This module defines the fit model used. We grab/use this regardless of fitting on cpu (scipy) or gpu etc.
 
 Ensure any fit functions you define are added to the AVAILABLE_FNS module variable.
 Try not to have overlapping parameter names in the same fit.
@@ -186,10 +184,10 @@ class FitFunc:
 
     def __init__(self, param_indices):
         """
-        Argument
-        --------
+        Arguments
+        ---------
         param_indices : np array
-            where the parameters for this fitfunc are located within broader fitmodel param array
+            Where the parameters for this fitfunc are located within broader fitmodel param array.
         """
         self.this_fn_param_indices = param_indices
 
@@ -553,7 +551,6 @@ class Stretched_exponential(FitFunc):
 # ==========================================================================
 # ==========================================================================
 
-# TODO add exponentials... consult T1, T2 people etc.
 # careful -> don't want overlapping param definitions!!!
 AVAILABLE_FNS = {
     "lorentzian": Lorentzian,

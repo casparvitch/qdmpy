@@ -484,7 +484,32 @@
                 "arctan"
             ]
     },
-
+    // ========== gpufit options ===========
+    // Fit tolerance threshold
+    // Setting a lower value for the tolerance results in more precise values for the fit 
+    // parameters, but requires more fit iterations to reach convergence.
+    // A typical value for the tolerance settings is between 1.0E-3 and 1.0E-6.
+    "gpufit_tolerance": {
+        "option_default": 1e-4
+    },
+    // Max number of iterations
+    // The maximum number of fit iterations permitted. If the fit has not converged after this 
+    // number of iterations, the fit returns with a status value indicating that the maximum 
+    // number of iterations was reached.
+    "gpufit_max_iterations": {
+        "option_default": 25
+    },
+    // See https://gpufit.readthedocs.io/en/latest/fit_estimator_functions.html
+    // default: least squares estimator
+    // Use MLE (Maximum likelihood estimator) for data subject to Poisson statistics
+    //  ->> Noise in the data is assumed to be purely Poissonian.
+    "gpufit_estimator_id": {
+        "option_default": "LSE",
+        "option_choices": [
+            "LSE",
+            "MLE"
+        ]
+    },
 	// ===========================================================================================
     // =============================== Plotting Parameters =======================================
 	// ===========================================================================================

@@ -76,7 +76,7 @@ def plot_ROI_PL_image(options, PL_image):
     options : dict
         Generic options dict holding all the user options.
 
-    PL_image : np array, 2D.
+    PL_image : np array, 2D
         Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned but
         not cut down to ROI.
 
@@ -116,8 +116,12 @@ def add_colorbar(im, fig, ax, aspect=20, pad_fraction=1, **kwargs):
 
     ax : matplotlib Axis object
 
+    Returns
+    -------
+    cbar : matplotlib colorbar object
 
-    Optional arguments
+
+    Optional Arguments
     ------------------
     aspect : int
         Reciprocal of aspect ratio passed to new colorbar axis width. Default: 20.
@@ -128,9 +132,6 @@ def add_colorbar(im, fig, ax, aspect=20, pad_fraction=1, **kwargs):
     **kwargs : other keyword arguments
         Passed to fig.colorbar.
 
-    Returns
-    -------
-    cbar : matplotlib colorbar object
     """
     divider = make_axes_locatable(ax)
     width = axes_size.AxesY(ax, aspect=1.0 / aspect)
@@ -171,9 +172,6 @@ def add_patch_square_centre(ax, area_c, area_size, label=None, edgecolor="b"):
     edgecolor : str
         Color of label and edge of annotation. Default: "b".
 
-    Returns
-    -------
-    Nothing.
     """
     rect_corner = [int(area_c[0] - area_size / 2), int(area_c[1] - area_size / 2)]
     rect = patches.Rectangle(
@@ -225,9 +223,6 @@ def add_patch_rect(ax, rect_corner_x, rect_corner_y, size_x, size_y, label=None,
     edgecolor : str
         Color of label and edge of annotation. Default: "b".
 
-    Returns
-    -------
-    Nothing.
     """
     rect = patches.Rectangle(
         (rect_corner_x, rect_corner_y),
@@ -339,7 +334,7 @@ def plot_AOI_PL_images(options, PL_image_ROI, AOIs):
     options : dict
         Generic options dict holding all the user options.
 
-    PL_image_ROI : np array, 2D.
+    PL_image_ROI : np array, 2D
         Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
         cut down to ROI.
 
@@ -503,7 +498,7 @@ def plot_ROI_avg_fits(options, backend_ROI_results_lst):
         Generic options dict holding all the user options.
 
     backend_ROI_results_lst : list of tuples
-        Format: (fit_backend, `QDMPy.fitting.FitResultROIAvg` objects), for each fit_backend
+        Format: (fit_backend, `QDMPy.fit_shared.ROIAvgFitResult` objects), for each fit_backend
 
     Returns
     -------
@@ -753,7 +748,6 @@ def plot_AOI_spectra_fit(
     sweep_list,
     AOIs,
     fit_result_collection_lst,
-    backend_ROI_results_lst,
     fit_model,
 ):
     """
@@ -790,12 +784,11 @@ def plot_AOI_spectra_fit(
 
     fit_result_collection_lst : list
         List of `QDMPy.fit_shared.FitResultCollection` objects (one for each fit_backend)
+        holding ROI, AOI fit results
 
-    backend_ROI_results_lst : list of `fitting.FitResultROIAvg`
-        `QDMPy.fitting.FitResultROIAvg` object, each element for each fit backend
-
-    fit_model : `fit_models.FitModel` object.
-
+    fit_model : `QDMPy.fit_models.FitModel`
+        Model we're fitting to.
+        
     Returns
     -------
     fig : matplotlib Figure object
@@ -919,8 +912,8 @@ def plot_AOI_spectra_fit(
     )  # this is meant to be less indented than the line above
 
     high_res_xdata = np.linspace(
-        np.min(backend_ROI_results_lst[0].sweep_list),
-        np.max(backend_ROI_results_lst[0].sweep_list),
+        np.min(fit_result_collection_lst[0].roi_avg_fit_result.sweep_list),
+        np.max(fit_result_collection_lst[0].roi_avg_fit_result.sweep_list),
         10000,
     )
 
@@ -1017,7 +1010,8 @@ def plot_param_image(options, fit_model, pixel_fit_params, param_name, param_num
     options : dict
         Generic options dict holding all the user options.
 
-    fit_model : `fit_models.FitModel` object.
+    fit_model : `QDMPy.fit_models.FitModel`
+        Model we're fitting to.
 
     pixel_fit_params : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
@@ -1067,7 +1061,8 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
     options : dict
         Generic options dict holding all the user options.
 
-    fit_model : `fit_models.FitModel` object.
+    fit_model : `QDMPy.fit_models.FitModel`
+        Model we're fitting to.
 
     pixel_fit_params : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
