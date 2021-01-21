@@ -56,23 +56,16 @@
     	"option_choices":
     		[
     			"Full",
-    			"Rectangle",
-    			"Square"
-    		]
+    			"Rectangle"    		]
     },
-    // half the size of the square (used for square only)
-    "ROI_halfsize": {
-    	"option_default": 1
-    },
-    // centre pixel (for rectangle or square)
-    "ROI_centre": {
-    	"option_default": [3, 3]
-    },
-    // Used for the rectangle size only
-    "ROI_rect_size": {
-    	"option_default": [1, 1]
-    },
-
+    // Start of ROI region (indices, [start_x, start_y]) i.e. top left corner
+    "ROI_start": {
+        "option_default": 0
+    },    
+    // End of ROI region (indices, [end_x, end_y]) i.e. bottom right corner
+    "ROI_end": {
+        "option_default": 0
+    },    
     // Removes data points from the start and end of each pixel data
     "remove_start_sweep": {
     	"option_default": 1
@@ -80,9 +73,7 @@
     "remove_end_sweep": {
     	"option_default": 0
     },
-
     // Style of the reference normalisation used. div = division and sub = subtraction
-    // Note: subtraction adds '1', i.e. 1 + sig - ref
     "normalisation": {
     	"option_default": "div",
     	"option_choices":
@@ -97,30 +88,30 @@
     "single_pixel_check": {
     	"option_default": [1, 1]
     },
-    // centre pixel of area 1
-    "area_1_centre": {
+    // start indices (top left corner) of area 1, [start_x, start_y]
+    "area_1_start": {
     	"option_default": [1, 1]
     },
-    // halfsize of the square region of area 1
-    "area_1_halfsize": {
-    	"option_default": 1
+    // end indices [end_x, end_y] of the square region of area 1
+    "area_1_end": {
+    	"option_default": [2, 2]
     },
     // etc. for as many as you like: need to be copied/extended below if you want more AOIs
-    "area_2_centre": {
+    "area_2_start": {
     },
-    "area_2_halfsize": {
+    "area_2_end": {
     },
-    "area_3_centre": {
+    "area_3_start": {
     },
-    "area_3_halfsize": {
+    "area_3_end": {
     },
-    "area_4_centre": {
+    "area_4_start": {
     },
-    "area_4_halfsize": {
+    "area_4_end": {
     },
-    "area_5_centre": {
+    "area_5_start": {
     },
-    "area_5_halfsize": {
+    "area_5_end": {
     },
 
     // ========== Fitting Parameters ==========
@@ -619,6 +610,8 @@
     "metadata": {},
     // for multiprocessing: # threads to use
     "threads": {},
+    // Size of image (size_x, size_y) after rebinning, before being cut down to ROI
+    "rebinned_image_size": {},
     // did we automatically reload a previous fit result?
     "reloaded_prev_fit": {},
     // did we find a previous fit result?

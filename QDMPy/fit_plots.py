@@ -254,21 +254,14 @@ def annotate_ROI_image(options, ax):
         binning = 1
     if options["ROI"] == "Full":
         return None
-    elif options["ROI"] == "Square":
-        size = options["ROI_radius"] * binning * 2
-        corner = [
-            options["ROI_centre"][0] * binning - size / 2,
-            options["ROI_centre"][1] * binning - size / 2,
-        ]
+    elif options["ROI"] =="Rectangle":
+        full_size_w, full_size_h = *options["rebinned_image_size"]
 
-        add_patch_rect(ax, corner[0], corner[1], size, size, label="ROI", edgecolor="r")
-    elif options["ROI"] == "Rectangle":
-        start_x = options["ROI_centre"][0] - options["ROI_rect_size"][0] / 2
-        start_y = options["ROI_centre"][1] - options["ROI_rect_size"][1] / 2
-        size_x = options["ROI_rect_size"][0]
-        size_y = options["ROI_rect_size"][1]
+        start_x, start_y = options["ROI_start"]
+        end_x, end_y = options["ROI_end"]
 
-        add_patch_rect(ax, start_x, start_y, size_x, size_y, label="ROI", edgecolor="r")
+
+        add_patch_rect(ax, start_x, start_y, end_x - start_x + 1, end_y - start_y + 1, label="ROI", edgecolor="r")
     else:
         raise systems.OptionsError(
             "ROI", options["ROI"], options["system"], custom_msg="Unknown ROI encountered."
@@ -313,8 +306,8 @@ def annotate_AOI_image(options, ax):
                 ax,
                 corner[0],
                 corner[1],
-                size,
-                size,
+                2*size,
+                2*size,
                 label="AOI " + str(i),
                 edgecolor=options["AOI_colors"][i],
             )
@@ -813,12 +806,14 @@ def plot_AOI_spectra_fit(
     ref_avgs = []
     # add roi data
     # FIXME this assumes our metadata style? Should call into systems then.
-    # FIXME sig not already cut down to ROI???
-    sz_h = int(options["metadata"]["AOIHeight"] / options["additional_bins"])
-    sz_w = int(options["metadata"]["AOIWidth"] / options["additional_bins"])
-    ROI = data_loading.define_ROI(options, sz_h, sz_w)
-    roi_avg_sig = np.nanmean(np.nanmean(sig[:, ROI[0], ROI[1]], axis=2), axis=1)
-    roi_avg_ref = np.nanmean(np.nanmean(ref[:, ROI[0], ROI[1]], axis=2), axis=1)
+    # # FIXME sig not already cut down to ROI???
+    # sz_h = int(options["metadata"]["AOIHeight"] / options["additional_bins"])
+    # sz_w = int(options["metadata"]["AOIWidth"] / options["additional_bins"])
+    # ROI = data_loading.define_ROI(options, sz_h, sz_w)
+    roi_avg_sig = np.nanmean(np.nanmean(sig, axis=2), axis=1)
+    roi_avg_ref = np.nanmean(np.nanmean(ref, axis=2), axis=1)
+    # roi_avg_sig = np.nanmean(np.nanmean(sig[:, ROI[0], ROI[1]], axis=2), axis=1)
+    # roi_avg_ref = np.nanmean(np.nanmean(ref[:, ROI[0], ROI[1]], axis=2), axis=1)
     sig_avgs.append(roi_avg_sig)
     ref_avgs.append(roi_avg_ref)
     # add single pixel check

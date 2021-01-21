@@ -15,8 +15,7 @@ Functions
  - `QDMPy.data_loading.rebin_image`
  - `QDMPy.data_loading.define_ROI`
  - `QDMPy.data_loading.define_area_roi`
- - `QDMPy.data_loading.define_area_roi_centre`
- - `QDMPy.data_loading.remove_unwanted_sweeps`
+ - `QDMPy.data_loading.remove_unwanted_data`
  - `QDMPy.data_loading.define_AOIs`
 """
 
@@ -97,14 +96,14 @@ def load_options(options_dict=None, options_path=None, check_for_prev_result=Fal
 
     sys = systems.choose_system(prelim_options["system_name"])
 
-    sys.system_specific_option_update(prelim_options)
-
     metadata = sys.read_metadata(prelim_options["filepath"])
 
     prelim_options["metadata"] = metadata  # add metadata to options dict
 
     options = sys.get_default_options()  # first load in default options
     options.update(prelim_options)  # now update with what has been decided upon by user
+
+    sys.system_specific_option_update(options)
 
     options["system"] = sys
 
@@ -248,25 +247,62 @@ def reshape_dataset(options, raw_data, sweep_list):
         size_h, size_w = image_rebinned.shape[1:]
     except Exception:
         size_h, size_w = image_rebinned.shape
-    ROI = define_ROI(options, size_h, size_w)
+
+    # FIXME test, is the above correct, image_rebinned is h, w in shape???
+
+    options["rebinned_image_size"] = (size_w, size_h)
+
+    # check options to ensure ROI/AOI are in correct format (now we have image size)
+    # FIXME
+    options["ROI_start"], options["ROI_end"] = check_start_end_rectangle("ROI", *options["ROI_start"], *options["ROI_end"], size_w, size_h)
+    # TODO below here, do same for ROI
+    i = 0
+    while True:
+        i += 1
+        # NOTE wait need to change size here to be ROI size I think no? -> if so, put it after remove_unwanted_data
+        options[f"AOI_{i}_start"], options[f"AOI_{i}_end"] = check_start_end_rectangle(f"AOI_{i}", *options[f"AOI_{i}_start"], *options["AOI_{i}_end"], size_w, size_h)
 
     # somewhat important a lot of this isn't hidden, so we can adjust it later
-    PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list = remove_unwanted_sweeps(
-        options, image_rebinned, sweep_list, sig, ref, sig_norm, ROI
+    PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list = remove_unwanted_data(
+        options, image_rebinned, sweep_list, sig, ref, sig_norm
     )  # also cuts sig etc. down to ROI
 
     # single pixel check
-    single_pixel_pl = sig_norm[
-        :, options["single_pixel_check"][0], options["single_pixel_check"][1]
-    ]
+    try:
+        single_pixel_pl = sig_norm[
+            :, options["single_pixel_check"][0], options["single_pixel_check"][1]
+        ]
+    except IndexError as e:
+        warnings.warn(f"Avoiding IndexError for single_pixel_check (setting pixel check to centre of image):\n{e}")
+        single_pixel_pl = sig_norm[:, PL_image_ROI.shape[0] // 2, PL_image_ROI.shape[1] // 2]
+        options["single_pixel_check"] = (PL_image_ROI.shape[0] // 2, PL_image_ROI.shape[1] // 2)
 
     return PL_image, PL_image_ROI, sig, ref, sig_norm, single_pixel_pl, sweep_list
 
-
 # ============================================================================
-#
-# =============== INWARD-FACING FUNCTIONS
-#
+
+# FIXME add documentation
+def check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_x, full_size_y):
+        if start_x >= full_size_w:
+            warnings.warn(f"{name} Rectangle starts outside image (in x), setting to zero.")
+            start_x = 0
+        elif start_x < 0:
+            warnings.warn(f"{name} Rectangle too big in x, cropping to image.")
+            start_x = 0
+        if start_y >= full_size_h:
+            warnings.warn(f"{name} Rectangle starts outside image (in y), setting to zero.")
+            start_y = 0
+        elif start_y < 0:
+            warnings.warn(f"{name} Rectangle too big in y, cropping to image.")
+            start_y = 0
+        if end_x >= full_size_w:
+            warnings.warn(f"{name} Rectangle too big in x, cropping to image.")
+            end_x = full_size_w - 1
+        if end_y >= full_size_h:
+            warnings.warn(f"{name} Rectangle too big in y, cropping to image.")
+            end_y = full_size_h - 1
+    return start_x, start_y, end_x, end_y
+
 # ============================================================================
 
 
@@ -321,7 +357,7 @@ def check_if_already_processed(options):
 
 # ============================================================================
 
-
+# FIXME -> not just ROI! will need to write more complex functions
 def check_ROI_compatibility(options, prev_options):
     """
     Check if ROI option in current options and previous options are compatible.
@@ -342,29 +378,31 @@ def check_ROI_compatibility(options, prev_options):
     -------
     Nothing
     """
-    failure_string = """
-    Detected previous (similar) fit results. We would skip fitting the pixels
-    and load these previous results, but ROI options were not the same. To avoid issues with
-    plotting inconsistent PL/param arrays etc. and to remove ambiguity, the previous fit results
-    will not be loaded ("force_fit" has been set to True).
-     - If you intended to fit the data again (i.e. in different ROI) then don't worry about
-       this message.
-     - If you want to speed things up a bit and use this automatic reload feature, then try
-       setting "auto_match_prev_ROI_options" to True. It will not effect any other part of the
-       analysis process.
-    """
+    return None
+    # FIXME
+    # failure_string = """
+    # Detected previous (similar) fit results. We would skip fitting the pixels
+    # and load these previous results, but ROI options were not the same. To avoid issues with
+    # plotting inconsistent PL/param arrays etc. and to remove ambiguity, the previous fit results
+    # will not be loaded ("force_fit" has been set to True).
+    #  - If you intended to fit the data again (i.e. in different ROI) then don't worry about
+    #    this message.
+    #  - If you want to speed things up a bit and use this automatic reload feature, then try
+    #    setting "auto_match_prev_ROI_options" to True. It will not effect any other part of the
+    #    analysis process.
+    # """
 
-    ROI_settings = ["ROI", "ROI_halfsize", "ROI_centre", "ROI_rect_size"]
-    if options["auto_match_prev_ROI_options"]:
-        for key in ROI_settings:
-            options[key] = prev_options[key]
-    else:
-        for key in ROI_settings:
-            if options[key] != prev_options[key]:
-                warnings.warn(failure_string)
-                options["reloaded_prev_fit"] = False
-                options["force_fit"] = True
-                break
+    # ROI_settings = ["ROI", "ROI_halfsize", "ROI_centre", "ROI_rect_size"]
+    # if options["auto_match_prev_ROI_options"]:
+    #     for key in ROI_settings:
+    #         options[key] = prev_options[key]
+    # else:
+    #     for key in ROI_settings:
+    #         if options[key] != prev_options[key]:
+    #             warnings.warn(failure_string)
+    #             options["reloaded_prev_fit"] = False
+    #             options["force_fit"] = True
+    #             break
 
 
 # ============================================================================
@@ -524,7 +562,7 @@ def rebin_image(options, image):
 # ============================================================================
 
 
-def define_ROI(options, full_size_h, full_size_w):
+def define_ROI(options, full_size_w, full_size_h):
     """
     Defines meshgrids that can be used to slice image into smaller region of interest (ROI).
 
@@ -533,11 +571,11 @@ def define_ROI(options, full_size_h, full_size_w):
     options : dict
         Generic options dict holding all the user options.
 
-    full_size_h : int
-        Height of image.
-
     full_size_w : int
-        Width of image.
+        Width of image (after rebin, before ROI cut).
+
+    full_size_h : int
+        Height of image (after rebin, before ROI cut).
 
     Returns
     -------
@@ -549,16 +587,13 @@ def define_ROI(options, full_size_h, full_size_w):
 
     if options["ROI"] == "Full":
         ROI = define_area_roi(0, 0, full_size_w - 1, full_size_h - 1)
-    elif options["ROI"] == "Square":
-        ROI = define_area_roi_centre(options["ROI_centre"], 2 * options["ROI_halfsize"])
     elif options["ROI"] == "Rectangle":
-        start_x = int(options["ROI_centre"][0] - options["ROI_rect_size"][0] / 2)
-        start_y = int(options["ROI_centre"][1] - options["ROI_rect_size"][1] / 2)
-        end_x = int(options["ROI_centre"][0] + options["ROI_rect_size"][0] / 2)
-        end_y = int(options["ROI_centre"][1] + options["ROI_rect_size"][1] / 2)
+        start_x, start_y = options["ROI_start"]
+        end_x, end_y = options["ROI_end"]
         ROI = define_area_roi(start_x, start_y, end_x, end_y)
 
     return ROI
+
 
 
 # ============================================================================
@@ -580,8 +615,8 @@ def define_area_roi(start_x, start_y, end_x, end_y):
         Defines an ROI that can be applied to the 3D image through direct indexing.
         E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
     """
-    x = [np.linspace(start_x, end_x, end_x - start_x + 1, dtype=int)]
-    y = [np.linspace(start_y, end_y, end_y - start_y + 1, dtype=int)]
+    x = np.linspace(start_x, end_x, end_x - start_x + 1, dtype=int)
+    y = np.linspace(start_y, end_y, end_y - start_y + 1, dtype=int)
     xv, yv = np.meshgrid(x, y)
     return [yv, xv]
 
@@ -589,31 +624,7 @@ def define_area_roi(start_x, start_y, end_x, end_y):
 # ============================================================================
 
 
-def define_area_roi_centre(centre, size):
-    """
-    Makes a list with of meshgrids that defines the ROI. Square ROI.
-
-    Arguments
-    ---------
-    centre, size : int
-        Defines centre and size of ROI square.
-
-    Returns
-    -------
-    ROI : length 2 list of np meshgrids.
-        Defines an ROI that can be applied to the 3D image through direct indexing.
-        E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
-    """
-    x = [np.linspace(centre[0] - size / 2, centre[0] + size / 2, size + 1, dtype=int)]
-    y = [np.linspace(centre[1] - size / 2, centre[1] + size / 2, size + 1, dtype=int)]
-    xv, yv = np.meshgrid(x, y)
-    return [yv, xv]
-
-
-# ============================================================================
-
-
-def remove_unwanted_sweeps(options, image_rebinned, sweep_list, sig, ref, sig_norm, ROI):
+def remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_norm):
     """
     Removes unwanted sweep values (i.e. freq values or tau values) for all of the data arrays.
 
@@ -644,10 +655,6 @@ def remove_unwanted_sweeps(options, image_rebinned, sweep_list, sig, ref, sig_no
         reshaped and rebinned.  Unwanted sweeps not removed yet.
         Format: [sweep_vals, x, y]
 
-    ROI : length 2 list of np meshgrids
-        Defines an ROI that can be applied to the 3D image through direct indexing.
-        E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
-
     Returns
     -------
     PL_image : np array, 2D
@@ -676,10 +683,21 @@ def remove_unwanted_sweeps(options, image_rebinned, sweep_list, sig, ref, sig_no
     """
     systems.clean_options(options)
 
-    # here ensure we have copies, not views
     rem_start = options["remove_start_sweep"]
     rem_end = options["remove_end_sweep"]
+
+    ROI = define_ROI(options, *options["rebinned_image_size"])
+
+    if rem_start < 0:
+        warnings.warn("remove_start_sweep must be >=0, setting to zero now.")
+        rem_start = 0
+    if rem_end < 0:
+        warnings.warn("remove_end_sweep must be >=0, setting to zero now.")
+        rem_end = 0
+
     PL_image = np.sum(image_rebinned, axis=0)
+
+    errored_before = False
     PL_image_ROI = PL_image[ROI[0], ROI[1]].copy()
     sig = sig[rem_start : -1 - rem_end, ROI[0], ROI[1]].copy()  # noqa: E203
     ref = ref[rem_start : -1 - rem_end, ROI[0], ROI[1]].copy()  # noqa: E203
@@ -719,13 +737,13 @@ def define_AOIs(options):
     while True:
         i += 1
         try:
-            centre = options["area_" + str(i) + "_centre"]
-            halfsize = options["area_" + str(i) + "_halfsize"]
+            start = options["area_" + str(i) + "_start"]
+            end = options["area_" + str(i) + "_end"]
 
-            if centre is None or halfsize is None:
-                break
+            if start is None or end is None:
+                continue
 
-            AOIs.append(define_area_roi_centre(centre, 2 * halfsize))
+            AOIs.append(define_area_roi(*start, *end))
         except KeyError:
             break
     return AOIs

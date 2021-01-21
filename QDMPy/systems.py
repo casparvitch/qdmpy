@@ -193,13 +193,14 @@ class UniMelb(System):
 
         # need to know number of threads to call (might be parallel fitting)
         options["threads"] = cpu_count() - options["scipy_sub_threads"]
-        if "filepath" not in options:
-            options["filepath"] = os.getcwd()
+
         options["filepath"] = os.path.normpath(options["filepath"])
-        if "fit_method" in options:
-            # ensure only useful (scipy) loss method is used
-            if options["fit_method"] == "lm":
+        
+        # ensure only useful (scipy) loss method is used
+        if "scipy_fit_method" in options:
+            if options["scipy_fit_method"] == "lm":
                 options["loss"] = "linear"
+
         if "base_dir" in options:
             if options["base_dir"] == "test_datasets":
                 # find tests path in this repo and prepend
