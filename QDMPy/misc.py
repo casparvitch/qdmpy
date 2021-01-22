@@ -30,7 +30,7 @@ import warnings
 from collections import OrderedDict, defaultdict
 import re
 import simplejson as json
-
+import numpy as np
 
 # ============================================================================
 
@@ -126,6 +126,9 @@ def getsubitems(obj, itemkey, islast, maxlinelength):
     # assume we can concatenate inner content unless a child node returns an
     # expanded list
     can_concat = True
+
+    if isinstance(obj, np.array):
+        obj = obj.tolist()
 
     isdict = isinstance(obj, dict)
     islist = isinstance(obj, list)
