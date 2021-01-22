@@ -719,7 +719,7 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
 
         axs[1, 1].legend()
         axs[1, 1].grid(True)
-        axs[1, 1].set_title("Division Normalisation (Weber contrast, sig / ref")
+        axs[1, 1].set_title("Division Normalisation (Weber contrast, sig / ref)")
         axs[1, 1].set_xlabel("Sweep parameter")
         axs[1, 1].set_ylabel("PL (a.u.)")
 
