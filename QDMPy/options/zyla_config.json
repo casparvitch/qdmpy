@@ -89,29 +89,29 @@
     	"option_default": [1, 1]
     },
     // start indices (top left corner) of area 1, [start_x, start_y]
-    "area_1_start": {
+    "AOI_1_start": {
     	"option_default": [1, 1]
     },
     // end indices [end_x, end_y] of the square region of area 1
-    "area_1_end": {
+    "AOI_1_end": {
     	"option_default": [2, 2]
     },
     // etc. for as many as you like: need to be copied/extended below if you want more AOIs
-    "area_2_start": {
+    "AOI_2_start": {
     },
-    "area_2_end": {
+    "AOI_2_end": {
     },
-    "area_3_start": {
+    "AOI_3_start": {
     },
-    "area_3_end": {
+    "AOI_3_end": {
     },
-    "area_4_start": {
+    "AOI_4_start": {
     },
-    "area_4_end": {
+    "AOI_4_end": {
     },
-    "area_5_start": {
+    "AOI_5_start": {
     },
-    "area_5_end": {
+    "AOI_5_end": {
     },
 
     // ========== Fitting Parameters ==========

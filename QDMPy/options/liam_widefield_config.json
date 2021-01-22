@@ -93,31 +93,32 @@
     "single_pixel_check": {
     	"option_default": [1, 1]
     },
-    // centre pixel of area 1
-    "area_1_centre": {
-    	"option_default": [1, 1]
+    // start indices (top left corner) of area 1, [start_x, start_y]
+    "AOI_1_start": {
+        "option_default": [1, 1]
     },
-    // halfsize of the square region of area 1
-    "area_1_halfsize": {
-    	"option_default": 1
+    // end indices [end_x, end_y] of the square region of area 1
+    "AOI_1_end": {
+        "option_default": [2, 2]
     },
     // etc. for as many as you like: need to be copied/extended below if you want more AOIs
-    "area_2_centre": {
+    "AOI_2_start": {
     },
-    "area_2_halfsize": {
+    "AOI_2_end": {
     },
-    "area_3_centre": {
+    "AOI_3_start": {
     },
-    "area_3_halfsize": {
+    "AOI_3_end": {
     },
-    "area_4_centre": {
+    "AOI_4_start": {
     },
-    "area_4_halfsize": {
+    "AOI_4_end": {
     },
-    "area_5_centre": {
+    "AOI_5_start": {
     },
-    "area_5_halfsize": {
+    "AOI_5_end": {
     },
+
 
     // ========== Fitting Parameters ==========
     // Backend used for pixel fitting (required)

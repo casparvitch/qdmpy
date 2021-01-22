@@ -49,7 +49,6 @@ import warnings
 import QDMPy.systems as systems
 import QDMPy.fit_models as fit_models
 
-import QDMPy.data_loading as data_loading
 import QDMPy.misc as misc
 
 
@@ -88,15 +87,26 @@ def plot_ROI_PL_image(options, PL_image):
     c_map = options["colormaps"]["PL_images"]
     c_range = get_colormap_range(options["colormap_range_dicts"]["PL_images"], PL_image)
 
-    fig, ax = plot_image(options, PL_image, "PL - ROI", c_map, c_range, "Counts", None)
+    fig, ax = plt.subplots(constrained_layout=True)
 
-    if options["show_scalebar"]:
-        pixel_size = options["system"].get_raw_pixel_size() * options["total_bin"]
-        scalebar = ScaleBar(pixel_size)
-        ax.add_artist(scalebar)
+    fig, ax = plot_image_on_ax(
+        fig,
+        ax,
+        options,
+        PL_image,
+        "PL - ROI",
+        c_map,
+        c_range,
+        "Counts",
+        options["system"].get_raw_pixel_size() * options["total_bin"],
+    )
 
     if options["annotate_image_regions"]:
         annotate_ROI_image(options, ax)
+
+    np.savetxt(options["data_dir"] / "PL - ROI.txt", PL_image)
+    if options["save_plots"]:
+        fig.savefig(options["output_dir"] / ("PL - ROI." + options["save_fig_type"]))
 
     return fig
 
@@ -254,14 +264,20 @@ def annotate_ROI_image(options, ax):
         binning = 1
     if options["ROI"] == "Full":
         return None
-    elif options["ROI"] =="Rectangle":
-        full_size_w, full_size_h = *options["rebinned_image_size"]
+    elif options["ROI"] == "Rectangle":
 
         start_x, start_y = options["ROI_start"]
         end_x, end_y = options["ROI_end"]
 
-
-        add_patch_rect(ax, start_x, start_y, end_x - start_x + 1, end_y - start_y + 1, label="ROI", edgecolor="r")
+        add_patch_rect(
+            ax,
+            start_x,
+            start_y,
+            end_x - start_x + 1,
+            end_y - start_y + 1,
+            label="ROI",
+            edgecolor="r",
+        )
     else:
         raise systems.OptionsError(
             "ROI", options["ROI"], options["system"], custom_msg="Unknown ROI encountered."
@@ -290,24 +306,17 @@ def annotate_AOI_image(options, ax):
     while True:
         i += 1
         try:
-            centre = options["area_" + str(i) + "_centre"]
-            size = options["area_" + str(i) + "_halfsize"]
-            if centre is None or size is None:
-                break
-            centre *= binning
-            size *= binning
+            start = options["AOI_" + str(i) + "_start"]
+            end = options["AOI_" + str(i) + "_end"]
+            if start is None or end is None:
+                continue
 
-            corner = [
-                centre[0] - size,
-                centre[1] - size,
-            ]
-
+            # need to handle binning???
             add_patch_rect(
                 ax,
-                corner[0],
-                corner[1],
-                2*size,
-                2*size,
+                *start,
+                end[0] - start[0] + 1,
+                end[1] - start[1] + 1,
                 label="AOI " + str(i),
                 edgecolor=options["AOI_colors"][i],
             )
@@ -318,7 +327,7 @@ def annotate_AOI_image(options, ax):
 # ============================================================================
 
 
-def plot_AOI_PL_images(options, PL_image_ROI, AOIs):
+def plot_AOI_PL_images(options, PL_image_ROI):
     """
     Plots PL image cut down to ROI, with annotated AOI regions.
 
@@ -342,28 +351,28 @@ def plot_AOI_PL_images(options, PL_image_ROI, AOIs):
     -------
     fig : matplotlib Figure object
     """
-    if AOIs == []:
-        return None
-
+    fig, ax = plt.subplots(constrained_layout=True)
     c_map = options["colormaps"]["PL_images"]
     c_range = get_colormap_range(options["colormap_range_dicts"]["PL_images"], PL_image_ROI)
 
-    fig, ax = plot_image(
+    fig, ax = plot_image_on_ax(
+        fig,
+        ax,
         options,
         PL_image_ROI,
         "PL - AOIs",
         c_map,
         c_range,
         "Counts",
-        None,
+        options["system"].get_raw_pixel_size() * options["total_bin"],
     )
-    if options["show_scalebar"]:
-        pixel_size = options["system"].get_raw_pixel_size() * options["total_bin"]
-        scalebar = ScaleBar(pixel_size)
-        ax.add_artist(scalebar)
 
     if options["annotate_image_regions"]:
         annotate_AOI_image(options, ax)
+
+    np.savetxt(options["data_dir"] / "PL - AOIs.txt", PL_image_ROI)
+    if options["save_plots"]:
+        fig.savefig(options["output_dir"] / ("PL - AOIs." + options["save_fig_type"]))
 
     return fig
 
@@ -505,7 +514,7 @@ def plot_ROI_avg_fits(options, backend_ROI_results_lst):
     spectrum_frame.plot(
         backend_ROI_results_lst[0].sweep_list,
         backend_ROI_results_lst[0].pl_roi,
-        label="raw data",
+        label=f"raw data ({options['normalisation']})",
         ls=" ",
         marker="o",
         mfc="w",
@@ -680,7 +689,7 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
         # plot subtraction norm
         axs[1, 0].plot(
             sweep_list,
-            1 + sig_avgs[i] - ref_avgs[i],
+            1 + (sig_avgs[i] - ref_avgs[i]) / (sig_avgs[i] + ref_avgs[i]),
             label="AOI " + str(i + 1),
             c=options["AOI_colors"][i + 1],
             ls=linestyles[i],
@@ -690,7 +699,9 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
         )
         axs[1, 0].legend()
         axs[1, 0].grid(True)
-        axs[1, 0].set_title("Subtraction Normalisation")
+        axs[1, 0].set_title(
+            "Subtraction Normalisation (Michelson contrast, 1 + (sig - ref / sig + ref) )"
+        )
         axs[1, 0].set_xlabel("Sweep parameter")
         axs[1, 0].set_ylabel("PL (a.u.)")
 
@@ -708,7 +719,7 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
 
         axs[1, 1].legend()
         axs[1, 1].grid(True)
-        axs[1, 1].set_title("Division Normalisation")
+        axs[1, 1].set_title("Division Normalisation (Weber contrast, sig / ref")
         axs[1, 1].set_xlabel("Sweep parameter")
         axs[1, 1].set_ylabel("PL (a.u.)")
 
@@ -781,7 +792,7 @@ def plot_AOI_spectra_fit(
 
     fit_model : `QDMPy.fit_models.FitModel`
         Model we're fitting to.
-        
+
     Returns
     -------
     fig : matplotlib Figure object
@@ -794,7 +805,6 @@ def plot_AOI_spectra_fit(
 
     figsize = mpl.rcParams["figure.figsize"].copy()
     figsize[0] *= 3  # number of columns
-    # figsize[0] *= 2  # the above was too big
     figsize[1] *= 2 + len(AOIs)  # number of rows
 
     fig, axs = plt.subplots(
@@ -805,15 +815,8 @@ def plot_AOI_spectra_fit(
     sig_avgs = []
     ref_avgs = []
     # add roi data
-    # FIXME this assumes our metadata style? Should call into systems then.
-    # # FIXME sig not already cut down to ROI???
-    # sz_h = int(options["metadata"]["AOIHeight"] / options["additional_bins"])
-    # sz_w = int(options["metadata"]["AOIWidth"] / options["additional_bins"])
-    # ROI = data_loading.define_ROI(options, sz_h, sz_w)
     roi_avg_sig = np.nanmean(np.nanmean(sig, axis=2), axis=1)
     roi_avg_ref = np.nanmean(np.nanmean(ref, axis=2), axis=1)
-    # roi_avg_sig = np.nanmean(np.nanmean(sig[:, ROI[0], ROI[1]], axis=2), axis=1)
-    # roi_avg_ref = np.nanmean(np.nanmean(ref[:, ROI[0], ROI[1]], axis=2), axis=1)
     sig_avgs.append(roi_avg_sig)
     ref_avgs.append(roi_avg_ref)
     # add single pixel check
@@ -871,7 +874,7 @@ def plot_AOI_spectra_fit(
     for i, (sig, ref) in enumerate(zip(sig_avgs, ref_avgs)):
         axs[i, 1].plot(
             sweep_list,
-            1 + sig - ref,
+            1 + (sig - ref) / (sig + ref),
             label="subtraction",
             c="firebrick",
             ls="dashed",
@@ -930,7 +933,7 @@ def plot_AOI_spectra_fit(
             elif options["normalisation"] == "div":
                 sig_norm = sig / ref
             elif options["normalisation"] == "sub":
-                sig_norm = sig - ref
+                sig_norm = 1 + (sig - ref) / (sig + ref)
 
             best_fit_ydata = fit_model(fit_param_ar, high_res_xdata)
             roi_fit_ydata = fit_model(
@@ -944,7 +947,7 @@ def plot_AOI_spectra_fit(
                 axs[i, 2].plot(
                     sweep_list,
                     sig_norm,
-                    label="raw data",
+                    label=f"raw data ({options['normalisation']})",
                     ls="",
                     marker="o",
                     ms=3.5,
@@ -1041,7 +1044,7 @@ def plot_param_image(options, fit_model, pixel_fit_params, param_name, param_num
         c_map,
         c_range,
         c_label,
-        None,
+        options["system"].get_raw_pixel_size() * options["total_bin"],
     )
     return fig
 
@@ -1153,7 +1156,7 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
                 c_map,
                 c_range,
                 c_label,
-                None,
+                options["system"].get_raw_pixel_size() * options["total_bin"],
             )
 
             np.savetxt(options["data_dir"] / f"{param_key}.txt", image_data)

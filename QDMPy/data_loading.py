@@ -96,14 +96,14 @@ def load_options(options_dict=None, options_path=None, check_for_prev_result=Fal
 
     sys = systems.choose_system(prelim_options["system_name"])
 
+    sys.system_specific_option_update(prelim_options)
+
     metadata = sys.read_metadata(prelim_options["filepath"])
 
     prelim_options["metadata"] = metadata  # add metadata to options dict
 
     options = sys.get_default_options()  # first load in default options
     options.update(prelim_options)  # now update with what has been decided upon by user
-
-    sys.system_specific_option_update(options)
 
     options["system"] = sys
 
@@ -247,25 +247,37 @@ def reshape_dataset(options, raw_data, sweep_list):
         size_h, size_w = image_rebinned.shape[1:]
     except Exception:
         size_h, size_w = image_rebinned.shape
-
     # FIXME test, is the above correct, image_rebinned is h, w in shape???
+    # ---> needs to be tested on non-square image
 
     options["rebinned_image_size"] = (size_w, size_h)
 
-    # check options to ensure ROI/AOI are in correct format (now we have image size)
-    # FIXME
-    options["ROI_start"], options["ROI_end"] = check_start_end_rectangle("ROI", *options["ROI_start"], *options["ROI_end"], size_w, size_h)
-    # TODO below here, do same for ROI
-    i = 0
-    while True:
-        i += 1
-        # NOTE wait need to change size here to be ROI size I think no? -> if so, put it after remove_unwanted_data
-        options[f"AOI_{i}_start"], options[f"AOI_{i}_end"] = check_start_end_rectangle(f"AOI_{i}", *options[f"AOI_{i}_start"], *options["AOI_{i}_end"], size_w, size_h)
+    # check options to ensure ROI is in correct format (now we have image size)
+    options["ROI_start"], options["ROI_end"] = check_start_end_rectangle(
+        "ROI", *options["ROI_start"], *options["ROI_end"], size_w, size_h
+    )
 
     # somewhat important a lot of this isn't hidden, so we can adjust it later
     PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list = remove_unwanted_data(
         options, image_rebinned, sweep_list, sig, ref, sig_norm
     )  # also cuts sig etc. down to ROI
+
+    # check options to ensure AOI is in correct format (now we have ROI size)
+    i = 0
+    while True:
+        i += 1
+        try:
+            if options[f"AOI_{i}_start"] is None or options[f"AOI_{i}_end"] is None:
+                continue
+            options[f"AOI_{i}_start"], options[f"AOI_{i}_end"] = check_start_end_rectangle(
+                f"AOI_{i}",
+                *options[f"AOI_{i}_start"],
+                *options[f"AOI_{i}_end"],
+                *PL_image_ROI.shape,
+            )
+
+        except KeyError:
+            break
 
     # single pixel check
     try:
@@ -273,35 +285,53 @@ def reshape_dataset(options, raw_data, sweep_list):
             :, options["single_pixel_check"][0], options["single_pixel_check"][1]
         ]
     except IndexError as e:
-        warnings.warn(f"Avoiding IndexError for single_pixel_check (setting pixel check to centre of image):\n{e}")
+        warnings.warn(
+            f"Avoiding IndexError for single_pixel_check (setting pixel check to centre of image):\n{e}"
+        )
         single_pixel_pl = sig_norm[:, PL_image_ROI.shape[0] // 2, PL_image_ROI.shape[1] // 2]
         options["single_pixel_check"] = (PL_image_ROI.shape[0] // 2, PL_image_ROI.shape[1] // 2)
 
     return PL_image, PL_image_ROI, sig, ref, sig_norm, single_pixel_pl, sweep_list
 
+
 # ============================================================================
 
 # FIXME add documentation
 def check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_x, full_size_y):
-        if start_x >= full_size_w:
-            warnings.warn(f"{name} Rectangle starts outside image (in x), setting to zero.")
-            start_x = 0
-        elif start_x < 0:
-            warnings.warn(f"{name} Rectangle too big in x, cropping to image.")
-            start_x = 0
-        if start_y >= full_size_h:
-            warnings.warn(f"{name} Rectangle starts outside image (in y), setting to zero.")
-            start_y = 0
-        elif start_y < 0:
-            warnings.warn(f"{name} Rectangle too big in y, cropping to image.")
-            start_y = 0
-        if end_x >= full_size_w:
-            warnings.warn(f"{name} Rectangle too big in x, cropping to image.")
-            end_x = full_size_w - 1
-        if end_y >= full_size_h:
-            warnings.warn(f"{name} Rectangle too big in y, cropping to image.")
-            end_y = full_size_h - 1
-    return start_x, start_y, end_x, end_y
+    if start_x >= end_x:
+        warnings.warn(f"{name} Rectangle ends before it starts (in x), swapping them")
+        temp = start_x
+        start_x = end_x
+        end_x = temp
+    if start_y >= end_y:
+        warnings.warn(f"{name} Rectangle ends before it starts (in y), swapping them")
+        temp = start_x
+        start_x = end_y
+        end_x = temp
+
+    if start_x >= full_size_x:
+        warnings.warn(f"{name} Rectangle starts outside image (in x), setting to zero.")
+        start_x = 0
+    elif start_x < 0:
+        warnings.warn(f"{name} Rectangle too big in x, cropping to image.")
+        start_x = 0
+
+    if start_y >= full_size_y:
+        warnings.warn(f"{name} Rectangle starts outside image (in y), setting to zero.")
+        start_y = 0
+    elif start_y < 0:
+        warnings.warn(f"{name} Rectangle too big in y, cropping to image.")
+        start_y = 0
+
+    if end_x >= full_size_x:
+        warnings.warn(f"{name} Rectangle too big in x, cropping to image.")
+        end_x = full_size_x - 1
+    if end_y >= full_size_y:
+        warnings.warn(f"{name} Rectangle too big in y, cropping to image.")
+        end_y = full_size_y - 1
+
+    return (start_x, start_y), (end_x, end_y)
+
 
 # ============================================================================
 
@@ -546,7 +576,7 @@ def rebin_image(options, image):
         sig = image_rebinned[::2, :, :]
         ref = image_rebinned[1::2, :, :]
         if options["normalisation"] == "sub":
-            sig_norm = 1 + sig - ref
+            sig_norm = 1 + (sig - ref) / (sig + ref)
         elif options["normalisation"] == "div":
             sig_norm = sig / ref
         else:
@@ -593,7 +623,6 @@ def define_ROI(options, full_size_w, full_size_h):
         ROI = define_area_roi(start_x, start_y, end_x, end_y)
 
     return ROI
-
 
 
 # ============================================================================
@@ -737,12 +766,11 @@ def define_AOIs(options):
     while True:
         i += 1
         try:
-            start = options["area_" + str(i) + "_start"]
-            end = options["area_" + str(i) + "_end"]
+            start = options["AOI_" + str(i) + "_start"]
+            end = options["AOI_" + str(i) + "_end"]
 
             if start is None or end is None:
                 continue
-
             AOIs.append(define_area_roi(*start, *end))
         except KeyError:
             break

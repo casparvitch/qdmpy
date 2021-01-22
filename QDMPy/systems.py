@@ -65,10 +65,13 @@ class System:
     """Abstract class defining what is expected for a system."""
 
     name = "Unknown System"
-    """ """
+    """Name of the system."""
 
     options_dict = None
-    """ """
+    """Dictionary of available options for this system (loaded from config file)"""
+
+    filepath_joined = False
+    """Used to ensure base_dir is not prepended to filepath twice!"""
 
     def __init__(self, *args, **kwargs):
         """
@@ -127,12 +130,9 @@ class System:
         # most systems will need these {you need to copy to your subclass method}
         # need to know number of threads to call (might be parallel fitting)
         options["threads"] = cpu_count() - options["scipy_sub_threads"]
-        if "base_dir" in options:
-            if options["base_dir"] == "test_datasets":
-                # find tests path in this repo and prepend
-                options["filepath"] = DIR_PATH / "tests/test_datasets/" / options["filepath"]
-            elif options["base_dir"] != "":
-                options["filepath"] = options["base_dir"] / options["filepath"]
+        if "base_dir" in options and not self.filepath_joined:
+            options["filepath"] = options["base_dir"] / options["filepath"]
+            self.filepath_joined = True
 
 
 # ============================================================================
@@ -195,18 +195,15 @@ class UniMelb(System):
         options["threads"] = cpu_count() - options["scipy_sub_threads"]
 
         options["filepath"] = os.path.normpath(options["filepath"])
-        
+
         # ensure only useful (scipy) loss method is used
         if "scipy_fit_method" in options:
             if options["scipy_fit_method"] == "lm":
                 options["loss"] = "linear"
 
-        if "base_dir" in options:
-            if options["base_dir"] == "test_datasets":
-                # find tests path in this repo and prepend
-                options["filepath"] = DIR_PATH / "tests/test_datasets/" / options["filepath"]
-            elif options["base_dir"] != "":
-                options["filepath"] = os.path.join(options["base_dir"], options["filepath"])
+        if "base_dir" in options and not self.filepath_joined:
+            options["filepath"] = os.path.join(options["base_dir"], options["filepath"])
+            self.filepath_joined = True  # just a flag so we don't do this twice
 
 
 # ============================================================================
