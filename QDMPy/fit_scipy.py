@@ -42,6 +42,7 @@ import QDMPy.fit_interface as fit_interface
 
 # ==========================================================================
 
+
 def prep_scipy_fit_options(options, fit_model):
     """
     General options dict -> scipy_fit_options
@@ -62,9 +63,7 @@ def prep_scipy_fit_options(options, fit_model):
     """
 
     # this is just constructing the initial parameter guesses and bounds in the right format
-    _, fit_param_bound_ar = gen_scipy_init_guesses(
-        options, *fit_shared.gen_init_guesses(options)
-    )
+    _, fit_param_bound_ar = gen_scipy_init_guesses(options, *fit_shared.gen_init_guesses(options))
     fit_bounds = (fit_param_bound_ar[:, 0], fit_param_bound_ar[:, 1])
 
     # see scipy.optimize.least_squares
@@ -164,7 +163,7 @@ def fit_ROI_avg_scipy(options, sig_norm, sweep_list, fit_model):
         Generic options dict holding all the user options.
 
     sig_norm : np array, 3D
-        Normalised measurement array, shape: [sweep_list, x, y].
+        Normalised measurement array, shape: [sweep_list, y, x].
 
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
@@ -192,7 +191,6 @@ def fit_ROI_avg_scipy(options, sig_norm, sweep_list, fit_model):
     )
 
     best_params = fitting_results.x
-
 
     return fit_shared.ROIAvgFitResult(
         "scipy", fit_options, fit_model, pl_roi, sweep_list, best_params, init_param_guess
@@ -262,7 +260,7 @@ def fit_AOIs_scipy(
         Generic options dict holding all the user options.
 
     sig_norm : np array, 3D
-        Normalised measurement array, shape: [sweep_list, x, y].
+        Normalised measurement array, shape: [sweep_list, y, x].
 
     single_pixel_pl : np array, 1D
         Normalised measurement array, for chosen single pixel check.
@@ -297,9 +295,7 @@ def fit_AOIs_scipy(
         guess_params = roi_avg_fit_result.best_params.copy()
     else:
         # this is just constructing the initial parameter guesses and bounds in the right format
-        fit_param_ar, _ = gen_scipy_init_guesses(
-            options, *fit_shared.gen_init_guesses(options)
-        )
+        fit_param_ar, _ = gen_scipy_init_guesses(options, *fit_shared.gen_init_guesses(options))
         guess_params = fit_param_ar.copy()
 
     single_pixel_fit_params = fit_single_pixel_scipy(
@@ -359,7 +355,7 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, kwargs={}):
         Array (or I guess single value, anything iterable) of affine parameter (tau/freq)
 
     shaped_data : list (3 elements)
-        array returned by `QDMPy.fit_shared.pixel_generator`: [x, y, sig_norm[:, x, y]]
+        array returned by `QDMPy.fit_shared.pixel_generator`: [y, x, sig_norm[:, y, x]]
 
     kwargs : dict
         Other options (dict) passed to least_squares, i.e. fit_options
@@ -367,11 +363,11 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, kwargs={}):
     Returns
     -------
     wrapped_squares : tuple
-        (x, y), least_squares(...).x
+        (y, x), least_squares(...).x
         I.e. the position of the fit result, and then the fit result parameters array.
     """
-    # shaped_data: [x, y, pl]
-    # output: (x, y), result_params
+    # shaped_data: [y, x, pl]
+    # output: (y, x), result_params
     return (
         (shaped_data[0], shaped_data[1]),
         least_squares(fun, p0, args=(sweep_vec, shaped_data[2]), **kwargs).x,
@@ -391,7 +387,7 @@ def fit_pixels_scipy(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resul
         Generic options dict holding all the user options.
 
     sig_norm : np array, 3D
-        Normalised measurement array, shape: [sweep_list, x, y].
+        Normalised measurement array, shape: [sweep_list, y, x].
 
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
@@ -458,7 +454,7 @@ def fit_pixels_scipy(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resul
         )
     t1 = timer()
     # for the record
-    options["fit_time_(s)"] = timedelta(seconds=t1-t0).total_seconds()
+    options["fit_time_(s)"] = timedelta(seconds=t1 - t0).total_seconds()
 
     roi_shape = np.shape(sig_norm)
     res = fit_interface.get_pixel_fitting_results(

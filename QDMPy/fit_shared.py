@@ -139,29 +139,29 @@ def shuffle_pixels(data_3d):
     Arguments
     ---------
     data_3d : np array, 3D
-        i.e. sig_norm data, [affine param, x, y].
+        i.e. sig_norm data, [affine param, y, x].
 
     Returns
     -------
-    shuffled_in_xy : np array, 3D
+    shuffled_in_yx : np array, 3D
         data_3d shuffled in 2nd, 3rd axis.
 
-    unshuffler : (x_unshuf, y_unshuf)
-        Both np array. Can be used to unshuffle shuffled_in_xy, i.e. through `QDMPy.fit_shared.unshuffle_pixels`.
+    unshuffler : (y_unshuf, x_unshuf)
+        Both np array. Can be used to unshuffle shuffled_in_yx, i.e. through `QDMPy.fit_shared.unshuffle_pixels`.
     """
 
     rng = np.random.default_rng()
 
-    x_shuf = rng.permutation(data_3d.shape[1])
-    x_unshuf = np.argsort(x_shuf)
-    y_shuf = rng.permutation(data_3d.shape[2])
+    y_shuf = rng.permutation(data_3d.shape[1])
     y_unshuf = np.argsort(y_shuf)
+    x_shuf = rng.permutation(data_3d.shape[2])
+    x_unshuf = np.argsort(x_shuf)
 
-    shuffled_in_x = data_3d[:, x_shuf, :]
-    shuffled_in_xy = shuffled_in_x[:, :, y_shuf]
+    shuffled_in_y = data_3d[:, y_unshuf, :]
+    shuffled_in_yx = shuffled_in_y[:, :, x_shuf]
 
     # return shuffled pixels, and arrays to unshuffle
-    return shuffled_in_xy.copy(), (x_unshuf, y_unshuf)
+    return shuffled_in_yx.copy(), (y_unshuf, x_unshuf)
 
 
 # =================================
@@ -176,18 +176,18 @@ def unshuffle_pixels(data_2d, unshuffler):
     data_2d : np array, 2D
         i.e. 'image' of a single fit parameter, all shuffled up!
 
-    unshuffler : (x_unshuf, y_unshuf)
+    unshuffler : (y_unshuf, x_unshuf)
         Two arrays returned by `QDMPy.fit_shared.shuffle_pixels that allow unshuffling of data_2d.
 
     Returns
     -------
-    unshuffled_in_xy: np array, 2D
+    unshuffled_in_yx: np array, 2D
         data_2d but the inverse operation of `QDMPy.fit_shared.shuffle_pixels` has been applied
     """
-    x_unshuf, y_unshuf = unshuffler
-    unshuffled_in_x = data_2d[x_unshuf, :]
-    unshuffled_in_xy = unshuffled_in_x[:, y_unshuf]
-    return unshuffled_in_xy.copy()
+    y_unshuf, x_unshuf = unshuffler
+    unshuffled_in_y = data_2d[y_unshuf, :]
+    unshuffled_in_yx = unshuffled_in_y[:, x_unshuf]
+    return unshuffled_in_yx.copy()
 
 
 # =================================
@@ -203,7 +203,7 @@ def unshuffle_fit_results(fit_result_dict, unshuffler):
         Dictionary, key: param_names, val: image (2D) of param values across FOV. Each image
         requires reshuffling (which this function achieves).
 
-    unshuffler : (x_unshuf, y_unshuf)
+    unshuffler : (y_unshuf, x_unshuf)
         Two arrays returned by `QDMPy.fit_shared.shuffle_pixels` that allow unshuffling of data_2d.
 
     Returns
@@ -224,22 +224,22 @@ def pixel_generator(our_array):
     Simple generator to shape data as expected by to_squares_wrapper in scipy concurrent method.
 
     Also allows us to track *where* (i.e. which pixel location) each result corresponds to.
-    See also: `QDMPy.fit_scipy.to_squares_wrapper`
+    See also: `QDMPy.fit_scipy.to_squares_wrapper`, `QDMPy.fit_gpufit.gpufit_reshape_result`.
 
     Arguments
     ---------
     our_array : np array, 3D
-        Shape: [sweep_list, x, y]
+        Shape: [sweep_list, y, x]
 
     Returns
     -------
     generator : list
-        [x, y, our_array[:, x, y]] generator (yielded)
+        [y, x, our_array[:, y, x]] generator (yielded)
     """
-    len_z, len_x, len_y = np.shape(our_array)
-    for x in range(len_x):
-        for y in range(len_y):
-            yield [x, y, our_array[:, x, y]]
+    len_z, len_y, len_x = np.shape(our_array)
+    for y in range(len_y):
+        for x in range(len_x):
+            yield [y, x, our_array[:, y, x]]
 
 
 # ============================================================================

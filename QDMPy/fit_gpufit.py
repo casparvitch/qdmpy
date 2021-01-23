@@ -52,7 +52,7 @@ def prep_gpufit_fit_options(options):
 
     gpufit_fit_options = {
         "tolerance": options["gpufit_tolerance"],
-        "max_number_iterations": options["gpufit_max_iterations"]
+        "max_number_iterations": options["gpufit_max_iterations"],
     }
 
     if options["gpufit_estimator_id"] == "LSE":
@@ -64,6 +64,7 @@ def prep_gpufit_fit_options(options):
             f"Didn't know what to do with 'gpfit_estimator_id' = {options['gpufit_estimator_id']}, available options: 'LSE', 'MLE'"
         )
     return gpufit_fit_options
+
 
 # ============================================================================
 
@@ -272,7 +273,9 @@ def fit_single_pixel_gpufit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg
         options["ModelID"],
         init_guess_params,
         constraints=init_bounds.astype(np.float32),
-        constraint_types=np.array([gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))], dtype=np.int32),
+        constraint_types=np.array(
+            [gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))], dtype=np.int32
+        ),
         user_info=np.array(sweep_list, dtype=np.float32),
         parameters_to_fit=params_to_fit,
     )
@@ -293,7 +296,7 @@ def fit_ROI_avg_gpufit(options, sig_norm, sweep_list, fit_model):
         Generic options dict holding all the user options.
 
     sig_norm : np array, 3D
-        Normalised measurement array, shape: [sweep_list, x, y].
+        Normalised measurement array, shape: [sweep_list, y, x].
 
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
@@ -343,7 +346,7 @@ def fit_ROI_avg_gpufit(options, sig_norm, sweep_list, fit_model):
         ),
         user_info=np.array(sweep_list, dtype=np.float32),
         parameters_to_fit=params_to_fit,
-        **gpufit_fit_options
+        **gpufit_fit_options,
     )
 
     return fit_shared.ROIAvgFitResult(
@@ -353,7 +356,7 @@ def fit_ROI_avg_gpufit(options, sig_norm, sweep_list, fit_model):
         pl_roi,
         sweep_list,
         best_params[0, :],  # only take one of the results
-        init_guess_params[0], # return the params un-repeated
+        init_guess_params[0],  # return the params un-repeated
     )
 
 
@@ -373,7 +376,7 @@ def fit_AOIs_gpufit(
         Generic options dict holding all the user options.
 
     sig_norm : np array, 3D
-        Normalised measurement array, shape: [sweep_list, x, y].
+        Normalised measurement array, shape: [sweep_list, y, x].
 
     single_pixel_pl : np array, 1D
         Normalised measurement array, for chosen single pixel check.
@@ -406,7 +409,6 @@ def fit_AOIs_gpufit(
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
         init_guess_params = roi_avg_fit_result.best_params.copy()
 
-
     single_pixel_fit_params = fit_single_pixel_gpufit(
         options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result
     )
@@ -430,15 +432,16 @@ def fit_AOIs_gpufit(
         aoi_avg = np.nanmean(np.nanmean(aoi_sig_norm, axis=2), axis=1)
         aoi_avg_doubled = np.repeat([aoi_avg], repeats=2, axis=0)
 
-
-
         fitting_results, _, _, _, _ = gf.fit_constrained(
             aoi_avg_doubled.astype(np.float32),
             None,
             options["ModelID"],
             np.array(init_guess_params, dtype=np.float32),
             constraints=np.array(init_bounds, dtype=np.float32),
-            constraint_types=np.array([gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))], dtype=np.int32),
+            constraint_types=np.array(
+                [gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))],
+                dtype=np.int32,
+            ),
             user_info=np.array(sweep_list, dtype=np.float32),
             parameters_to_fit=params_to_fit,
         )
@@ -462,7 +465,7 @@ def fit_pixels_gpufit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
         Generic options dict holding all the user options.
 
     sig_norm : np array, 3D
-        Normalised measurement array, shape: [sweep_list, x, y].
+        Normalised measurement array, shape: [sweep_list, y, x].
 
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
@@ -518,7 +521,9 @@ def fit_pixels_gpufit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
         options["ModelID"],
         init_guess_params_reshaped,
         constraints=np.array(init_bounds, dtype=np.float32),
-        constraint_types=np.array([gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))], dtype=np.int32),
+        constraint_types=np.array(
+            [gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))], dtype=np.int32
+        ),
         user_info=np.array(sweep_list, dtype=np.float32),
         parameters_to_fit=np.array(params_to_fit, dtype=np.int32),
     )
@@ -549,7 +554,7 @@ def gpufit_data_shape(sig_norm):
     sig_norm : np array, 3D
         Signal normalised by reference (via subtraction or normalisation, chosen in options),
         reshaped and rebinned. Unwanted sweeps removed. Cut down to ROI.
-        Format: [sweep_vals, x, y]
+        Format: [sweep_vals, y, x]
 
     Returns
     -------
@@ -561,8 +566,8 @@ def gpufit_data_shape(sig_norm):
     """
     pixel_posns = []
     sig_norm_reshaped = []
-    for x, y, spectrum in fit_shared.pixel_generator(sig_norm):
-        pixel_posns.append((x, y))
+    for y, x, spectrum in fit_shared.pixel_generator(sig_norm):
+        pixel_posns.append((y, x))
         sig_norm_reshaped.append(spectrum)
     return np.array(sig_norm_reshaped, dtype=np.float32), pixel_posns
 
@@ -572,8 +577,9 @@ def gpufit_data_shape(sig_norm):
 
 def gpufit_reshape_result(pixel_param_results, pixel_posns):
     """
-    Mimics to_squares_wrapper, so gpufit can use the get_pixel_fitting_results function
-    to get the nice usual dict of param result images.
+    Mimics `QDMPy.fit_scipy.to_squares_wrapper`, so gpufit can use the
+    `QDMPy.fit_interface.get_pixel_fitting_results` function to get the nice
+    usual dict of param result images.
 
     Arguments
     ---------
@@ -587,7 +593,7 @@ def gpufit_reshape_result(pixel_param_results, pixel_posns):
     Returns
     -------
     fit_results : list
-        List of [(x, y), best_fit_parameter] lists
+        List of [(y, x), best_fit_parameter] lists
     """
     fit_results = []
     for params, pos in zip(pixel_param_results, pixel_posns):

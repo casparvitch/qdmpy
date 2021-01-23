@@ -281,7 +281,7 @@ def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
         Generic options dict holding all the user options.
 
     sig_norm : np array, 3D
-        Normalised measurement array, shape: [sweep_list, x, y].
+        Normalised measurement array, shape: [sweep_list, y, x].
 
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)

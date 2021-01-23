@@ -44,10 +44,9 @@ def get_pixel_fitting_results(fit_model, fit_results, roi_shape):
     fit_model : `QDMPy.fit_models.FitModel`
         Model we're fitting to.
 
-    fit_results : list of [(x, y), result] objects
+    fit_results : list of [(y, x), result] objects
         (see `QDMPy.fit_scipy.to_squares_wrapper`, or `QDMPy.fit_gpufit.gpufit_reshape_result`)
-        A list of each pixels parameter array: fit_result.x (as well as position in image
-        denoted by (x, y), returned by the concurrent mapper in `fitting.fit_pixels`.
+        A list of each pixel's parameter array, as well as position in image denoted by (y, x).
 
     roi_shape : iterable, length 2
         Shape of the region of interest, to allow us to generate the right shape empty arrays.
@@ -68,7 +67,7 @@ def get_pixel_fitting_results(fit_model, fit_results, roi_shape):
     # Fill the arrays element-wise from the results function, which returns a
     # 1D array of flattened best-fit parameters.
 
-    for (x, y), result in fit_results:
+    for (y, x), result in fit_results:
         filled_params = {}  # keep track of index, i.e. pos_0, for this pixel
         for fn in fit_model.fn_chain:
             for param_num, param_name in enumerate(fn.param_defn):
@@ -81,7 +80,7 @@ def get_pixel_fitting_results(fit_model, fit_results, roi_shape):
                     key = param_name + "_" + str(filled_params[param_name])
                     filled_params[param_name] += 1
 
-                fit_image_results[key][x, y] = result[fn.this_fn_param_indices[param_num]]
+                fit_image_results[key][y, x] = result[fn.this_fn_param_indices[param_num]]
 
     return fit_image_results
 
@@ -152,7 +151,9 @@ def prep_fit_backends(options, fit_model):
     """
     # ensure backend we want to use for pixel fittings is in comparison!
     if options["fit_backend"] not in options["fit_backend_comparison"]:
-        warnings.warn("Your chosen fit backend wasn't in the fit backend comparison list, so it has been added for you.")
+        warnings.warn(
+            "Your chosen fit backend wasn't in the fit backend comparison list, so it has been added for you."
+        )
         options["fit_backend_comparison"].append(options["fit_backend"])
 
     for fit_backend in options["fit_backend_comparison"]:
@@ -190,7 +191,7 @@ def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
         Generic options dict holding all the user options.
 
     sig_norm : np array, 3D
-        Normalised measurement array, shape: [sweep_list, x, y].
+        Normalised measurement array, shape: [sweep_list, y, x].
 
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
@@ -241,7 +242,7 @@ def fit_AOIs(
         Generic options dict holding all the user options.
 
     sig_norm : np array, 3D
-        Normalised measurement array, shape: [sweep_list, x, y].
+        Normalised measurement array, shape: [sweep_list, y, x].
 
     single_pixel_pl : np array, 1D
         Normalised measurement array, for chosen single pixel check.
@@ -313,7 +314,7 @@ def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
         Generic options dict holding all the user options.
 
     sig_norm : np array, 3D
-        Normalised measurement array, shape: [sweep_list, x, y].
+        Normalised measurement array, shape: [sweep_list, y, x].
 
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)

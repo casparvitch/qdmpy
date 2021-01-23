@@ -1,17 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-This module holds tools for loading raw data etc. and reshaping to a usable format
+This module holds tools for loading raw data etc. and reshaping to a usable format.
 
 Functions
 ---------
  - `QDMPy.data_loading.recursive_dict_update`
+ - `QDMPy.data_loading.define_output_dir`
+ - `QDMPy.data_loading.interpolate_option_str`
  - `QDMPy.data_loading.load_options`
  - `QDMPy.data_loading.save_options`
  - `QDMPy.data_loading.reshape_dataset`
  - `QDMPy.data_loading.prev_options_exist`
  - `QDMPy.data_loading.get_prev_options`
  - `QDMPy.data_loading.check_if_already_processed`
- - `QDMPy.data_loading.check_ROI_compatibility`
+ - `QDMPy.data_loading.options_compatible`
+ - `QDMPy.data_loading.prev_pixel_results_exist`
  - `QDMPy.data_loading.reshape_raw`
  - `QDMPy.data_loading.rebin_image`
  - `QDMPy.data_loading.define_ROI`
@@ -33,11 +36,13 @@ import os
 import pathlib
 from collections import OrderedDict  # insertion order is guaranteed for py3.7+, but to be safe!
 import collections.abc
+import re
 
 # ============================================================================
 
 import QDMPy.misc as misc
 import QDMPy.systems as systems
+import QDMPy.fit_models as fit_models
 
 # ============================================================================
 
@@ -133,25 +138,122 @@ def load_options(options_dict=None, options_path=None, check_for_prev_result=Fal
         options["total_bin"] = options["original_bin"] * int(options["additional_bins"])
 
     # create output directories
-    output_dir = pathlib.PurePosixPath(
-        str(options["filepath"]) + "_processed" + "_bin_" + str(options["total_bin"])
-    )
-    options["output_dir"] = output_dir
-    options["data_dir"] = output_dir / "data"
+    define_output_dir(options)
 
-    if not os.path.exists(output_dir):
-        os.mkdir(output_dir)
-    if not os.path.exists(options["data_dir"]):
+    if not os.path.isdir(options["output_dir"]):
+        os.mkdir(options["output_dir"])
+    if not os.path.isdir(options["data_dir"]):
         os.mkdir(options["data_dir"])
 
     # don't always check for prev. results (so we can use this fn in other contexts)
     if check_for_prev_result:
         check_if_already_processed(options)
-    else:
-        options["reloaded_prev_fit"] = False
-        options["found_prev_result"] = False
 
     return options
+
+
+# ============================================================================
+
+
+def define_output_dir(options):
+    """
+    Defines output_dir and data_dir in options.
+    """
+    if options["custom_output_dir"] is not None:
+        output_dir = pathlib.PurePosixPath(
+            interpolate_option_str(str(options["custom_output_dir"]), options)
+        )
+    else:
+        output_dir = pathlib.PurePosixPath(
+            str(options["filepath"]) + "_processed" + "_bin_" + str(options["total_bin"])
+        )
+
+    if options["custom_output_dir_prefix"] is not None:
+        prefix = interpolate_option_str(str(options["custom_output_dir_prefix"]), options)
+    else:
+        prefix = ""
+
+    if options["custom_output_dir_suffix"] is not None:
+        suffix = interpolate_option_str(str(options["custom_output_dir_suffix"]), options)
+    else:
+        suffix = ""
+
+    options["output_dir"] = output_dir.parent.joinpath(prefix + output_dir.stem + suffix)
+    options["data_dir"] = options["output_dir"].joinpath("data")
+
+
+# ============================================================================
+
+
+def interpolate_option_str(interp_str, options):
+    """
+    Interpolates any options between braces in interp_str.
+    I.e. "{fit_backend}" -> f"{options['fit_backend']"
+    (this is possibly possible directly through f-strings but I didn't want to
+    play with fire)
+
+    Arguments
+    ---------
+    interp_str : str
+        String (possibly containing option names between braces) to be interpolated.
+
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    interp_str : str
+        String, now with interpolated values (option between braces).
+    """
+
+    # convert whitespace to underscore
+    interp_str = interp_str.replace(" ", "_")
+    if not ("{" in interp_str and "}" in interp_str):
+        return interp_str
+    pattern = r"\{(\w+)\}"  # all text between braces
+    match_substr_lst = re.findall(pattern, interp_str)
+    locs = []
+    for match_substr in match_substr_lst:
+        start_loc = interp_str.find(match_substr)
+        end_loc = start_loc + len(match_substr) - 1  # both fence posts inclusive
+        locs.append((start_loc, end_loc))
+
+    # ok so now we have the option names (keys) to interpolate (match_substr_lst)
+    # as well as the locations in the string of the same (locs)
+    # first we convert those option names to their variables
+    option_lst = []
+    for option_name in match_substr_lst:
+        try:
+            option_lst.append(str(options[option_name]))
+        except KeyError as e:
+            warnings.warn(
+                "\n"
+                + "KeyError caught interpolating custom output_dir.\n"
+                + f"You gave: {option_name}.\n"
+                + "Avoiding this issue by placing 'option_name' in the dir instead. KeyError msg:"
+                + f"{e}"
+            )
+            option_lst.append(option_name)
+
+    # this block is a bit old-school, but does the trick...
+    locs_passed = 0  # how many match locations we've passed
+    new_str = []  # ok actually a lst but will convert back at end
+
+    for i, c in enumerate(interp_str):
+        # don't want braces in output
+        if c == "{" or c == "}":
+            continue
+
+        #  'inside' a brace -> don't copy these chars
+        if i >= locs[locs_passed][0] and i <= locs[locs_passed][1]:
+            # when we've got to end of this brace location, copy in option
+            if i == locs[locs_passed][1]:
+                new_str.append(option_lst[locs_passed])
+                locs_passed += 1
+        else:
+            new_str.append(c)
+
+    return "".join(new_str)
 
 
 # ============================================================================
@@ -238,17 +340,17 @@ def reshape_dataset(options, raw_data, sweep_list):
     sig : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
         Cut down to ROI.
-        Format: [sweep_vals, x, y]
+        Format: [sweep_vals, y, x]
 
     ref : np array, 3D
         Reference component of raw data, reshaped and rebinned. Unwanted sweeps removed.
         Cut down to ROI.
-        Format: [sweep_vals, x, y]
+        Format: [sweep_vals, y, x]
 
     sig_norm : np array, 3D
         Signal normalised by reference (via subtraction or normalisation, chosen in options),
         reshaped and rebinned. Unwanted sweeps removed. Cut down to ROI.
-        Format: [sweep_vals, x, y]
+        Format: [sweep_vals, y, x]
 
     single_pixel_pl : np array, 1D
         Normalised measurement array, for chosen single pixel check.
@@ -312,8 +414,45 @@ def reshape_dataset(options, raw_data, sweep_list):
 
 # ============================================================================
 
-# FIXME add documentation
+
 def check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_w, full_size_h):
+    """
+    Checks that 'name' rectange (defined by top left corner 'start_x', 'start_y' and bottom
+    right corner 'end_x', 'end_y') fits within a larger rectangle of size 'full_size_w',
+    'full_size_h'. If there are no good, they're fixed with a warning.
+
+    Arguments
+    ---------
+    name : str
+        The name of the rectangle we're checking (e.g. "ROI", "AOI").
+
+    start_x : int
+        x coordinate (relative to origin) of rectangle's top left corner.
+
+    start_y : int
+        y coordinate (relative to origin) of rectangle's top left corner.
+
+    end_x : int
+        x coordinate (relative to origin) of rectangle's bottom right corner.
+
+    end_y : int
+        y coordinate (relative to origin) of rectangle's bottom right corner.
+
+    full_size_w : int
+        Full width of image (or image region, e.g. ROI).
+
+    full_size_h : int
+        Full height of image (or image region, e.g. ROI).
+
+    Returns
+    -------
+    start_coords : tuple
+        'fixed' start coords: (start_x, start_y)
+
+    end_coords : tuple
+        'fixed' end coords: (end_x, end_y)
+    """
+
     if start_x >= end_x:
         warnings.warn(f"{name} Rectangle ends before it starts (in x), swapping them")
         temp = start_x
@@ -357,7 +496,7 @@ def prev_options_exist(options):
     Checks if options file from previous result can be found in default location, returns Bool.
     """
     prev_opt_path = os.path.normpath(options["output_dir"] / "saved_options.json")
-    return os.path.exists(prev_opt_path)
+    return os.path.isfile(prev_opt_path)
 
 
 # ============================================================================
@@ -383,36 +522,24 @@ def check_if_already_processed(options):
     """
     Looks for previous fit result.
 
-    If previous fit result exists, checks for compatibility between ROI option choices.
+    If previous fit result exists, checks for compatibility between option choices.
 
     Returns nothing.
     """
-    # FIXME obviously this whole function needs to be overhauled
-    # but critically, need to check at some point if there are prev. pixel fit results!!!
 
-    if prev_options_exist(options):
-        options["found_prev_result"] = True
-
-    # 'fit_pixels' test is there to see if the user actually cares about pixel info
-    if not options["force_fit"] and options["found_prev_result"] and options["fit_pixels"]:
-        # i.e. we are going to try reloading the prev dataset
-        options["reloaded_prev_fit"] = True  # set for the record
-
-        # check ROI regions are the same
-        prev_options = get_prev_options(options)
-        check_ROI_compatibility(options, prev_options)
+    options["found_prev_options"] = (
+        prev_options_exist(options)
+        and options_compatible(options, get_prev_options(options))
+        and prev_pixel_results_exist(options, get_prev_options(options))
+    )
 
 
 # ============================================================================
 
-# FIXME -> not just ROI! will need to write more complex functions
-def check_ROI_compatibility(options, prev_options):
-    """
-    Check if ROI option in current options and previous options are compatible.
 
-    When re-loading, want to ensure we have the same ROI settings as what the
-    previous processing was run under. Allow user to override (i.e. copy old
-    ROI settings) with "copy_prev_ROI_options" option.
+def options_compatible(options, prev_options):
+    """
+    Checks if option choices are compatible with previously fit options
 
     Arguments
     ---------
@@ -424,33 +551,89 @@ def check_ROI_compatibility(options, prev_options):
 
     Returns
     -------
-    Nothing
+    options_compatible : bool
+        Whether or not options are compatible.
     """
-    return None
-    # FIXME
-    # failure_string = """
-    # Detected previous (similar) fit results. We would skip fitting the pixels
-    # and load these previous results, but ROI options were not the same. To avoid issues with
-    # plotting inconsistent PL/param arrays etc. and to remove ambiguity, the previous fit results
-    # will not be loaded ("force_fit" has been set to True).
-    #  - If you intended to fit the data again (i.e. in different ROI) then don't worry about
-    #    this message.
-    #  - If you want to speed things up a bit and use this automatic reload feature, then try
-    #    setting "auto_match_prev_ROI_options" to True. It will not effect any other part of the
-    #    analysis process.
-    # """
 
-    # ROI_settings = ["ROI", "ROI_halfsize", "ROI_centre", "ROI_rect_size"]
-    # if options["auto_match_prev_ROI_options"]:
-    #     for key in ROI_settings:
-    #         options[key] = prev_options[key]
-    # else:
-    #     for key in ROI_settings:
-    #         if options[key] != prev_options[key]:
-    #             warnings.warn(failure_string)
-    #             options["reloaded_prev_fit"] = False
-    #             options["force_fit"] = True
-    #             break
+    for option_name in [
+        "additional_bins",
+        "normalisation",
+        "fit_backend",
+        "fit_functions",
+        "ROI",
+        "ignore_ref",
+        "system_name",
+        "remove_start_sweep",
+        "remove_end_sweep",
+        "use_ROI_avg_fit_res_for_all_pixels",
+    ]:
+        if options[option_name] != prev_options[option_name]:
+            return False
+    # check relevant roi params
+    if options["ROI"] == "Rectangle" and (
+        options["ROI_start"] != prev_options["ROI_start"]
+        and options["ROI_end"] != prev_options["ROI_end"]
+    ):
+        return False
+
+    # check relevant param guesses/bounds
+
+    # check relevant fit params
+    if options["fit_backend"] == "scipy":
+        for fit_opt_name in [
+            "scipy_fit_method",
+            "scipy_use_analytic_jac",
+            "scipy_fit_jac_acc",
+            "scipy_fit_gtol",
+            "scipy_fit_xtol",
+            "scipy_fit_ftol",
+            "scipy_scale_x",
+            "scipy_loss_fn",
+        ]:
+            if options[fit_opt_name] != prev_options[fit_opt_name]:
+                return False
+    elif options["fit_backend"] == "gpufit":
+        for fit_opt_name in [
+            "gpufit_tolerance",
+            "gpufit_max_iterations",
+            "gpufit_estimator_id",
+        ]:
+            if options[fit_opt_name] != prev_options[fit_opt_name]:
+                return False
+
+    # if all that was ok, return True
+    return True
+
+
+# ============================================================================
+
+
+def prev_pixel_results_exist(options, prev_options):
+    """
+    Check if the actual fit result files exists.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    prev_options : dict
+        Generic options dict from previous fit result.
+
+    Returns
+    -------
+    pixels_results_exist : bool
+        Whether or not previous pixel result files exist.
+    """
+    prev_options = get_prev_options(options)
+
+    for fn_type, num in prev_options["fit_functions"].items():
+        for param_name in fit_models.AVAILABLE_FNS[fn_type].param_defn:
+            for n in range(num):
+                param_key = param_name + "_" + str(n)
+                if not os.path.isfile(options["data_dir"] / (param_key + ".txt")):
+                    return False
+    return True
 
 
 # ============================================================================
@@ -474,7 +657,7 @@ def reshape_raw(options, raw_data, sweep_list):
     Returns
     -------
     image : np array, 3D
-        Format: [sweep values, x, y]. Has not been seperated into sig/ref etc. and has
+        Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
         not been rebinned. Unwanted sweep values not removed.
 
     """
@@ -524,7 +707,7 @@ def reshape_raw(options, raw_data, sweep_list):
                 ],
             )
             options["used_ref"] = True
-    # Transpose the dataset to get the correct x and y orientations ([data, y, x])
+    # Transpose the dataset to get the correct x and y orientations ([y, x])
     # will work for non-square images
     return image.transpose([0, 2, 1]).copy()
 
@@ -548,21 +731,21 @@ def rebin_image(options, image):
     Returns
     -------
     image_rebinned : np array, 3D
-        Format: [sweep values, x, y]. Same as image, but now rebinned (x size and y size
+        Format: [sweep values, y, x]. Same as image, but now rebinned (x size and y size
         have changed). Not cut down to ROI.
 
     sig : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
-        Format: [sweep_vals, x, y]. Not cut down to ROI.
+        Format: [sweep_vals, y, x]. Not cut down to ROI.
 
     ref : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
-        Not cut down to ROI. Format: [sweep_vals, x, y].
+        Not cut down to ROI. Format: [sweep_vals, y, x].
 
     sig_norm : np array, 3D
         Signal normalised by reference (via subtraction or normalisation, chosen in options),
         reshaped and rebinned.  Unwanted sweeps not removed yet.
-        Not cut down to ROI. Format: [sweep_vals, x, y].
+        Not cut down to ROI. Format: [sweep_vals, y, x].
     """
     systems.clean_options(options)
 
@@ -667,7 +850,7 @@ def define_area_roi(start_x, start_y, end_x, end_y):
     x = np.linspace(start_x, end_x, end_x - start_x + 1, dtype=int)
     y = np.linspace(start_y, end_y, end_y - start_y + 1, dtype=int)
     xv, yv = np.meshgrid(x, y)
-    return [yv, xv]  # images are indexed [data, y, x]
+    return [yv, xv]  # arrays are indexed in image convention, e.g. sig[swwpp_param, y, x]
 
 
 # ============================================================================
@@ -693,16 +876,16 @@ def remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_norm
 
     sig : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
-        Format: [sweep_vals, x, y]
+        Format: [sweep_vals, y, x]
 
     ref : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
-        Format: [sweep_vals, x, y]
+        Format: [sweep_vals, y, x]
 
     sig_norm : np array, 3D
         Signal normalised by reference (via subtraction or normalisation, chosen in options),
         reshaped and rebinned.  Unwanted sweeps not removed yet.
-        Format: [sweep_vals, x, y]
+        Format: [sweep_vals, y, x]
 
     Returns
     -------
@@ -716,16 +899,16 @@ def remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_norm
 
     sig : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
-        Format: [sweep_vals, x, y]
+        Format: [sweep_vals, y, x]
 
     ref : np array, 3D
         Reference component of raw data, reshaped and rebinned. Unwanted sweeps removed.
-        Format: [sweep_vals, x, y]
+        Format: [sweep_vals, y, x]
 
     sig_norm : np array, 3D
         Signal normalised by reference (via subtraction or normalisation, chosen in options),
         reshaped and rebinned. Unwanted sweeps removed.
-        Format: [sweep_vals, x, y]
+        Format: [sweep_vals, y, x]
 
     sweep_list : list
         List of sweep parameter values (with removed unwanted sweeps at start/end)

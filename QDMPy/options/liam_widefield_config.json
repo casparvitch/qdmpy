@@ -8,6 +8,22 @@
     "raw_pixel_size": {
         "option_default": 222e-9
     },
+    // =======================================
+    // === Custom output directory control ===
+    // Any option key can be interpolated (to options[key]) with braces (like f-strings)
+    // e.g. "ODMR_{fit_backend}" -> "ODMR_scipy" if the fit backend was scipy
+    // Note all whitespace will be converted to underscore
+    "custom_output_dir_prefix": {
+        "option_default": null
+    },
+    "custom_output_dir_suffix": {
+        "option_default": null
+    },
+    // Must be an absolute path (e.g. from root/C:), will override the path determined internally.
+    "custom_output_dir": {
+        "option_default": null
+    },
+    // =======================================
         
     // if true the reference measurement is ignored
     "ignore_ref": {
@@ -145,15 +161,6 @@
     			true,
     			false
     		]
-    },
-    // if loading previous fit, ensure ROIs are the same
-    "auto_match_prev_ROI_options": {
-        "option_default": false,
-        "option_choices":
-            [
-                true,
-                false
-            ]
     },
     // fit pixels in a random order to give more accurate ETA
     "scramble_pixels": {

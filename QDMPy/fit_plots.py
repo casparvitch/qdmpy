@@ -562,12 +562,12 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
     sig : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
         Cut down to ROI.
-        Format: [sweep_vals, x, y]
+        Format: [sweep_vals, y, x]
 
     ref : np array, 3D
         Reference component of raw data, reshaped and rebinned. Unwanted sweeps removed.
         Cut down to ROI.
-        Format: [sweep_vals, x, y]
+        Format: [sweep_vals, y, x]
     sweep_list : list
         List of sweep parameter values (with removed unwanted sweeps at start/end)
 
@@ -731,12 +731,12 @@ def plot_AOI_spectra_fit(
     sig : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
         Cut down to ROI.
-        Format: [sweep_vals, x, y]
+        Format: [sweep_vals, y, x]
 
     ref : np array, 3D
         Reference component of raw data, reshaped and rebinned. Unwanted sweeps removed.
         Cut down to ROI.
-        Format: [sweep_vals, x, y]
+        Format: [sweep_vals, y, x]
     sweep_list : list
         List of sweep parameter values (with removed unwanted sweeps at start/end)
 
