@@ -16,7 +16,7 @@ __author__ = "Sam Scholten"
 #     )
 #     fit_plots.set_mpl_rcparams(options)
 
-#     raw_data, prelim_sweep_list = data_loading.load_raw_and_sweep(options)
+#     raw_data, prelim_sweep_list = data_loading.load_image_and_sweep(options)
 
 #     PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list = data_loading.reshape_dataset(
 #         options, raw_data, prelim_sweep_list

@@ -79,10 +79,20 @@ class System:
         """
         pass
 
-    def read_raw(self, filepath, **kwargs):
+    def read_image(self, filepath, **kwargs):
         """
         Method that must be defined to read raw data in from filepath.
+
+        Returns
+        -------
+        image : np array, 3D
+            Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
+            not been rebinned. Unwanted sweep values not removed.
         """
+        raise NotImplementedError
+
+    def determine_binning(self, options):
+        # TODO needs documenting
         raise NotImplementedError
 
     def read_sweep_list(self, filepath, **kwargs):
@@ -91,11 +101,12 @@ class System:
         """
         raise NotImplementedError
 
-    def read_metadata(self, filepath, **kwargs):
-        """
-        Method that must be defined to read metadata in from filepath.
-        """
-        raise NotImplementedError
+    # not everyone will need this!
+    # def read_metadata(self, filepath, **kwargs):
+    #     """
+    #     Method that must be defined to read metadata in from filepath.
+    #     """
+    #     raise NotImplementedError
 
     def get_raw_pixel_size(self):
         """
@@ -151,30 +162,25 @@ class UniMelb(System):
     def __init__(self, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
 
-    def read_raw(self, filepath, **kwargs):
+    def read_image(self, filepath, options):
         with open(os.path.normpath(filepath), "r") as fid:
             raw_data = np.fromfile(fid, dtype=np.float32())[2:]
-        return raw_data
+        return self._reshape_raw(options, raw_data, self.read_sweep_list(filepath))
 
-    def read_sweep_list(self, filepath, **kwargs):
+    # TODO needs documenting
+    def determine_binning(self, options):
+        metadata = self._read_metadata(options["filepath"])
+
+        options["original_bin"] = int(metadata["Binning"])
+        if not int(options["additional_bins"]):
+            options["total_bin"] = options["original_bin"]
+        else:
+            options["total_bin"] = options["original_bin"] * int(options["additional_bins"])
+
+    def read_sweep_list(self, filepath):
         with open(os.path.normpath(str(filepath) + "_metaSpool.txt"), "r") as fid:
             sweep_str = fid.readline().rstrip().split("\t")
         return [float(i) for i in sweep_str]
-
-    def read_metadata(self, filepath, **kwargs):
-
-        # skip over sweep list
-        with open(os.path.normpath(str(filepath) + "_metaSpool.txt"), "r") as fid:
-            _ = fid.readline().rstrip().split("\t")
-            # ok now read the metadata
-            rest_str = fid.read()
-            matches = re.findall(
-                r"^([a-zA-Z0-9_ _/+()#-]+):([a-zA-Z0-9_ _/+()#-]+)",
-                rest_str,
-                re.MULTILINE,
-            )
-            metadata = {a: misc.failfloat(b) for (a, b) in matches}
-        return metadata
 
     def get_default_options(self):
         ret = {}
@@ -192,9 +198,8 @@ class UniMelb(System):
         # set some things that cannot be stored in the json
 
         # need to know number of threads to call (might be parallel fitting)
-        options["threads"] = cpu_count() - options["scipy_sub_threads"]
-
-        options["filepath"] = os.path.normpath(options["filepath"])
+        if "scipy_sub_threads" in options:
+            options["threads"] = cpu_count() - options["scipy_sub_threads"]
 
         # ensure only useful (scipy) loss method is used
         if "scipy_fit_method" in options:
@@ -204,6 +209,100 @@ class UniMelb(System):
         if "base_dir" in options and not self.filepath_joined:
             options["filepath"] = os.path.join(options["base_dir"], options["filepath"])
             self.filepath_joined = True  # just a flag so we don't do this twice
+
+        # add metadata to options (so it's saved for output)
+        if "metadata" not in options:
+            options["metadata"] = self._read_metadata(options["filepath"])
+
+        options["filepath"] = os.path.normpath(options["filepath"])
+
+    def _read_metadata(self, filepath):
+
+        # skip over sweep list
+        with open(os.path.normpath(str(filepath) + "_metaSpool.txt"), "r") as fid:
+            _ = fid.readline().rstrip().split("\t")
+            # ok now read the metadata
+            rest_str = fid.read()
+            matches = re.findall(
+                r"^([a-zA-Z0-9_ _/+()#-]+):([a-zA-Z0-9_ _/+()#-]+)",
+                rest_str,
+                re.MULTILINE,
+            )
+            metadata = {a: misc.failfloat(b) for (a, b) in matches}
+        return metadata
+
+    def _reshape_raw(self, options, raw_data, sweep_list):
+        """
+        Reshapes raw data into more useful shape, according to image size in metadata.
+        Unimelb-specific data reshaping procedure (relies upon metadata)
+
+        Arguments
+        ---------
+        options : dict
+            Generic options dict holding all the user options.
+
+        raw_data : np array, 1D (unshaped)
+            Raw unshaped data read from binary file
+
+        sweep_list : list
+            List of sweep parameter values
+
+        Returns
+        -------
+        image : np array, 3D
+            Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
+            not been rebinned. Unwanted sweep values not removed.
+
+        """
+
+        options["used_ref"] = False  # flag for later
+
+        metadata = self._read_metadata(options["filepath"])
+
+        # NOTE: AOIHeight and AOIWidth are saved by labview the opposite of what you'd expect
+        # -> LV rotates to give image as you'd expect standing in lab
+        # -> thus, we ensure all images in this processing code matches LV orientation
+        try:
+            if not options["ignore_ref"]:
+                data_pts = len(sweep_list)
+                image = np.reshape(
+                    raw_data,
+                    [
+                        data_pts,
+                        int(metadata["AOIHeight"]),
+                        int(metadata["AOIWidth"]),
+                    ],
+                )
+            else:
+                raise ValueError
+        except ValueError:
+            # if the ref is used then there's 2* the number of sweeps
+            # i.e. auto-detect reference existence
+            data_pts = 2 * len(sweep_list)
+            if options["ignore_ref"]:
+                image = np.reshape(
+                    raw_data,
+                    [
+                        data_pts,
+                        int(metadata["AOIHeight"]),
+                        int(metadata["AOIWidth"]),
+                    ],
+                )[
+                    ::2
+                ]  # hmmm disregard ref -> use every second element
+            else:
+                image = np.reshape(
+                    raw_data,
+                    [
+                        data_pts,
+                        int(metadata["AOIHeight"]),
+                        int(metadata["AOIWidth"]),
+                    ],
+                )
+                options["used_ref"] = True
+        # Transpose the dataset to get the correct x and y orientations ([y, x])
+        # will work for non-square images
+        return image.transpose([0, 2, 1]).copy()
 
 
 # ============================================================================
@@ -230,7 +329,7 @@ class Zyla(UniMelb):
 
 class LiamsWidefield(UniMelb):
     """
-    Specific system details for Liam's Widefield QDM. Currently a copy of Zyla
+    Specific system details for Liam's Widefield QDM. Currently a copy of Zyla.
     """
 
     name = "Liams Widefield"

@@ -15,7 +15,6 @@ Functions
  - `QDMPy.data_loading.check_if_already_processed`
  - `QDMPy.data_loading.options_compatible`
  - `QDMPy.data_loading.prev_pixel_results_exist`
- - `QDMPy.data_loading.reshape_raw`
  - `QDMPy.data_loading.rebin_image`
  - `QDMPy.data_loading.define_ROI`
  - `QDMPy.data_loading.define_area_roi`
@@ -119,23 +118,17 @@ def load_options(options_dict=None, options_path=None, check_for_prev_result=Fal
 
     sys.system_specific_option_update(prelim_options)
 
-    metadata = sys.read_metadata(prelim_options["filepath"])
-
-    prelim_options["metadata"] = metadata  # add metadata to options dict
-
     options = sys.get_default_options()  # first load in default options
     # now update with what has been decided upon by user
     options = recursive_dict_update(options, prelim_options)
 
+    sys.determine_binning(options)
+
+    sys.system_specific_option_update(options)  # do this again on full options to be sure
+
     options["system"] = sys
 
     systems.clean_options(options)  # check all the options make sense
-
-    options["original_bin"] = int(metadata["Binning"])
-    if not int(options["additional_bins"]):
-        options["total_bin"] = options["original_bin"]
-    else:
-        options["total_bin"] = options["original_bin"] * int(options["additional_bins"])
 
     # create output directories
     define_output_dir(options)
@@ -283,7 +276,7 @@ def save_options(options):
 # ============================================================================
 
 
-def load_raw_and_sweep(options):
+def load_image_and_sweep(options):
     """
     Reads raw image data and sweep_list (affine parameters) using system methods
 
@@ -294,23 +287,24 @@ def load_raw_and_sweep(options):
 
     Returns
     -------
-    raw_data : np array, 1D (unshaped)
-        Raw unshaped data read from binary file
+    image : np array, 3D
+        Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
+        not been rebinned. Unwanted sweep values not removed.
 
     sweep_list : list
         List of sweep parameter values
     """
     systems.clean_options(options)
 
-    raw_data = options["system"].read_raw(options["filepath"])
+    image = options["system"].read_image(options["filepath"], options)
     sweep_list = options["system"].read_sweep_list(options["filepath"])
-    return raw_data, sweep_list
+    return image, sweep_list
 
 
 # ============================================================================
 
 
-def reshape_dataset(options, raw_data, sweep_list):
+def reshape_dataset(options, image, sweep_list):
     """
     Reshapes and re-bins raw data into more useful format.
 
@@ -321,8 +315,9 @@ def reshape_dataset(options, raw_data, sweep_list):
     options : dict
         Generic options dict holding all the user options.
 
-    raw_data : np array, 1D (unshaped)
-        Raw unshaped data read from binary file
+    image : np array, 3D
+        Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
+        not been rebinned. Unwanted sweep values not removed.
 
     sweep_list : list
         List of sweep parameter values
@@ -360,7 +355,7 @@ def reshape_dataset(options, raw_data, sweep_list):
     """
     systems.clean_options(options)
 
-    image = reshape_raw(options, raw_data, sweep_list)
+    # image = reshape_raw(options, raw_data, sweep_list)
     image_rebinned, sig, ref, sig_norm = rebin_image(options, image)
     try:
         size_h, size_w = image_rebinned.shape[1:]
@@ -373,7 +368,7 @@ def reshape_dataset(options, raw_data, sweep_list):
     if options["ROI"] != "Full":
         options["ROI_start"], options["ROI_end"] = check_start_end_rectangle(
             "ROI", *options["ROI_start"], *options["ROI_end"], size_w, size_h
-        )
+        )  # opposite convention here, [x, y]
 
     # somewhat important a lot of this isn't hidden, so we can adjust it later
     PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list = remove_unwanted_data(
@@ -634,82 +629,6 @@ def prev_pixel_results_exist(options, prev_options):
                 if not os.path.isfile(options["data_dir"] / (param_key + ".txt")):
                     return False
     return True
-
-
-# ============================================================================
-
-
-def reshape_raw(options, raw_data, sweep_list):
-    """
-    Reshapes raw data into more useful shape, according to image size in metadata.
-
-    Arguments
-    ---------
-    options : dict
-        Generic options dict holding all the user options.
-
-    raw_data : np array, 1D (unshaped)
-        Raw unshaped data read from binary file
-
-    sweep_list : list
-        List of sweep parameter values
-
-    Returns
-    -------
-    image : np array, 3D
-        Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
-        not been rebinned. Unwanted sweep values not removed.
-
-    """
-
-    systems.clean_options(options)
-
-    options["used_ref"] = False  # flag for later
-
-    # NOTE: AOIHeight and AOIWidth are saved by labview the opposite of what you'd expect
-    # -> LV rotates to give image as you'd expect standing in lab
-    # -> thus, we ensure all images in this processing code matches LV orientation
-    try:
-        if not options["ignore_ref"]:
-            data_pts = len(sweep_list)
-            image = np.reshape(
-                raw_data,
-                [
-                    data_pts,
-                    int(options["metadata"]["AOIHeight"]),
-                    int(options["metadata"]["AOIWidth"]),
-                ],
-            )
-        else:
-            raise ValueError
-    except ValueError:
-        # if the ref is used then there's 2* the number of sweeps
-        # i.e. auto-detect reference existence
-        data_pts = 2 * len(sweep_list)
-        if options["ignore_ref"]:
-            image = np.reshape(
-                raw_data,
-                [
-                    data_pts,
-                    int(options["metadata"]["AOIHeight"]),
-                    int(options["metadata"]["AOIWidth"]),
-                ],
-            )[
-                ::2
-            ]  # hmmm disregard ref -> use every second element
-        else:
-            image = np.reshape(
-                raw_data,
-                [
-                    data_pts,
-                    int(options["metadata"]["AOIHeight"]),
-                    int(options["metadata"]["AOIWidth"]),
-                ],
-            )
-            options["used_ref"] = True
-    # Transpose the dataset to get the correct x and y orientations ([y, x])
-    # will work for non-square images
-    return image.transpose([0, 2, 1]).copy()
 
 
 # ============================================================================
