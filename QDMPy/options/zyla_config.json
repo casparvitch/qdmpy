@@ -611,7 +611,7 @@
     // for multiprocessing: # threads to use
     "threads": {},
     // Size of image (size_x, size_y) after rebinning, before being cut down to ROI
-    "rebinned_image_size": {},
+    "rebinned_image_shape": {},
     // did we automatically reload a previous fit result?
     "reloaded_prev_fit": {},
     // did we find a previous fit result?

@@ -258,7 +258,7 @@ def fit_single_pixel_gpufit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg
         while len(params_to_fit) < 26:
             params_to_fit.append(0)
     else:
-        params_to_fit = [1 for i in range((fit_models.get_param_defn(fit_model)))]
+        params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
 
     params_to_fit = np.array(params_to_fit, dtype=np.int32)
     init_guess_params = np.repeat([init_guess_params], repeats=2, axis=0)
