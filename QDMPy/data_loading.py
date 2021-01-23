@@ -527,7 +527,7 @@ def check_if_already_processed(options):
     Returns nothing.
     """
 
-    options["found_prev_options"] = (
+    options["found_prev_result"] = (
         prev_options_exist(options)
         and options_compatible(options, get_prev_options(options))
         and prev_pixel_results_exist(options, get_prev_options(options))

@@ -157,7 +157,7 @@ def shuffle_pixels(data_3d):
     x_shuf = rng.permutation(data_3d.shape[2])
     x_unshuf = np.argsort(x_shuf)
 
-    shuffled_in_y = data_3d[:, y_unshuf, :]
+    shuffled_in_y = data_3d[:, y_shuf, :]
     shuffled_in_yx = shuffled_in_y[:, :, x_shuf]
 
     # return shuffled pixels, and arrays to unshuffle
