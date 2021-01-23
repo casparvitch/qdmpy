@@ -7,7 +7,6 @@ Functions
  - `QDMPy.fit_plots.set_mpl_rcparams`
  - `QDMPy.fit_plots.plot_ROI_PL_image`
  - `QDMPy.fit_plots.add_colorbar`
- - `QDMPy.fit_plots.add_patch_square_centre`
  - `QDMPy.fit_plots.add_patch_rect`
  - `QDMPy.fit_plots.annotate_ROI_image`
  - `QDMPy.fit_plots.annotate_AOI_image`
@@ -159,56 +158,9 @@ def add_colorbar(im, fig, ax, aspect=20, pad_fraction=1, **kwargs):
 # ============================================================================
 
 
-def add_patch_square_centre(ax, area_c, area_size, label=None, edgecolor="b"):
-    """
-    Annotates square onto image figure.
-
-    Arguments
-    ---------
-    ax : matplotlib Axis object
-
-    area_c : int
-        Location of centre of area you want to annotate.
-
-    area_size : int
-        Size of area you want to annotate.
-
-
-    Optional arguments
-    ------------------
-    label : str
-        Text to label annotated square with. Color is defined by edgecolor. Default: None.
-
-    edgecolor : str
-        Color of label and edge of annotation. Default: "b".
-
-    """
-    rect_corner = [int(area_c[0] - area_size / 2), int(area_c[1] - area_size / 2)]
-    rect = patches.Rectangle(
-        (rect_corner[0], rect_corner[1]),
-        int(area_size),
-        int(area_size),
-        linewidth=1,
-        edgecolor=edgecolor,
-        facecolor="none",
-    )
-    ax.add_patch(rect)
-    if label:
-        # Add label for the square
-        ax.text(
-            area_c[0] + 0.95 * area_size,  # label posn.: top right
-            area_c[1],
-            label,
-            {"color": edgecolor, "fontsize": 10, "ha": "center", "va": "center"},
-        )
-
-
-# ============================================================================
-
-
 def add_patch_rect(ax, rect_corner_x, rect_corner_y, size_x, size_y, label=None, edgecolor="b"):
     """
-    Same as `QDMPy.fit_plots.add_patch_square_centre` but a rectangular annotation.
+    Adds a rectangular annotation onto ax.
 
     Arguments
     ---------
@@ -266,6 +218,7 @@ def annotate_ROI_image(options, ax):
         return None
     elif options["ROI"] == "Rectangle":
 
+        # these options are [x, y], opposite to data indexing convention
         start_x, start_y = options["ROI_start"]
         end_x, end_y = options["ROI_end"]
 
@@ -296,16 +249,18 @@ def annotate_AOI_image(options, ax):
         binning = 1
 
     # annotate single pixel check
-    corner = (options["single_pixel_check"][0], options["single_pixel_check"][1])
+    corner_x = options["single_pixel_check"][0]
+    corner_y = options["single_pixel_check"][1]
     size = 1
     add_patch_rect(
-        ax, corner[0], corner[1], size, size, label="PX check", edgecolor=options["AOI_colors"][0]
+        ax, corner_x, corner_y, size, size, label="PX check", edgecolor=options["AOI_colors"][0]
     )
 
     i = 0
     while True:
         i += 1
         try:
+            # these options are [x, y], opposite to data indexing convention
             start = options["AOI_" + str(i) + "_start"]
             end = options["AOI_" + str(i) + "_end"]
             if start is None or end is None:
@@ -726,7 +681,9 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
 
     # delete axes that we didn't use
     for i in range(len(AOIs)):
-        if i < len(options["system"].option_choices("normalisation")):  # we used these (normalisation)
+        if i < len(
+            options["system"].option_choices("normalisation")
+        ):  # we used these (normalisation)
             continue
         else:  # we didn't use these
             fig.delaxes(axs[1, i])
@@ -825,8 +782,8 @@ def plot_AOI_spectra_fit(
     sig_avgs.append(roi_avg_sig)
     ref_avgs.append(roi_avg_ref)
     # add single pixel check
-    pixel_sig = sig[:, options["single_pixel_check"][0], options["single_pixel_check"][1]]
-    pixel_ref = ref[:, options["single_pixel_check"][0], options["single_pixel_check"][1]]
+    pixel_sig = sig[:, options["single_pixel_check"][1], options["single_pixel_check"][0]]
+    pixel_ref = ref[:, options["single_pixel_check"][1], options["single_pixel_check"][0]]
     sig_avgs.append(pixel_sig)
     ref_avgs.append(pixel_ref)
     # add AOI data

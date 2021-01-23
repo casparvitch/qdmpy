@@ -47,7 +47,7 @@ DIR_PATH = systems.DIR_PATH
 
 
 def recursive_dict_update(to_be_updated_dict, updating_dict):
-    """ 
+    """
     Recursively updates to_be_updated_dict with values from updating_dict (to all dict depths)
     """
     if not isinstance(to_be_updated_dict, collections.abc.Mapping):
@@ -59,6 +59,7 @@ def recursive_dict_update(to_be_updated_dict, updating_dict):
         else:
             to_be_updated_dict[key] = val
     return to_be_updated_dict
+
 
 # ============================================================================
 
@@ -265,7 +266,6 @@ def reshape_dataset(options, raw_data, sweep_list):
         size_h, size_w = image_rebinned.shape
 
     options["rebinned_image_shape"] = (size_h, size_w)
-    print(size_h, size_w)
 
     # check options to ensure ROI is in correct format (now we have image size)
     if options["ROI"] != "Full":
@@ -278,8 +278,6 @@ def reshape_dataset(options, raw_data, sweep_list):
         options, image_rebinned, sweep_list, sig, ref, sig_norm
     )  # also cuts sig etc. down to ROI
 
-    print(options["rebinned_image_shape"], sig_norm.shape, PL_image_ROI.shape)
-
     # check options to ensure AOI is in correct format (now we have ROI size)
     i = 0
     while True:
@@ -291,7 +289,7 @@ def reshape_dataset(options, raw_data, sweep_list):
                 f"AOI_{i}",
                 *options[f"AOI_{i}_start"],
                 *options[f"AOI_{i}_end"],
-                *sig_norm.shape[1:],
+                *reversed(sig_norm.shape[1:]),  # opposite convention here, [x, y]
             )
 
         except KeyError:
@@ -300,14 +298,14 @@ def reshape_dataset(options, raw_data, sweep_list):
     # single pixel check
     try:
         single_pixel_pl = sig_norm[
-            :, options["single_pixel_check"][0], options["single_pixel_check"][1]
+            :, options["single_pixel_check"][1], options["single_pixel_check"][0]
         ]
     except IndexError as e:
         warnings.warn(
             f"Avoiding IndexError for single_pixel_check (setting pixel check to centre of image):\n{e}"
         )
-        single_pixel_pl = sig_norm[:, sig_norm.shape[0] // 2, sig_norm.shape[1] // 2]
-        options["single_pixel_check"] = (sig_norm.shape[0] // 2, sig_norm.shape[1] // 2)
+        single_pixel_pl = sig_norm[:, sig_norm.shape[1] // 2, sig_norm.shape[2] // 2]
+        options["single_pixel_check"] = (sig_norm.shape[2] // 2, sig_norm.shape[1] // 2)
 
     return PL_image, PL_image_ROI, sig, ref, sig_norm, single_pixel_pl, sweep_list
 
@@ -315,7 +313,7 @@ def reshape_dataset(options, raw_data, sweep_list):
 # ============================================================================
 
 # FIXME add documentation
-def check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_x, full_size_y):
+def check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_w, full_size_h):
     if start_x >= end_x:
         warnings.warn(f"{name} Rectangle ends before it starts (in x), swapping them")
         temp = start_x
@@ -327,26 +325,26 @@ def check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_x,
         start_x = end_y
         end_x = temp
 
-    if start_x >= full_size_x:
+    if start_x >= full_size_w:
         warnings.warn(f"{name} Rectangle starts outside image (too large in x), setting to zero.")
         start_x = 0
     elif start_x < 0:
         warnings.warn(f"{name} Rectangle starts outside image (negative in x), setting to zero..")
         start_x = 0
 
-    if start_y >= full_size_y:
+    if start_y >= full_size_h:
         warnings.warn(f"{name} Rectangle starts outside image (too large in y), setting to zero.")
         start_y = 0
     elif start_y < 0:
         warnings.warn(f"{name}  Rectangle starts outside image (negative in y), setting to zero.")
         start_y = 0
 
-    if end_x >= full_size_x:
+    if end_x >= full_size_w:
         warnings.warn(f"{name} Rectangle too big in x, cropping to image.")
-        end_x = full_size_x - 1
-    if end_y >= full_size_y:
+        end_x = full_size_w - 1
+    if end_y >= full_size_h:
         warnings.warn(f"{name} Rectangle too big in y, cropping to image.")
-        end_y = full_size_y - 1
+        end_y = full_size_h - 1
 
     return (start_x, start_y), (end_x, end_y)
 
@@ -389,6 +387,8 @@ def check_if_already_processed(options):
 
     Returns nothing.
     """
+    # FIXME obviously this whole function needs to be overhauled
+    # but critically, need to check at some point if there are prev. pixel fit results!!!
 
     if prev_options_exist(options):
         options["found_prev_result"] = True
@@ -483,8 +483,9 @@ def reshape_raw(options, raw_data, sweep_list):
 
     options["used_ref"] = False  # flag for later
 
-
     # NOTE: AOIHeight and AOIWidth are saved by labview the opposite of what you'd expect
+    # -> LV rotates to give image as you'd expect standing in lab
+    # -> thus, we ensure all images in this processing code matches LV orientation
     try:
         if not options["ignore_ref"]:
             data_pts = len(sweep_list)
@@ -523,9 +524,8 @@ def reshape_raw(options, raw_data, sweep_list):
                 ],
             )
             options["used_ref"] = True
-    # Transpose the dataset to get the correct x and y orientations
+    # Transpose the dataset to get the correct x and y orientations ([data, y, x])
     # will work for non-square images
-    # return image
     return image.transpose([0, 2, 1]).copy()
 
 
@@ -612,7 +612,7 @@ def rebin_image(options, image):
 # ============================================================================
 
 
-def define_ROI(options, full_size_w, full_size_h):
+def define_ROI(options, full_size_h, full_size_w):
     """
     Defines meshgrids that can be used to slice image into smaller region of interest (ROI).
 
@@ -667,8 +667,7 @@ def define_area_roi(start_x, start_y, end_x, end_y):
     x = np.linspace(start_x, end_x, end_x - start_x + 1, dtype=int)
     y = np.linspace(start_y, end_y, end_y - start_y + 1, dtype=int)
     xv, yv = np.meshgrid(x, y)
-    return [xv, yv]
-    # return [yv, xv] # yo what this doing here?
+    return [yv, xv]  # images are indexed [data, y, x]
 
 
 # ============================================================================
@@ -737,9 +736,6 @@ def remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_norm
     rem_end = options["remove_end_sweep"]
 
     ROI = define_ROI(options, *options["rebinned_image_shape"])
-    print("==================================================")
-    print(ROI)
-    print("==================================================")
 
     if rem_start < 0:
         warnings.warn("remove_start_sweep must be >=0, setting to zero now.")
@@ -750,7 +746,6 @@ def remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_norm
 
     PL_image = np.sum(image_rebinned, axis=0)
 
-    errored_before = False
     PL_image_ROI = PL_image[ROI[0], ROI[1]].copy()
     sig = sig[rem_start : -1 - rem_end, ROI[0], ROI[1]].copy()  # noqa: E203
     ref = ref[rem_start : -1 - rem_end, ROI[0], ROI[1]].copy()  # noqa: E203
