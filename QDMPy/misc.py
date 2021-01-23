@@ -127,7 +127,7 @@ def getsubitems(obj, itemkey, islast, maxlinelength):
     # expanded list
     can_concat = True
 
-    if isinstance(obj, np.array):
+    if isinstance(obj, np.ndarray):
         obj = obj.tolist()
 
     isdict = isinstance(obj, dict)

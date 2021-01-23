@@ -48,33 +48,26 @@
 	// ===========================================================================================
     // For taking a region of interest and ignoring the rest qof the data set
     "ROI": {
-    	"option_default": "Full",
-    	"option_choices":
-    		[
-    			"Full",
-    			"Rectangle",
-    			"Square"
-    		]
+        "option_default": "Full",
+        "option_choices":
+            [
+                "Full",
+                "Rectangle"         ]
     },
-    // half the size of the square (used for square only)
-    "ROI_halfsize": {
-    	"option_default": 1
-    },
-    // centre pixel (for rectangle or square)
-    "ROI_centre": {
-    	"option_default": [3, 3]
-    },
-    // Used for the rectangle size only
-    "ROI_rect_size": {
-    	"option_default": [1, 1]
-    },
-
+    // Start of ROI region (indices, [start_x, start_y]) i.e. top left corner
+    "ROI_start": {
+        "option_default": 0
+    },    
+    // End of ROI region (indices, [end_x, end_y]) i.e. bottom right corner
+    "ROI_end": {
+        "option_default": 0
+    },    
     // Removes data points from the start and end of each pixel data
     "remove_start_sweep": {
-    	"option_default": 1
+        "option_default": 1
     },
     "remove_end_sweep": {
-    	"option_default": 0
+        "option_default": 0
     },
 
     // Style of the reference normalisation used. div = division and sub = subtraction
@@ -491,7 +484,7 @@
     // parameters, but requires more fit iterations to reach convergence.
     // A typical value for the tolerance settings is between 1.0E-3 and 1.0E-6.
     "gpufit_tolerance": {
-        "option_default": 1e-4
+        "option_default": 1e-12
     },
     // Max number of iterations
     // The maximum number of fit iterations permitted. If the fit has not converged after this 

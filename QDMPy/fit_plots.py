@@ -631,10 +631,11 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
         ref_avgs.append(ref_avg)
 
     figsize = mpl.rcParams["figure.figsize"].copy()
-    figsize[0] *= len(AOIs)
+    num_wide = 2 if len(AOIs) < 2 else len(AOIs)
+    figsize[0] *= num_wide
     figsize[1] *= 2
     fig, axs = plt.subplots(
-        2, len(AOIs), figsize=figsize, sharex=True, sharey=False, constrained_layout=True
+        2, num_wide, figsize=figsize, sharex=True, sharey=False, constrained_layout=True
     )
 
     for i, AOI in enumerate(AOIs):
@@ -725,10 +726,14 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
 
     # delete axes that we didn't use
     for i in range(len(AOIs)):
-        if i < 2:  # we used these
+        if i < len(options["system"].option_choices("normalisation")):  # we used these (normalisation)
             continue
         else:  # we didn't use these
             fig.delaxes(axs[1, i])
+
+    if len(AOIs) == 1:
+        # again, didn't use
+        fig.delaxes(axs[0, 1])
 
     output_dict = {}
     for i in range(len(AOIs)):
@@ -917,7 +922,7 @@ def plot_AOI_spectra_fit(
         10000,
     )
 
-    # plot fits as third column
+    # loop of fit backends first
     for fit_backend_number, fit_backend_fit_result in enumerate(fit_result_collection_lst):
         fit_backend_name = fit_backend_fit_result.fit_backend
 
@@ -926,7 +931,7 @@ def plot_AOI_spectra_fit(
             fit_backend_fit_result.single_pixel_fit_result,
             *fit_backend_fit_result.AOI_fit_results_lst,
         ]
-
+        # now plot fits as third column
         for i, (fit_param_ar, sig, ref) in enumerate(zip(fit_params_lst, sig_avgs, ref_avgs)):
             if not options["used_ref"]:
                 sig_norm = sig
@@ -940,7 +945,7 @@ def plot_AOI_spectra_fit(
                 fit_backend_fit_result.roi_avg_fit_result.best_params, high_res_xdata
             )
 
-            # first loop over -> plot raw data, add titles
+            # this is the first loop -> plot raw data, add titles
             if not fit_backend_number:
 
                 # raw data

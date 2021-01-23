@@ -4,6 +4,7 @@ This module holds tools for loading raw data etc. and reshaping to a usable form
 
 Functions
 ---------
+ - `QDMPy.data_loading.recursive_dict_update`
  - `QDMPy.data_loading.load_options`
  - `QDMPy.data_loading.save_options`
  - `QDMPy.data_loading.reshape_dataset`
@@ -31,6 +32,7 @@ import warnings
 import os
 import pathlib
 from collections import OrderedDict  # insertion order is guaranteed for py3.7+, but to be safe!
+import collections.abc
 
 # ============================================================================
 
@@ -42,9 +44,22 @@ import QDMPy.systems as systems
 DIR_PATH = systems.DIR_PATH
 
 # ============================================================================
-#
-# =============== OUTWARD-FACING FUNCTIONS
-#
+
+
+def recursive_dict_update(to_be_updated_dict, updating_dict):
+    """ 
+    Recursively updates to_be_updated_dict with values from updating_dict (to all dict depths)
+    """
+    if not isinstance(to_be_updated_dict, collections.abc.Mapping):
+        return updating_dict
+    for key, val in updating_dict.items():
+        if isinstance(val, collections.abc.Mapping):
+            # avoids KeyError by returning {}
+            to_be_updated_dict[key] = recursive_dict_update(to_be_updated_dict.get(key, {}), val)
+        else:
+            to_be_updated_dict[key] = val
+    return to_be_updated_dict
+
 # ============================================================================
 
 
@@ -103,7 +118,8 @@ def load_options(options_dict=None, options_path=None, check_for_prev_result=Fal
     prelim_options["metadata"] = metadata  # add metadata to options dict
 
     options = sys.get_default_options()  # first load in default options
-    options.update(prelim_options)  # now update with what has been decided upon by user
+    # now update with what has been decided upon by user
+    options = recursive_dict_update(options, prelim_options)
 
     options["system"] = sys
 
@@ -247,20 +263,22 @@ def reshape_dataset(options, raw_data, sweep_list):
         size_h, size_w = image_rebinned.shape[1:]
     except Exception:
         size_h, size_w = image_rebinned.shape
-    # FIXME test, is the above correct, image_rebinned is h, w in shape???
-    # ---> needs to be tested on non-square image
 
-    options["rebinned_image_size"] = (size_w, size_h)
+    options["rebinned_image_shape"] = (size_h, size_w)
+    print(size_h, size_w)
 
     # check options to ensure ROI is in correct format (now we have image size)
-    options["ROI_start"], options["ROI_end"] = check_start_end_rectangle(
-        "ROI", *options["ROI_start"], *options["ROI_end"], size_w, size_h
-    )
+    if options["ROI"] != "Full":
+        options["ROI_start"], options["ROI_end"] = check_start_end_rectangle(
+            "ROI", *options["ROI_start"], *options["ROI_end"], size_w, size_h
+        )
 
     # somewhat important a lot of this isn't hidden, so we can adjust it later
     PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list = remove_unwanted_data(
         options, image_rebinned, sweep_list, sig, ref, sig_norm
     )  # also cuts sig etc. down to ROI
+
+    print(options["rebinned_image_shape"], sig_norm.shape, PL_image_ROI.shape)
 
     # check options to ensure AOI is in correct format (now we have ROI size)
     i = 0
@@ -273,7 +291,7 @@ def reshape_dataset(options, raw_data, sweep_list):
                 f"AOI_{i}",
                 *options[f"AOI_{i}_start"],
                 *options[f"AOI_{i}_end"],
-                *PL_image_ROI.shape,
+                *sig_norm.shape[1:],
             )
 
         except KeyError:
@@ -288,8 +306,8 @@ def reshape_dataset(options, raw_data, sweep_list):
         warnings.warn(
             f"Avoiding IndexError for single_pixel_check (setting pixel check to centre of image):\n{e}"
         )
-        single_pixel_pl = sig_norm[:, PL_image_ROI.shape[0] // 2, PL_image_ROI.shape[1] // 2]
-        options["single_pixel_check"] = (PL_image_ROI.shape[0] // 2, PL_image_ROI.shape[1] // 2)
+        single_pixel_pl = sig_norm[:, sig_norm.shape[0] // 2, sig_norm.shape[1] // 2]
+        options["single_pixel_check"] = (sig_norm.shape[0] // 2, sig_norm.shape[1] // 2)
 
     return PL_image, PL_image_ROI, sig, ref, sig_norm, single_pixel_pl, sweep_list
 
@@ -310,17 +328,17 @@ def check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_x,
         end_x = temp
 
     if start_x >= full_size_x:
-        warnings.warn(f"{name} Rectangle starts outside image (in x), setting to zero.")
+        warnings.warn(f"{name} Rectangle starts outside image (too large in x), setting to zero.")
         start_x = 0
     elif start_x < 0:
-        warnings.warn(f"{name} Rectangle too big in x, cropping to image.")
+        warnings.warn(f"{name} Rectangle starts outside image (negative in x), setting to zero..")
         start_x = 0
 
     if start_y >= full_size_y:
-        warnings.warn(f"{name} Rectangle starts outside image (in y), setting to zero.")
+        warnings.warn(f"{name} Rectangle starts outside image (too large in y), setting to zero.")
         start_y = 0
     elif start_y < 0:
-        warnings.warn(f"{name} Rectangle too big in y, cropping to image.")
+        warnings.warn(f"{name}  Rectangle starts outside image (negative in y), setting to zero.")
         start_y = 0
 
     if end_x >= full_size_x:
@@ -465,6 +483,8 @@ def reshape_raw(options, raw_data, sweep_list):
 
     options["used_ref"] = False  # flag for later
 
+
+    # NOTE: AOIHeight and AOIWidth are saved by labview the opposite of what you'd expect
     try:
         if not options["ignore_ref"]:
             data_pts = len(sweep_list)
@@ -505,6 +525,7 @@ def reshape_raw(options, raw_data, sweep_list):
             options["used_ref"] = True
     # Transpose the dataset to get the correct x and y orientations
     # will work for non-square images
+    # return image
     return image.transpose([0, 2, 1]).copy()
 
 
@@ -521,7 +542,7 @@ def rebin_image(options, image):
         Generic options dict holding all the user options.
 
     image : np array, 3D
-        Format: [sweep values, x, y]. Has not been seperated into sig/ref etc. and has
+        Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
         not been rebinned.
 
     Returns
@@ -547,7 +568,6 @@ def rebin_image(options, image):
 
     if not options["additional_bins"]:
         options["additional_bins"] = 1
-        warnings.warn("oiy fix up additional_bins = 0 to be handled more nicely...?")
         image_rebinned = image
     else:
         if options["additional_bins"] != 1 and options["additional_bins"] % 2:
@@ -647,7 +667,8 @@ def define_area_roi(start_x, start_y, end_x, end_y):
     x = np.linspace(start_x, end_x, end_x - start_x + 1, dtype=int)
     y = np.linspace(start_y, end_y, end_y - start_y + 1, dtype=int)
     xv, yv = np.meshgrid(x, y)
-    return [yv, xv]
+    return [xv, yv]
+    # return [yv, xv] # yo what this doing here?
 
 
 # ============================================================================
@@ -665,7 +686,7 @@ def remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_norm
         Generic options dict holding all the user options.
 
     image_rebinned : np array, 3D
-        Format: [sweep values, x, y]. Same as image, but rebinned (x size and y size
+        Format: [sweep values, y, x]. Same as image, but rebinned (x size and y size
         have changed).
 
     sweep_list : list
@@ -715,7 +736,10 @@ def remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_norm
     rem_start = options["remove_start_sweep"]
     rem_end = options["remove_end_sweep"]
 
-    ROI = define_ROI(options, *options["rebinned_image_size"])
+    ROI = define_ROI(options, *options["rebinned_image_shape"])
+    print("==================================================")
+    print(ROI)
+    print("==================================================")
 
     if rem_start < 0:
         warnings.warn("remove_start_sweep must be >=0, setting to zero now.")
