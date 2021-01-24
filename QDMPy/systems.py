@@ -92,7 +92,16 @@ class System:
         raise NotImplementedError
 
     def determine_binning(self, options):
-        # TODO needs documenting
+        """
+        Method that must be defined to define the original_bin and total_bin options
+        (in the options dict). original_bin equiv. to a camera binning, e.g. any binning
+        before QDMPy was run.
+
+        Arguments
+        ---------
+        options : dict
+            Generic options dict holding all the user options.
+        """
         raise NotImplementedError
 
     def read_sweep_list(self, filepath, **kwargs):
@@ -100,13 +109,6 @@ class System:
         Method that must be defined to read sweep_list in from filepath.
         """
         raise NotImplementedError
-
-    # not everyone will need this!
-    # def read_metadata(self, filepath, **kwargs):
-    #     """
-    #     Method that must be defined to read metadata in from filepath.
-    #     """
-    #     raise NotImplementedError
 
     def get_raw_pixel_size(self):
         """
@@ -167,7 +169,6 @@ class UniMelb(System):
             raw_data = np.fromfile(fid, dtype=np.float32())[2:]
         return self._reshape_raw(options, raw_data, self.read_sweep_list(filepath))
 
-    # TODO needs documenting
     def determine_binning(self, options):
         metadata = self._read_metadata(options["filepath"])
 
@@ -217,6 +218,10 @@ class UniMelb(System):
         options["filepath"] = os.path.normpath(options["filepath"])
 
     def _read_metadata(self, filepath):
+        """
+        Reads metaspool text file into a metadata dictionary.
+        Filepath argument is the filepath of the (binary) dataset.
+        """
 
         # skip over sweep list
         with open(os.path.normpath(str(filepath) + "_metaSpool.txt"), "r") as fid:
