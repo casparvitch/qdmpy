@@ -6,6 +6,9 @@ This module defines the fit model used. We grab/use this regardless of fitting o
 Ensure any fit functions you define are added to the AVAILABLE_FNS module variable.
 Try not to have overlapping parameter names in the same fit.
 
+For ODMR peaks, ensure the frequency position of the peak is named something
+prefixed by 'pos'. (see `QDMPy.bfield.calc.calc_bnv` for the reasoning).
+
 Classes
 -------
  - `QDMPy.fit._models.FitModel`
@@ -308,8 +311,8 @@ class Circular(FitFunc):
     Circular function (sine)
     """
 
-    param_defn = ["rabi_freq", "pos_circ", "amp_circ"]
-    param_units = {"rabi_freq": "Nu (Hz)", "pos_circ": "Tau (s)", "amp_circ": "Amp (a.u.)"}
+    param_defn = ["rabi_freq", "t0_circ", "amp_circ"]
+    param_units = {"rabi_freq": "Nu (Hz)", "t0_circ": "Tau (s)", "amp_circ": "Amp (a.u.)"}
 
     @staticmethod
     @njit

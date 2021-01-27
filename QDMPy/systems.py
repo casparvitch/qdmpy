@@ -305,7 +305,7 @@ class UniMelb(System):
                     ],
                 )[
                     ::2
-                ]  # hmmm disregard ref -> use every second element
+                ]  # hmmm disregard ref -> use every second element.
             else:
                 image = np.reshape(
                     raw_data,

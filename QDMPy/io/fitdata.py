@@ -58,6 +58,17 @@ def load_fit_param(options, param_key):
 
 
 def save_pixel_fit_results(options, pixel_fit_params):
+    """
+    Saves pixel fit results to disk.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    fit_result_dict : OrderedDict
+        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
+    """
     if pixel_fit_params is not None:
         for param_key, result in pixel_fit_params.items():
             np.savetxt(options["data_dir"] / f"{param_key}.txt", result)

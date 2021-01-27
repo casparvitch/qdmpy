@@ -256,7 +256,7 @@ def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
             options, sig_norm, sweep_list, fit_model, roi_avg_fit_result
         )
     elif options["fit_backend"] == "gpufit":
-        return fit_gpufit.fit_pixels_gpufitY(
+        return fit_gpufit.fit_pixels_gpufit(
             options, sig_norm, sweep_list, fit_model, roi_avg_fit_result
         )
     else:

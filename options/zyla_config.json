@@ -29,7 +29,7 @@
         "option_default": 0.000000244140625
     },
         
-    // if true the reference measurement is ignored
+    // If true the reference (often no-MW) measurement is ignored.
     "ignore_ref": {
     	"option_default": false,
     	"option_choices":
