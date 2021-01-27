@@ -261,11 +261,11 @@ This module defines...
 
 Classes
 -------
- - `QDMPy.<this module name (filename)>.ClassNameOne`
+ - `QDMPy.<this sub-package name>.<this module name (filename)>.ClassNameOne`
 
 Functions
 ---------
- - `QDMPy.<this module name (filename)>.Function1`
+ - `QDMPy.<this sub-package name>.<this module name (filename)>.Function1`
 """
 ```
 
@@ -286,11 +286,11 @@ def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `QDMPy.fit_models.FitModel` object.
+    fit_model : `QDMPy.fit._models.FitModel` object.
 
     Returns
     -------
-    `QDMPy.fit_shared.ROIAvgFitResult` object containing the fit result (see class specifics)
+    `QDMPy.fit._shared.ROIAvgFitResult` object containing the fit result (see class specifics)
     """
 ```
 

@@ -72,7 +72,7 @@ instance/
 docs/_build/
 
 # pdoc documentation
-QDMPy/docs/QDMPy/*.html
+/docs/QDMPy/*.html
 
 # PyBuilder
 target/

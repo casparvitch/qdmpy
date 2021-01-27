@@ -4,19 +4,29 @@ This module holds tools for fitting raw data via scipy. (scipy backend)
 
 Functions
 ---------
- - `QDMPy.fit_scipy.prep_scipy_fit_options`
- - `QDMPy.fit_scipy.gen_scipy_init_guesses`
- - `QDMPy.fit_scipy.fit_ROI_avg_scipy`
- - `QDMPy.fit_scipy.fit_single_pixel_scipy`
- - `QDMPy.fit_scipy.fit_AOIs_scipy`
- - `QDMPy.fit_scipy.limit_cpu`
- - `QDMPy.fit_scipy.to_squares_wrapper`
- - `QDMPy.fit_scipy.fit_pixels_scipy`
+ - `QDMPy.fit._scipyfit.prep_scipyfit_options`
+ - `QDMPy.fit._scipyfit.gen_scipyfit_init_guesses`
+ - `QDMPy.fit._scipyfit.fit_ROI_avg_scipyfit`
+ - `QDMPy.fit._scipyfit.fit_single_pixel_scipyfit`
+ - `QDMPy.fit._scipyfit.fit_AOIs_scipyfit`
+ - `QDMPy.fit._scipyfit.limit_cpu`
+ - `QDMPy.fit._scipyfit.to_squares_wrapper`
+ - `QDMPy.fit._scipyfit.fit_pixels_scipyfit`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
+__pdoc__ = {
+    "QDMPy.fit._scipyfit.prep_scipyfit_options": True,
+    "QDMPy.fit._scipyfit.gen_scipyfit_init_guesses": True,
+    "QDMPy.fit._scipyfit.fit_ROI_avg_scipyfit": True,
+    "QDMPy.fit._scipyfit.fit_single_pixel_scipyfit": True,
+    "QDMPy.fit._scipyfit.fit_AOIs_scipyfit": True,
+    "QDMPy.fit._scipyfit.limit_cpu": True,
+    "QDMPy.fit._scipyfit.to_squares_wrapper": True,
+    "QDMPy.fit._scipyfit.fit_pixels_scipyfit": True,
+}
 
 # ==========================================================================
 
@@ -35,17 +45,16 @@ from datetime import timedelta
 
 # ============================================================================
 
-import QDMPy.systems as systems
-import QDMPy.fit_models as fit_models
-import QDMPy.fit_shared as fit_shared
-import QDMPy.fit_interface as fit_interface
+import QDMPy.io.systems as systems
+import QDMPy.fit._models as fit_models
+import QDMPy.fit._shared as fit_shared
 
 # ==========================================================================
 
 
-def prep_scipy_fit_options(options, fit_model):
+def prep_scipyfit_options(options, fit_model):
     """
-    General options dict -> scipy_fit_options
+    General options dict -> scipyfit_options
     in format that scipy least_squares expects.
 
     Arguments
@@ -53,7 +62,7 @@ def prep_scipy_fit_options(options, fit_model):
     options : dict
         Generic options dict holding all the user options.
 
-    fit_model : `QDMPy.fit_models.FitModel`
+    fit_model : `QDMPy.fit._models.FitModel`
         Fit model object.
 
     Returns
@@ -63,40 +72,42 @@ def prep_scipy_fit_options(options, fit_model):
     """
 
     # this is just constructing the initial parameter guesses and bounds in the right format
-    _, fit_param_bound_ar = gen_scipy_init_guesses(options, *fit_shared.gen_init_guesses(options))
+    _, fit_param_bound_ar = gen_scipyfit_init_guesses(
+        options, *fit_shared.gen_init_guesses(options)
+    )
     fit_bounds = (fit_param_bound_ar[:, 0], fit_param_bound_ar[:, 1])
 
     # see scipy.optimize.least_squares
-    scipy_fit_options = {
-        "method": options["scipy_fit_method"],
-        "verbose": options["scipy_verbose_fitting"],
-        "gtol": options["scipy_fit_gtol"],
-        "xtol": options["scipy_fit_xtol"],
-        "ftol": options["scipy_fit_ftol"],
-        "loss": options["scipy_loss_fn"],
+    scipyfit_options = {
+        "method": options["scipyfit_fit_method"],
+        "verbose": options["scipyfit_verbose_fitting"],
+        "gtol": options["scipyfit_fit_gtol"],
+        "xtol": options["scipyfit_fit_xtol"],
+        "ftol": options["scipyfit_fit_ftol"],
+        "loss": options["scipyfit_loss_fn"],
     }
 
-    if options["scipy_fit_method"] != "lm":
-        scipy_fit_options["bounds"] = fit_bounds
-        scipy_fit_options["verbose"] = options["scipy_verbose_fitting"]
+    if options["scipyfit_fit_method"] != "lm":
+        scipyfit_options["bounds"] = fit_bounds
+        scipyfit_options["verbose"] = options["scipyfit_verbose_fitting"]
 
-    if options["scipy_scale_x"]:
-        scipy_fit_options["x_scale"] = "jac"
+    if options["scipyfit_scale_x"]:
+        scipyfit_options["x_scale"] = "jac"
     else:
-        options["scipy_scale_x"] = False
+        options["scipyfit_scale_x"] = False
 
     # define jacobian option for least_squares fitting
-    if fit_model.jacobian_scipy is None or not options["scipy_use_analytic_jac"]:
-        scipy_fit_options["jac"] = options["scipy_fit_jac_acc"]
+    if fit_model.jacobian_scipy is None or not options["scipyfit_use_analytic_jac"]:
+        scipyfit_options["jac"] = options["scipyfit_fit_jac_acc"]
     else:
-        scipy_fit_options["jac"] = fit_model.jacobian_scipy
-    return scipy_fit_options
+        scipyfit_options["jac"] = fit_model.jacobian_scipyfit
+    return scipyfit_options
 
 
 # ==========================================================================
 
 
-def gen_scipy_init_guesses(options, init_guesses, init_bounds):
+def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
     """
     Generate arrays of initial fit guesses and bounds in correct form for scipy least_squares.
 
@@ -153,7 +164,7 @@ def gen_scipy_init_guesses(options, init_guesses, init_bounds):
 # ==========================================================================
 
 
-def fit_ROI_avg_scipy(options, sig_norm, sweep_list, fit_model):
+def fit_ROI_avg_scipyfit(options, sig_norm, sweep_list, fit_model):
     """
     Fit the average of the measurement over the region of interest specified, with scipy.
 
@@ -168,12 +179,12 @@ def fit_ROI_avg_scipy(options, sig_norm, sweep_list, fit_model):
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `QDMPy.fit_models.FitModel`
+    fit_model : `QDMPy.fit._models.FitModel`
         The fit model object.
 
     Returns
     -------
-    `QDMPy.fit_shared.ROIAvgFitResult` object containing the fit result (see class specifics)
+    `QDMPy.fit._shared.ROIAvgFitResult` object containing the fit result (see class specifics)
     """
 
     systems.clean_options(options)
@@ -182,9 +193,9 @@ def fit_ROI_avg_scipy(options, sig_norm, sweep_list, fit_model):
     # collapse to just pl_ar (as function of sweep, 1D)
     pl_roi = np.nanmean(np.nanmean(sig_norm, axis=2), axis=1)
 
-    fit_options = prep_scipy_fit_options(options, fit_model)
+    fit_options = prep_scipyfit_options(options, fit_model)
 
-    init_param_guess, _ = gen_scipy_init_guesses(options, *fit_shared.gen_init_guesses(options))
+    init_param_guess, _ = gen_scipyfit_init_guesses(options, *fit_shared.gen_init_guesses(options))
 
     fitting_results = least_squares(
         fit_model.residuals_scipy, init_param_guess, args=(sweep_list, pl_roi), **fit_options
@@ -193,14 +204,14 @@ def fit_ROI_avg_scipy(options, sig_norm, sweep_list, fit_model):
     best_params = fitting_results.x
 
     return fit_shared.ROIAvgFitResult(
-        "scipy", fit_options, fit_model, pl_roi, sweep_list, best_params, init_param_guess
+        "scipyfit", fit_options, fit_model, pl_roi, sweep_list, best_params, init_param_guess
     )
 
 
 # ==========================================================================
 
 
-def fit_single_pixel_scipy(options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result):
+def fit_single_pixel_scipyfit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result):
     """
     Fit Single pixel and return best_fit_result.x (i.e. the optimal fit parameters)
 
@@ -215,11 +226,11 @@ def fit_single_pixel_scipy(options, pixel_pl_ar, sweep_list, fit_model, roi_avg_
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `QDMPy.fit_models.FitModel`
+    fit_model : `QDMPy.fit._models.FitModel`
         The fit model.
 
-    roi_avg_fit_result : `QDMPy.fit_shared.ROIAvgFitResult`
-        `QDMPy.fit_shared.ROIAvgFitResult` object, to pull fit_options from.
+    roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
+        `QDMPy.fit._shared.ROIAvgFitResult` object, to pull fit_options from.
 
     Returns
     -------
@@ -235,11 +246,11 @@ def fit_single_pixel_scipy(options, pixel_pl_ar, sweep_list, fit_model, roi_avg_
         init_guess_params = roi_avg_fit_result.best_params.copy()
     else:
         # this is just constructing the initial parameter guesses and bounds in the right format
-        fit_param_ar, _ = gen_scipy_init_guesses(options, *fit_shared.gen_init_guesses(options))
+        fit_param_ar, _ = gen_scipyfit_init_guesses(options, *fit_shared.gen_init_guesses(options))
         init_guess_params = fit_param_ar.copy()
 
     fitting_results = least_squares(
-        fit_model.residuals_scipy, init_guess_params, args=(sweep_list, pixel_pl_ar), **fit_opts
+        fit_model.residuals_scipyfit, init_guess_params, args=(sweep_list, pixel_pl_ar), **fit_opts
     )
     return fitting_results.x
 
@@ -247,7 +258,7 @@ def fit_single_pixel_scipy(options, pixel_pl_ar, sweep_list, fit_model, roi_avg_
 # ==========================================================================
 
 
-def fit_AOIs_scipy(
+def fit_AOIs_scipyfit(
     options, sig_norm, pixel_pl_ar, sweep_list, fit_model, AOIs, roi_avg_fit_result
 ):
     """
@@ -268,20 +279,20 @@ def fit_AOIs_scipy(
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq).
 
-    fit_model : `QDMPy.fit_models.FitModel`
+    fit_model : `QDMPy.fit._models.FitModel`
         The model we're fitting to.
 
     AOIs : list
         List of AOI specifications - each a length-2 iterable that can be used to directly index
         into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].
 
-    roi_avg_fit_result : `QDMPy.fit_shared.ROIAvgFitResult`
-        `QDMPy.fit_shared.ROIAvgFitResult` object, to pull `QDMPy.fit_shared.ROIAvgFitResult.fit_options`
+    roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
+        `QDMPy.fit._shared.ROIAvgFitResult` object, to pull `QDMPy.fit._shared.ROIAvgFitResult.fit_options`
         from.
 
     Returns
     -------
-    fit_result_collection : `QDMPy.fit_shared.FitResultCollection`
+    fit_result_collection : `QDMPy.fit._shared.FitResultCollection`
         Collection of ROI/AOI fit results for this fit backend.
     """
 
@@ -295,10 +306,10 @@ def fit_AOIs_scipy(
         guess_params = roi_avg_fit_result.best_params.copy()
     else:
         # this is just constructing the initial parameter guesses and bounds in the right format
-        fit_param_ar, _ = gen_scipy_init_guesses(options, *fit_shared.gen_init_guesses(options))
+        fit_param_ar, _ = gen_scipyfit_init_guesses(options, *fit_shared.gen_init_guesses(options))
         guess_params = fit_param_ar.copy()
 
-    single_pixel_fit_params = fit_single_pixel_scipy(
+    single_pixel_fit_params = fit_single_pixel_scipyfit(
         options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result
     )
 
@@ -314,7 +325,7 @@ def fit_AOIs_scipy(
         AOI_avg_best_fit_results_lst.append(fitting_results.x)
 
     return fit_shared.FitResultCollection(
-        "scipy", roi_avg_fit_result, single_pixel_fit_params, AOI_avg_best_fit_results_lst
+        "scipyfit", roi_avg_fit_result, single_pixel_fit_params, AOI_avg_best_fit_results_lst
     )
 
 
@@ -355,7 +366,7 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, kwargs={}):
         Array (or I guess single value, anything iterable) of affine parameter (tau/freq)
 
     shaped_data : list (3 elements)
-        array returned by `QDMPy.fit_shared.pixel_generator`: [y, x, sig_norm[:, y, x]]
+        array returned by `QDMPy.fit._shared.pixel_generator`: [y, x, sig_norm[:, y, x]]
 
     kwargs : dict
         Other options (dict) passed to least_squares, i.e. fit_options
@@ -377,7 +388,7 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, kwargs={}):
 # ==========================================================================
 
 
-def fit_pixels_scipy(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
+def fit_pixels_scipyfit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
     """
     Fits each pixel and returns dictionary of param_name -> param_image.
 
@@ -392,11 +403,11 @@ def fit_pixels_scipy(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resul
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `QDMPy.fit_models.FitModel`
+    fit_model : `QDMPy.fit._models.FitModel`
         The model we're fitting to.
 
-    roi_avg_fit_result : `QDMPy.fit_shared.ROIAvgFitResult`
-        `QDMPy.fit_shared.ROIAvgFitResult` object, to pull fit_options from.
+    roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
+        `QDMPy.fit._shared.ROIAvgFitResult` object, to pull fit_options from.
 
     Returns
     -------
@@ -426,7 +437,7 @@ def fit_pixels_scipy(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resul
         init_guess_params = roi_avg_fit_result.best_params.copy()
     else:
         # this is just constructing the initial parameter guesses and bounds in the right format
-        init_guess_params, _ = gen_scipy_init_guesses(
+        init_guess_params, _ = gen_scipyfit_init_guesses(
             options, *fit_shared.gen_init_guesses(options)
         )
     # call into the library (measure time)
@@ -438,7 +449,7 @@ def fit_pixels_scipy(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resul
             tqdm(
                 executor.map(
                     to_squares_wrapper,
-                    repeat(fit_model.residuals_scipy),
+                    repeat(fit_model.residuals_scipyfit),
                     repeat(init_guess_params),
                     repeat(sweep_ar),
                     fit_shared.pixel_generator(pixel_data),
@@ -449,7 +460,7 @@ def fit_pixels_scipy(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resul
                 mininterval=1,
                 total=num_pixels,
                 unit=" PX",
-                disable=(not options["scipy_show_progressbar"]),
+                disable=(not options["scipyfit_show_progressbar"]),
             )
         )
     t1 = timer()
@@ -457,7 +468,7 @@ def fit_pixels_scipy(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resul
     options["fit_time_(s)"] = timedelta(seconds=t1 - t0).total_seconds()
 
     roi_shape = np.shape(sig_norm)
-    res = fit_interface.get_pixel_fitting_results(
+    res = fit_shared.get_pixel_fitting_results(
         fit_model, fit_results, (roi_shape[1], roi_shape[2])
     )
     if options["scramble_pixels"]:

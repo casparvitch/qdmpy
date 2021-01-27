@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """
 This module holds tools for calculating the magnetic field (\\vec{B}) from
-ODMR datasets (after they've been fit with the `QDMPy.fit_interface` tooling.
+ODMR datasets (after they've been fit with the `QDMPy.fit.interface` tooling).
 
 Functions
 ---------
- - `QDMPy.Bfield_calc`
 """
 
 # ============================================================================

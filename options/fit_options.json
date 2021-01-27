@@ -20,7 +20,7 @@
     "area_3_centre": [95, 25],
     "area_3_halfsize": 3,
 
-    "fit_backend": "scipy",
+    "fit_backend": "scipyfit",
     "fit_pixels": true, 
     "force_fit": true, 
     "auto_match_prev_ROI_options": false,

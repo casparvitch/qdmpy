@@ -3,112 +3,37 @@
 This module holds the general interface tools for fitting raw data, independent of fit backend
 (e.g. scipy/gpufit etc.).
 
+All of these functions are automatically loaded into the namespace when the fit
+sub-package is imported. (e.g. import QDMPy.fit).
+
 Functions
 ---------
- - `QDMPy.fit_interface.get_pixel_fitting_results`
- - `QDMPy.fit_interface.load_prev_fit_results`
- - `QDMPy.fit_interface.load_fit_param`
- - `QDMPy.fit_interface.define_fit_model`
- - `QDMPy.fit_interface.prep_fit_backends`
- - `QDMPy.fit_interface.fit_ROI_avg`
- - `QDMPy.fit_interface.fit_AOIs`
- - `QDMPy.fit_interface.fit_pixels`
+ - `QDMPy.fit.interface.define_fit_model`
+ - `QDMPy.fit.interface.fit_ROI_avg`
+ - `QDMPy.fit.interface.fit_AOIs`
+ - `QDMPy.fit.interface.fit_pixels`
+ - `QDMPy.fit.interface._prep_fit_backends`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 
+__pdoc__ = {
+    "QDMPy.fit.interface.define_fit_model": True,
+    "QDMPy.fit.interface.fit_ROI_avg": True,
+    "QDMPy.fit.interface.fit_AOIs": True,
+    "QDMPy.fit.interface.fit_pixels": True,
+    "QDMPy.fit.interface._prep_fit_backends": True,
+}
+
 # ============================================================================
 
-import numpy as np
 import warnings
 
 # ============================================================================
 
-import QDMPy.fit_models as fit_models
-import QDMPy.data_loading as data_loading
-
-# ============================================================================
-
-
-def get_pixel_fitting_results(fit_model, fit_results, roi_shape):
-    """
-    Take the fit result data from scipy/gpufit and back it down to a dictionary of arrays.
-
-    Each array is 2D, representing the values for each parameter (specified by the dict key).
-
-
-    Arguments
-    ---------
-    fit_model : `QDMPy.fit_models.FitModel`
-        Model we're fitting to.
-
-    fit_results : list of [(y, x), result] objects
-        (see `QDMPy.fit_scipy.to_squares_wrapper`, or `QDMPy.fit_gpufit.gpufit_reshape_result`)
-        A list of each pixel's parameter array, as well as position in image denoted by (y, x).
-
-    roi_shape : iterable, length 2
-        Shape of the region of interest, to allow us to generate the right shape empty arrays.
-        This is probably a little useless, we could extract from any of the results.
-
-    Returns
-    -------
-    fit_image_results : dict
-        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
-    """
-    # initialise dictionary with key: val = param_name: param_units
-    fit_image_results = fit_models.get_param_odict(fit_model)
-
-    # override with correct size empty arrays using np.zeros
-    for key in fit_image_results.keys():
-        fit_image_results[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
-
-    # Fill the arrays element-wise from the results function, which returns a
-    # 1D array of flattened best-fit parameters.
-
-    for (y, x), result in fit_results:
-        filled_params = {}  # keep track of index, i.e. pos_0, for this pixel
-        for fn in fit_model.fn_chain:
-            for param_num, param_name in enumerate(fn.param_defn):
-
-                # keep track of what index we're up to, i.e. pos_1
-                if param_name not in filled_params.keys():
-                    key = param_name + "_0"
-                    filled_params[param_name] = 1
-                else:
-                    key = param_name + "_" + str(filled_params[param_name])
-                    filled_params[param_name] += 1
-
-                fit_image_results[key][y, x] = result[fn.this_fn_param_indices[param_num]]
-
-    return fit_image_results
-
-
-# ============================================================================
-
-
-def load_prev_fit_results(options):
-    """Load (all) parameter fit results from previous processing."""
-
-    prev_options = data_loading.get_prev_options(options)
-
-    fit_param_res_dict = {}
-
-    for fn_type, num in prev_options["fit_functions"].items():
-        for param_name in fit_models.AVAILABLE_FNS[fn_type].param_defn:
-            for n in range(num):
-                param_key = param_name + "_" + str(n)
-                fit_param_res_dict[param_key] = load_fit_param(options, param_key)
-    return fit_param_res_dict
-
-
-# ============================================================================
-
-
-def load_fit_param(options, param_key):
-    """Load a previously fit param, of name 'param_key'."""
-    return np.loadtxt(options["data_dir"] / (param_key + ".txt"))
+import QDMPy.fit._models as fit_models
 
 
 # ============================================================================
@@ -123,7 +48,7 @@ def define_fit_model(options):
 
     options["fit_param_defn"] = fit_models.get_param_odict(fit_model)
 
-    prep_fit_backends(options, fit_model)
+    _prep_fit_backends(options, fit_model)
 
     return fit_model
 
@@ -131,7 +56,7 @@ def define_fit_model(options):
 # ============================================================================
 
 
-def prep_fit_backends(options, fit_model):
+def _prep_fit_backends(options, fit_model):
     """
     Prepare all possible fit backends, checking that everything will work.
 
@@ -146,7 +71,7 @@ def prep_fit_backends(options, fit_model):
     options : dict
         Generic options dict holding all the user options.
 
-    fit_model : `QDMPy.fit_models.FitModel`
+    fit_model : `QDMPy.fit._models.FitModel`
         Model we're fitting to.
     """
     # ensure backend we want to use for pixel fittings is in comparison!
@@ -157,17 +82,17 @@ def prep_fit_backends(options, fit_model):
         options["fit_backend_comparison"].append(options["fit_backend"])
 
     for fit_backend in options["fit_backend_comparison"]:
-        if fit_backend == "scipy":
+        if fit_backend == "scipyfit":
             # import, but make it globally available (to module)
-            global fit_scipy
-            _temp = __import__("QDMPy.fit_scipy", globals(), locals())
-            fit_scipy = _temp.fit_scipy
+            global fit_scipyfit
+            _temp = __import__("QDMPy.fit._scipyfit", globals(), locals())
+            fit_scipyfit = _temp.fit_scipyfit
 
         elif fit_backend == "gpufit":
             # here we use a programmatic import as we don't want to load (and crash)
             # if user doesn't have the gpufit stuff installed
             global fit_gpufit
-            _temp = __import__("QDMPy.fit_gpufit", globals(), locals())
+            _temp = __import__("QDMPy.fit._gpufit", globals(), locals())
             fit_gpufit = _temp.fit_gpufit
 
             fit_gpufit.prep_gpufit_backend(options, fit_model)
@@ -196,13 +121,13 @@ def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `QDMPy.fit_models.FitModel`
+    fit_model : `QDMPy.fit._models.FitModel`
         Model we're fitting to.
 
     Returns
     -------
     backend_ROI_results_lst : list
-        List of `QDMPy.fit_shared.ROIAvgFitResult` objects containing the fit result
+        List of `QDMPy.fit._shared.ROIAvgFitResult` objects containing the fit result
         (see class specifics) for each fit backend selected for comparison
 
     """
@@ -211,9 +136,9 @@ def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
     backend_ROI_results_lst = []
     # iterate through all possible fit backend choices
     for fit_backend in options["fit_backend_comparison"]:
-        if fit_backend == "scipy":
+        if fit_backend == "scipyfit":
             backend_ROI_results_lst.append(
-                fit_scipy.fit_ROI_avg_scipy(options, sig_norm, sweep_list, fit_model)
+                fit_scipyfit.fit_ROI_avg_scipyfit(options, sig_norm, sweep_list, fit_model)
             )
         elif fit_backend == "gpufit":
 
@@ -250,29 +175,29 @@ def fit_AOIs(
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq).
 
-    fit_model : `QDMPy.fit_models.FitModel`
+    fit_model : `QDMPy.fit._models.FitModel`
         Model we're fitting to.
 
     AOIs : list
         List of AOI specifications - each a length-2 iterable that can be used to directly index
         into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].
 
-    roi_avg_fit_result : `QDMPy.fit_shared.ROIAvgFitResult`
-        `QDMPy.fit_shared.ROIAvgFitResult` object, to pull `QDMPy.fit_shared.ROIAvgFitResult.fit_options`
+    roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
+        `QDMPy.fit._shared.ROIAvgFitResult` object, to pull `QDMPy.fit._shared.ROIAvgFitResult.fit_options`
         from.
 
     Returns
     -------
-    fit_result_collection : `QDMPy.fit_shared.FitResultCollection`
-        `QDMPy.fit_shared.FitResultCollection` object.
+    fit_result_collection : `QDMPy.fit._shared.FitResultCollection`
+        `QDMPy.fit._shared.FitResultCollection` object.
     """
 
     fit_result_collection_lst = []  # list of FitResultCollection objects
     # iterate through all possible fit backend choices
     for n, fit_backend in enumerate(options["fit_backend_comparison"]):
-        if fit_backend == "scipy":
+        if fit_backend == "scipyfit":
             fit_result_collection_lst.append(
-                fit_scipy.fit_AOIs_scipy(
+                fit_scipyfit.fit_AOIs_scipyfit(
                     options,
                     sig_norm,
                     single_pixel_pl,
@@ -319,11 +244,11 @@ def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `QDMPy.fit_models.FitModel`
+    fit_model : `QDMPy.fit._models.FitModel`
         Model we're fitting to.
 
-    roi_avg_fit_result : `QDMPy.fit_shared.ROIAvgFitResult`
-        `QDMPy.fit_shared.ROIAvgFitResult` object, to pull fit_options from.
+    roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
+        `QDMPy.fit._shared.ROIAvgFitResult` object, to pull fit_options from.
 
     Returns
     -------
@@ -332,12 +257,12 @@ def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
     """
 
     # here only use only chosen backend!
-    if options["fit_backend"] == "scipy":
-        return fit_scipy.fit_pixels_scipy(
+    if options["fit_backend"] == "scipyfit":
+        return fit_scipyfit.fit_pixels_scipyfit(
             options, sig_norm, sweep_list, fit_model, roi_avg_fit_result
         )
     elif options["fit_backend"] == "gpufit":
-        return fit_gpufit.fit_pixels_gpufit(
+        return fit_gpufit.fit_pixels_gpufitY(
             options, sig_norm, sweep_list, fit_model, roi_avg_fit_result
         )
     else:

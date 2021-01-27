@@ -8,33 +8,51 @@ Try not to have overlapping parameter names in the same fit.
 
 Classes
 -------
- - `QDMPy.fit_models.FitModel`
- - `QDMPy.fit_models.FitFunc`
- - `QDMPy.fit_models.Constant`
- - `QDMPy.fit_models.Linear`
- - `QDMPy.fit_models.Circular`
- - `QDMPy.fit_models.Gaussian`
- - `QDMPy.fit_models.Gaussian_hyperfine_14`
- - `QDMPy.fit_models.Gaussian_hyperfine_15`
- - `QDMPy.fit_models.Lorentzian`
- - `QDMPy.fit_models.Lorentzian_hyperfine_14`
- - `QDMPy.fit_models.Lorentzian_hyperfine_15`
- - `QDMPy.fit_models.Stretched_exponential`
+ - `QDMPy.fit._models.FitModel`
+ - `QDMPy.fit._models.FitFunc`
+ - `QDMPy.fit._models.Constant`
+ - `QDMPy.fit._models.Linear`
+ - `QDMPy.fit._models.Circular`
+ - `QDMPy.fit._models.Gaussian`
+ - `QDMPy.fit._models.Gaussian_hyperfine_14`
+ - `QDMPy.fit._models.Gaussian_hyperfine_15`
+ - `QDMPy.fit._models.Lorentzian`
+ - `QDMPy.fit._models.Lorentzian_hyperfine_14`
+ - `QDMPy.fit._models.Lorentzian_hyperfine_15`
+ - `QDMPy.fit._models.Stretched_exponential`
 
 Functions
 ---------
- - `QDMPy.fit_models.get_param_defn`
- - `QDMPy.fit_models.get_param_odict`
- - `QDMPy.fit_models.get_param_unit`
+ - `QDMPy.fit._models.get_param_defn`
+ - `QDMPy.fit._models.get_param_odict`
+ - `QDMPy.fit._models.get_param_unit`
 
 Module variables
 ----------------
- - `QDMPy.fit_models.AVAILABLE_FNS`
+ - `QDMPy.fit._models.AVAILABLE_FNS`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
+__pdoc__ = {
+    "QDMPy.fit._models.FitModel": True,
+    "QDMPy.fit._models.FitFunc": True,
+    "QDMPy.fit._models.Constant": True,
+    "QDMPy.fit._models.Linear": True,
+    "QDMPy.fit._models.Circular": True,
+    "QDMPy.fit._models.Gaussian": True,
+    "QDMPy.fit._models.Gaussian_hyperfine_14": True,
+    "QDMPy.fit._models.Gaussian_hyperfine_15": True,
+    "QDMPy.fit._models.Lorentzian": True,
+    "QDMPy.fit._models.Lorentzian_hyperfine_14": True,
+    "QDMPy.fit._models.Lorentzian_hyperfine_15": True,
+    "QDMPy.fit._models.Stretched_exponential": True,
+    "QDMPy.fit._models.get_param_defn": True,
+    "QDMPy.fit._models.get_param_odict": True,
+    "QDMPy.fit._models.get_param_unit": True,
+    "QDMPy.fit._models.AVAILABLE_FNS": True,
+}
 
 # ============================================================================
 
@@ -109,13 +127,13 @@ class FitModel:
 
     # =================================
 
-    def residuals_scipy(self, param_ar, sweep_vec, pl_val):
+    def residuals_scipyfit(self, param_ar, sweep_vec, pl_val):
         """Evaluates residual: fit model - PL value """
         return self.__call__(param_ar, sweep_vec) - pl_val
 
     # =================================
 
-    def jacobian_scipy(self, param_ar, sweep_vec, pl_val):
+    def jacobian_scipyfit(self, param_ar, sweep_vec, pl_val):
         """Evaluates jacobian of fitmodel in format expected by scipy least_squares"""
 
         for i, fn in enumerate(self.fn_chain):

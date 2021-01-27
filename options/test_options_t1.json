@@ -20,8 +20,8 @@
     "area_3_centre": [50, 50],
     "area_3_halfsize": 3,
 
-    "fit_backend": "scipy",
-    "fit_backend_comparison": ["scipy", "gpufit"],
+    "fit_backend": "scipyfit",
+    "fit_backend_comparison": ["scipyfit", "gpufit"],
     "fit_pixels": true, 
     "force_fit": true, 
     "auto_match_prev_ROI_options": false,

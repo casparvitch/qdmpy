@@ -1,27 +1,36 @@
 # -*- coding: utf-8 -*-
 
 """
-Collection of helper functions that don't belong anywhere else.
-
-Currently functions for loading json files to dicts and the inverse.
+json2dict; functions for loading json files to dicts and the inverse.
 
 Functions
 ---------
- - `QDMPy.misc.failfloat`
- - `QDMPy.misc.defaultdict_from_d`
- - `QDMPy.misc.json_to_dict`
- - `QDMPy.misc.dict_to_json`
- - `QDMPy.misc.prettyjson`
- - `QDMPy.misc.getsubitems`
- - `QDMPy.misc.basictype2str`
- - `QDMPy.misc.indentitems`
- - `QDMPy.misc.json_remove_comments`
+ - `QDMPy.io.json2dict.failfloat`
+ - `QDMPy.io.json2dict.defaultdict_from_d`
+ - `QDMPy.io.json2dict.json_to_dict`
+ - `QDMPy.io.json2dict.dict_to_json`
+ - `QDMPy.io.json2dict.prettyjson`
+ - `QDMPy.io.json2dict.getsubitems`
+ - `QDMPy.io.json2dict.basictype2str`
+ - `QDMPy.io.json2dict.indentitems`
+ - `QDMPy.io.json2dict.json_remove_comments`
 """
 
 # ============================================================================
 
 
 __author__ = "Sam Scholten"
+__author__ = {
+    "QDMPy.io.json2dict.failfloat": True,
+    "QDMPy.io.json2dict.defaultdict_from_d": True,
+    "QDMPy.io.json2dict.json_to_dict": True,
+    "QDMPy.io.json2dict.dict_to_json": True,
+    "QDMPy.io.json2dict.prettyjson": True,
+    "QDMPy.io.json2dict.getsubitems": True,
+    "QDMPy.io.json2dict.basictype2str": True,
+    "QDMPy.io.json2dict.indentitems": True,
+    "QDMPy.io.json2dict.json_remove_comments": True,
+}
 
 # ============================================================================
 

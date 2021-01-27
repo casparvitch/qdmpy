@@ -1,25 +1,37 @@
 # -*- coding: utf-8 -*-
 """
 This module holds some functions and classes that are shared between different
-fitting backends, but are not a part of the user-facing fit_interface.
+fitting backends, but are not a part of the user-facing interface.
 
 Classes
 -------
- - `QDMPy.fit_shared.FitResultCollection`
- - `QDMPy.fit_shared.ROIAvgFitResult`
+ - `QDMPy.fit._shared.FitResultCollection`
+ - `QDMPy.fit._shared.ROIAvgFitResult`
 
 Functions
 ---------
- - `QDMPy.fit_shared.shuffle_pixels`
- - `QDMPy.fit_shared.unshuffle_pixels`
- - `QDMPy.fit_shared.unshuffle_fit_results`
- - `QDMPy.fit_shared.pixel_generator`
- - `QDMPy.fit_shared.gen_init_guesses`
- - `QDMPy.fit_shared.bounds_from_range`
+ - `QDMPy.fit._shared.shuffle_pixels`
+ - `QDMPy.fit._shared.unshuffle_pixels`
+ - `QDMPy.fit._shared.unshuffle_fit_results`
+ - `QDMPy.fit._shared.pixel_generator`
+ - `QDMPy.fit._shared.gen_init_guesses`
+ - `QDMPy.fit._shared.bounds_from_range`
+ - `QDMPy.fit._shared.bounds_from_range`
 """
 # ============================================================================
 
 __author__ = "Sam Scholten"
+__pdoc__ = {
+    "QDMPy.fit._shared.FitResultCollection": True,
+    "QDMPy.fit._shared.ROIAvgFitResult": True,
+    "QDMPy.fit._shared.shuffle_pixels": True,
+    "QDMPy.fit._shared.unshuffle_pixels": True,
+    "QDMPy.fit._shared.unshuffle_fit_results": True,
+    "QDMPy.fit._shared.pixel_generator": True,
+    "QDMPy.fit._shared.gen_init_guesses": True,
+    "QDMPy.fit._shared.bounds_from_range": True,
+    "QDMPy.fit._shared.bounds_from_range": True,
+}
 
 # ============================================================================
 
@@ -28,9 +40,8 @@ import numpy as np
 
 # ============================================================================
 
-import QDMPy.fit_models as fit_models
-import QDMPy.misc as misc
-
+import QDMPy.fit._models as fit_models
+import QDMPy.io.json2dict
 
 # ============================================================================
 
@@ -46,7 +57,7 @@ class FitResultCollection:
             Name of the fit backend (e.g. scipy, gpufit, etc.) used.
 
         roi_avg_fit_result
-            `QDMPy.fit_shared.ROIAvgFitResult` object.
+            `QDMPy.fit._shared.ROIAvgFitResult` object.
 
         single_pixel_result
             Best (optimal) fit/model parameters for single pixel check.
@@ -117,7 +128,7 @@ class ROIAvgFitResult:
         self.init_param_guess = init_param_guess
 
     def savejson(self, filename, dir):
-        """ Save all attributes as a json file in dir/filename, via `misc.dict_to_json` """
+        """ Save all attributes as a json file in dir/filename, via `QDMPy.io.json2dict.dict_to_json` """
 
         output_dict = {
             "fit_backend": self.fit_backend,
@@ -126,7 +137,7 @@ class ROIAvgFitResult:
             "best_params": self.best_params,
             "init_param_guess": self.init_param_guess,
         }
-        misc.dict_to_json(output_dict, filename, dir)
+        QDMPy.io.json2dict.dict_to_json(output_dict, filename, dir)
 
 
 # ============================================================================
@@ -147,7 +158,7 @@ def shuffle_pixels(data_3d):
         data_3d shuffled in 2nd, 3rd axis.
 
     unshuffler : (y_unshuf, x_unshuf)
-        Both np array. Can be used to unshuffle shuffled_in_yx, i.e. through `QDMPy.fit_shared.unshuffle_pixels`.
+        Both np array. Can be used to unshuffle shuffled_in_yx, i.e. through `QDMPy.fit._shared.unshuffle_pixels`.
     """
 
     rng = np.random.default_rng()
@@ -177,12 +188,12 @@ def unshuffle_pixels(data_2d, unshuffler):
         i.e. 'image' of a single fit parameter, all shuffled up!
 
     unshuffler : (y_unshuf, x_unshuf)
-        Two arrays returned by `QDMPy.fit_shared.shuffle_pixels that allow unshuffling of data_2d.
+        Two arrays returned by `QDMPy.fit._shared.shuffle_pixels that allow unshuffling of data_2d.
 
     Returns
     -------
     unshuffled_in_yx: np array, 2D
-        data_2d but the inverse operation of `QDMPy.fit_shared.shuffle_pixels` has been applied
+        data_2d but the inverse operation of `QDMPy.fit._shared.shuffle_pixels` has been applied
     """
     y_unshuf, x_unshuf = unshuffler
     unshuffled_in_y = data_2d[y_unshuf, :]
@@ -204,7 +215,7 @@ def unshuffle_fit_results(fit_result_dict, unshuffler):
         requires reshuffling (which this function achieves).
 
     unshuffler : (y_unshuf, x_unshuf)
-        Two arrays returned by `QDMPy.fit_shared.shuffle_pixels` that allow unshuffling of data_2d.
+        Two arrays returned by `QDMPy.fit._shared.shuffle_pixels` that allow unshuffling of data_2d.
 
     Returns
     -------
@@ -224,7 +235,7 @@ def pixel_generator(our_array):
     Simple generator to shape data as expected by to_squares_wrapper in scipy concurrent method.
 
     Also allows us to track *where* (i.e. which pixel location) each result corresponds to.
-    See also: `QDMPy.fit_scipy.to_squares_wrapper`, `QDMPy.fit_gpufit.gpufit_reshape_result`.
+    See also: `QDMPy.fit._scipyfit.to_squares_wrapper`, `QDMPy.fit._gpufit.gpufit_reshape_result`.
 
     Arguments
     ---------
@@ -332,3 +343,56 @@ def bounds_from_range(options, param_key):
 
 
 # ============================================================================
+
+
+def get_pixel_fitting_results(fit_model, fit_results, roi_shape):
+    """
+    Take the fit result data from scipyfit/gpufit and back it down to a dictionary of arrays.
+
+    Each array is 2D, representing the values for each parameter (specified by the dict key).
+
+
+    Arguments
+    ---------
+    fit_model : `QDMPy.fit._models.FitModel`
+        Model we're fitting to.
+
+    fit_results : list of [(y, x), result] objects
+        (see `QDMPy.fit._scipyfit.to_squares_wrapper`, or `QDMPy.fit._gpufit.gpufit_reshape_result`)
+        A list of each pixel's parameter array, as well as position in image denoted by (y, x).
+
+    roi_shape : iterable, length 2
+        Shape of the region of interest, to allow us to generate the right shape empty arrays.
+        This is probably a little useless, we could extract from any of the results.
+
+    Returns
+    -------
+    fit_image_results : dict
+        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
+    """
+    # initialise dictionary with key: val = param_name: param_units
+    fit_image_results = fit_models.get_param_odict(fit_model)
+
+    # override with correct size empty arrays using np.zeros
+    for key in fit_image_results.keys():
+        fit_image_results[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+
+    # Fill the arrays element-wise from the results function, which returns a
+    # 1D array of flattened best-fit parameters.
+
+    for (y, x), result in fit_results:
+        filled_params = {}  # keep track of index, i.e. pos_0, for this pixel
+        for fn in fit_model.fn_chain:
+            for param_num, param_name in enumerate(fn.param_defn):
+
+                # keep track of what index we're up to, i.e. pos_1
+                if param_name not in filled_params.keys():
+                    key = param_name + "_0"
+                    filled_params[param_name] = 1
+                else:
+                    key = param_name + "_" + str(filled_params[param_name])
+                    filled_params[param_name] += 1
+
+                fit_image_results[key][y, x] = result[fn.this_fn_param_indices[param_num]]
+
+    return fit_image_results

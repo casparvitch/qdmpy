@@ -14,23 +14,23 @@ in the SYSTEMS_DICT defined near the bottom.
 
 Classes
 -------
- - `QDMPy.systems.System`
- - `QDMPy.systems.UniMelb`
- - `QDMPy.systems.Zyla`
- - `QDMPy.systems.OptionsError`
+ - `QDMPy.io.systems.System`
+ - `QDMPy.io.systems.UniMelb`
+ - `QDMPy.io.systems.Zyla`
+ - `QDMPy.io.systems.OptionsError`
 
 
 Functions
 ---------
- - `QDMPy.systems.check_option`
- - `QDMPy.systems.check_options`
- - `QDMPy.systems.clean_options`
+ - `QDMPy.io.systems.check_option`
+ - `QDMPy.io.systems.check_options`
+ - `QDMPy.io.systems.clean_options`
 
 
 Module variables
 ----------------
- - `QDMPy.systems.DIR_PATH`
- - `QDMPy.systems.SYSTEMS_DICT`
+ - `QDMPy.io.systems.ROOT_PATH`
+ - `QDMPy.io.systems.SYSTEMS_DICT`
 
 """
 
@@ -38,6 +38,17 @@ Module variables
 # ============================================================================
 
 __author__ = "Sam Scholten"
+__pdoc__ = {
+    "QDMPy.io.systems.System": True,
+    "QDMPy.io.systems.UniMelb": True,
+    "QDMPy.io.systems.Zyla": True,
+    "QDMPy.io.systems.OptionsError": True,
+    "QDMPy.io.systems.check_option": True,
+    "QDMPy.io.systems.check_options": True,
+    "QDMPy.io.systems.clean_options": True,
+    "QDMPy.io.systems.ROOT_PATH": True,
+    "QDMPy.io.systems.SYSTEMS_DICT": True,
+}
 
 # ============================================================================
 
@@ -50,14 +61,15 @@ from multiprocessing import cpu_count
 
 # ============================================================================
 
-import QDMPy.misc as misc
+import QDMPy.io.json2dict
 
 # ============================================================================
 
 
-DIR_PATH = pathlib.Path(__file__).parent.absolute()
+ROOT_PATH = pathlib.Path(__file__).parent.parent.absolute()
 """
-Path to QDMPy directory, so you can navigate to options directory (e.g. to read config json files)
+Path to the root of the QDMPy package. E.g. the parent of the QDMPy directory.
+Allows access to the options directory (e.g. to read congfig json files)
 """
 
 
@@ -233,7 +245,7 @@ class UniMelb(System):
                 rest_str,
                 re.MULTILINE,
             )
-            metadata = {a: misc.failfloat(b) for (a, b) in matches}
+            metadata = {a: QDMPy.io.json2dict.failfloat(b) for (a, b) in matches}
         return metadata
 
     def _reshape_raw(self, options, raw_data, sweep_list):
@@ -321,12 +333,12 @@ class Zyla(UniMelb):
     """
 
     name = "Zyla"
-    config_path = DIR_PATH / "options/zyla_config.json"
+    config_path = ROOT_PATH / "options/zyla_config.json"
 
     def __init__(self, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
         # ensure all values default to None (at all levels of reading in json)
-        self.options_dict = misc.json_to_dict(self.config_path, hook="dd")
+        self.options_dict = QDMPy.io.json2dict.json_to_dict(self.config_path, hook="dd")
 
     def get_raw_pixel_size(self):
         return self.options_dict["raw_pixel_size"]["option_default"]
@@ -338,12 +350,12 @@ class LiamsWidefield(UniMelb):
     """
 
     name = "Liams Widefield"
-    config_path = DIR_PATH / "options/liam_widefield_config.json"
+    config_path = ROOT_PATH / "options/liam_widefield_config.json"
 
     def __init__(self, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
         # ensure all values default to None (at all levels of reading in json)
-        self.options_dict = misc.json_to_dict(self.config_path, hook="dd")
+        self.options_dict = QDMPy.io.json2dict.json_to_dict(self.config_path, hook="dd")
 
     def get_raw_pixel_size(self):
         return self.options_dict["raw_pixel_size"]["option_default"]

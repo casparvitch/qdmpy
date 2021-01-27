@@ -135,17 +135,17 @@
     // ========== Fitting Parameters ==========
     // Backend used for pixel fitting
     "fit_backend": {
-        "option_default": "scipy",
+        "option_default": "scipyfit",
         "option_choices":
             [
-                "scipy",
+                "scipyfit",
                 "gpufit"
             ]
     },
     // Backends compared in ROI/AOI spectra comparisons.
     "fit_backend_comparison": {
         "option_default": [
-            "scipy"
+            "scipyfit"
         ]
     },
     // overrides automatic reloading of previous fit results
@@ -383,96 +383,96 @@
     // lm (fast but doesn't use bounds),
     // trf (uses bounds and the most reliable fit method but can be very slow)
     // dogbox (uses bounds and is faster than trf)
-    "scipy_fit_method": {
-    	"option_default": "trf",
-    	"option_choices":
-    		[
-    			"lm",
-    			"trf",
-    			"dogbox"
-    		]
+    "scipyfit_fit_method": {
+        "option_default": "trf",
+        "option_choices":
+            [
+                "lm",
+                "trf",
+                "dogbox"
+            ]
     },
     // number of threads to *not* use for fitting
-    "scipy_sub_threads": {
+    "scipyfit_sub_threads": {
         "option_default": 0
     },
      // display progress bar during fitting
-    "scipy_show_progressbar": {
-    	"option_default": true,
-    	"option_choices":
-    		[
-    			true,
-    			false
-    		]
+    "scipyfit_show_progressbar": {
+        "option_default": true,
+        "option_choices":
+            [
+                true,
+                false
+            ]
     },
     // uses an analytically determined Jacobian, This should be faster but hasn't been implemented 
     // for every function
     // - note it gives different fit results (should be more accurate than a finite-diff method)
-    "scipy_use_analytic_jac": {
-    	"option_default": true,
-    	"option_choices":
-    		[
-    			true,
-    			false
-    		]
+    "scipyfit_use_analytic_jac": {
+        "option_default": true,
+        "option_choices":
+            [
+                true,
+                false
+            ]
     },
     // verbose fitting 0 = silent, 1 = term report, 2 display iterations
-    "scipy_verbose_fitting": {
-    	"option_default": 0,
-    	"option_choices": 
-    		[
-    			0, 
-    			1,
-    			2
-    		]
+    "scipyfit_verbose_fitting": {
+        "option_default": 0,
+        "option_choices": 
+            [
+                0, 
+                1,
+                2
+            ]
     },
     // The scheme ‘3-point’ is more accurate, but requires twice as many operations 
     // as ‘2-point’ (default).
     // The scheme ‘cs’ uses complex steps, and while potentially the most accurate, it is
     // applicable only when fun correctly handles complex inputs and can be analytically
     // continued to the complex plane.
-    "scipy_fit_jac_acc":  {
-    	"option_default": "2-point",
-    	"option_choices": 
-    		[
-    			"2-point", 
-    			"3-point", 
-    			"cs"
-    		]
+    "scipyfit_fit_jac_acc":  {
+        "option_default": "2-point",
+        "option_choices": 
+            [
+                "2-point", 
+                "3-point", 
+                "cs"
+            ]
     },
     // Tolerance settings, the exact condition depends on method used - see scipy documentation
     // Tolerance for termination by the change of the independent variables.
-    "scipy_fit_gtol":  {
-    	"option_default": 1e-12
+    "scipyfit_fit_gtol":  {
+        "option_default": 1e-12
     },
     // Tolerance for termination by the norm of the gradient.
-    "scipy_fit_xtol":  {
-    	"option_default": 1e-12
+    "scipyfit_fit_xtol":  {
+        "option_default": 1e-12
     },
     // Tolerance for termination by the change of the cost function.
-    "scipy_fit_ftol": {
-    	"option_default": 1e-12
+    "scipyfit_fit_ftol": {
+        "option_default": 1e-12
     },
     // Rescales the x by the units of the Jacobian (doesn't seem to make a difference)
-    "scipy_scale_x": {
-    	"option_default": true,
-    	"options_choices":
-    		[
-    			true,
-    			false
-    		]
+    "scipyfit_scale_x": {
+        "option_default": true,
+        "options_choices":
+            [
+                true,
+                false
+            ]
     },
     // Determines the loss function. This in non trivial check the scipy documnetation
-    "scipy_loss_fn": {
-    	"option_default": "linear",
-    	"option_choices": 
-    		[
-    			"linear", 
-    			"soft_l1", 
-    			"huber", 
-    			"cauchy",
-    			"arctan"
-    		]
+    "scipyfit_loss_fn": {
+        "option_default": "linear",
+        "option_choices": 
+            [
+                "linear", 
+                "soft_l1", 
+                "huber", 
+                "cauchy",
+                "arctan"
+            ]
     },
     // ========== gpufit options ===========
     // Fit tolerance threshold
@@ -592,7 +592,7 @@
     },
     "fit_backend_colors": {
         "option_default": {
-            "scipy": {
+            "scipyfit": {
                 "roifit_linecolor": "mediumblue",
                 "residual_linecolor": "black",
                 "aoi_roi_fit_linecolor": "indigo",

@@ -1,0 +1,2239 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.9.2" />
+<title>QDMPy.io.rawdata API documentation</title>
+<meta name="description" content="This module holds tools for loading raw data etc. and reshaping to a usable format …" />
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
+<link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
+<link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
+<style>:root{--highlight-color:#fe9}.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}#sidebar > *:last-child{margin-bottom:2cm}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}h1:target,h2:target,h3:target,h4:target,h5:target,h6:target{background:var(--highlight-color);padding:.2em 0}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{margin-top:.6em;font-weight:bold}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}dt:target .name{background:var(--highlight-color)}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}td{padding:0 .5em}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%;height:100vh;overflow:auto;position:sticky;top:0}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/highlight.min.js" integrity="sha256-Uv3H6lx7dJmRfRvH8TH6kJD1TSK1aFcwgx+mdg3epi8=" crossorigin></script>
+<script>window.addEventListener('DOMContentLoaded', () => hljs.initHighlighting())</script>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>QDMPy.io.rawdata</code></h1>
+</header>
+<section id="section-intro">
+<p>This module holds tools for loading raw data etc. and reshaping to a usable format.</p>
+<p>Also contained here are functions for defining regions/areas of interest within the
+larger image dataset, that are then used in consequent functions, as well as the
+general options dictionary.</p>
+<h2 id="functions">Functions</h2>
+<ul>
+<li><code><a title="QDMPy.io.rawdata.load_options" href="#QDMPy.io.rawdata.load_options">load_options()</a></code></li>
+<li><code><a title="QDMPy.io.rawdata.save_options" href="#QDMPy.io.rawdata.save_options">save_options()</a></code></li>
+<li><code><a title="QDMPy.io.rawdata.load_image_and_sweep" href="#QDMPy.io.rawdata.load_image_and_sweep">load_image_and_sweep()</a></code></li>
+<li><code><a title="QDMPy.io.rawdata.reshape_dataset" href="#QDMPy.io.rawdata.reshape_dataset">reshape_dataset()</a></code></li>
+<li>QDMPy.io.rawdata._define_output_dir</li>
+<li><code><a title="QDMPy.io.rawdata._check_if_already_fit" href="#QDMPy.io.rawdata._check_if_already_fit">_check_if_already_fit()</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._prev_options_exist" href="#QDMPy.io.rawdata._prev_options_exist">_prev_options_exist()</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._options_compatible" href="#QDMPy.io.rawdata._options_compatible">_options_compatible()</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._prev_pixel_results_exist" href="#QDMPy.io.rawdata._prev_pixel_results_exist">_prev_pixel_results_exist()</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._get_prev_options" href="#QDMPy.io.rawdata._get_prev_options">_get_prev_options()</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._interpolate_option_str" href="#QDMPy.io.rawdata._interpolate_option_str">_interpolate_option_str()</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._rebin_image" href="#QDMPy.io.rawdata._rebin_image">_rebin_image()</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._remove_unwanted_data" href="#QDMPy.io.rawdata._remove_unwanted_data">_remove_unwanted_data()</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._define_ROI" href="#QDMPy.io.rawdata._define_ROI">_define_ROI()</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._define_area_roi" href="#QDMPy.io.rawdata._define_area_roi">_define_area_roi()</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._define_AOIs" href="#QDMPy.io.rawdata._define_AOIs">_define_AOIs()</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._recursive_dict_update" href="#QDMPy.io.rawdata._recursive_dict_update">_recursive_dict_update()</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._check_start_end_rectangle" href="#QDMPy.io.rawdata._check_start_end_rectangle">_check_start_end_rectangle()</a></code></li>
+</ul>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python"># -*- coding: utf-8 -*-
+&#34;&#34;&#34;
+This module holds tools for loading raw data etc. and reshaping to a usable format.
+
+Also contained here are functions for defining regions/areas of interest within the
+larger image dataset, that are then used in consequent functions, as well as the
+general options dictionary.
+
+Functions
+---------
+ - `QDMPy.io.rawdata.load_options`
+ - `QDMPy.io.rawdata.save_options`
+ - `QDMPy.io.rawdata.load_image_and_sweep`
+ - `QDMPy.io.rawdata.reshape_dataset`
+  - QDMPy.io.rawdata._define_output_dir
+ - `QDMPy.io.rawdata._check_if_already_fit`
+ - `QDMPy.io.rawdata._prev_options_exist`
+ - `QDMPy.io.rawdata._options_compatible`
+ - `QDMPy.io.rawdata._prev_pixel_results_exist`
+ - `QDMPy.io.rawdata._get_prev_options`
+ - `QDMPy.io.rawdata._interpolate_option_str`
+ - `QDMPy.io.rawdata._rebin_image`
+ - `QDMPy.io.rawdata._remove_unwanted_data`
+ - `QDMPy.io.rawdata._define_ROI`
+ - `QDMPy.io.rawdata._define_area_roi`
+ - `QDMPy.io.rawdata._define_AOIs`
+ - `QDMPy.io.rawdata._recursive_dict_update`
+ - `QDMPy.io.rawdata._check_start_end_rectangle`
+&#34;&#34;&#34;
+
+
+# ============================================================================
+
+__author__ = &#34;Sam Scholten&#34;
+__pdoc__ = {
+    &#34;QDMPy.io.rawdata.load_options&#34;: True,
+    &#34;QDMPy.io.rawdata.save_options&#34;: True,
+    &#34;QDMPy.io.rawdata.load_image_and_sweep&#34;: True,
+    &#34;QDMPy.io.rawdata.reshape_dataset&#34;: True,
+    &#34;QDMPy.io.rawdata._define_output_dir&#34;: True,
+    &#34;QDMPy.io.rawdata._check_if_already_fit&#34;: True,
+    &#34;QDMPy.io.rawdata._prev_options_exist&#34;: True,
+    &#34;QDMPy.io.rawdata._options_compatible&#34;: True,
+    &#34;QDMPy.io.rawdata._prev_pixel_results_exist&#34;: True,
+    &#34;QDMPy.io.rawdata._get_prev_options&#34;: True,
+    &#34;QDMPy.io.rawdata._interpolate_option_str&#34;: True,
+    &#34;QDMPy.io.rawdata._rebin_image&#34;: True,
+    &#34;QDMPy.io.rawdata._remove_unwanted_data&#34;: True,
+    &#34;QDMPy.io.rawdata._define_ROI&#34;: True,
+    &#34;QDMPy.io.rawdata._define_area_roi&#34;: True,
+    &#34;QDMPy.io.rawdata._define_AOIs&#34;: True,
+    &#34;QDMPy.io.rawdata._recursive_dict_update&#34;: True,
+    &#34;QDMPy.io.rawdata._check_start_end_rectangle&#34;: True,
+}
+
+# ============================================================================
+
+
+import numpy as np
+import warnings
+import os
+import pathlib
+from collections import OrderedDict  # insertion order is guaranteed for py3.7+, but to be safe!
+import collections.abc
+import re
+
+# ============================================================================
+
+import QDMPy.io.json2dict
+import QDMPy.io.systems as systems
+import QDMPy.fit._models as fit_models
+
+# ============================================================================
+
+
+def load_options(options_dict=None, options_path=None, check_for_prev_result=False):
+    &#34;&#34;&#34;
+    Load and process options (from json file or dict) into generic options dict used everywhere.
+
+    Also handles directory creation etc. to put results in.
+    Provide either options_dict OR options_path (must provide one!).
+
+    Note the system default options are loaded in, so you only need to set the things you need.
+    In particular, filepath, fit_functions and system_name must be set
+
+    Optional Arguments
+    -------------------
+    options_dict : dict
+        Directly pass in a dictionary of options.
+        Default: None
+
+    path : string
+        Path to fit options .json file. Can be absolute, or from QDMPy.
+        Default: None
+
+    check_for_prev_result : bool
+        Check to see if there&#39;s a previous fit result for these options.
+        Default: False
+
+    Returns
+    -------
+    options : dict
+        Generic options dict holding all the user options.
+    &#34;&#34;&#34;
+
+    # only options_dict OR options_path
+    if options_dict is not None and options_path is not None:
+        raise RuntimeError(&#34;pass either options_dict OR options_path to load_options&#34;)
+    if options_dict is None and options_path is None:
+        raise RuntimeError(&#34;pass one of options_dict OR options_path to load_options&#34;)
+
+    if options_path is not None:
+        prelim_options = QDMPy.io.json2dict.json_to_dict(options_path)
+    else:
+        prelim_options = OrderedDict(options_dict)  # unnescessary py3.7+, leave to describe intent
+
+    required_options = [&#34;filepath&#34;, &#34;fit_functions&#34;]
+    for key in required_options:
+        if key not in prelim_options:
+            raise RuntimeError(f&#34;Must provide these options: {required_options}&#34;)
+
+    chosen_system = systems.choose_system(prelim_options[&#34;system_name&#34;])
+
+    chosen_system.system_specific_option_update(prelim_options)
+
+    options = chosen_system.get_default_options()  # first load in default options
+    # now update with what has been decided upon by user
+    options = _recursive_dict_update(options, prelim_options)
+
+    chosen_system.determine_binning(options)
+
+    chosen_system.system_specific_option_update(
+        options
+    )  # do this again on full options to be sure
+
+    options[&#34;system&#34;] = chosen_system
+
+    systems.clean_options(options)  # check all the options make sense
+
+    # create output directories
+    _define_output_dir(options)
+
+    if not os.path.isdir(options[&#34;output_dir&#34;]):
+        os.mkdir(options[&#34;output_dir&#34;])
+    if not os.path.isdir(options[&#34;data_dir&#34;]):
+        os.mkdir(options[&#34;data_dir&#34;])
+
+    # don&#39;t always check for prev. results (so we can use this fn in other contexts)
+    if check_for_prev_result:
+        _check_if_already_fit(options)
+
+    return options
+
+
+# ============================================================================
+
+
+def save_options(options):
+    &#34;&#34;&#34;
+    Saves generic options dict to harddrive as json file (in options[&#34;output_dir&#34;])
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    &#34;&#34;&#34;
+
+    keys_to_remove = [&#34;system&#34;]
+    save_options = {}
+
+    for key, val in options.items():
+        if key.endswith(&#34;dir&#34;) or key == &#34;filepath&#34;:
+            val = str(val).replace(&#34;\\&#34;, &#34;\\\\&#34;)
+        if key not in keys_to_remove:
+            save_options[key] = val
+    QDMPy.io.json2dict.dict_to_json(
+        save_options, &#34;saved_options.json&#34;, path_to_dir=options[&#34;output_dir&#34;]
+    )
+
+
+# ============================================================================
+
+
+def load_image_and_sweep(options):
+    &#34;&#34;&#34;
+    Reads raw image data and sweep_list (affine parameters) using system methods
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    image : np array, 3D
+        Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
+        not been rebinned. Unwanted sweep values not removed.
+
+    sweep_list : list
+        List of sweep parameter values
+    &#34;&#34;&#34;
+    systems.clean_options(options)
+
+    image = options[&#34;system&#34;].read_image(options[&#34;filepath&#34;], options)
+    sweep_list = options[&#34;system&#34;].read_sweep_list(options[&#34;filepath&#34;])
+    return image, sweep_list
+
+
+# ============================================================================
+
+
+def reshape_dataset(options, image, sweep_list):
+    &#34;&#34;&#34;
+    Reshapes and re-bins raw data into more useful format.
+
+    Cuts down to ROI and removes unwanted sweeps.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    image : np array, 3D
+        Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
+        not been rebinned. Unwanted sweep values not removed.
+
+    sweep_list : list
+        List of sweep parameter values
+
+    Returns
+    -------
+    PL_image : np array, 2D.
+        Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
+        cut down to ROI.
+
+    PL_image_ROI : np array, 2D
+        Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
+        cut down to ROI.
+
+    sig : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+        Cut down to ROI.
+        Format: [sweep_vals, y, x]
+
+    ref : np array, 3D
+        Reference component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+        Cut down to ROI.
+        Format: [sweep_vals, y, x]
+
+    sig_norm : np array, 3D
+        Signal normalised by reference (via subtraction or normalisation, chosen in options),
+        reshaped and rebinned. Unwanted sweeps removed. Cut down to ROI.
+        Format: [sweep_vals, y, x]
+
+    single_pixel_pl : np array, 1D
+        Normalised measurement array, for chosen single pixel check.
+
+    sweep_list : list
+        List of sweep parameter values (with removed unwanted sweeps at start/end)
+    &#34;&#34;&#34;
+    systems.clean_options(options)
+
+    # image = reshape_raw(options, raw_data, sweep_list)
+    image_rebinned, sig, ref, sig_norm = _rebin_image(options, image)
+    try:
+        size_h, size_w = image_rebinned.shape[1:]
+    except Exception:
+        size_h, size_w = image_rebinned.shape
+
+    options[&#34;rebinned_image_shape&#34;] = (size_h, size_w)
+
+    # check options to ensure ROI is in correct format (now we have image size)
+    if options[&#34;ROI&#34;] != &#34;Full&#34;:
+        options[&#34;ROI_start&#34;], options[&#34;ROI_end&#34;] = _check_start_end_rectangle(
+            &#34;ROI&#34;, *options[&#34;ROI_start&#34;], *options[&#34;ROI_end&#34;], size_w, size_h
+        )  # opposite convention here, [x, y]
+
+    # somewhat important a lot of this isn&#39;t hidden, so we can adjust it later
+    PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list = _remove_unwanted_data(
+        options, image_rebinned, sweep_list, sig, ref, sig_norm
+    )  # also cuts sig etc. down to ROI
+
+    # check options to ensure AOI is in correct format (now we have ROI size)
+    i = 0
+    while True:
+        i += 1
+        try:
+            if options[f&#34;AOI_{i}_start&#34;] is None or options[f&#34;AOI_{i}_end&#34;] is None:
+                continue
+            options[f&#34;AOI_{i}_start&#34;], options[f&#34;AOI_{i}_end&#34;] = _check_start_end_rectangle(
+                f&#34;AOI_{i}&#34;,
+                *options[f&#34;AOI_{i}_start&#34;],
+                *options[f&#34;AOI_{i}_end&#34;],
+                *reversed(sig_norm.shape[1:]),  # opposite convention here, [x, y]
+            )
+
+        except KeyError:
+            break
+
+    # single pixel check
+    try:
+        single_pixel_pl = sig_norm[
+            :, options[&#34;single_pixel_check&#34;][1], options[&#34;single_pixel_check&#34;][0]
+        ]
+    except IndexError as e:
+        warnings.warn(
+            f&#34;Avoiding IndexError for single_pixel_check (setting pixel check to centre of image):\n{e}&#34;
+        )
+        single_pixel_pl = sig_norm[:, sig_norm.shape[1] // 2, sig_norm.shape[2] // 2]
+        options[&#34;single_pixel_check&#34;] = (sig_norm.shape[2] // 2, sig_norm.shape[1] // 2)
+
+    return PL_image, PL_image_ROI, sig, ref, sig_norm, single_pixel_pl, sweep_list
+
+
+# ============================================================================
+
+
+def _define_output_dir(options):
+    &#34;&#34;&#34;
+    Defines output_dir and data_dir in options.
+    &#34;&#34;&#34;
+    if options[&#34;custom_output_dir&#34;] is not None:
+        output_dir = pathlib.PurePosixPath(
+            _interpolate_option_str(str(options[&#34;custom_output_dir&#34;]), options)
+        )
+    else:
+        output_dir = pathlib.PurePosixPath(
+            str(options[&#34;filepath&#34;]) + &#34;_processed&#34; + &#34;_bin_&#34; + str(options[&#34;total_bin&#34;])
+        )
+
+    if options[&#34;custom_output_dir_prefix&#34;] is not None:
+        prefix = _interpolate_option_str(str(options[&#34;custom_output_dir_prefix&#34;]), options)
+    else:
+        prefix = &#34;&#34;
+
+    if options[&#34;custom_output_dir_suffix&#34;] is not None:
+        suffix = _interpolate_option_str(str(options[&#34;custom_output_dir_suffix&#34;]), options)
+    else:
+        suffix = &#34;&#34;
+
+    options[&#34;output_dir&#34;] = output_dir.parent.joinpath(prefix + output_dir.stem + suffix)
+    options[&#34;data_dir&#34;] = options[&#34;output_dir&#34;].joinpath(&#34;data&#34;)
+
+
+# ============================================================================
+
+
+def _check_if_already_fit(options):
+    &#34;&#34;&#34;
+    Looks for previous fit result.
+
+    If previous fit result exists, checks for compatibility between option choices.
+
+    Returns nothing.
+    &#34;&#34;&#34;
+
+    options[&#34;found_prev_result&#34;] = (
+        _prev_options_exist(options)
+        and _options_compatible(options, _get_prev_options(options))
+        and _prev_pixel_results_exist(options, _get_prev_options(options))
+    )
+
+
+# ============================================================================
+
+
+def _prev_options_exist(options):
+    &#34;&#34;&#34;
+    Checks if options file from previous result can be found in default location, returns Bool.
+    &#34;&#34;&#34;
+    prev_opt_path = os.path.normpath(options[&#34;output_dir&#34;] / &#34;saved_options.json&#34;)
+    return os.path.isfile(prev_opt_path)
+
+
+# ============================================================================
+
+
+def _options_compatible(options, prev_options):
+    &#34;&#34;&#34;
+    Checks if option choices are compatible with previously fit options
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    prev_options : dict
+        Generic options dict from previous fit result.
+
+    Returns
+    -------
+    _options_compatible : bool
+        Whether or not options are compatible.
+    &#34;&#34;&#34;
+
+    for option_name in [
+        &#34;additional_bins&#34;,
+        &#34;normalisation&#34;,
+        &#34;fit_backend&#34;,
+        &#34;fit_functions&#34;,
+        &#34;ROI&#34;,
+        &#34;ignore_ref&#34;,
+        &#34;system_name&#34;,
+        &#34;remove_start_sweep&#34;,
+        &#34;remove_end_sweep&#34;,
+        &#34;use_ROI_avg_fit_res_for_all_pixels&#34;,
+    ]:
+        if options[option_name] != prev_options[option_name]:
+            return False
+    # check relevant roi params
+    if options[&#34;ROI&#34;] == &#34;Rectangle&#34; and (
+        options[&#34;ROI_start&#34;] != prev_options[&#34;ROI_start&#34;]
+        and options[&#34;ROI_end&#34;] != prev_options[&#34;ROI_end&#34;]
+    ):
+        return False
+
+    # check relevant param guesses/bounds
+
+    # check relevant fit params
+    if options[&#34;fit_backend&#34;] == &#34;scipyfit&#34;:
+        for fit_opt_name in [
+            &#34;scipy_fit_method&#34;,
+            &#34;scipy_use_analytic_jac&#34;,
+            &#34;scipy_fit_jac_acc&#34;,
+            &#34;scipy_fit_gtol&#34;,
+            &#34;scipy_fit_xtol&#34;,
+            &#34;scipy_fit_ftol&#34;,
+            &#34;scipy_scale_x&#34;,
+            &#34;scipy_loss_fn&#34;,
+        ]:
+            if options[fit_opt_name] != prev_options[fit_opt_name]:
+                return False
+    elif options[&#34;fit_backend&#34;] == &#34;gpufit&#34;:
+        for fit_opt_name in [
+            &#34;gpufit_tolerance&#34;,
+            &#34;gpufit_max_iterations&#34;,
+            &#34;gpufit_estimator_id&#34;,
+        ]:
+            if options[fit_opt_name] != prev_options[fit_opt_name]:
+                return False
+
+    # if all that was ok, return True
+    return True
+
+
+# ============================================================================
+
+
+def _prev_pixel_results_exist(options, prev_options):
+    &#34;&#34;&#34;
+    Check if the actual fit result files exists.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    prev_options : dict
+        Generic options dict from previous fit result.
+
+    Returns
+    -------
+    pixels_results_exist : bool
+        Whether or not previous pixel result files exist.
+    &#34;&#34;&#34;
+    prev_options = _get_prev_options(options)
+
+    for fn_type, num in prev_options[&#34;fit_functions&#34;].items():
+        for param_name in fit_models.AVAILABLE_FNS[fn_type].param_defn:
+            for n in range(num):
+                param_key = param_name + &#34;_&#34; + str(n)
+                if not os.path.isfile(options[&#34;data_dir&#34;] / (param_key + &#34;.txt&#34;)):
+                    return False
+    return True
+
+
+# ============================================================================
+
+
+def _get_prev_options(options):
+    &#34;&#34;&#34;
+    Reads options file from previous fit result (.json), returns a dictionary.
+    &#34;&#34;&#34;
+    return QDMPy.io.json2dict.json_to_dict(options[&#34;output_dir&#34;] / &#34;saved_options.json&#34;)
+
+
+# ============================================================================
+
+
+def _interpolate_option_str(interp_str, options):
+    &#34;&#34;&#34;
+    Interpolates any options between braces in interp_str.
+    I.e. &#34;{fit_backend}&#34; -&gt; f&#34;{options[&#39;fit_backend&#39;]&#34;
+    (this is possibly possible directly through f-strings but I didn&#39;t want to
+    play with fire)
+
+    Arguments
+    ---------
+    interp_str : str
+        String (possibly containing option names between braces) to be interpolated.
+
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    interp_str : str
+        String, now with interpolated values (option between braces).
+    &#34;&#34;&#34;
+
+    # convert whitespace to underscore
+    interp_str = interp_str.replace(&#34; &#34;, &#34;_&#34;)
+    if not (&#34;{&#34; in interp_str and &#34;}&#34; in interp_str):
+        return interp_str
+    pattern = r&#34;\{(\w+)\}&#34;  # all text between braces
+    match_substr_lst = re.findall(pattern, interp_str)
+    locs = []
+    for match_substr in match_substr_lst:
+        start_loc = interp_str.find(match_substr)
+        end_loc = start_loc + len(match_substr) - 1  # both fence posts inclusive
+        locs.append((start_loc, end_loc))
+
+    # ok so now we have the option names (keys) to interpolate (match_substr_lst)
+    # as well as the locations in the string of the same (locs)
+    # first we convert those option names to their variables
+    option_lst = []
+    for option_name in match_substr_lst:
+        try:
+            option_lst.append(str(options[option_name]))
+        except KeyError as e:
+            warnings.warn(
+                &#34;\n&#34;
+                + &#34;KeyError caught interpolating custom output_dir.\n&#34;
+                + f&#34;You gave: {option_name}.\n&#34;
+                + &#34;Avoiding this issue by placing &#39;option_name&#39; in the dir instead. KeyError msg:&#34;
+                + f&#34;{e}&#34;
+            )
+            option_lst.append(option_name)
+
+    # this block is a bit old-school, but does the trick...
+    locs_passed = 0  # how many match locations we&#39;ve passed
+    new_str = []  # ok actually a lst but will convert back at end
+
+    for i, c in enumerate(interp_str):
+        # don&#39;t want braces in output
+        if c == &#34;{&#34; or c == &#34;}&#34;:
+            continue
+
+        #  &#39;inside&#39; a brace -&gt; don&#39;t copy these chars
+        if i &gt;= locs[locs_passed][0] and i &lt;= locs[locs_passed][1]:
+            # when we&#39;ve got to end of this brace location, copy in option
+            if i == locs[locs_passed][1]:
+                new_str.append(option_lst[locs_passed])
+                locs_passed += 1
+        else:
+            new_str.append(c)
+
+    return &#34;&#34;.join(new_str)
+
+
+# ============================================================================
+
+
+def _rebin_image(options, image):
+    &#34;&#34;&#34;
+    Reshapes raw data into more useful shape, according to image size in metadata.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    image : np array, 3D
+        Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
+        not been rebinned.
+
+    Returns
+    -------
+    image_rebinned : np array, 3D
+        Format: [sweep values, y, x]. Same as image, but now rebinned (x size and y size
+        have changed). Not cut down to ROI.
+
+    sig : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
+        Format: [sweep_vals, y, x]. Not cut down to ROI.
+
+    ref : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
+        Not cut down to ROI. Format: [sweep_vals, y, x].
+
+    sig_norm : np array, 3D
+        Signal normalised by reference (via subtraction or normalisation, chosen in options),
+        reshaped and rebinned.  Unwanted sweeps not removed yet.
+        Not cut down to ROI. Format: [sweep_vals, y, x].
+    &#34;&#34;&#34;
+    systems.clean_options(options)
+
+    if not options[&#34;additional_bins&#34;]:
+        options[&#34;additional_bins&#34;] = 1
+        image_rebinned = image
+    else:
+        if options[&#34;additional_bins&#34;] != 1 and options[&#34;additional_bins&#34;] % 2:
+            raise RuntimeError(&#34;The binning parameter needs to be a multiple of 2.&#34;)
+
+        data_pts = image.shape[0]
+        height = image.shape[1]
+        width = image.shape[2]
+        image_rebinned = (
+            np.reshape(
+                image,
+                [
+                    data_pts,
+                    int(height / options[&#34;additional_bins&#34;]),
+                    options[&#34;additional_bins&#34;],
+                    int(width / options[&#34;additional_bins&#34;]),
+                    options[&#34;additional_bins&#34;],
+                ],
+            )
+            .sum(2)
+            .sum(3)
+        )
+
+    # define sig and ref differently if we&#39;re using a ref
+    if options[&#34;used_ref&#34;]:
+        sig = image_rebinned[::2, :, :]
+        ref = image_rebinned[1::2, :, :]
+        if options[&#34;normalisation&#34;] == &#34;sub&#34;:
+            sig_norm = 1 + (sig - ref) / (sig + ref)
+        elif options[&#34;normalisation&#34;] == &#34;div&#34;:
+            sig_norm = sig / ref
+        else:
+            raise KeyError(&#34;bad normalisation option, use: [&#39;sub&#39;, &#39;div&#39;]&#34;)
+    else:
+
+        sig = ref = image_rebinned
+        sig_norm = sig / np.max(sig, 0)
+
+    return image_rebinned, sig, ref, sig_norm
+
+
+# ============================================================================
+
+
+def _remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_norm):
+    &#34;&#34;&#34;
+    Removes unwanted sweep values (i.e. freq values or tau values) for all of the data arrays.
+
+    Also cuts data down to ROI.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    image_rebinned : np array, 3D
+        Format: [sweep values, y, x]. Same as image, but rebinned (x size and y size
+        have changed).
+
+    sweep_list : list
+        List of sweep parameter values
+
+    sig : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
+        Format: [sweep_vals, y, x]
+
+    ref : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
+        Format: [sweep_vals, y, x]
+
+    sig_norm : np array, 3D
+        Signal normalised by reference (via subtraction or normalisation, chosen in options),
+        reshaped and rebinned.  Unwanted sweeps not removed yet.
+        Format: [sweep_vals, y, x]
+
+    Returns
+    -------
+    PL_image : np array, 2D
+        Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
+        cut down to ROI
+
+    PL_image_ROI : np array, 2D
+        Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped and rebinned as
+        well as cut down to ROI.
+
+    sig : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+        Format: [sweep_vals, y, x]
+
+    ref : np array, 3D
+        Reference component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+        Format: [sweep_vals, y, x]
+
+    sig_norm : np array, 3D
+        Signal normalised by reference (via subtraction or normalisation, chosen in options),
+        reshaped and rebinned. Unwanted sweeps removed.
+        Format: [sweep_vals, y, x]
+
+    sweep_list : list
+        List of sweep parameter values (with removed unwanted sweeps at start/end)
+    &#34;&#34;&#34;
+    systems.clean_options(options)
+
+    rem_start = options[&#34;remove_start_sweep&#34;]
+    rem_end = options[&#34;remove_end_sweep&#34;]
+
+    ROI = _define_ROI(options, *options[&#34;rebinned_image_shape&#34;])
+
+    if rem_start &lt; 0:
+        warnings.warn(&#34;remove_start_sweep must be &gt;=0, setting to zero now.&#34;)
+        rem_start = 0
+    if rem_end &lt; 0:
+        warnings.warn(&#34;remove_end_sweep must be &gt;=0, setting to zero now.&#34;)
+        rem_end = 0
+
+    PL_image = np.sum(image_rebinned, axis=0)
+
+    PL_image_ROI = PL_image[ROI[0], ROI[1]].copy()
+    sig = sig[rem_start : -1 - rem_end, ROI[0], ROI[1]].copy()  # noqa: E203
+    ref = ref[rem_start : -1 - rem_end, ROI[0], ROI[1]].copy()  # noqa: E203
+    sig_norm = sig_norm[rem_start : -1 - rem_end, ROI[0], ROI[1]].copy()  # noqa: E203
+    sweep_list = np.asarray(sweep_list[rem_start : -1 - rem_end]).copy()  # noqa: E203
+
+    return PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list
+
+
+# ============================================================================
+
+
+def _define_ROI(options, full_size_h, full_size_w):
+    &#34;&#34;&#34;
+    Defines meshgrids that can be used to slice image into smaller region of interest (ROI).
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    full_size_w : int
+        Width of image (after rebin, before ROI cut).
+
+    full_size_h : int
+        Height of image (after rebin, before ROI cut).
+
+    Returns
+    -------
+    ROI : length 2 list of np meshgrids
+        Defines an ROI that can be applied to the 3D image through direct indexing.
+        E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
+    &#34;&#34;&#34;
+    systems.clean_options(options)
+
+    if options[&#34;ROI&#34;] == &#34;Full&#34;:
+        ROI = _define_area_roi(0, 0, full_size_w - 1, full_size_h - 1)
+    elif options[&#34;ROI&#34;] == &#34;Rectangle&#34;:
+        start_x, start_y = options[&#34;ROI_start&#34;]
+        end_x, end_y = options[&#34;ROI_end&#34;]
+        ROI = _define_area_roi(start_x, start_y, end_x, end_y)
+
+    return ROI
+
+
+# ============================================================================
+
+
+def _define_area_roi(start_x, start_y, end_x, end_y):
+    &#34;&#34;&#34;
+    Makes a list with of meshgrids that defines the ROI. Rectangular ROI
+
+    Arguments
+    ---------
+    start_x, start_y, end_x, end_y : int
+        Positions of ROI vertices as coordinates of indices.
+        Defines a rectangle between (start_x, start_y) and (end_x, end_y).
+
+    Returns
+    -------
+    ROI : length 2 list of np meshgrids
+        Defines an ROI that can be applied to the 3D image through direct indexing.
+        E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
+    &#34;&#34;&#34;
+    x = np.linspace(start_x, end_x, end_x - start_x + 1, dtype=int)
+    y = np.linspace(start_y, end_y, end_y - start_y + 1, dtype=int)
+    xv, yv = np.meshgrid(x, y)
+    return [yv, xv]  # arrays are indexed in image convention, e.g. sig[swwpp_param, y, x]
+
+
+# ============================================================================
+
+# ============================================================================
+
+
+def _define_AOIs(options):
+    &#34;&#34;&#34;
+    Defines areas of interest (AOIs).
+
+    Returns list of AOIs that can be used to directly index into image array, e.g.:
+    sig_AOI = sig[:, AOI[0], AOI[1]].
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    AOIs : list
+        List of AOI regions. Much like ROI object, these are a length-2 list of np meshgrids
+        that can be used to directly index into image to provide a view into just the AOI
+        part of the image. E.g. sig_AOI = sig[:, AOI[0], AOI[1]]. Returns a list as in
+        general we have more than one area of interest.
+        I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]
+    &#34;&#34;&#34;
+    AOIs = []
+
+    i = 0
+    while True:
+        i += 1
+        try:
+            start = options[&#34;AOI_&#34; + str(i) + &#34;_start&#34;]
+            end = options[&#34;AOI_&#34; + str(i) + &#34;_end&#34;]
+
+            if start is None or end is None:
+                continue
+            AOIs.append(_define_area_roi(*start, *end))
+        except KeyError:
+            break
+    return AOIs
+
+
+def _recursive_dict_update(to_be_updated_dict, updating_dict):
+    &#34;&#34;&#34;
+    Recursively updates to_be_updated_dict with values from updating_dict (to all dict depths)
+    &#34;&#34;&#34;
+    if not isinstance(to_be_updated_dict, collections.abc.Mapping):
+        return updating_dict
+    for key, val in updating_dict.items():
+        if isinstance(val, collections.abc.Mapping):
+            # avoids KeyError by returning {}
+            to_be_updated_dict[key] = _recursive_dict_update(to_be_updated_dict.get(key, {}), val)
+        else:
+            to_be_updated_dict[key] = val
+    return to_be_updated_dict
+
+
+# ============================================================================
+
+
+def _check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_w, full_size_h):
+    &#34;&#34;&#34;
+    Checks that &#39;name&#39; rectange (defined by top left corner &#39;start_x&#39;, &#39;start_y&#39; and bottom
+    right corner &#39;end_x&#39;, &#39;end_y&#39;) fits within a larger rectangle of size &#39;full_size_w&#39;,
+    &#39;full_size_h&#39;. If there are no good, they&#39;re fixed with a warning.
+
+    Arguments
+    ---------
+    name : str
+        The name of the rectangle we&#39;re checking (e.g. &#34;ROI&#34;, &#34;AOI&#34;).
+
+    start_x : int
+        x coordinate (relative to origin) of rectangle&#39;s top left corner.
+
+    start_y : int
+        y coordinate (relative to origin) of rectangle&#39;s top left corner.
+
+    end_x : int
+        x coordinate (relative to origin) of rectangle&#39;s bottom right corner.
+
+    end_y : int
+        y coordinate (relative to origin) of rectangle&#39;s bottom right corner.
+
+    full_size_w : int
+        Full width of image (or image region, e.g. ROI).
+
+    full_size_h : int
+        Full height of image (or image region, e.g. ROI).
+
+    Returns
+    -------
+    start_coords : tuple
+        &#39;fixed&#39; start coords: (start_x, start_y)
+
+    end_coords : tuple
+        &#39;fixed&#39; end coords: (end_x, end_y)
+    &#34;&#34;&#34;
+
+    if start_x &gt;= end_x:
+        warnings.warn(f&#34;{name} Rectangle ends before it starts (in x), swapping them&#34;)
+        temp = start_x
+        start_x = end_x
+        end_x = temp
+    if start_y &gt;= end_y:
+        warnings.warn(f&#34;{name} Rectangle ends before it starts (in y), swapping them&#34;)
+        temp = start_x
+        start_x = end_y
+        end_x = temp
+
+    if start_x &gt;= full_size_w:
+        warnings.warn(f&#34;{name} Rectangle starts outside image (too large in x), setting to zero.&#34;)
+        start_x = 0
+    elif start_x &lt; 0:
+        warnings.warn(f&#34;{name} Rectangle starts outside image (negative in x), setting to zero..&#34;)
+        start_x = 0
+
+    if start_y &gt;= full_size_h:
+        warnings.warn(f&#34;{name} Rectangle starts outside image (too large in y), setting to zero.&#34;)
+        start_y = 0
+    elif start_y &lt; 0:
+        warnings.warn(f&#34;{name}  Rectangle starts outside image (negative in y), setting to zero.&#34;)
+        start_y = 0
+
+    if end_x &gt;= full_size_w:
+        warnings.warn(f&#34;{name} Rectangle too big in x, cropping to image.&#34;)
+        end_x = full_size_w - 1
+    if end_y &gt;= full_size_h:
+        warnings.warn(f&#34;{name} Rectangle too big in y, cropping to image.&#34;)
+        end_y = full_size_h - 1
+
+    return (start_x, start_y), (end_x, end_y)
+
+
+# ============================================================================</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="QDMPy.io.rawdata._check_if_already_fit"><code class="name flex">
+<span>def <span class="ident">_check_if_already_fit</span></span>(<span>options)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Looks for previous fit result.</p>
+<p>If previous fit result exists, checks for compatibility between option choices.</p>
+<p>Returns nothing.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _check_if_already_fit(options):
+    &#34;&#34;&#34;
+    Looks for previous fit result.
+
+    If previous fit result exists, checks for compatibility between option choices.
+
+    Returns nothing.
+    &#34;&#34;&#34;
+
+    options[&#34;found_prev_result&#34;] = (
+        _prev_options_exist(options)
+        and _options_compatible(options, _get_prev_options(options))
+        and _prev_pixel_results_exist(options, _get_prev_options(options))
+    )</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.rawdata._check_start_end_rectangle"><code class="name flex">
+<span>def <span class="ident">_check_start_end_rectangle</span></span>(<span>name, start_x, start_y, end_x, end_y, full_size_w, full_size_h)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Checks that 'name' rectange (defined by top left corner 'start_x', 'start_y' and bottom
+right corner 'end_x', 'end_y') fits within a larger rectangle of size 'full_size_w',
+'full_size_h'. If there are no good, they're fixed with a warning.</p>
+<h2 id="arguments">Arguments</h2>
+<dl>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>The name of the rectangle we're checking (e.g. "ROI", "AOI").</dd>
+<dt><strong><code>start_x</code></strong> :&ensp;<code>int</code></dt>
+<dd>x coordinate (relative to origin) of rectangle's top left corner.</dd>
+<dt><strong><code>start_y</code></strong> :&ensp;<code>int</code></dt>
+<dd>y coordinate (relative to origin) of rectangle's top left corner.</dd>
+<dt><strong><code>end_x</code></strong> :&ensp;<code>int</code></dt>
+<dd>x coordinate (relative to origin) of rectangle's bottom right corner.</dd>
+<dt><strong><code>end_y</code></strong> :&ensp;<code>int</code></dt>
+<dd>y coordinate (relative to origin) of rectangle's bottom right corner.</dd>
+<dt><strong><code>full_size_w</code></strong> :&ensp;<code>int</code></dt>
+<dd>Full width of image (or image region, e.g. ROI).</dd>
+<dt><strong><code>full_size_h</code></strong> :&ensp;<code>int</code></dt>
+<dd>Full height of image (or image region, e.g. ROI).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>start_coords</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>'fixed' start coords: (start_x, start_y)</dd>
+<dt><strong><code>end_coords</code></strong> :&ensp;<code>tuple</code></dt>
+<dd>'fixed' end coords: (end_x, end_y)</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_w, full_size_h):
+    &#34;&#34;&#34;
+    Checks that &#39;name&#39; rectange (defined by top left corner &#39;start_x&#39;, &#39;start_y&#39; and bottom
+    right corner &#39;end_x&#39;, &#39;end_y&#39;) fits within a larger rectangle of size &#39;full_size_w&#39;,
+    &#39;full_size_h&#39;. If there are no good, they&#39;re fixed with a warning.
+
+    Arguments
+    ---------
+    name : str
+        The name of the rectangle we&#39;re checking (e.g. &#34;ROI&#34;, &#34;AOI&#34;).
+
+    start_x : int
+        x coordinate (relative to origin) of rectangle&#39;s top left corner.
+
+    start_y : int
+        y coordinate (relative to origin) of rectangle&#39;s top left corner.
+
+    end_x : int
+        x coordinate (relative to origin) of rectangle&#39;s bottom right corner.
+
+    end_y : int
+        y coordinate (relative to origin) of rectangle&#39;s bottom right corner.
+
+    full_size_w : int
+        Full width of image (or image region, e.g. ROI).
+
+    full_size_h : int
+        Full height of image (or image region, e.g. ROI).
+
+    Returns
+    -------
+    start_coords : tuple
+        &#39;fixed&#39; start coords: (start_x, start_y)
+
+    end_coords : tuple
+        &#39;fixed&#39; end coords: (end_x, end_y)
+    &#34;&#34;&#34;
+
+    if start_x &gt;= end_x:
+        warnings.warn(f&#34;{name} Rectangle ends before it starts (in x), swapping them&#34;)
+        temp = start_x
+        start_x = end_x
+        end_x = temp
+    if start_y &gt;= end_y:
+        warnings.warn(f&#34;{name} Rectangle ends before it starts (in y), swapping them&#34;)
+        temp = start_x
+        start_x = end_y
+        end_x = temp
+
+    if start_x &gt;= full_size_w:
+        warnings.warn(f&#34;{name} Rectangle starts outside image (too large in x), setting to zero.&#34;)
+        start_x = 0
+    elif start_x &lt; 0:
+        warnings.warn(f&#34;{name} Rectangle starts outside image (negative in x), setting to zero..&#34;)
+        start_x = 0
+
+    if start_y &gt;= full_size_h:
+        warnings.warn(f&#34;{name} Rectangle starts outside image (too large in y), setting to zero.&#34;)
+        start_y = 0
+    elif start_y &lt; 0:
+        warnings.warn(f&#34;{name}  Rectangle starts outside image (negative in y), setting to zero.&#34;)
+        start_y = 0
+
+    if end_x &gt;= full_size_w:
+        warnings.warn(f&#34;{name} Rectangle too big in x, cropping to image.&#34;)
+        end_x = full_size_w - 1
+    if end_y &gt;= full_size_h:
+        warnings.warn(f&#34;{name} Rectangle too big in y, cropping to image.&#34;)
+        end_y = full_size_h - 1
+
+    return (start_x, start_y), (end_x, end_y)</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.rawdata._define_AOIs"><code class="name flex">
+<span>def <span class="ident">_define_AOIs</span></span>(<span>options)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Defines areas of interest (AOIs).</p>
+<p>Returns list of AOIs that can be used to directly index into image array, e.g.:
+sig_AOI = sig[:, AOI[0], AOI[1]].</p>
+<h2 id="arguments">Arguments</h2>
+<dl>
+<dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Generic options dict holding all the user options.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>AOIs</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of AOI regions. Much like ROI object, these are a length-2 list of np meshgrids
+that can be used to directly index into image to provide a view into just the AOI
+part of the image. E.g. sig_AOI = sig[:, AOI[0], AOI[1]]. Returns a list as in
+general we have more than one area of interest.
+I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _define_AOIs(options):
+    &#34;&#34;&#34;
+    Defines areas of interest (AOIs).
+
+    Returns list of AOIs that can be used to directly index into image array, e.g.:
+    sig_AOI = sig[:, AOI[0], AOI[1]].
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    AOIs : list
+        List of AOI regions. Much like ROI object, these are a length-2 list of np meshgrids
+        that can be used to directly index into image to provide a view into just the AOI
+        part of the image. E.g. sig_AOI = sig[:, AOI[0], AOI[1]]. Returns a list as in
+        general we have more than one area of interest.
+        I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]
+    &#34;&#34;&#34;
+    AOIs = []
+
+    i = 0
+    while True:
+        i += 1
+        try:
+            start = options[&#34;AOI_&#34; + str(i) + &#34;_start&#34;]
+            end = options[&#34;AOI_&#34; + str(i) + &#34;_end&#34;]
+
+            if start is None or end is None:
+                continue
+            AOIs.append(_define_area_roi(*start, *end))
+        except KeyError:
+            break
+    return AOIs</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.rawdata._define_ROI"><code class="name flex">
+<span>def <span class="ident">_define_ROI</span></span>(<span>options, full_size_h, full_size_w)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Defines meshgrids that can be used to slice image into smaller region of interest (ROI).</p>
+<h2 id="arguments">Arguments</h2>
+<dl>
+<dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Generic options dict holding all the user options.</dd>
+<dt><strong><code>full_size_w</code></strong> :&ensp;<code>int</code></dt>
+<dd>Width of image (after rebin, before ROI cut).</dd>
+<dt><strong><code>full_size_h</code></strong> :&ensp;<code>int</code></dt>
+<dd>Height of image (after rebin, before ROI cut).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>ROI</code></strong> :&ensp;<code>length 2 list</code> of <code>np meshgrids</code></dt>
+<dd>Defines an ROI that can be applied to the 3D image through direct indexing.
+E.g. sig_ROI = sig[:, ROI[0], ROI[1]]</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _define_ROI(options, full_size_h, full_size_w):
+    &#34;&#34;&#34;
+    Defines meshgrids that can be used to slice image into smaller region of interest (ROI).
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    full_size_w : int
+        Width of image (after rebin, before ROI cut).
+
+    full_size_h : int
+        Height of image (after rebin, before ROI cut).
+
+    Returns
+    -------
+    ROI : length 2 list of np meshgrids
+        Defines an ROI that can be applied to the 3D image through direct indexing.
+        E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
+    &#34;&#34;&#34;
+    systems.clean_options(options)
+
+    if options[&#34;ROI&#34;] == &#34;Full&#34;:
+        ROI = _define_area_roi(0, 0, full_size_w - 1, full_size_h - 1)
+    elif options[&#34;ROI&#34;] == &#34;Rectangle&#34;:
+        start_x, start_y = options[&#34;ROI_start&#34;]
+        end_x, end_y = options[&#34;ROI_end&#34;]
+        ROI = _define_area_roi(start_x, start_y, end_x, end_y)
+
+    return ROI</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.rawdata._define_area_roi"><code class="name flex">
+<span>def <span class="ident">_define_area_roi</span></span>(<span>start_x, start_y, end_x, end_y)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Makes a list with of meshgrids that defines the ROI. Rectangular ROI</p>
+<h2 id="arguments">Arguments</h2>
+<dl>
+<dt><strong><code>start_x</code></strong>, <strong><code>start_y</code></strong>, <strong><code>end_x</code></strong>, <strong><code>end_y</code></strong> :&ensp;<code>int</code></dt>
+<dd>Positions of ROI vertices as coordinates of indices.
+Defines a rectangle between (start_x, start_y) and (end_x, end_y).</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>ROI</code></strong> :&ensp;<code>length 2 list</code> of <code>np meshgrids</code></dt>
+<dd>Defines an ROI that can be applied to the 3D image through direct indexing.
+E.g. sig_ROI = sig[:, ROI[0], ROI[1]]</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _define_area_roi(start_x, start_y, end_x, end_y):
+    &#34;&#34;&#34;
+    Makes a list with of meshgrids that defines the ROI. Rectangular ROI
+
+    Arguments
+    ---------
+    start_x, start_y, end_x, end_y : int
+        Positions of ROI vertices as coordinates of indices.
+        Defines a rectangle between (start_x, start_y) and (end_x, end_y).
+
+    Returns
+    -------
+    ROI : length 2 list of np meshgrids
+        Defines an ROI that can be applied to the 3D image through direct indexing.
+        E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
+    &#34;&#34;&#34;
+    x = np.linspace(start_x, end_x, end_x - start_x + 1, dtype=int)
+    y = np.linspace(start_y, end_y, end_y - start_y + 1, dtype=int)
+    xv, yv = np.meshgrid(x, y)
+    return [yv, xv]  # arrays are indexed in image convention, e.g. sig[swwpp_param, y, x]</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.rawdata._define_output_dir"><code class="name flex">
+<span>def <span class="ident">_define_output_dir</span></span>(<span>options)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Defines output_dir and data_dir in options.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _define_output_dir(options):
+    &#34;&#34;&#34;
+    Defines output_dir and data_dir in options.
+    &#34;&#34;&#34;
+    if options[&#34;custom_output_dir&#34;] is not None:
+        output_dir = pathlib.PurePosixPath(
+            _interpolate_option_str(str(options[&#34;custom_output_dir&#34;]), options)
+        )
+    else:
+        output_dir = pathlib.PurePosixPath(
+            str(options[&#34;filepath&#34;]) + &#34;_processed&#34; + &#34;_bin_&#34; + str(options[&#34;total_bin&#34;])
+        )
+
+    if options[&#34;custom_output_dir_prefix&#34;] is not None:
+        prefix = _interpolate_option_str(str(options[&#34;custom_output_dir_prefix&#34;]), options)
+    else:
+        prefix = &#34;&#34;
+
+    if options[&#34;custom_output_dir_suffix&#34;] is not None:
+        suffix = _interpolate_option_str(str(options[&#34;custom_output_dir_suffix&#34;]), options)
+    else:
+        suffix = &#34;&#34;
+
+    options[&#34;output_dir&#34;] = output_dir.parent.joinpath(prefix + output_dir.stem + suffix)
+    options[&#34;data_dir&#34;] = options[&#34;output_dir&#34;].joinpath(&#34;data&#34;)</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.rawdata._get_prev_options"><code class="name flex">
+<span>def <span class="ident">_get_prev_options</span></span>(<span>options)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reads options file from previous fit result (.json), returns a dictionary.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _get_prev_options(options):
+    &#34;&#34;&#34;
+    Reads options file from previous fit result (.json), returns a dictionary.
+    &#34;&#34;&#34;
+    return QDMPy.io.json2dict.json_to_dict(options[&#34;output_dir&#34;] / &#34;saved_options.json&#34;)</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.rawdata._interpolate_option_str"><code class="name flex">
+<span>def <span class="ident">_interpolate_option_str</span></span>(<span>interp_str, options)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Interpolates any options between braces in interp_str.
+I.e. "{fit_backend}" -&gt; f"{options['fit_backend']"
+(this is possibly possible directly through f-strings but I didn't want to
+play with fire)</p>
+<h2 id="arguments">Arguments</h2>
+<dl>
+<dt><strong><code>interp_str</code></strong> :&ensp;<code>str</code></dt>
+<dd>String (possibly containing option names between braces) to be interpolated.</dd>
+<dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Generic options dict holding all the user options.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>interp_str</code></strong> :&ensp;<code>str</code></dt>
+<dd>String, now with interpolated values (option between braces).</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _interpolate_option_str(interp_str, options):
+    &#34;&#34;&#34;
+    Interpolates any options between braces in interp_str.
+    I.e. &#34;{fit_backend}&#34; -&gt; f&#34;{options[&#39;fit_backend&#39;]&#34;
+    (this is possibly possible directly through f-strings but I didn&#39;t want to
+    play with fire)
+
+    Arguments
+    ---------
+    interp_str : str
+        String (possibly containing option names between braces) to be interpolated.
+
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    interp_str : str
+        String, now with interpolated values (option between braces).
+    &#34;&#34;&#34;
+
+    # convert whitespace to underscore
+    interp_str = interp_str.replace(&#34; &#34;, &#34;_&#34;)
+    if not (&#34;{&#34; in interp_str and &#34;}&#34; in interp_str):
+        return interp_str
+    pattern = r&#34;\{(\w+)\}&#34;  # all text between braces
+    match_substr_lst = re.findall(pattern, interp_str)
+    locs = []
+    for match_substr in match_substr_lst:
+        start_loc = interp_str.find(match_substr)
+        end_loc = start_loc + len(match_substr) - 1  # both fence posts inclusive
+        locs.append((start_loc, end_loc))
+
+    # ok so now we have the option names (keys) to interpolate (match_substr_lst)
+    # as well as the locations in the string of the same (locs)
+    # first we convert those option names to their variables
+    option_lst = []
+    for option_name in match_substr_lst:
+        try:
+            option_lst.append(str(options[option_name]))
+        except KeyError as e:
+            warnings.warn(
+                &#34;\n&#34;
+                + &#34;KeyError caught interpolating custom output_dir.\n&#34;
+                + f&#34;You gave: {option_name}.\n&#34;
+                + &#34;Avoiding this issue by placing &#39;option_name&#39; in the dir instead. KeyError msg:&#34;
+                + f&#34;{e}&#34;
+            )
+            option_lst.append(option_name)
+
+    # this block is a bit old-school, but does the trick...
+    locs_passed = 0  # how many match locations we&#39;ve passed
+    new_str = []  # ok actually a lst but will convert back at end
+
+    for i, c in enumerate(interp_str):
+        # don&#39;t want braces in output
+        if c == &#34;{&#34; or c == &#34;}&#34;:
+            continue
+
+        #  &#39;inside&#39; a brace -&gt; don&#39;t copy these chars
+        if i &gt;= locs[locs_passed][0] and i &lt;= locs[locs_passed][1]:
+            # when we&#39;ve got to end of this brace location, copy in option
+            if i == locs[locs_passed][1]:
+                new_str.append(option_lst[locs_passed])
+                locs_passed += 1
+        else:
+            new_str.append(c)
+
+    return &#34;&#34;.join(new_str)</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.rawdata._options_compatible"><code class="name flex">
+<span>def <span class="ident">_options_compatible</span></span>(<span>options, prev_options)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Checks if option choices are compatible with previously fit options</p>
+<h2 id="arguments">Arguments</h2>
+<dl>
+<dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Generic options dict holding all the user options.</dd>
+<dt><strong><code>prev_options</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Generic options dict from previous fit result.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>_options_compatible</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether or not options are compatible.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _options_compatible(options, prev_options):
+    &#34;&#34;&#34;
+    Checks if option choices are compatible with previously fit options
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    prev_options : dict
+        Generic options dict from previous fit result.
+
+    Returns
+    -------
+    _options_compatible : bool
+        Whether or not options are compatible.
+    &#34;&#34;&#34;
+
+    for option_name in [
+        &#34;additional_bins&#34;,
+        &#34;normalisation&#34;,
+        &#34;fit_backend&#34;,
+        &#34;fit_functions&#34;,
+        &#34;ROI&#34;,
+        &#34;ignore_ref&#34;,
+        &#34;system_name&#34;,
+        &#34;remove_start_sweep&#34;,
+        &#34;remove_end_sweep&#34;,
+        &#34;use_ROI_avg_fit_res_for_all_pixels&#34;,
+    ]:
+        if options[option_name] != prev_options[option_name]:
+            return False
+    # check relevant roi params
+    if options[&#34;ROI&#34;] == &#34;Rectangle&#34; and (
+        options[&#34;ROI_start&#34;] != prev_options[&#34;ROI_start&#34;]
+        and options[&#34;ROI_end&#34;] != prev_options[&#34;ROI_end&#34;]
+    ):
+        return False
+
+    # check relevant param guesses/bounds
+
+    # check relevant fit params
+    if options[&#34;fit_backend&#34;] == &#34;scipyfit&#34;:
+        for fit_opt_name in [
+            &#34;scipy_fit_method&#34;,
+            &#34;scipy_use_analytic_jac&#34;,
+            &#34;scipy_fit_jac_acc&#34;,
+            &#34;scipy_fit_gtol&#34;,
+            &#34;scipy_fit_xtol&#34;,
+            &#34;scipy_fit_ftol&#34;,
+            &#34;scipy_scale_x&#34;,
+            &#34;scipy_loss_fn&#34;,
+        ]:
+            if options[fit_opt_name] != prev_options[fit_opt_name]:
+                return False
+    elif options[&#34;fit_backend&#34;] == &#34;gpufit&#34;:
+        for fit_opt_name in [
+            &#34;gpufit_tolerance&#34;,
+            &#34;gpufit_max_iterations&#34;,
+            &#34;gpufit_estimator_id&#34;,
+        ]:
+            if options[fit_opt_name] != prev_options[fit_opt_name]:
+                return False
+
+    # if all that was ok, return True
+    return True</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.rawdata._prev_options_exist"><code class="name flex">
+<span>def <span class="ident">_prev_options_exist</span></span>(<span>options)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Checks if options file from previous result can be found in default location, returns Bool.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _prev_options_exist(options):
+    &#34;&#34;&#34;
+    Checks if options file from previous result can be found in default location, returns Bool.
+    &#34;&#34;&#34;
+    prev_opt_path = os.path.normpath(options[&#34;output_dir&#34;] / &#34;saved_options.json&#34;)
+    return os.path.isfile(prev_opt_path)</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.rawdata._prev_pixel_results_exist"><code class="name flex">
+<span>def <span class="ident">_prev_pixel_results_exist</span></span>(<span>options, prev_options)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check if the actual fit result files exists.</p>
+<h2 id="arguments">Arguments</h2>
+<dl>
+<dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Generic options dict holding all the user options.</dd>
+<dt><strong><code>prev_options</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Generic options dict from previous fit result.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>pixels_results_exist</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether or not previous pixel result files exist.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _prev_pixel_results_exist(options, prev_options):
+    &#34;&#34;&#34;
+    Check if the actual fit result files exists.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    prev_options : dict
+        Generic options dict from previous fit result.
+
+    Returns
+    -------
+    pixels_results_exist : bool
+        Whether or not previous pixel result files exist.
+    &#34;&#34;&#34;
+    prev_options = _get_prev_options(options)
+
+    for fn_type, num in prev_options[&#34;fit_functions&#34;].items():
+        for param_name in fit_models.AVAILABLE_FNS[fn_type].param_defn:
+            for n in range(num):
+                param_key = param_name + &#34;_&#34; + str(n)
+                if not os.path.isfile(options[&#34;data_dir&#34;] / (param_key + &#34;.txt&#34;)):
+                    return False
+    return True</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.rawdata._rebin_image"><code class="name flex">
+<span>def <span class="ident">_rebin_image</span></span>(<span>options, image)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reshapes raw data into more useful shape, according to image size in metadata.</p>
+<h2 id="arguments">Arguments</h2>
+<dl>
+<dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Generic options dict holding all the user options.</dd>
+<dt><strong><code>image</code></strong> :&ensp;<code>np array, 3D</code></dt>
+<dd>Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
+not been rebinned.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>image_rebinned</code></strong> :&ensp;<code>np array, 3D</code></dt>
+<dd>Format: [sweep values, y, x]. Same as image, but now rebinned (x size and y size
+have changed). Not cut down to ROI.</dd>
+<dt><strong><code>sig</code></strong> :&ensp;<code>np array, 3D</code></dt>
+<dd>Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
+Format: [sweep_vals, y, x]. Not cut down to ROI.</dd>
+<dt><strong><code>ref</code></strong> :&ensp;<code>np array, 3D</code></dt>
+<dd>Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
+Not cut down to ROI. Format: [sweep_vals, y, x].</dd>
+<dt><strong><code>sig_norm</code></strong> :&ensp;<code>np array, 3D</code></dt>
+<dd>Signal normalised by reference (via subtraction or normalisation, chosen in options),
+reshaped and rebinned.
+Unwanted sweeps not removed yet.
+Not cut down to ROI. Format: [sweep_vals, y, x].</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _rebin_image(options, image):
+    &#34;&#34;&#34;
+    Reshapes raw data into more useful shape, according to image size in metadata.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    image : np array, 3D
+        Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
+        not been rebinned.
+
+    Returns
+    -------
+    image_rebinned : np array, 3D
+        Format: [sweep values, y, x]. Same as image, but now rebinned (x size and y size
+        have changed). Not cut down to ROI.
+
+    sig : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
+        Format: [sweep_vals, y, x]. Not cut down to ROI.
+
+    ref : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
+        Not cut down to ROI. Format: [sweep_vals, y, x].
+
+    sig_norm : np array, 3D
+        Signal normalised by reference (via subtraction or normalisation, chosen in options),
+        reshaped and rebinned.  Unwanted sweeps not removed yet.
+        Not cut down to ROI. Format: [sweep_vals, y, x].
+    &#34;&#34;&#34;
+    systems.clean_options(options)
+
+    if not options[&#34;additional_bins&#34;]:
+        options[&#34;additional_bins&#34;] = 1
+        image_rebinned = image
+    else:
+        if options[&#34;additional_bins&#34;] != 1 and options[&#34;additional_bins&#34;] % 2:
+            raise RuntimeError(&#34;The binning parameter needs to be a multiple of 2.&#34;)
+
+        data_pts = image.shape[0]
+        height = image.shape[1]
+        width = image.shape[2]
+        image_rebinned = (
+            np.reshape(
+                image,
+                [
+                    data_pts,
+                    int(height / options[&#34;additional_bins&#34;]),
+                    options[&#34;additional_bins&#34;],
+                    int(width / options[&#34;additional_bins&#34;]),
+                    options[&#34;additional_bins&#34;],
+                ],
+            )
+            .sum(2)
+            .sum(3)
+        )
+
+    # define sig and ref differently if we&#39;re using a ref
+    if options[&#34;used_ref&#34;]:
+        sig = image_rebinned[::2, :, :]
+        ref = image_rebinned[1::2, :, :]
+        if options[&#34;normalisation&#34;] == &#34;sub&#34;:
+            sig_norm = 1 + (sig - ref) / (sig + ref)
+        elif options[&#34;normalisation&#34;] == &#34;div&#34;:
+            sig_norm = sig / ref
+        else:
+            raise KeyError(&#34;bad normalisation option, use: [&#39;sub&#39;, &#39;div&#39;]&#34;)
+    else:
+
+        sig = ref = image_rebinned
+        sig_norm = sig / np.max(sig, 0)
+
+    return image_rebinned, sig, ref, sig_norm</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.rawdata._recursive_dict_update"><code class="name flex">
+<span>def <span class="ident">_recursive_dict_update</span></span>(<span>to_be_updated_dict, updating_dict)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Recursively updates to_be_updated_dict with values from updating_dict (to all dict depths)</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _recursive_dict_update(to_be_updated_dict, updating_dict):
+    &#34;&#34;&#34;
+    Recursively updates to_be_updated_dict with values from updating_dict (to all dict depths)
+    &#34;&#34;&#34;
+    if not isinstance(to_be_updated_dict, collections.abc.Mapping):
+        return updating_dict
+    for key, val in updating_dict.items():
+        if isinstance(val, collections.abc.Mapping):
+            # avoids KeyError by returning {}
+            to_be_updated_dict[key] = _recursive_dict_update(to_be_updated_dict.get(key, {}), val)
+        else:
+            to_be_updated_dict[key] = val
+    return to_be_updated_dict</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.rawdata._remove_unwanted_data"><code class="name flex">
+<span>def <span class="ident">_remove_unwanted_data</span></span>(<span>options, image_rebinned, sweep_list, sig, ref, sig_norm)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Removes unwanted sweep values (i.e. freq values or tau values) for all of the data arrays.</p>
+<p>Also cuts data down to ROI.</p>
+<h2 id="arguments">Arguments</h2>
+<dl>
+<dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Generic options dict holding all the user options.</dd>
+<dt><strong><code>image_rebinned</code></strong> :&ensp;<code>np array, 3D</code></dt>
+<dd>Format: [sweep values, y, x]. Same as image, but rebinned (x size and y size
+have changed).</dd>
+<dt><strong><code>sweep_list</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of sweep parameter values</dd>
+<dt><strong><code>sig</code></strong> :&ensp;<code>np array, 3D</code></dt>
+<dd>Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
+Format: [sweep_vals, y, x]</dd>
+<dt><strong><code>ref</code></strong> :&ensp;<code>np array, 3D</code></dt>
+<dd>Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
+Format: [sweep_vals, y, x]</dd>
+<dt><strong><code>sig_norm</code></strong> :&ensp;<code>np array, 3D</code></dt>
+<dd>Signal normalised by reference (via subtraction or normalisation, chosen in options),
+reshaped and rebinned.
+Unwanted sweeps not removed yet.
+Format: [sweep_vals, y, x]</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>PL_image</code></strong> :&ensp;<code>np array, 2D</code></dt>
+<dd>Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
+cut down to ROI</dd>
+<dt><strong><code>PL_image_ROI</code></strong> :&ensp;<code>np array, 2D</code></dt>
+<dd>Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped and rebinned as
+well as cut down to ROI.</dd>
+<dt><strong><code>sig</code></strong> :&ensp;<code>np array, 3D</code></dt>
+<dd>Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+Format: [sweep_vals, y, x]</dd>
+<dt><strong><code>ref</code></strong> :&ensp;<code>np array, 3D</code></dt>
+<dd>Reference component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+Format: [sweep_vals, y, x]</dd>
+<dt><strong><code>sig_norm</code></strong> :&ensp;<code>np array, 3D</code></dt>
+<dd>Signal normalised by reference (via subtraction or normalisation, chosen in options),
+reshaped and rebinned. Unwanted sweeps removed.
+Format: [sweep_vals, y, x]</dd>
+<dt><strong><code>sweep_list</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of sweep parameter values (with removed unwanted sweeps at start/end)</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_norm):
+    &#34;&#34;&#34;
+    Removes unwanted sweep values (i.e. freq values or tau values) for all of the data arrays.
+
+    Also cuts data down to ROI.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    image_rebinned : np array, 3D
+        Format: [sweep values, y, x]. Same as image, but rebinned (x size and y size
+        have changed).
+
+    sweep_list : list
+        List of sweep parameter values
+
+    sig : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
+        Format: [sweep_vals, y, x]
+
+    ref : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
+        Format: [sweep_vals, y, x]
+
+    sig_norm : np array, 3D
+        Signal normalised by reference (via subtraction or normalisation, chosen in options),
+        reshaped and rebinned.  Unwanted sweeps not removed yet.
+        Format: [sweep_vals, y, x]
+
+    Returns
+    -------
+    PL_image : np array, 2D
+        Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
+        cut down to ROI
+
+    PL_image_ROI : np array, 2D
+        Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped and rebinned as
+        well as cut down to ROI.
+
+    sig : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+        Format: [sweep_vals, y, x]
+
+    ref : np array, 3D
+        Reference component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+        Format: [sweep_vals, y, x]
+
+    sig_norm : np array, 3D
+        Signal normalised by reference (via subtraction or normalisation, chosen in options),
+        reshaped and rebinned. Unwanted sweeps removed.
+        Format: [sweep_vals, y, x]
+
+    sweep_list : list
+        List of sweep parameter values (with removed unwanted sweeps at start/end)
+    &#34;&#34;&#34;
+    systems.clean_options(options)
+
+    rem_start = options[&#34;remove_start_sweep&#34;]
+    rem_end = options[&#34;remove_end_sweep&#34;]
+
+    ROI = _define_ROI(options, *options[&#34;rebinned_image_shape&#34;])
+
+    if rem_start &lt; 0:
+        warnings.warn(&#34;remove_start_sweep must be &gt;=0, setting to zero now.&#34;)
+        rem_start = 0
+    if rem_end &lt; 0:
+        warnings.warn(&#34;remove_end_sweep must be &gt;=0, setting to zero now.&#34;)
+        rem_end = 0
+
+    PL_image = np.sum(image_rebinned, axis=0)
+
+    PL_image_ROI = PL_image[ROI[0], ROI[1]].copy()
+    sig = sig[rem_start : -1 - rem_end, ROI[0], ROI[1]].copy()  # noqa: E203
+    ref = ref[rem_start : -1 - rem_end, ROI[0], ROI[1]].copy()  # noqa: E203
+    sig_norm = sig_norm[rem_start : -1 - rem_end, ROI[0], ROI[1]].copy()  # noqa: E203
+    sweep_list = np.asarray(sweep_list[rem_start : -1 - rem_end]).copy()  # noqa: E203
+
+    return PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.rawdata.load_image_and_sweep"><code class="name flex">
+<span>def <span class="ident">load_image_and_sweep</span></span>(<span>options)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reads raw image data and sweep_list (affine parameters) using system methods</p>
+<h2 id="arguments">Arguments</h2>
+<dl>
+<dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Generic options dict holding all the user options.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>image</code></strong> :&ensp;<code>np array, 3D</code></dt>
+<dd>Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
+not been rebinned. Unwanted sweep values not removed.</dd>
+<dt><strong><code>sweep_list</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of sweep parameter values</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_image_and_sweep(options):
+    &#34;&#34;&#34;
+    Reads raw image data and sweep_list (affine parameters) using system methods
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    image : np array, 3D
+        Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
+        not been rebinned. Unwanted sweep values not removed.
+
+    sweep_list : list
+        List of sweep parameter values
+    &#34;&#34;&#34;
+    systems.clean_options(options)
+
+    image = options[&#34;system&#34;].read_image(options[&#34;filepath&#34;], options)
+    sweep_list = options[&#34;system&#34;].read_sweep_list(options[&#34;filepath&#34;])
+    return image, sweep_list</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.rawdata.load_options"><code class="name flex">
+<span>def <span class="ident">load_options</span></span>(<span>options_dict=None, options_path=None, check_for_prev_result=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Load and process options (from json file or dict) into generic options dict used everywhere.</p>
+<p>Also handles directory creation etc. to put results in.
+Provide either options_dict OR options_path (must provide one!).</p>
+<p>Note the system default options are loaded in, so you only need to set the things you need.
+In particular, filepath, fit_functions and system_name must be set</p>
+<h2 id="optional-arguments">Optional Arguments</h2>
+<p>options_dict : dict
+Directly pass in a dictionary of options.
+Default: None</p>
+<p>path : string
+Path to fit options .json file. Can be absolute, or from QDMPy.
+Default: None</p>
+<p>check_for_prev_result : bool
+Check to see if there's a previous fit result for these options.
+Default: False</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Generic options dict holding all the user options.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_options(options_dict=None, options_path=None, check_for_prev_result=False):
+    &#34;&#34;&#34;
+    Load and process options (from json file or dict) into generic options dict used everywhere.
+
+    Also handles directory creation etc. to put results in.
+    Provide either options_dict OR options_path (must provide one!).
+
+    Note the system default options are loaded in, so you only need to set the things you need.
+    In particular, filepath, fit_functions and system_name must be set
+
+    Optional Arguments
+    -------------------
+    options_dict : dict
+        Directly pass in a dictionary of options.
+        Default: None
+
+    path : string
+        Path to fit options .json file. Can be absolute, or from QDMPy.
+        Default: None
+
+    check_for_prev_result : bool
+        Check to see if there&#39;s a previous fit result for these options.
+        Default: False
+
+    Returns
+    -------
+    options : dict
+        Generic options dict holding all the user options.
+    &#34;&#34;&#34;
+
+    # only options_dict OR options_path
+    if options_dict is not None and options_path is not None:
+        raise RuntimeError(&#34;pass either options_dict OR options_path to load_options&#34;)
+    if options_dict is None and options_path is None:
+        raise RuntimeError(&#34;pass one of options_dict OR options_path to load_options&#34;)
+
+    if options_path is not None:
+        prelim_options = QDMPy.io.json2dict.json_to_dict(options_path)
+    else:
+        prelim_options = OrderedDict(options_dict)  # unnescessary py3.7+, leave to describe intent
+
+    required_options = [&#34;filepath&#34;, &#34;fit_functions&#34;]
+    for key in required_options:
+        if key not in prelim_options:
+            raise RuntimeError(f&#34;Must provide these options: {required_options}&#34;)
+
+    chosen_system = systems.choose_system(prelim_options[&#34;system_name&#34;])
+
+    chosen_system.system_specific_option_update(prelim_options)
+
+    options = chosen_system.get_default_options()  # first load in default options
+    # now update with what has been decided upon by user
+    options = _recursive_dict_update(options, prelim_options)
+
+    chosen_system.determine_binning(options)
+
+    chosen_system.system_specific_option_update(
+        options
+    )  # do this again on full options to be sure
+
+    options[&#34;system&#34;] = chosen_system
+
+    systems.clean_options(options)  # check all the options make sense
+
+    # create output directories
+    _define_output_dir(options)
+
+    if not os.path.isdir(options[&#34;output_dir&#34;]):
+        os.mkdir(options[&#34;output_dir&#34;])
+    if not os.path.isdir(options[&#34;data_dir&#34;]):
+        os.mkdir(options[&#34;data_dir&#34;])
+
+    # don&#39;t always check for prev. results (so we can use this fn in other contexts)
+    if check_for_prev_result:
+        _check_if_already_fit(options)
+
+    return options</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.rawdata.reshape_dataset"><code class="name flex">
+<span>def <span class="ident">reshape_dataset</span></span>(<span>options, image, sweep_list)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reshapes and re-bins raw data into more useful format.</p>
+<p>Cuts down to ROI and removes unwanted sweeps.</p>
+<h2 id="arguments">Arguments</h2>
+<dl>
+<dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Generic options dict holding all the user options.</dd>
+<dt><strong><code>image</code></strong> :&ensp;<code>np array, 3D</code></dt>
+<dd>Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
+not been rebinned. Unwanted sweep values not removed.</dd>
+<dt><strong><code>sweep_list</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of sweep parameter values</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<p>PL_image : np array, 2D.
+Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
+cut down to ROI.</p>
+<dl>
+<dt><strong><code>PL_image_ROI</code></strong> :&ensp;<code>np array, 2D</code></dt>
+<dd>Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
+cut down to ROI.</dd>
+<dt><strong><code>sig</code></strong> :&ensp;<code>np array, 3D</code></dt>
+<dd>Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+Cut down to ROI.
+Format: [sweep_vals, y, x]</dd>
+<dt><strong><code>ref</code></strong> :&ensp;<code>np array, 3D</code></dt>
+<dd>Reference component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+Cut down to ROI.
+Format: [sweep_vals, y, x]</dd>
+<dt><strong><code>sig_norm</code></strong> :&ensp;<code>np array, 3D</code></dt>
+<dd>Signal normalised by reference (via subtraction or normalisation, chosen in options),
+reshaped and rebinned. Unwanted sweeps removed. Cut down to ROI.
+Format: [sweep_vals, y, x]</dd>
+<dt><strong><code>single_pixel_pl</code></strong> :&ensp;<code>np array, 1D</code></dt>
+<dd>Normalised measurement array, for chosen single pixel check.</dd>
+<dt><strong><code>sweep_list</code></strong> :&ensp;<code>list</code></dt>
+<dd>List of sweep parameter values (with removed unwanted sweeps at start/end)</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def reshape_dataset(options, image, sweep_list):
+    &#34;&#34;&#34;
+    Reshapes and re-bins raw data into more useful format.
+
+    Cuts down to ROI and removes unwanted sweeps.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    image : np array, 3D
+        Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
+        not been rebinned. Unwanted sweep values not removed.
+
+    sweep_list : list
+        List of sweep parameter values
+
+    Returns
+    -------
+    PL_image : np array, 2D.
+        Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
+        cut down to ROI.
+
+    PL_image_ROI : np array, 2D
+        Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
+        cut down to ROI.
+
+    sig : np array, 3D
+        Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+        Cut down to ROI.
+        Format: [sweep_vals, y, x]
+
+    ref : np array, 3D
+        Reference component of raw data, reshaped and rebinned. Unwanted sweeps removed.
+        Cut down to ROI.
+        Format: [sweep_vals, y, x]
+
+    sig_norm : np array, 3D
+        Signal normalised by reference (via subtraction or normalisation, chosen in options),
+        reshaped and rebinned. Unwanted sweeps removed. Cut down to ROI.
+        Format: [sweep_vals, y, x]
+
+    single_pixel_pl : np array, 1D
+        Normalised measurement array, for chosen single pixel check.
+
+    sweep_list : list
+        List of sweep parameter values (with removed unwanted sweeps at start/end)
+    &#34;&#34;&#34;
+    systems.clean_options(options)
+
+    # image = reshape_raw(options, raw_data, sweep_list)
+    image_rebinned, sig, ref, sig_norm = _rebin_image(options, image)
+    try:
+        size_h, size_w = image_rebinned.shape[1:]
+    except Exception:
+        size_h, size_w = image_rebinned.shape
+
+    options[&#34;rebinned_image_shape&#34;] = (size_h, size_w)
+
+    # check options to ensure ROI is in correct format (now we have image size)
+    if options[&#34;ROI&#34;] != &#34;Full&#34;:
+        options[&#34;ROI_start&#34;], options[&#34;ROI_end&#34;] = _check_start_end_rectangle(
+            &#34;ROI&#34;, *options[&#34;ROI_start&#34;], *options[&#34;ROI_end&#34;], size_w, size_h
+        )  # opposite convention here, [x, y]
+
+    # somewhat important a lot of this isn&#39;t hidden, so we can adjust it later
+    PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list = _remove_unwanted_data(
+        options, image_rebinned, sweep_list, sig, ref, sig_norm
+    )  # also cuts sig etc. down to ROI
+
+    # check options to ensure AOI is in correct format (now we have ROI size)
+    i = 0
+    while True:
+        i += 1
+        try:
+            if options[f&#34;AOI_{i}_start&#34;] is None or options[f&#34;AOI_{i}_end&#34;] is None:
+                continue
+            options[f&#34;AOI_{i}_start&#34;], options[f&#34;AOI_{i}_end&#34;] = _check_start_end_rectangle(
+                f&#34;AOI_{i}&#34;,
+                *options[f&#34;AOI_{i}_start&#34;],
+                *options[f&#34;AOI_{i}_end&#34;],
+                *reversed(sig_norm.shape[1:]),  # opposite convention here, [x, y]
+            )
+
+        except KeyError:
+            break
+
+    # single pixel check
+    try:
+        single_pixel_pl = sig_norm[
+            :, options[&#34;single_pixel_check&#34;][1], options[&#34;single_pixel_check&#34;][0]
+        ]
+    except IndexError as e:
+        warnings.warn(
+            f&#34;Avoiding IndexError for single_pixel_check (setting pixel check to centre of image):\n{e}&#34;
+        )
+        single_pixel_pl = sig_norm[:, sig_norm.shape[1] // 2, sig_norm.shape[2] // 2]
+        options[&#34;single_pixel_check&#34;] = (sig_norm.shape[2] // 2, sig_norm.shape[1] // 2)
+
+    return PL_image, PL_image_ROI, sig, ref, sig_norm, single_pixel_pl, sweep_list</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.rawdata.save_options"><code class="name flex">
+<span>def <span class="ident">save_options</span></span>(<span>options)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Saves generic options dict to harddrive as json file (in options["output_dir"])</p>
+<h2 id="arguments">Arguments</h2>
+<dl>
+<dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Generic options dict holding all the user options.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_options(options):
+    &#34;&#34;&#34;
+    Saves generic options dict to harddrive as json file (in options[&#34;output_dir&#34;])
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    &#34;&#34;&#34;
+
+    keys_to_remove = [&#34;system&#34;]
+    save_options = {}
+
+    for key, val in options.items():
+        if key.endswith(&#34;dir&#34;) or key == &#34;filepath&#34;:
+            val = str(val).replace(&#34;\\&#34;, &#34;\\\\&#34;)
+        if key not in keys_to_remove:
+            save_options[key] = val
+    QDMPy.io.json2dict.dict_to_json(
+        save_options, &#34;saved_options.json&#34;, path_to_dir=options[&#34;output_dir&#34;]
+    )</code></pre>
+</details>
+</dd>
+</dl>
+</section>
+<section>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul>
+<li><a href="#functions">Functions</a></li>
+</ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="QDMPy.io" href="index.html">QDMPy.io</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-functions">Functions</a></h3>
+<ul class="">
+<li><code><a title="QDMPy.io.rawdata._check_if_already_fit" href="#QDMPy.io.rawdata._check_if_already_fit">_check_if_already_fit</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._check_start_end_rectangle" href="#QDMPy.io.rawdata._check_start_end_rectangle">_check_start_end_rectangle</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._define_AOIs" href="#QDMPy.io.rawdata._define_AOIs">_define_AOIs</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._define_ROI" href="#QDMPy.io.rawdata._define_ROI">_define_ROI</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._define_area_roi" href="#QDMPy.io.rawdata._define_area_roi">_define_area_roi</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._define_output_dir" href="#QDMPy.io.rawdata._define_output_dir">_define_output_dir</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._get_prev_options" href="#QDMPy.io.rawdata._get_prev_options">_get_prev_options</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._interpolate_option_str" href="#QDMPy.io.rawdata._interpolate_option_str">_interpolate_option_str</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._options_compatible" href="#QDMPy.io.rawdata._options_compatible">_options_compatible</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._prev_options_exist" href="#QDMPy.io.rawdata._prev_options_exist">_prev_options_exist</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._prev_pixel_results_exist" href="#QDMPy.io.rawdata._prev_pixel_results_exist">_prev_pixel_results_exist</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._rebin_image" href="#QDMPy.io.rawdata._rebin_image">_rebin_image</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._recursive_dict_update" href="#QDMPy.io.rawdata._recursive_dict_update">_recursive_dict_update</a></code></li>
+<li><code><a title="QDMPy.io.rawdata._remove_unwanted_data" href="#QDMPy.io.rawdata._remove_unwanted_data">_remove_unwanted_data</a></code></li>
+<li><code><a title="QDMPy.io.rawdata.load_image_and_sweep" href="#QDMPy.io.rawdata.load_image_and_sweep">load_image_and_sweep</a></code></li>
+<li><code><a title="QDMPy.io.rawdata.load_options" href="#QDMPy.io.rawdata.load_options">load_options</a></code></li>
+<li><code><a title="QDMPy.io.rawdata.reshape_dataset" href="#QDMPy.io.rawdata.reshape_dataset">reshape_dataset</a></code></li>
+<li><code><a title="QDMPy.io.rawdata.save_options" href="#QDMPy.io.rawdata.save_options">save_options</a></code></li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.9.2</a>.</p>
+</footer>
+</body>
+</html>

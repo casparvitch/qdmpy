@@ -2,29 +2,56 @@
 """
 This module holds tools for loading raw data etc. and reshaping to a usable format.
 
+Also contained here are functions for defining regions/areas of interest within the
+larger image dataset, that are then used in consequent functions, as well as the
+general options dictionary.
+
 Functions
 ---------
- - `QDMPy.data_loading.recursive_dict_update`
- - `QDMPy.data_loading.define_output_dir`
- - `QDMPy.data_loading.interpolate_option_str`
- - `QDMPy.data_loading.load_options`
- - `QDMPy.data_loading.save_options`
- - `QDMPy.data_loading.reshape_dataset`
- - `QDMPy.data_loading.prev_options_exist`
- - `QDMPy.data_loading.get_prev_options`
- - `QDMPy.data_loading.check_if_already_processed`
- - `QDMPy.data_loading.options_compatible`
- - `QDMPy.data_loading.prev_pixel_results_exist`
- - `QDMPy.data_loading.rebin_image`
- - `QDMPy.data_loading.define_ROI`
- - `QDMPy.data_loading.define_area_roi`
- - `QDMPy.data_loading.remove_unwanted_data`
- - `QDMPy.data_loading.define_AOIs`
+ - `QDMPy.io.rawdata.load_options`
+ - `QDMPy.io.rawdata.save_options`
+ - `QDMPy.io.rawdata.load_image_and_sweep`
+ - `QDMPy.io.rawdata.reshape_dataset`
+  - QDMPy.io.rawdata._define_output_dir
+ - `QDMPy.io.rawdata._check_if_already_fit`
+ - `QDMPy.io.rawdata._prev_options_exist`
+ - `QDMPy.io.rawdata._options_compatible`
+ - `QDMPy.io.rawdata._prev_pixel_results_exist`
+ - `QDMPy.io.rawdata._get_prev_options`
+ - `QDMPy.io.rawdata._interpolate_option_str`
+ - `QDMPy.io.rawdata._rebin_image`
+ - `QDMPy.io.rawdata._remove_unwanted_data`
+ - `QDMPy.io.rawdata._define_ROI`
+ - `QDMPy.io.rawdata._define_area_roi`
+ - `QDMPy.io.rawdata._define_AOIs`
+ - `QDMPy.io.rawdata._recursive_dict_update`
+ - `QDMPy.io.rawdata._check_start_end_rectangle`
 """
+
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
+__pdoc__ = {
+    "QDMPy.io.rawdata.load_options": True,
+    "QDMPy.io.rawdata.save_options": True,
+    "QDMPy.io.rawdata.load_image_and_sweep": True,
+    "QDMPy.io.rawdata.reshape_dataset": True,
+    "QDMPy.io.rawdata._define_output_dir": True,
+    "QDMPy.io.rawdata._check_if_already_fit": True,
+    "QDMPy.io.rawdata._prev_options_exist": True,
+    "QDMPy.io.rawdata._options_compatible": True,
+    "QDMPy.io.rawdata._prev_pixel_results_exist": True,
+    "QDMPy.io.rawdata._get_prev_options": True,
+    "QDMPy.io.rawdata._interpolate_option_str": True,
+    "QDMPy.io.rawdata._rebin_image": True,
+    "QDMPy.io.rawdata._remove_unwanted_data": True,
+    "QDMPy.io.rawdata._define_ROI": True,
+    "QDMPy.io.rawdata._define_area_roi": True,
+    "QDMPy.io.rawdata._define_AOIs": True,
+    "QDMPy.io.rawdata._recursive_dict_update": True,
+    "QDMPy.io.rawdata._check_start_end_rectangle": True,
+}
 
 # ============================================================================
 
@@ -39,31 +66,9 @@ import re
 
 # ============================================================================
 
-import QDMPy.misc as misc
-import QDMPy.systems as systems
-import QDMPy.fit_models as fit_models
-
-# ============================================================================
-
-DIR_PATH = systems.DIR_PATH
-
-# ============================================================================
-
-
-def recursive_dict_update(to_be_updated_dict, updating_dict):
-    """
-    Recursively updates to_be_updated_dict with values from updating_dict (to all dict depths)
-    """
-    if not isinstance(to_be_updated_dict, collections.abc.Mapping):
-        return updating_dict
-    for key, val in updating_dict.items():
-        if isinstance(val, collections.abc.Mapping):
-            # avoids KeyError by returning {}
-            to_be_updated_dict[key] = recursive_dict_update(to_be_updated_dict.get(key, {}), val)
-        else:
-            to_be_updated_dict[key] = val
-    return to_be_updated_dict
-
+import QDMPy.io.json2dict
+import QDMPy.io.systems as systems
+import QDMPy.fit._models as fit_models
 
 # ============================================================================
 
@@ -105,7 +110,7 @@ def load_options(options_dict=None, options_path=None, check_for_prev_result=Fal
         raise RuntimeError("pass one of options_dict OR options_path to load_options")
 
     if options_path is not None:
-        prelim_options = misc.json_to_dict(options_path)
+        prelim_options = QDMPy.io.json2dict.json_to_dict(options_path)
     else:
         prelim_options = OrderedDict(options_dict)  # unnescessary py3.7+, leave to describe intent
 
@@ -114,24 +119,26 @@ def load_options(options_dict=None, options_path=None, check_for_prev_result=Fal
         if key not in prelim_options:
             raise RuntimeError(f"Must provide these options: {required_options}")
 
-    sys = systems.choose_system(prelim_options["system_name"])
+    chosen_system = systems.choose_system(prelim_options["system_name"])
 
-    sys.system_specific_option_update(prelim_options)
+    chosen_system.system_specific_option_update(prelim_options)
 
-    options = sys.get_default_options()  # first load in default options
+    options = chosen_system.get_default_options()  # first load in default options
     # now update with what has been decided upon by user
-    options = recursive_dict_update(options, prelim_options)
+    options = _recursive_dict_update(options, prelim_options)
 
-    sys.determine_binning(options)
+    chosen_system.determine_binning(options)
 
-    sys.system_specific_option_update(options)  # do this again on full options to be sure
+    chosen_system.system_specific_option_update(
+        options
+    )  # do this again on full options to be sure
 
-    options["system"] = sys
+    options["system"] = chosen_system
 
     systems.clean_options(options)  # check all the options make sense
 
     # create output directories
-    define_output_dir(options)
+    _define_output_dir(options)
 
     if not os.path.isdir(options["output_dir"]):
         os.mkdir(options["output_dir"])
@@ -140,113 +147,9 @@ def load_options(options_dict=None, options_path=None, check_for_prev_result=Fal
 
     # don't always check for prev. results (so we can use this fn in other contexts)
     if check_for_prev_result:
-        check_if_already_processed(options)
+        _check_if_already_fit(options)
 
     return options
-
-
-# ============================================================================
-
-
-def define_output_dir(options):
-    """
-    Defines output_dir and data_dir in options.
-    """
-    if options["custom_output_dir"] is not None:
-        output_dir = pathlib.PurePosixPath(
-            interpolate_option_str(str(options["custom_output_dir"]), options)
-        )
-    else:
-        output_dir = pathlib.PurePosixPath(
-            str(options["filepath"]) + "_processed" + "_bin_" + str(options["total_bin"])
-        )
-
-    if options["custom_output_dir_prefix"] is not None:
-        prefix = interpolate_option_str(str(options["custom_output_dir_prefix"]), options)
-    else:
-        prefix = ""
-
-    if options["custom_output_dir_suffix"] is not None:
-        suffix = interpolate_option_str(str(options["custom_output_dir_suffix"]), options)
-    else:
-        suffix = ""
-
-    options["output_dir"] = output_dir.parent.joinpath(prefix + output_dir.stem + suffix)
-    options["data_dir"] = options["output_dir"].joinpath("data")
-
-
-# ============================================================================
-
-
-def interpolate_option_str(interp_str, options):
-    """
-    Interpolates any options between braces in interp_str.
-    I.e. "{fit_backend}" -> f"{options['fit_backend']"
-    (this is possibly possible directly through f-strings but I didn't want to
-    play with fire)
-
-    Arguments
-    ---------
-    interp_str : str
-        String (possibly containing option names between braces) to be interpolated.
-
-    options : dict
-        Generic options dict holding all the user options.
-
-    Returns
-    -------
-    interp_str : str
-        String, now with interpolated values (option between braces).
-    """
-
-    # convert whitespace to underscore
-    interp_str = interp_str.replace(" ", "_")
-    if not ("{" in interp_str and "}" in interp_str):
-        return interp_str
-    pattern = r"\{(\w+)\}"  # all text between braces
-    match_substr_lst = re.findall(pattern, interp_str)
-    locs = []
-    for match_substr in match_substr_lst:
-        start_loc = interp_str.find(match_substr)
-        end_loc = start_loc + len(match_substr) - 1  # both fence posts inclusive
-        locs.append((start_loc, end_loc))
-
-    # ok so now we have the option names (keys) to interpolate (match_substr_lst)
-    # as well as the locations in the string of the same (locs)
-    # first we convert those option names to their variables
-    option_lst = []
-    for option_name in match_substr_lst:
-        try:
-            option_lst.append(str(options[option_name]))
-        except KeyError as e:
-            warnings.warn(
-                "\n"
-                + "KeyError caught interpolating custom output_dir.\n"
-                + f"You gave: {option_name}.\n"
-                + "Avoiding this issue by placing 'option_name' in the dir instead. KeyError msg:"
-                + f"{e}"
-            )
-            option_lst.append(option_name)
-
-    # this block is a bit old-school, but does the trick...
-    locs_passed = 0  # how many match locations we've passed
-    new_str = []  # ok actually a lst but will convert back at end
-
-    for i, c in enumerate(interp_str):
-        # don't want braces in output
-        if c == "{" or c == "}":
-            continue
-
-        #  'inside' a brace -> don't copy these chars
-        if i >= locs[locs_passed][0] and i <= locs[locs_passed][1]:
-            # when we've got to end of this brace location, copy in option
-            if i == locs[locs_passed][1]:
-                new_str.append(option_lst[locs_passed])
-                locs_passed += 1
-        else:
-            new_str.append(c)
-
-    return "".join(new_str)
 
 
 # ============================================================================
@@ -270,7 +173,9 @@ def save_options(options):
             val = str(val).replace("\\", "\\\\")
         if key not in keys_to_remove:
             save_options[key] = val
-    misc.dict_to_json(save_options, "saved_options.json", path_to_dir=options["output_dir"])
+    QDMPy.io.json2dict.dict_to_json(
+        save_options, "saved_options.json", path_to_dir=options["output_dir"]
+    )
 
 
 # ============================================================================
@@ -356,7 +261,7 @@ def reshape_dataset(options, image, sweep_list):
     systems.clean_options(options)
 
     # image = reshape_raw(options, raw_data, sweep_list)
-    image_rebinned, sig, ref, sig_norm = rebin_image(options, image)
+    image_rebinned, sig, ref, sig_norm = _rebin_image(options, image)
     try:
         size_h, size_w = image_rebinned.shape[1:]
     except Exception:
@@ -366,12 +271,12 @@ def reshape_dataset(options, image, sweep_list):
 
     # check options to ensure ROI is in correct format (now we have image size)
     if options["ROI"] != "Full":
-        options["ROI_start"], options["ROI_end"] = check_start_end_rectangle(
+        options["ROI_start"], options["ROI_end"] = _check_start_end_rectangle(
             "ROI", *options["ROI_start"], *options["ROI_end"], size_w, size_h
         )  # opposite convention here, [x, y]
 
     # somewhat important a lot of this isn't hidden, so we can adjust it later
-    PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list = remove_unwanted_data(
+    PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list = _remove_unwanted_data(
         options, image_rebinned, sweep_list, sig, ref, sig_norm
     )  # also cuts sig etc. down to ROI
 
@@ -382,7 +287,7 @@ def reshape_dataset(options, image, sweep_list):
         try:
             if options[f"AOI_{i}_start"] is None or options[f"AOI_{i}_end"] is None:
                 continue
-            options[f"AOI_{i}_start"], options[f"AOI_{i}_end"] = check_start_end_rectangle(
+            options[f"AOI_{i}_start"], options[f"AOI_{i}_end"] = _check_start_end_rectangle(
                 f"AOI_{i}",
                 *options[f"AOI_{i}_start"],
                 *options[f"AOI_{i}_end"],
@@ -410,83 +315,56 @@ def reshape_dataset(options, image, sweep_list):
 # ============================================================================
 
 
-def check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_w, full_size_h):
+def _define_output_dir(options):
     """
-    Checks that 'name' rectange (defined by top left corner 'start_x', 'start_y' and bottom
-    right corner 'end_x', 'end_y') fits within a larger rectangle of size 'full_size_w',
-    'full_size_h'. If there are no good, they're fixed with a warning.
-
-    Arguments
-    ---------
-    name : str
-        The name of the rectangle we're checking (e.g. "ROI", "AOI").
-
-    start_x : int
-        x coordinate (relative to origin) of rectangle's top left corner.
-
-    start_y : int
-        y coordinate (relative to origin) of rectangle's top left corner.
-
-    end_x : int
-        x coordinate (relative to origin) of rectangle's bottom right corner.
-
-    end_y : int
-        y coordinate (relative to origin) of rectangle's bottom right corner.
-
-    full_size_w : int
-        Full width of image (or image region, e.g. ROI).
-
-    full_size_h : int
-        Full height of image (or image region, e.g. ROI).
-
-    Returns
-    -------
-    start_coords : tuple
-        'fixed' start coords: (start_x, start_y)
-
-    end_coords : tuple
-        'fixed' end coords: (end_x, end_y)
+    Defines output_dir and data_dir in options.
     """
+    if options["custom_output_dir"] is not None:
+        output_dir = pathlib.PurePosixPath(
+            _interpolate_option_str(str(options["custom_output_dir"]), options)
+        )
+    else:
+        output_dir = pathlib.PurePosixPath(
+            str(options["filepath"]) + "_processed" + "_bin_" + str(options["total_bin"])
+        )
 
-    if start_x >= end_x:
-        warnings.warn(f"{name} Rectangle ends before it starts (in x), swapping them")
-        temp = start_x
-        start_x = end_x
-        end_x = temp
-    if start_y >= end_y:
-        warnings.warn(f"{name} Rectangle ends before it starts (in y), swapping them")
-        temp = start_x
-        start_x = end_y
-        end_x = temp
+    if options["custom_output_dir_prefix"] is not None:
+        prefix = _interpolate_option_str(str(options["custom_output_dir_prefix"]), options)
+    else:
+        prefix = ""
 
-    if start_x >= full_size_w:
-        warnings.warn(f"{name} Rectangle starts outside image (too large in x), setting to zero.")
-        start_x = 0
-    elif start_x < 0:
-        warnings.warn(f"{name} Rectangle starts outside image (negative in x), setting to zero..")
-        start_x = 0
+    if options["custom_output_dir_suffix"] is not None:
+        suffix = _interpolate_option_str(str(options["custom_output_dir_suffix"]), options)
+    else:
+        suffix = ""
 
-    if start_y >= full_size_h:
-        warnings.warn(f"{name} Rectangle starts outside image (too large in y), setting to zero.")
-        start_y = 0
-    elif start_y < 0:
-        warnings.warn(f"{name}  Rectangle starts outside image (negative in y), setting to zero.")
-        start_y = 0
-
-    if end_x >= full_size_w:
-        warnings.warn(f"{name} Rectangle too big in x, cropping to image.")
-        end_x = full_size_w - 1
-    if end_y >= full_size_h:
-        warnings.warn(f"{name} Rectangle too big in y, cropping to image.")
-        end_y = full_size_h - 1
-
-    return (start_x, start_y), (end_x, end_y)
+    options["output_dir"] = output_dir.parent.joinpath(prefix + output_dir.stem + suffix)
+    options["data_dir"] = options["output_dir"].joinpath("data")
 
 
 # ============================================================================
 
 
-def prev_options_exist(options):
+def _check_if_already_fit(options):
+    """
+    Looks for previous fit result.
+
+    If previous fit result exists, checks for compatibility between option choices.
+
+    Returns nothing.
+    """
+
+    options["found_prev_result"] = (
+        _prev_options_exist(options)
+        and _options_compatible(options, _get_prev_options(options))
+        and _prev_pixel_results_exist(options, _get_prev_options(options))
+    )
+
+
+# ============================================================================
+
+
+def _prev_options_exist(options):
     """
     Checks if options file from previous result can be found in default location, returns Bool.
     """
@@ -497,42 +375,7 @@ def prev_options_exist(options):
 # ============================================================================
 
 
-def get_prev_options(options):
-    """
-    Reads options file from previous fit result (.json), returns a dictionary.
-    """
-    return misc.json_to_dict(options["output_dir"] / "saved_options.json")
-
-    # old version:
-    # prev_opt_path = os.path.normpath(options["output_dir"] / "saved_options.json")
-    # f = open(prev_opt_path)
-    # json_str = f.read()
-    # return json.loads(json_str)
-
-
-# ============================================================================
-
-
-def check_if_already_processed(options):
-    """
-    Looks for previous fit result.
-
-    If previous fit result exists, checks for compatibility between option choices.
-
-    Returns nothing.
-    """
-
-    options["found_prev_result"] = (
-        prev_options_exist(options)
-        and options_compatible(options, get_prev_options(options))
-        and prev_pixel_results_exist(options, get_prev_options(options))
-    )
-
-
-# ============================================================================
-
-
-def options_compatible(options, prev_options):
+def _options_compatible(options, prev_options):
     """
     Checks if option choices are compatible with previously fit options
 
@@ -546,7 +389,7 @@ def options_compatible(options, prev_options):
 
     Returns
     -------
-    options_compatible : bool
+    _options_compatible : bool
         Whether or not options are compatible.
     """
 
@@ -574,7 +417,7 @@ def options_compatible(options, prev_options):
     # check relevant param guesses/bounds
 
     # check relevant fit params
-    if options["fit_backend"] == "scipy":
+    if options["fit_backend"] == "scipyfit":
         for fit_opt_name in [
             "scipy_fit_method",
             "scipy_use_analytic_jac",
@@ -603,7 +446,7 @@ def options_compatible(options, prev_options):
 # ============================================================================
 
 
-def prev_pixel_results_exist(options, prev_options):
+def _prev_pixel_results_exist(options, prev_options):
     """
     Check if the actual fit result files exists.
 
@@ -620,7 +463,7 @@ def prev_pixel_results_exist(options, prev_options):
     pixels_results_exist : bool
         Whether or not previous pixel result files exist.
     """
-    prev_options = get_prev_options(options)
+    prev_options = _get_prev_options(options)
 
     for fn_type, num in prev_options["fit_functions"].items():
         for param_name in fit_models.AVAILABLE_FNS[fn_type].param_defn:
@@ -634,7 +477,91 @@ def prev_pixel_results_exist(options, prev_options):
 # ============================================================================
 
 
-def rebin_image(options, image):
+def _get_prev_options(options):
+    """
+    Reads options file from previous fit result (.json), returns a dictionary.
+    """
+    return QDMPy.io.json2dict.json_to_dict(options["output_dir"] / "saved_options.json")
+
+
+# ============================================================================
+
+
+def _interpolate_option_str(interp_str, options):
+    """
+    Interpolates any options between braces in interp_str.
+    I.e. "{fit_backend}" -> f"{options['fit_backend']"
+    (this is possibly possible directly through f-strings but I didn't want to
+    play with fire)
+
+    Arguments
+    ---------
+    interp_str : str
+        String (possibly containing option names between braces) to be interpolated.
+
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    interp_str : str
+        String, now with interpolated values (option between braces).
+    """
+
+    # convert whitespace to underscore
+    interp_str = interp_str.replace(" ", "_")
+    if not ("{" in interp_str and "}" in interp_str):
+        return interp_str
+    pattern = r"\{(\w+)\}"  # all text between braces
+    match_substr_lst = re.findall(pattern, interp_str)
+    locs = []
+    for match_substr in match_substr_lst:
+        start_loc = interp_str.find(match_substr)
+        end_loc = start_loc + len(match_substr) - 1  # both fence posts inclusive
+        locs.append((start_loc, end_loc))
+
+    # ok so now we have the option names (keys) to interpolate (match_substr_lst)
+    # as well as the locations in the string of the same (locs)
+    # first we convert those option names to their variables
+    option_lst = []
+    for option_name in match_substr_lst:
+        try:
+            option_lst.append(str(options[option_name]))
+        except KeyError as e:
+            warnings.warn(
+                "\n"
+                + "KeyError caught interpolating custom output_dir.\n"
+                + f"You gave: {option_name}.\n"
+                + "Avoiding this issue by placing 'option_name' in the dir instead. KeyError msg:"
+                + f"{e}"
+            )
+            option_lst.append(option_name)
+
+    # this block is a bit old-school, but does the trick...
+    locs_passed = 0  # how many match locations we've passed
+    new_str = []  # ok actually a lst but will convert back at end
+
+    for i, c in enumerate(interp_str):
+        # don't want braces in output
+        if c == "{" or c == "}":
+            continue
+
+        #  'inside' a brace -> don't copy these chars
+        if i >= locs[locs_passed][0] and i <= locs[locs_passed][1]:
+            # when we've got to end of this brace location, copy in option
+            if i == locs[locs_passed][1]:
+                new_str.append(option_lst[locs_passed])
+                locs_passed += 1
+        else:
+            new_str.append(c)
+
+    return "".join(new_str)
+
+
+# ============================================================================
+
+
+def _rebin_image(options, image):
     """
     Reshapes raw data into more useful shape, according to image size in metadata.
 
@@ -714,68 +641,7 @@ def rebin_image(options, image):
 # ============================================================================
 
 
-def define_ROI(options, full_size_h, full_size_w):
-    """
-    Defines meshgrids that can be used to slice image into smaller region of interest (ROI).
-
-    Arguments
-    ---------
-    options : dict
-        Generic options dict holding all the user options.
-
-    full_size_w : int
-        Width of image (after rebin, before ROI cut).
-
-    full_size_h : int
-        Height of image (after rebin, before ROI cut).
-
-    Returns
-    -------
-    ROI : length 2 list of np meshgrids
-        Defines an ROI that can be applied to the 3D image through direct indexing.
-        E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
-    """
-    systems.clean_options(options)
-
-    if options["ROI"] == "Full":
-        ROI = define_area_roi(0, 0, full_size_w - 1, full_size_h - 1)
-    elif options["ROI"] == "Rectangle":
-        start_x, start_y = options["ROI_start"]
-        end_x, end_y = options["ROI_end"]
-        ROI = define_area_roi(start_x, start_y, end_x, end_y)
-
-    return ROI
-
-
-# ============================================================================
-
-
-def define_area_roi(start_x, start_y, end_x, end_y):
-    """
-    Makes a list with of meshgrids that defines the ROI. Rectangular ROI
-
-    Arguments
-    ---------
-    start_x, start_y, end_x, end_y : int
-        Positions of ROI vertices as coordinates of indices.
-        Defines a rectangle between (start_x, start_y) and (end_x, end_y).
-
-    Returns
-    -------
-    ROI : length 2 list of np meshgrids
-        Defines an ROI that can be applied to the 3D image through direct indexing.
-        E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
-    """
-    x = np.linspace(start_x, end_x, end_x - start_x + 1, dtype=int)
-    y = np.linspace(start_y, end_y, end_y - start_y + 1, dtype=int)
-    xv, yv = np.meshgrid(x, y)
-    return [yv, xv]  # arrays are indexed in image convention, e.g. sig[swwpp_param, y, x]
-
-
-# ============================================================================
-
-
-def remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_norm):
+def _remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_norm):
     """
     Removes unwanted sweep values (i.e. freq values or tau values) for all of the data arrays.
 
@@ -837,7 +703,7 @@ def remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_norm
     rem_start = options["remove_start_sweep"]
     rem_end = options["remove_end_sweep"]
 
-    ROI = define_ROI(options, *options["rebinned_image_shape"])
+    ROI = _define_ROI(options, *options["rebinned_image_shape"])
 
     if rem_start < 0:
         warnings.warn("remove_start_sweep must be >=0, setting to zero now.")
@@ -860,7 +726,70 @@ def remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_norm
 # ============================================================================
 
 
-def define_AOIs(options):
+def _define_ROI(options, full_size_h, full_size_w):
+    """
+    Defines meshgrids that can be used to slice image into smaller region of interest (ROI).
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    full_size_w : int
+        Width of image (after rebin, before ROI cut).
+
+    full_size_h : int
+        Height of image (after rebin, before ROI cut).
+
+    Returns
+    -------
+    ROI : length 2 list of np meshgrids
+        Defines an ROI that can be applied to the 3D image through direct indexing.
+        E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
+    """
+    systems.clean_options(options)
+
+    if options["ROI"] == "Full":
+        ROI = _define_area_roi(0, 0, full_size_w - 1, full_size_h - 1)
+    elif options["ROI"] == "Rectangle":
+        start_x, start_y = options["ROI_start"]
+        end_x, end_y = options["ROI_end"]
+        ROI = _define_area_roi(start_x, start_y, end_x, end_y)
+
+    return ROI
+
+
+# ============================================================================
+
+
+def _define_area_roi(start_x, start_y, end_x, end_y):
+    """
+    Makes a list with of meshgrids that defines the ROI. Rectangular ROI
+
+    Arguments
+    ---------
+    start_x, start_y, end_x, end_y : int
+        Positions of ROI vertices as coordinates of indices.
+        Defines a rectangle between (start_x, start_y) and (end_x, end_y).
+
+    Returns
+    -------
+    ROI : length 2 list of np meshgrids
+        Defines an ROI that can be applied to the 3D image through direct indexing.
+        E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
+    """
+    x = np.linspace(start_x, end_x, end_x - start_x + 1, dtype=int)
+    y = np.linspace(start_y, end_y, end_y - start_y + 1, dtype=int)
+    xv, yv = np.meshgrid(x, y)
+    return [yv, xv]  # arrays are indexed in image convention, e.g. sig[swwpp_param, y, x]
+
+
+# ============================================================================
+
+# ============================================================================
+
+
+def _define_AOIs(options):
     """
     Defines areas of interest (AOIs).
 
@@ -892,10 +821,101 @@ def define_AOIs(options):
 
             if start is None or end is None:
                 continue
-            AOIs.append(define_area_roi(*start, *end))
+            AOIs.append(_define_area_roi(*start, *end))
         except KeyError:
             break
     return AOIs
+
+
+def _recursive_dict_update(to_be_updated_dict, updating_dict):
+    """
+    Recursively updates to_be_updated_dict with values from updating_dict (to all dict depths)
+    """
+    if not isinstance(to_be_updated_dict, collections.abc.Mapping):
+        return updating_dict
+    for key, val in updating_dict.items():
+        if isinstance(val, collections.abc.Mapping):
+            # avoids KeyError by returning {}
+            to_be_updated_dict[key] = _recursive_dict_update(to_be_updated_dict.get(key, {}), val)
+        else:
+            to_be_updated_dict[key] = val
+    return to_be_updated_dict
+
+
+# ============================================================================
+
+
+def _check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_w, full_size_h):
+    """
+    Checks that 'name' rectange (defined by top left corner 'start_x', 'start_y' and bottom
+    right corner 'end_x', 'end_y') fits within a larger rectangle of size 'full_size_w',
+    'full_size_h'. If there are no good, they're fixed with a warning.
+
+    Arguments
+    ---------
+    name : str
+        The name of the rectangle we're checking (e.g. "ROI", "AOI").
+
+    start_x : int
+        x coordinate (relative to origin) of rectangle's top left corner.
+
+    start_y : int
+        y coordinate (relative to origin) of rectangle's top left corner.
+
+    end_x : int
+        x coordinate (relative to origin) of rectangle's bottom right corner.
+
+    end_y : int
+        y coordinate (relative to origin) of rectangle's bottom right corner.
+
+    full_size_w : int
+        Full width of image (or image region, e.g. ROI).
+
+    full_size_h : int
+        Full height of image (or image region, e.g. ROI).
+
+    Returns
+    -------
+    start_coords : tuple
+        'fixed' start coords: (start_x, start_y)
+
+    end_coords : tuple
+        'fixed' end coords: (end_x, end_y)
+    """
+
+    if start_x >= end_x:
+        warnings.warn(f"{name} Rectangle ends before it starts (in x), swapping them")
+        temp = start_x
+        start_x = end_x
+        end_x = temp
+    if start_y >= end_y:
+        warnings.warn(f"{name} Rectangle ends before it starts (in y), swapping them")
+        temp = start_x
+        start_x = end_y
+        end_x = temp
+
+    if start_x >= full_size_w:
+        warnings.warn(f"{name} Rectangle starts outside image (too large in x), setting to zero.")
+        start_x = 0
+    elif start_x < 0:
+        warnings.warn(f"{name} Rectangle starts outside image (negative in x), setting to zero..")
+        start_x = 0
+
+    if start_y >= full_size_h:
+        warnings.warn(f"{name} Rectangle starts outside image (too large in y), setting to zero.")
+        start_y = 0
+    elif start_y < 0:
+        warnings.warn(f"{name}  Rectangle starts outside image (negative in y), setting to zero.")
+        start_y = 0
+
+    if end_x >= full_size_w:
+        warnings.warn(f"{name} Rectangle too big in x, cropping to image.")
+        end_x = full_size_w - 1
+    if end_y >= full_size_h:
+        warnings.warn(f"{name} Rectangle too big in y, cropping to image.")
+        end_y = full_size_h - 1
+
+    return (start_x, start_y), (end_x, end_y)
 
 
 # ============================================================================
