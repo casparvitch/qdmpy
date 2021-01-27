@@ -45,9 +45,9 @@ from datetime import timedelta
 
 # ============================================================================
 
-import QDMPy.io.systems as systems
-import QDMPy.fit._models as fit_models
+import QDMPy.systems as systems
 import QDMPy.fit._shared as fit_shared
+import QDMPy.constants
 
 # ==========================================================================
 
@@ -144,7 +144,7 @@ def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
         # extract a guess/bounds for each of the copies of each fn_type (e.g. 8 lorentzians)
         for n in range(num):
 
-            for pos, key in enumerate(fit_models.AVAILABLE_FNS[fn_type].param_defn):
+            for pos, key in enumerate(QDMPy.constants.AVAILABLE_FNS[fn_type].param_defn):
                 # this check is to handle the edge case of guesses/bounds
                 # options being provided as numbers rather than lists of numbers
                 try:

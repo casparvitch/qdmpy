@@ -68,8 +68,8 @@ import re
 # ============================================================================
 
 import QDMPy.io.json2dict
-import QDMPy.io.systems as systems
-import QDMPy.fit._models as fit_models
+import QDMPy.systems as systems
+import QDMPy.constants
 
 # ============================================================================
 
@@ -120,7 +120,7 @@ def load_options(options_dict=None, options_path=None, check_for_prev_result=Fal
         if key not in prelim_options:
             raise RuntimeError(f"Must provide these options: {required_options}")
 
-    chosen_system = systems.choose_system(prelim_options["system_name"])
+    chosen_system = QDMPy.constants.choose_system(prelim_options["system_name"])
 
     chosen_system.system_specific_option_update(prelim_options)
 
@@ -480,7 +480,7 @@ def _prev_pixel_results_exist(options, prev_options):
     prev_options = _get_prev_options(options)
 
     for fn_type, num in prev_options["fit_functions"].items():
-        for param_name in fit_models.AVAILABLE_FNS[fn_type].param_defn:
+        for param_name in QDMPy.constants.AVAILABLE_FNS[fn_type].param_defn:
             for n in range(num):
                 param_key = param_name + "_" + str(n)
                 if not os.path.isfile(options["data_dir"] / (param_key + ".txt")):

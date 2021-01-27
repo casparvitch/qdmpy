@@ -61,7 +61,6 @@ Functions
 # ============================================================================
 
 __author__ = &#34;Sam Scholten&#34;
-
 __pdoc__ = {
     &#34;QDMPy.plot.fits.plot_ROI_PL_image&#34;: True,
     &#34;QDMPy.plot.fits.plot_AOI_PL_images&#34;: True,
@@ -87,9 +86,9 @@ import warnings
 # ============================================================================
 
 import QDMPy.fit._models as fit_models
-import QDMPy.io.systems
+import QDMPy.systems
 import QDMPy.io.json2dict
-
+import QDMPy.io.rawdata
 import QDMPy.plot.common as plot_common
 
 # ===========================================================================
@@ -135,7 +134,6 @@ def plot_ROI_PL_image(options, PL_image):
     if options[&#34;annotate_image_regions&#34;]:
         _annotate_ROI_image(options, ax)
 
-    np.savetxt(options[&#34;data_dir&#34;] / &#34;PL - ROI.txt&#34;, PL_image)
     if options[&#34;save_plots&#34;]:
         fig.savefig(options[&#34;output_dir&#34;] / (&#34;PL - ROI.&#34; + options[&#34;save_fig_type&#34;]))
 
@@ -190,7 +188,6 @@ def plot_AOI_PL_images(options, PL_image_ROI):
     if options[&#34;annotate_image_regions&#34;]:
         _annotate_AOI_image(options, ax)
 
-    np.savetxt(options[&#34;data_dir&#34;] / &#34;PL - AOIs.txt&#34;, PL_image_ROI)
     if options[&#34;save_plots&#34;]:
         fig.savefig(options[&#34;output_dir&#34;] / (&#34;PL - AOIs.&#34; + options[&#34;save_fig_type&#34;]))
 
@@ -298,7 +295,7 @@ def plot_ROI_avg_fits(options, backend_ROI_results_lst):
 # ============================================================================
 
 
-def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
+def plot_AOI_spectra(options, sig, ref, sweep_list):
     &#34;&#34;&#34;
     Plots spectra from each AOI, as well as subtraction and division norms.
 
@@ -306,13 +303,6 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
-    AOIs : list
-        List of AOI regions. Much like ROI object, these are a length-2 list of np meshgrids
-        that can be used to directly index into image to provide a view into just the AOI
-        part of the image. E.g. sig_AOI = sig[:, AOI[0], AOI[1]]. Returns a list as in
-        general we have more than one area of interest.
-        I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]
 
     sig : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
@@ -330,6 +320,7 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
     -------
     fig : matplotlib Figure object
     &#34;&#34;&#34;
+    AOIs = QDMPy.io.rawdata._define_AOIs(options)
 
     # pre-process data to plot
     sig_avgs = []
@@ -467,7 +458,6 @@ def plot_AOI_spectra_fit(
     sig,
     ref,
     sweep_list,
-    AOIs,
     fit_result_collection_lst,
     fit_model,
 ):
@@ -495,14 +485,6 @@ def plot_AOI_spectra_fit(
     sweep_list : list
         List of sweep parameter values (with removed unwanted sweeps at start/end)
 
-
-    AOIs : list
-        List of AOI regions. Much like ROI object, these are a length-2 list of np meshgrids
-        that can be used to directly index into image to provide a view into just the AOI
-        part of the image. E.g. sig_AOI = sig[:, AOI[0], AOI[1]]. Returns a list as in
-        general we have more than one area of interest.
-        I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]
-
     fit_result_collection_lst : list
         List of `QDMPy.fit._shared.FitResultCollection` objects (one for each fit_backend)
         holding ROI, AOI fit results
@@ -519,6 +501,8 @@ def plot_AOI_spectra_fit(
     # ROI avg, single pixel, then each AOI
     # columns:
     # sig &amp; ref, sub &amp; div norm, fit -&gt; compared to ROI {raw, fit, ROI_avg_fit}
+
+    AOIs = QDMPy.io.rawdata._define_AOIs(options)
 
     figsize = mpl.rcParams[&#34;figure.figsize&#34;].copy()
     figsize[0] *= 3  # number of columns
@@ -878,8 +862,6 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
                 options[&#34;system&#34;].get_raw_pixel_size() * options[&#34;total_bin&#34;],
             )
 
-            np.savetxt(options[&#34;data_dir&#34;] / f&#34;{param_key}.txt&#34;, image_data)
-
         if options[&#34;save_plots&#34;]:
             fig.savefig(options[&#34;output_dir&#34;] / (param_name + &#34;.&#34; + options[&#34;save_fig_type&#34;]))
 
@@ -961,7 +943,7 @@ def _annotate_ROI_image(options, ax):
             edgecolor=&#34;r&#34;,
         )
     else:
-        raise QDMPy.io.systems.OptionsError(
+        raise QDMPy.systems.OptionsError(
             &#34;ROI&#34;, options[&#34;ROI&#34;], options[&#34;system&#34;], custom_msg=&#34;Unknown ROI encountered.&#34;
         )
 
@@ -1173,7 +1155,7 @@ Color of label and edge of annotation. Default: "b".</p></div>
             edgecolor=&#34;r&#34;,
         )
     else:
-        raise QDMPy.io.systems.OptionsError(
+        raise QDMPy.systems.OptionsError(
             &#34;ROI&#34;, options[&#34;ROI&#34;], options[&#34;system&#34;], custom_msg=&#34;Unknown ROI encountered.&#34;
         )</code></pre>
 </details>
@@ -1251,7 +1233,6 @@ I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]</dd>
     if options[&#34;annotate_image_regions&#34;]:
         _annotate_AOI_image(options, ax)
 
-    np.savetxt(options[&#34;data_dir&#34;] / &#34;PL - AOIs.txt&#34;, PL_image_ROI)
     if options[&#34;save_plots&#34;]:
         fig.savefig(options[&#34;output_dir&#34;] / (&#34;PL - AOIs.&#34; + options[&#34;save_fig_type&#34;]))
 
@@ -1259,7 +1240,7 @@ I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]</dd>
 </details>
 </dd>
 <dt id="QDMPy.plot.fits.plot_AOI_spectra"><code class="name flex">
-<span>def <span class="ident">plot_AOI_spectra</span></span>(<span>options, AOIs, sig, ref, sweep_list)</span>
+<span>def <span class="ident">plot_AOI_spectra</span></span>(<span>options, sig, ref, sweep_list)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Plots spectra from each AOI, as well as subtraction and division norms.</p>
@@ -1267,12 +1248,6 @@ I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]</dd>
 <dl>
 <dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
 <dd>Generic options dict holding all the user options.</dd>
-<dt><strong><code>AOIs</code></strong> :&ensp;<code>list</code></dt>
-<dd>List of AOI regions. Much like ROI object, these are a length-2 list of np meshgrids
-that can be used to directly index into image to provide a view into just the AOI
-part of the image. E.g. sig_AOI = sig[:, AOI[0], AOI[1]]. Returns a list as in
-general we have more than one area of interest.
-I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]</dd>
 <dt><strong><code>sig</code></strong> :&ensp;<code>np array, 3D</code></dt>
 <dd>Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
 Cut down to ROI.
@@ -1293,7 +1268,7 @@ Format: [sweep_vals, y, x]</dd>
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
+<pre><code class="python">def plot_AOI_spectra(options, sig, ref, sweep_list):
     &#34;&#34;&#34;
     Plots spectra from each AOI, as well as subtraction and division norms.
 
@@ -1301,13 +1276,6 @@ Format: [sweep_vals, y, x]</dd>
     ---------
     options : dict
         Generic options dict holding all the user options.
-
-    AOIs : list
-        List of AOI regions. Much like ROI object, these are a length-2 list of np meshgrids
-        that can be used to directly index into image to provide a view into just the AOI
-        part of the image. E.g. sig_AOI = sig[:, AOI[0], AOI[1]]. Returns a list as in
-        general we have more than one area of interest.
-        I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]
 
     sig : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
@@ -1325,6 +1293,7 @@ Format: [sweep_vals, y, x]</dd>
     -------
     fig : matplotlib Figure object
     &#34;&#34;&#34;
+    AOIs = QDMPy.io.rawdata._define_AOIs(options)
 
     # pre-process data to plot
     sig_avgs = []
@@ -1455,7 +1424,7 @@ Format: [sweep_vals, y, x]</dd>
 </details>
 </dd>
 <dt id="QDMPy.plot.fits.plot_AOI_spectra_fit"><code class="name flex">
-<span>def <span class="ident">plot_AOI_spectra_fit</span></span>(<span>options, sig, ref, sweep_list, AOIs, fit_result_collection_lst, fit_model)</span>
+<span>def <span class="ident">plot_AOI_spectra_fit</span></span>(<span>options, sig, ref, sweep_list, fit_result_collection_lst, fit_model)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Plots sig and ref spectra, sub and div normalisation and fit for the ROI average, a single
@@ -1476,12 +1445,6 @@ Cut down to ROI.
 Format: [sweep_vals, y, x]</dd>
 <dt><strong><code>sweep_list</code></strong> :&ensp;<code>list</code></dt>
 <dd>List of sweep parameter values (with removed unwanted sweeps at start/end)</dd>
-<dt><strong><code>AOIs</code></strong> :&ensp;<code>list</code></dt>
-<dd>List of AOI regions. Much like ROI object, these are a length-2 list of np meshgrids
-that can be used to directly index into image to provide a view into just the AOI
-part of the image. E.g. sig_AOI = sig[:, AOI[0], AOI[1]]. Returns a list as in
-general we have more than one area of interest.
-I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]</dd>
 <dt><strong><code>fit_result_collection_lst</code></strong> :&ensp;<code>list</code></dt>
 <dd>List of <code><a title="QDMPy.fit._shared.FitResultCollection" href="../fit/_shared.html#QDMPy.fit._shared.FitResultCollection">FitResultCollection</a></code> objects (one for each fit_backend)
 holding ROI, AOI fit results</dd>
@@ -1502,7 +1465,6 @@ holding ROI, AOI fit results</dd>
     sig,
     ref,
     sweep_list,
-    AOIs,
     fit_result_collection_lst,
     fit_model,
 ):
@@ -1530,14 +1492,6 @@ holding ROI, AOI fit results</dd>
     sweep_list : list
         List of sweep parameter values (with removed unwanted sweeps at start/end)
 
-
-    AOIs : list
-        List of AOI regions. Much like ROI object, these are a length-2 list of np meshgrids
-        that can be used to directly index into image to provide a view into just the AOI
-        part of the image. E.g. sig_AOI = sig[:, AOI[0], AOI[1]]. Returns a list as in
-        general we have more than one area of interest.
-        I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]
-
     fit_result_collection_lst : list
         List of `QDMPy.fit._shared.FitResultCollection` objects (one for each fit_backend)
         holding ROI, AOI fit results
@@ -1554,6 +1508,8 @@ holding ROI, AOI fit results</dd>
     # ROI avg, single pixel, then each AOI
     # columns:
     # sig &amp; ref, sub &amp; div norm, fit -&gt; compared to ROI {raw, fit, ROI_avg_fit}
+
+    AOIs = QDMPy.io.rawdata._define_AOIs(options)
 
     figsize = mpl.rcParams[&#34;figure.figsize&#34;].copy()
     figsize[0] *= 3  # number of columns
@@ -1812,7 +1768,6 @@ not cut down to ROI.</dd>
     if options[&#34;annotate_image_regions&#34;]:
         _annotate_ROI_image(options, ax)
 
-    np.savetxt(options[&#34;data_dir&#34;] / &#34;PL - ROI.txt&#34;, PL_image)
     if options[&#34;save_plots&#34;]:
         fig.savefig(options[&#34;output_dir&#34;] / (&#34;PL - ROI.&#34; + options[&#34;save_fig_type&#34;]))
 
@@ -2145,8 +2100,6 @@ in the fit model called 'pos', each labeled 'pos_0', 'pos_1' etc. Default: 0.</p
                 c_label,
                 options[&#34;system&#34;].get_raw_pixel_size() * options[&#34;total_bin&#34;],
             )
-
-            np.savetxt(options[&#34;data_dir&#34;] / f&#34;{param_key}.txt&#34;, image_data)
 
         if options[&#34;save_plots&#34;]:
             fig.savefig(options[&#34;output_dir&#34;] / (param_name + &#34;.&#34; + options[&#34;save_fig_type&#34;]))</code></pre>

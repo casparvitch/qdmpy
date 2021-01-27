@@ -10,27 +10,26 @@ Also defined are functions to handle the checking/cleaning of the json options
 file (and then dict) to ensure it is valid etc.
 
 _Make sure_ that any valid systems you define here are placed
-in the SYSTEMS_DICT defined near the bottom.
+in the SYSTEMS defined in `QDMPy.constants`.
 
 Classes
 -------
- - `QDMPy.io.systems.System`
- - `QDMPy.io.systems.UniMelb`
- - `QDMPy.io.systems.Zyla`
- - `QDMPy.io.systems.OptionsError`
+ - `QDMPy.systems.System`
+ - `QDMPy.systems.UniMelb`
+ - `QDMPy.systems.Zyla`
+ - `QDMPy.systems.OptionsError`
 
 
 Functions
 ---------
- - `QDMPy.io.systems.check_option`
- - `QDMPy.io.systems.check_options`
- - `QDMPy.io.systems.clean_options`
+ - `QDMPy.systems.check_option`
+ - `QDMPy.systems.check_options`
+ - `QDMPy.systems.clean_options`
 
 
 Module variables
 ----------------
- - `QDMPy.io.systems.ROOT_PATH`
- - `QDMPy.io.systems.SYSTEMS_DICT`
+ - `QDMPy.systems._ROOT_PATH`
 
 """
 
@@ -39,15 +38,14 @@ Module variables
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "QDMPy.io.systems.System": True,
-    "QDMPy.io.systems.UniMelb": True,
-    "QDMPy.io.systems.Zyla": True,
-    "QDMPy.io.systems.OptionsError": True,
-    "QDMPy.io.systems.check_option": True,
-    "QDMPy.io.systems.check_options": True,
-    "QDMPy.io.systems.clean_options": True,
-    "QDMPy.io.systems.ROOT_PATH": True,
-    "QDMPy.io.systems.SYSTEMS_DICT": True,
+    "QDMPy.systems.System": True,
+    "QDMPy.systems.UniMelb": True,
+    "QDMPy.systems.Zyla": True,
+    "QDMPy.systems.OptionsError": True,
+    "QDMPy.systems.check_option": True,
+    "QDMPy.systems.check_options": True,
+    "QDMPy.systems.clean_options": True,
+    "QDMPy.systems._ROOT_PATH": True,
 }
 
 # ============================================================================
@@ -55,8 +53,8 @@ __pdoc__ = {
 import numpy as np
 import os
 import re
-import pathlib
 import warnings
+import pathlib
 from multiprocessing import cpu_count
 
 # ============================================================================
@@ -65,12 +63,13 @@ import QDMPy.io.json2dict
 
 # ============================================================================
 
+_ROOT_PATH = pathlib.Path(__file__).parent.parent.absolute()
+"""
+Path to the root of the package. E.g. the parent of the QDMPy directory.
+Allows access to the options directory (e.g. to read config json files)
+"""
 
-ROOT_PATH = pathlib.Path(__file__).parent.parent.parent.absolute()
-"""
-Path to the root of the QDMPy package. E.g. the parent of the QDMPy directory.
-Allows access to the options directory (e.g. to read congfig json files)
-"""
+# ============================================================================
 
 
 class System:
@@ -333,7 +332,7 @@ class Zyla(UniMelb):
     """
 
     name = "Zyla"
-    config_path = ROOT_PATH / "options/zyla_config.json"
+    config_path = _ROOT_PATH / "options/zyla_config.json"
 
     def __init__(self, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
@@ -349,8 +348,8 @@ class LiamsWidefield(UniMelb):
     Specific system details for Liam's Widefield QDM. Currently a copy of Zyla.
     """
 
-    name = "Liams Widefield"
-    config_path = ROOT_PATH / "options/liam_widefield_config.json"
+    name = "Liam's Widefield"
+    config_path = _ROOT_PATH / "options/liam_widefield_config.json"
 
     def __init__(self, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
@@ -359,10 +358,6 @@ class LiamsWidefield(UniMelb):
 
     def get_raw_pixel_size(self):
         return self.options_dict["raw_pixel_size"]["option_default"]
-
-
-def choose_system(name):
-    return SYSTEMS_DICT[name]()
 
 
 # ============================================================================
@@ -425,11 +420,3 @@ def clean_options(options):
         return
     else:
         check_options(options)
-
-
-SYSTEMS_DICT = {"Zyla": Zyla, "Liams_Widefield": LiamsWidefield}
-"""
-Dictionary that defines systems available for use.
-
-Add any systems you define here so you can use them.
-"""

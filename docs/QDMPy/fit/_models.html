@@ -46,10 +46,6 @@ Try not to have overlapping parameter names in the same fit.</p>
 <li><code><a title="QDMPy.fit._models.get_param_odict" href="#QDMPy.fit._models.get_param_odict">get_param_odict()</a></code></li>
 <li><code><a title="QDMPy.fit._models.get_param_unit" href="#QDMPy.fit._models.get_param_unit">get_param_unit()</a></code></li>
 </ul>
-<h2 id="module-variables">Module Variables</h2>
-<ul>
-<li><code><a title="QDMPy.fit._models.AVAILABLE_FNS" href="#QDMPy.fit._models.AVAILABLE_FNS">AVAILABLE_FNS</a></code></li>
-</ul>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -82,10 +78,6 @@ Functions
  - `QDMPy.fit._models.get_param_defn`
  - `QDMPy.fit._models.get_param_odict`
  - `QDMPy.fit._models.get_param_unit`
-
-Module variables
-----------------
- - `QDMPy.fit._models.AVAILABLE_FNS`
 &#34;&#34;&#34;
 
 # ============================================================================
@@ -107,7 +99,6 @@ __pdoc__ = {
     &#34;QDMPy.fit._models.get_param_defn&#34;: True,
     &#34;QDMPy.fit._models.get_param_odict&#34;: True,
     &#34;QDMPy.fit._models.get_param_unit&#34;: True,
-    &#34;QDMPy.fit._models.AVAILABLE_FNS&#34;: True,
 }
 
 # ============================================================================
@@ -118,6 +109,7 @@ from collections import OrderedDict
 
 # ============================================================================
 
+import QDMPy.constants
 
 # ================================================================================================
 # ================================================================================================
@@ -148,7 +140,7 @@ class FitModel:
 
         for fn_type, num_fns in fit_functions.items():
             for i in range(num_fns):
-                next_fn = AVAILABLE_FNS[fn_type]  # NOTE: AVAILABLE_FNS defined at end of file
+                next_fn = QDMPy.constants.AVAILABLE_FNS[fn_type]
                 next_fn_param_len = len(next_fn.param_defn)
                 next_fn_param_indices = [all_param_len + i for i in range(next_fn_param_len)]
                 all_param_len += next_fn_param_len
@@ -622,47 +614,12 @@ class Stretched_exponential(FitFunc):
         return J
 
 
-# ==========================================================================
-# ==========================================================================
-
-# careful -&gt; don&#39;t want overlapping param definitions!!!
-AVAILABLE_FNS = {
-    &#34;lorentzian&#34;: Lorentzian,
-    &#34;lorentzian_hyperfine_14&#34;: Lorentzian_hyperfine_14,
-    &#34;lorentzian_hyperfine_15&#34;: Lorentzian_hyperfine_15,
-    &#34;gaussian&#34;: Gaussian,
-    &#34;gaussian_hyperfine_14&#34;: Gaussian_hyperfine_14,
-    &#34;gaussian_hyperfine_15&#34;: Gaussian_hyperfine_15,
-    &#34;constant&#34;: Constant,
-    &#34;linear&#34;: Linear,
-    &#34;circular&#34;: Circular,
-    &#34;stretched_exponential&#34;: Stretched_exponential,
-}
-&#34;&#34;&#34;
-Dictionary that defines fit functions available for use.
-
-Add any functions you define here so you can use them.
-
-Try not to overlap function parameter names.
-&#34;&#34;&#34;
-
-
-# ==========================================================================
 # ==========================================================================</code></pre>
 </details>
 </section>
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-variables">Global variables</h2>
-<dl>
-<dt id="QDMPy.fit._models.AVAILABLE_FNS"><code class="name">var <span class="ident">AVAILABLE_FNS</span></code></dt>
-<dd>
-<div class="desc"><p>Dictionary that defines fit functions available for use.</p>
-<p>Add any functions you define here so you can use them.</p>
-<p>Try not to overlap function parameter names.</p></div>
-</dd>
-</dl>
 </section>
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
@@ -1053,7 +1010,7 @@ format: {"linear": 1, "lorentzian": 8} etc., i.e. options["fit_functions"]</dd>
 
         for fn_type, num_fns in fit_functions.items():
             for i in range(num_fns):
-                next_fn = AVAILABLE_FNS[fn_type]  # NOTE: AVAILABLE_FNS defined at end of file
+                next_fn = QDMPy.constants.AVAILABLE_FNS[fn_type]
                 next_fn_param_len = len(next_fn.param_defn)
                 next_fn_param_indices = [all_param_len + i for i in range(next_fn_param_len)]
                 all_param_len += next_fn_param_len
@@ -1929,18 +1886,12 @@ def grad_fn(x, charac_exp_t, amp_exp, power_exp):
 <ul>
 <li><a href="#classes">Classes</a></li>
 <li><a href="#functions">Functions</a></li>
-<li><a href="#module-variables">Module variables</a></li>
 </ul>
 </div>
 <ul id="index">
 <li><h3>Super-module</h3>
 <ul>
 <li><code><a title="QDMPy.fit" href="index.html">QDMPy.fit</a></code></li>
-</ul>
-</li>
-<li><h3><a href="#header-variables">Global variables</a></h3>
-<ul class="">
-<li><code><a title="QDMPy.fit._models.AVAILABLE_FNS" href="#QDMPy.fit._models.AVAILABLE_FNS">AVAILABLE_FNS</a></code></li>
 </ul>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>

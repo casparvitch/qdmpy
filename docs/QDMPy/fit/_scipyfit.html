@@ -85,9 +85,9 @@ from datetime import timedelta
 
 # ============================================================================
 
-import QDMPy.io.systems as systems
-import QDMPy.fit._models as fit_models
+import QDMPy.systems as systems
 import QDMPy.fit._shared as fit_shared
+import QDMPy.constants
 
 # ==========================================================================
 
@@ -137,7 +137,7 @@ def prep_scipyfit_options(options, fit_model):
         options[&#34;scipyfit_scale_x&#34;] = False
 
     # define jacobian option for least_squares fitting
-    if fit_model.jacobian_scipy is None or not options[&#34;scipyfit_use_analytic_jac&#34;]:
+    if fit_model.jacobian_scipyfit is None or not options[&#34;scipyfit_use_analytic_jac&#34;]:
         scipyfit_options[&#34;jac&#34;] = options[&#34;scipyfit_fit_jac_acc&#34;]
     else:
         scipyfit_options[&#34;jac&#34;] = fit_model.jacobian_scipyfit
@@ -184,7 +184,7 @@ def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
         # extract a guess/bounds for each of the copies of each fn_type (e.g. 8 lorentzians)
         for n in range(num):
 
-            for pos, key in enumerate(fit_models.AVAILABLE_FNS[fn_type].param_defn):
+            for pos, key in enumerate(QDMPy.constants.AVAILABLE_FNS[fn_type].param_defn):
                 # this check is to handle the edge case of guesses/bounds
                 # options being provided as numbers rather than lists of numbers
                 try:
@@ -238,7 +238,7 @@ def fit_ROI_avg_scipyfit(options, sig_norm, sweep_list, fit_model):
     init_param_guess, _ = gen_scipyfit_init_guesses(options, *fit_shared.gen_init_guesses(options))
 
     fitting_results = least_squares(
-        fit_model.residuals_scipy, init_param_guess, args=(sweep_list, pl_roi), **fit_options
+        fit_model.residuals_scipyfit, init_param_guess, args=(sweep_list, pl_roi), **fit_options
     )
 
     best_params = fitting_results.x
@@ -360,7 +360,7 @@ def fit_AOIs_scipyfit(
         aoi_avg = np.nanmean(np.nanmean(aoi_sig_norm, axis=2), axis=1)
 
         fitting_results = least_squares(
-            fit_model.residuals_scipy, guess_params, args=(sweep_list, aoi_avg), **fit_opts
+            fit_model.residuals_scipyfit, guess_params, args=(sweep_list, aoi_avg), **fit_opts
         )
         AOI_avg_best_fit_results_lst.append(fitting_results.x)
 
@@ -620,7 +620,7 @@ from.</dd>
         aoi_avg = np.nanmean(np.nanmean(aoi_sig_norm, axis=2), axis=1)
 
         fitting_results = least_squares(
-            fit_model.residuals_scipy, guess_params, args=(sweep_list, aoi_avg), **fit_opts
+            fit_model.residuals_scipyfit, guess_params, args=(sweep_list, aoi_avg), **fit_opts
         )
         AOI_avg_best_fit_results_lst.append(fitting_results.x)
 
@@ -685,7 +685,7 @@ from.</dd>
     init_param_guess, _ = gen_scipyfit_init_guesses(options, *fit_shared.gen_init_guesses(options))
 
     fitting_results = least_squares(
-        fit_model.residuals_scipy, init_param_guess, args=(sweep_list, pl_roi), **fit_options
+        fit_model.residuals_scipyfit, init_param_guess, args=(sweep_list, pl_roi), **fit_options
     )
 
     best_params = fitting_results.x
@@ -950,7 +950,7 @@ version of that fn_type.</dd>
         # extract a guess/bounds for each of the copies of each fn_type (e.g. 8 lorentzians)
         for n in range(num):
 
-            for pos, key in enumerate(fit_models.AVAILABLE_FNS[fn_type].param_defn):
+            for pos, key in enumerate(QDMPy.constants.AVAILABLE_FNS[fn_type].param_defn):
                 # this check is to handle the edge case of guesses/bounds
                 # options being provided as numbers rather than lists of numbers
                 try:
@@ -1057,7 +1057,7 @@ in format that scipy least_squares expects.</p>
         options[&#34;scipyfit_scale_x&#34;] = False
 
     # define jacobian option for least_squares fitting
-    if fit_model.jacobian_scipy is None or not options[&#34;scipyfit_use_analytic_jac&#34;]:
+    if fit_model.jacobian_scipyfit is None or not options[&#34;scipyfit_use_analytic_jac&#34;]:
         scipyfit_options[&#34;jac&#34;] = options[&#34;scipyfit_fit_jac_acc&#34;]
     else:
         scipyfit_options[&#34;jac&#34;] = fit_model.jacobian_scipyfit

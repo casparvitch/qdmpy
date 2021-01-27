@@ -9,6 +9,7 @@ __pdoc__ = {
     "QDMPy.fit._scipyfit": True,
     "QDMPy.fit._shared": True,
     "QDMPy.fit._models": True,
+    "QDMPy.fit.interface": True,
 }
 
 

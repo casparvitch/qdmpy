@@ -27,6 +27,7 @@
 <ul>
 <li><code><a title="QDMPy.io.fitdata.load_prev_fit_results" href="#QDMPy.io.fitdata.load_prev_fit_results">load_prev_fit_results()</a></code></li>
 <li><code><a title="QDMPy.io.fitdata.load_fit_param" href="#QDMPy.io.fitdata.load_fit_param">load_fit_param()</a></code></li>
+<li><code><a title="QDMPy.io.fitdata.save_pixel_fit_results" href="#QDMPy.io.fitdata.save_pixel_fit_results">save_pixel_fit_results()</a></code></li>
 </ul>
 <details class="source">
 <summary>
@@ -40,6 +41,7 @@ Functions
 ---------
  - `QDMPy.io.fitdata.load_prev_fit_results`
  - `QDMPy.io.fitdata.load_fit_param`
+ - `QDMPy.io.fitdata.save_pixel_fit_results`
 
 &#34;&#34;&#34;
 
@@ -49,6 +51,7 @@ __author__ = &#34;Sam Scholten&#34;
 __pdoc__ = {
     &#34;QDMPy.io.fitdata.load_prev_fit_results&#34;: True,
     &#34;QDMPy.io.fitdata.load_fit_param&#34;: True,
+    &#34;QDMPy.io.fitdata.save_pixel_fit_results&#34;: True,
 }
 
 # ============================================================================
@@ -58,7 +61,7 @@ import numpy as np
 # ============================================================================
 
 import QDMPy.io.rawdata
-import QDMPy.fit._models as fit_models
+import QDMPy.constants
 
 # ============================================================================
 
@@ -71,7 +74,7 @@ def load_prev_fit_results(options):
     fit_param_res_dict = {}
 
     for fn_type, num in prev_options[&#34;fit_functions&#34;].items():
-        for param_name in fit_models.AVAILABLE_FNS[fn_type].param_defn:
+        for param_name in QDMPy.constants.AVAILABLE_FNS[fn_type].param_defn:
             for n in range(num):
                 param_key = param_name + &#34;_&#34; + str(n)
                 fit_param_res_dict[param_key] = load_fit_param(options, param_key)
@@ -84,6 +87,15 @@ def load_prev_fit_results(options):
 def load_fit_param(options, param_key):
     &#34;&#34;&#34;Load a previously fit param, of name &#39;param_key&#39;.&#34;&#34;&#34;
     return np.loadtxt(options[&#34;data_dir&#34;] / (param_key + &#34;.txt&#34;))
+
+
+# ============================================================================
+
+
+def save_pixel_fit_results(options, pixel_fit_params):
+    if pixel_fit_params is not None:
+        for param_key, result in pixel_fit_params.items():
+            np.savetxt(options[&#34;data_dir&#34;] / f&#34;{param_key}.txt&#34;, result)
 
 
 # ============================================================================</code></pre>
@@ -127,11 +139,26 @@ def load_fit_param(options, param_key):
     fit_param_res_dict = {}
 
     for fn_type, num in prev_options[&#34;fit_functions&#34;].items():
-        for param_name in fit_models.AVAILABLE_FNS[fn_type].param_defn:
+        for param_name in QDMPy.constants.AVAILABLE_FNS[fn_type].param_defn:
             for n in range(num):
                 param_key = param_name + &#34;_&#34; + str(n)
                 fit_param_res_dict[param_key] = load_fit_param(options, param_key)
     return fit_param_res_dict</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.fitdata.save_pixel_fit_results"><code class="name flex">
+<span>def <span class="ident">save_pixel_fit_results</span></span>(<span>options, pixel_fit_params)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_pixel_fit_results(options, pixel_fit_params):
+    if pixel_fit_params is not None:
+        for param_key, result in pixel_fit_params.items():
+            np.savetxt(options[&#34;data_dir&#34;] / f&#34;{param_key}.txt&#34;, result)</code></pre>
 </details>
 </dd>
 </dl>
@@ -156,6 +183,7 @@ def load_fit_param(options, param_key):
 <ul class="">
 <li><code><a title="QDMPy.io.fitdata.load_fit_param" href="#QDMPy.io.fitdata.load_fit_param">load_fit_param</a></code></li>
 <li><code><a title="QDMPy.io.fitdata.load_prev_fit_results" href="#QDMPy.io.fitdata.load_prev_fit_results">load_prev_fit_results</a></code></li>
+<li><code><a title="QDMPy.io.fitdata.save_pixel_fit_results" href="#QDMPy.io.fitdata.save_pixel_fit_results">save_pixel_fit_results</a></code></li>
 </ul>
 </li>
 </ul>

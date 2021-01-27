@@ -44,7 +44,7 @@ import warnings
 # ============================================================================
 
 import QDMPy.fit._models as fit_models
-import QDMPy.io.systems
+import QDMPy.systems
 import QDMPy.io.json2dict
 import QDMPy.io.rawdata
 import QDMPy.plot.common as plot_common
@@ -901,7 +901,7 @@ def _annotate_ROI_image(options, ax):
             edgecolor="r",
         )
     else:
-        raise QDMPy.io.systems.OptionsError(
+        raise QDMPy.systems.OptionsError(
             "ROI", options["ROI"], options["system"], custom_msg="Unknown ROI encountered."
         )
 

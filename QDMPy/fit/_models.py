@@ -26,10 +26,6 @@ Functions
  - `QDMPy.fit._models.get_param_defn`
  - `QDMPy.fit._models.get_param_odict`
  - `QDMPy.fit._models.get_param_unit`
-
-Module variables
-----------------
- - `QDMPy.fit._models.AVAILABLE_FNS`
 """
 
 # ============================================================================
@@ -51,7 +47,6 @@ __pdoc__ = {
     "QDMPy.fit._models.get_param_defn": True,
     "QDMPy.fit._models.get_param_odict": True,
     "QDMPy.fit._models.get_param_unit": True,
-    "QDMPy.fit._models.AVAILABLE_FNS": True,
 }
 
 # ============================================================================
@@ -62,6 +57,7 @@ from collections import OrderedDict
 
 # ============================================================================
 
+import QDMPy.constants
 
 # ================================================================================================
 # ================================================================================================
@@ -92,7 +88,7 @@ class FitModel:
 
         for fn_type, num_fns in fit_functions.items():
             for i in range(num_fns):
-                next_fn = AVAILABLE_FNS[fn_type]  # NOTE: AVAILABLE_FNS defined at end of file
+                next_fn = QDMPy.constants.AVAILABLE_FNS[fn_type]
                 next_fn_param_len = len(next_fn.param_defn)
                 next_fn_param_indices = [all_param_len + i for i in range(next_fn_param_len)]
                 all_param_len += next_fn_param_len
@@ -566,30 +562,4 @@ class Stretched_exponential(FitFunc):
         return J
 
 
-# ==========================================================================
-# ==========================================================================
-
-# careful -> don't want overlapping param definitions!!!
-AVAILABLE_FNS = {
-    "lorentzian": Lorentzian,
-    "lorentzian_hyperfine_14": Lorentzian_hyperfine_14,
-    "lorentzian_hyperfine_15": Lorentzian_hyperfine_15,
-    "gaussian": Gaussian,
-    "gaussian_hyperfine_14": Gaussian_hyperfine_14,
-    "gaussian_hyperfine_15": Gaussian_hyperfine_15,
-    "constant": Constant,
-    "linear": Linear,
-    "circular": Circular,
-    "stretched_exponential": Stretched_exponential,
-}
-"""
-Dictionary that defines fit functions available for use.
-
-Add any functions you define here so you can use them.
-
-Try not to overlap function parameter names.
-"""
-
-
-# ==========================================================================
 # ==========================================================================

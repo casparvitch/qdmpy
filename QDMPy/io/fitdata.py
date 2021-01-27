@@ -26,7 +26,7 @@ import numpy as np
 # ============================================================================
 
 import QDMPy.io.rawdata
-import QDMPy.fit._models as fit_models
+import QDMPy.constants
 
 # ============================================================================
 
@@ -39,7 +39,7 @@ def load_prev_fit_results(options):
     fit_param_res_dict = {}
 
     for fn_type, num in prev_options["fit_functions"].items():
-        for param_name in fit_models.AVAILABLE_FNS[fn_type].param_defn:
+        for param_name in QDMPy.constants.AVAILABLE_FNS[fn_type].param_defn:
             for n in range(num):
                 param_key = param_name + "_" + str(n)
                 fit_param_res_dict[param_key] = load_fit_param(options, param_key)
@@ -59,7 +59,7 @@ def load_fit_param(options, param_key):
 
 def save_pixel_fit_results(options, pixel_fit_params):
     if pixel_fit_params is not None:
-        for param_key, result in enumerate(pixel_fit_params):
+        for param_key, result in pixel_fit_params.items():
             np.savetxt(options["data_dir"] / f"{param_key}.txt", result)
 
 

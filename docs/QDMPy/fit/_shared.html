@@ -88,6 +88,7 @@ import numpy as np
 
 import QDMPy.fit._models as fit_models
 import QDMPy.io.json2dict
+import QDMPy.constants
 
 # ============================================================================
 
@@ -329,7 +330,7 @@ def gen_init_guesses(options):
     init_bounds = {}
 
     for fn_type, num in options[&#34;fit_functions&#34;].items():
-        fit_func = fit_models.AVAILABLE_FNS[fn_type](num)
+        fit_func = QDMPy.constants.AVAILABLE_FNS[fn_type](num)
         for param_key in fit_func.param_defn:
             guess = options[param_key + &#34;_guess&#34;]
             if param_key + &#34;_range&#34; in options:
@@ -548,7 +549,7 @@ version of that fn_type.</dd>
     init_bounds = {}
 
     for fn_type, num in options[&#34;fit_functions&#34;].items():
-        fit_func = fit_models.AVAILABLE_FNS[fn_type](num)
+        fit_func = QDMPy.constants.AVAILABLE_FNS[fn_type](num)
         for param_key in fit_func.param_defn:
             guess = options[param_key + &#34;_guess&#34;]
             if param_key + &#34;_range&#34; in options:

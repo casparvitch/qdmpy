@@ -32,6 +32,7 @@ general options dictionary.</p>
 <li><code><a title="QDMPy.io.rawdata.save_options" href="#QDMPy.io.rawdata.save_options">save_options()</a></code></li>
 <li><code><a title="QDMPy.io.rawdata.load_image_and_sweep" href="#QDMPy.io.rawdata.load_image_and_sweep">load_image_and_sweep()</a></code></li>
 <li><code><a title="QDMPy.io.rawdata.reshape_dataset" href="#QDMPy.io.rawdata.reshape_dataset">reshape_dataset()</a></code></li>
+<li><code><a title="QDMPy.io.rawdata.save_PL_data" href="#QDMPy.io.rawdata.save_PL_data">save_PL_data()</a></code></li>
 <li>QDMPy.io.rawdata._define_output_dir</li>
 <li><code><a title="QDMPy.io.rawdata._check_if_already_fit" href="#QDMPy.io.rawdata._check_if_already_fit">_check_if_already_fit()</a></code></li>
 <li><code><a title="QDMPy.io.rawdata._prev_options_exist" href="#QDMPy.io.rawdata._prev_options_exist">_prev_options_exist()</a></code></li>
@@ -65,6 +66,7 @@ Functions
  - `QDMPy.io.rawdata.save_options`
  - `QDMPy.io.rawdata.load_image_and_sweep`
  - `QDMPy.io.rawdata.reshape_dataset`
+ - `QDMPy.io.rawdata.save_PL_data`
   - QDMPy.io.rawdata._define_output_dir
  - `QDMPy.io.rawdata._check_if_already_fit`
  - `QDMPy.io.rawdata._prev_options_exist`
@@ -90,6 +92,7 @@ __pdoc__ = {
     &#34;QDMPy.io.rawdata.save_options&#34;: True,
     &#34;QDMPy.io.rawdata.load_image_and_sweep&#34;: True,
     &#34;QDMPy.io.rawdata.reshape_dataset&#34;: True,
+    &#34;QDMPy.io.rawdata.save_PL_data&#34;: True,
     &#34;QDMPy.io.rawdata._define_output_dir&#34;: True,
     &#34;QDMPy.io.rawdata._check_if_already_fit&#34;: True,
     &#34;QDMPy.io.rawdata._prev_options_exist&#34;: True,
@@ -108,7 +111,6 @@ __pdoc__ = {
 
 # ============================================================================
 
-
 import numpy as np
 import warnings
 import os
@@ -120,8 +122,8 @@ import re
 # ============================================================================
 
 import QDMPy.io.json2dict
-import QDMPy.io.systems as systems
-import QDMPy.fit._models as fit_models
+import QDMPy.systems as systems
+import QDMPy.constants
 
 # ============================================================================
 
@@ -172,7 +174,7 @@ def load_options(options_dict=None, options_path=None, check_for_prev_result=Fal
         if key not in prelim_options:
             raise RuntimeError(f&#34;Must provide these options: {required_options}&#34;)
 
-    chosen_system = systems.choose_system(prelim_options[&#34;system_name&#34;])
+    chosen_system = QDMPy.constants.choose_system(prelim_options[&#34;system_name&#34;])
 
     chosen_system.system_specific_option_update(prelim_options)
 
@@ -368,6 +370,15 @@ def reshape_dataset(options, image, sweep_list):
 # ============================================================================
 
 
+def save_PL_data(options, PL_image, PL_image_ROI):
+    &#34;&#34;&#34;Saves PL_image and PL_image_ROI to disk&#34;&#34;&#34;
+    np.savetxt(options[&#34;data_dir&#34;] / &#34;PL - ROI.txt&#34;, PL_image)
+    np.savetxt(options[&#34;data_dir&#34;] / &#34;PL - AOIs.txt&#34;, PL_image_ROI)
+
+
+# ============================================================================
+
+
 def _define_output_dir(options):
     &#34;&#34;&#34;
     Defines output_dir and data_dir in options.
@@ -406,12 +417,12 @@ def _check_if_already_fit(options):
 
     Returns nothing.
     &#34;&#34;&#34;
-
-    options[&#34;found_prev_result&#34;] = (
-        _prev_options_exist(options)
-        and _options_compatible(options, _get_prev_options(options))
-        and _prev_pixel_results_exist(options, _get_prev_options(options))
-    )
+    if not options[&#34;force_fit&#34;]:
+        options[&#34;found_prev_result&#34;] = (
+            _prev_options_exist(options)
+            and _options_compatible(options, _get_prev_options(options))
+            and _prev_pixel_results_exist(options, _get_prev_options(options))
+        )
 
 
 # ============================================================================
@@ -472,16 +483,20 @@ def _options_compatible(options, prev_options):
     # check relevant fit params
     if options[&#34;fit_backend&#34;] == &#34;scipyfit&#34;:
         for fit_opt_name in [
-            &#34;scipy_fit_method&#34;,
-            &#34;scipy_use_analytic_jac&#34;,
-            &#34;scipy_fit_jac_acc&#34;,
-            &#34;scipy_fit_gtol&#34;,
-            &#34;scipy_fit_xtol&#34;,
-            &#34;scipy_fit_ftol&#34;,
-            &#34;scipy_scale_x&#34;,
-            &#34;scipy_loss_fn&#34;,
+            &#34;scipyfit_method&#34;,
+            &#34;scipyfit_use_analytic_jac&#34;,
+            &#34;scipyfit_fit_jac_acc&#34;,
+            &#34;scipyfit_fit_gtol&#34;,
+            &#34;scipyfit_fit_xtol&#34;,
+            &#34;scipyfit_fit_ftol&#34;,
+            &#34;scipyfit_scale_x&#34;,
+            &#34;scipyfit_loss_fn&#34;,
         ]:
-            if options[fit_opt_name] != prev_options[fit_opt_name]:
+            if (
+                fit_opt_name not in options
+                or fit_opt_name not in prev_options
+                or options[fit_opt_name] != prev_options[fit_opt_name]
+            ):
                 return False
     elif options[&#34;fit_backend&#34;] == &#34;gpufit&#34;:
         for fit_opt_name in [
@@ -519,7 +534,7 @@ def _prev_pixel_results_exist(options, prev_options):
     prev_options = _get_prev_options(options)
 
     for fn_type, num in prev_options[&#34;fit_functions&#34;].items():
-        for param_name in fit_models.AVAILABLE_FNS[fn_type].param_defn:
+        for param_name in QDMPy.constants.AVAILABLE_FNS[fn_type].param_defn:
             for n in range(num):
                 param_key = param_name + &#34;_&#34; + str(n)
                 if not os.path.isfile(options[&#34;data_dir&#34;] / (param_key + &#34;.txt&#34;)):
@@ -1000,12 +1015,12 @@ def _check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_w
 
     Returns nothing.
     &#34;&#34;&#34;
-
-    options[&#34;found_prev_result&#34;] = (
-        _prev_options_exist(options)
-        and _options_compatible(options, _get_prev_options(options))
-        and _prev_pixel_results_exist(options, _get_prev_options(options))
-    )</code></pre>
+    if not options[&#34;force_fit&#34;]:
+        options[&#34;found_prev_result&#34;] = (
+            _prev_options_exist(options)
+            and _options_compatible(options, _get_prev_options(options))
+            and _prev_pixel_results_exist(options, _get_prev_options(options))
+        )</code></pre>
 </details>
 </dd>
 <dt id="QDMPy.io.rawdata._check_start_end_rectangle"><code class="name flex">
@@ -1491,16 +1506,20 @@ play with fire)</p>
     # check relevant fit params
     if options[&#34;fit_backend&#34;] == &#34;scipyfit&#34;:
         for fit_opt_name in [
-            &#34;scipy_fit_method&#34;,
-            &#34;scipy_use_analytic_jac&#34;,
-            &#34;scipy_fit_jac_acc&#34;,
-            &#34;scipy_fit_gtol&#34;,
-            &#34;scipy_fit_xtol&#34;,
-            &#34;scipy_fit_ftol&#34;,
-            &#34;scipy_scale_x&#34;,
-            &#34;scipy_loss_fn&#34;,
+            &#34;scipyfit_method&#34;,
+            &#34;scipyfit_use_analytic_jac&#34;,
+            &#34;scipyfit_fit_jac_acc&#34;,
+            &#34;scipyfit_fit_gtol&#34;,
+            &#34;scipyfit_fit_xtol&#34;,
+            &#34;scipyfit_fit_ftol&#34;,
+            &#34;scipyfit_scale_x&#34;,
+            &#34;scipyfit_loss_fn&#34;,
         ]:
-            if options[fit_opt_name] != prev_options[fit_opt_name]:
+            if (
+                fit_opt_name not in options
+                or fit_opt_name not in prev_options
+                or options[fit_opt_name] != prev_options[fit_opt_name]
+            ):
                 return False
     elif options[&#34;fit_backend&#34;] == &#34;gpufit&#34;:
         for fit_opt_name in [
@@ -1573,7 +1592,7 @@ play with fire)</p>
     prev_options = _get_prev_options(options)
 
     for fn_type, num in prev_options[&#34;fit_functions&#34;].items():
-        for param_name in fit_models.AVAILABLE_FNS[fn_type].param_defn:
+        for param_name in QDMPy.constants.AVAILABLE_FNS[fn_type].param_defn:
             for n in range(num):
                 param_key = param_name + &#34;_&#34; + str(n)
                 if not os.path.isfile(options[&#34;data_dir&#34;] / (param_key + &#34;.txt&#34;)):
@@ -1971,7 +1990,7 @@ Default: False</p>
         if key not in prelim_options:
             raise RuntimeError(f&#34;Must provide these options: {required_options}&#34;)
 
-    chosen_system = systems.choose_system(prelim_options[&#34;system_name&#34;])
+    chosen_system = QDMPy.constants.choose_system(prelim_options[&#34;system_name&#34;])
 
     chosen_system.system_specific_option_update(prelim_options)
 
@@ -2152,6 +2171,21 @@ Format: [sweep_vals, y, x]</dd>
     return PL_image, PL_image_ROI, sig, ref, sig_norm, single_pixel_pl, sweep_list</code></pre>
 </details>
 </dd>
+<dt id="QDMPy.io.rawdata.save_PL_data"><code class="name flex">
+<span>def <span class="ident">save_PL_data</span></span>(<span>options, PL_image, PL_image_ROI)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Saves PL_image and PL_image_ROI to disk</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_PL_data(options, PL_image, PL_image_ROI):
+    &#34;&#34;&#34;Saves PL_image and PL_image_ROI to disk&#34;&#34;&#34;
+    np.savetxt(options[&#34;data_dir&#34;] / &#34;PL - ROI.txt&#34;, PL_image)
+    np.savetxt(options[&#34;data_dir&#34;] / &#34;PL - AOIs.txt&#34;, PL_image_ROI)</code></pre>
+</details>
+</dd>
 <dt id="QDMPy.io.rawdata.save_options"><code class="name flex">
 <span>def <span class="ident">save_options</span></span>(<span>options)</span>
 </code></dt>
@@ -2226,6 +2260,7 @@ Format: [sweep_vals, y, x]</dd>
 <li><code><a title="QDMPy.io.rawdata.load_image_and_sweep" href="#QDMPy.io.rawdata.load_image_and_sweep">load_image_and_sweep</a></code></li>
 <li><code><a title="QDMPy.io.rawdata.load_options" href="#QDMPy.io.rawdata.load_options">load_options</a></code></li>
 <li><code><a title="QDMPy.io.rawdata.reshape_dataset" href="#QDMPy.io.rawdata.reshape_dataset">reshape_dataset</a></code></li>
+<li><code><a title="QDMPy.io.rawdata.save_PL_data" href="#QDMPy.io.rawdata.save_PL_data">save_PL_data</a></code></li>
 <li><code><a title="QDMPy.io.rawdata.save_options" href="#QDMPy.io.rawdata.save_options">save_options</a></code></li>
 </ul>
 </li>

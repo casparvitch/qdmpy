@@ -41,6 +41,7 @@ import numpy as np
 
 import QDMPy.fit._models as fit_models
 import QDMPy.fit._shared as fit_shared
+import QDMPy.constants
 
 # ============================================================================
 
@@ -201,7 +202,7 @@ def gen_gpufit_init_guesses(options, init_guesses, init_bounds):
         for n in range(num_fns_required):
 
             if n < num:
-                for pos, key in enumerate(fit_models.AVAILABLE_FNS[fn_type].param_defn):
+                for pos, key in enumerate(QDMPy.constants.AVAILABLE_FNS[fn_type].param_defn):
                     # these checks here are to handling the edge case of guesses/bounds
                     # options being provided as numbers rather than lists of numbers
                     try:
@@ -216,7 +217,7 @@ def gen_gpufit_init_guesses(options, init_guesses, init_bounds):
                         bound_lst.append(init_bounds[key][1])
             else:
                 # insert guesses and bounds for params we won't fit. (gpufit requires full array)
-                for pos, key in enumerate(fit_models.AVAILABLE_FNS[fn_type].param_defn):
+                for pos, key in enumerate(QDMPy.constants.AVAILABLE_FNS[fn_type].param_defn):
                     param_lst.append(0)
                     bound_lst.append(0)
                     bound_lst.append(1)
