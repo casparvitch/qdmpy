@@ -549,10 +549,10 @@
     "colormap_range_dicts": {
         "option_default": {
             "param_images": {
-                "type": "min_max_symmetric_about_mean"
+                "type": "_min_max_symmetric_about_mean"
             },
             "PL_images": {
-                "type": "min_max"
+                "type": "_min_max"
             }
         }
     },

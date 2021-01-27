@@ -66,7 +66,7 @@ import QDMPy.io.json2dict
 # ============================================================================
 
 
-ROOT_PATH = pathlib.Path(__file__).parent.parent.absolute()
+ROOT_PATH = pathlib.Path(__file__).parent.parent.parent.absolute()
 """
 Path to the root of the QDMPy package. E.g. the parent of the QDMPy directory.
 Allows access to the options directory (e.g. to read congfig json files)

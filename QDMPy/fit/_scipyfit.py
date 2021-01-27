@@ -97,7 +97,7 @@ def prep_scipyfit_options(options, fit_model):
         options["scipyfit_scale_x"] = False
 
     # define jacobian option for least_squares fitting
-    if fit_model.jacobian_scipy is None or not options["scipyfit_use_analytic_jac"]:
+    if fit_model.jacobian_scipyfit is None or not options["scipyfit_use_analytic_jac"]:
         scipyfit_options["jac"] = options["scipyfit_fit_jac_acc"]
     else:
         scipyfit_options["jac"] = fit_model.jacobian_scipyfit
@@ -198,7 +198,7 @@ def fit_ROI_avg_scipyfit(options, sig_norm, sweep_list, fit_model):
     init_param_guess, _ = gen_scipyfit_init_guesses(options, *fit_shared.gen_init_guesses(options))
 
     fitting_results = least_squares(
-        fit_model.residuals_scipy, init_param_guess, args=(sweep_list, pl_roi), **fit_options
+        fit_model.residuals_scipyfit, init_param_guess, args=(sweep_list, pl_roi), **fit_options
     )
 
     best_params = fitting_results.x
@@ -320,7 +320,7 @@ def fit_AOIs_scipyfit(
         aoi_avg = np.nanmean(np.nanmean(aoi_sig_norm, axis=2), axis=1)
 
         fitting_results = least_squares(
-            fit_model.residuals_scipy, guess_params, args=(sweep_list, aoi_avg), **fit_opts
+            fit_model.residuals_scipyfit, guess_params, args=(sweep_list, aoi_avg), **fit_opts
         )
         AOI_avg_best_fit_results_lst.append(fitting_results.x)
 

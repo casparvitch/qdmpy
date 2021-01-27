@@ -19,7 +19,6 @@ Functions
 # ============================================================================
 
 __author__ = "Sam Scholten"
-
 __pdoc__ = {
     "QDMPy.plot.fits.plot_ROI_PL_image": True,
     "QDMPy.plot.fits.plot_AOI_PL_images": True,
@@ -47,7 +46,7 @@ import warnings
 import QDMPy.fit._models as fit_models
 import QDMPy.io.systems
 import QDMPy.io.json2dict
-
+import QDMPy.io.rawdata
 import QDMPy.plot.common as plot_common
 
 # ===========================================================================
@@ -93,7 +92,6 @@ def plot_ROI_PL_image(options, PL_image):
     if options["annotate_image_regions"]:
         _annotate_ROI_image(options, ax)
 
-    np.savetxt(options["data_dir"] / "PL - ROI.txt", PL_image)
     if options["save_plots"]:
         fig.savefig(options["output_dir"] / ("PL - ROI." + options["save_fig_type"]))
 
@@ -148,7 +146,6 @@ def plot_AOI_PL_images(options, PL_image_ROI):
     if options["annotate_image_regions"]:
         _annotate_AOI_image(options, ax)
 
-    np.savetxt(options["data_dir"] / "PL - AOIs.txt", PL_image_ROI)
     if options["save_plots"]:
         fig.savefig(options["output_dir"] / ("PL - AOIs." + options["save_fig_type"]))
 
@@ -256,7 +253,7 @@ def plot_ROI_avg_fits(options, backend_ROI_results_lst):
 # ============================================================================
 
 
-def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
+def plot_AOI_spectra(options, sig, ref, sweep_list):
     """
     Plots spectra from each AOI, as well as subtraction and division norms.
 
@@ -264,13 +261,6 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
-    AOIs : list
-        List of AOI regions. Much like ROI object, these are a length-2 list of np meshgrids
-        that can be used to directly index into image to provide a view into just the AOI
-        part of the image. E.g. sig_AOI = sig[:, AOI[0], AOI[1]]. Returns a list as in
-        general we have more than one area of interest.
-        I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]
 
     sig : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
@@ -288,6 +278,7 @@ def plot_AOI_spectra(options, AOIs, sig, ref, sweep_list):
     -------
     fig : matplotlib Figure object
     """
+    AOIs = QDMPy.io.rawdata._define_AOIs(options)
 
     # pre-process data to plot
     sig_avgs = []
@@ -425,7 +416,6 @@ def plot_AOI_spectra_fit(
     sig,
     ref,
     sweep_list,
-    AOIs,
     fit_result_collection_lst,
     fit_model,
 ):
@@ -453,14 +443,6 @@ def plot_AOI_spectra_fit(
     sweep_list : list
         List of sweep parameter values (with removed unwanted sweeps at start/end)
 
-
-    AOIs : list
-        List of AOI regions. Much like ROI object, these are a length-2 list of np meshgrids
-        that can be used to directly index into image to provide a view into just the AOI
-        part of the image. E.g. sig_AOI = sig[:, AOI[0], AOI[1]]. Returns a list as in
-        general we have more than one area of interest.
-        I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]
-
     fit_result_collection_lst : list
         List of `QDMPy.fit._shared.FitResultCollection` objects (one for each fit_backend)
         holding ROI, AOI fit results
@@ -477,6 +459,8 @@ def plot_AOI_spectra_fit(
     # ROI avg, single pixel, then each AOI
     # columns:
     # sig & ref, sub & div norm, fit -> compared to ROI {raw, fit, ROI_avg_fit}
+
+    AOIs = QDMPy.io.rawdata._define_AOIs(options)
 
     figsize = mpl.rcParams["figure.figsize"].copy()
     figsize[0] *= 3  # number of columns
@@ -835,8 +819,6 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
                 c_label,
                 options["system"].get_raw_pixel_size() * options["total_bin"],
             )
-
-            np.savetxt(options["data_dir"] / f"{param_key}.txt", image_data)
 
         if options["save_plots"]:
             fig.savefig(options["output_dir"] / (param_name + "." + options["save_fig_type"]))

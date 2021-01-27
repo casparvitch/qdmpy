@@ -6,6 +6,7 @@ Functions
 ---------
  - `QDMPy.io.fitdata.load_prev_fit_results`
  - `QDMPy.io.fitdata.load_fit_param`
+ - `QDMPy.io.fitdata.save_pixel_fit_results`
 
 """
 
@@ -15,6 +16,7 @@ __author__ = "Sam Scholten"
 __pdoc__ = {
     "QDMPy.io.fitdata.load_prev_fit_results": True,
     "QDMPy.io.fitdata.load_fit_param": True,
+    "QDMPy.io.fitdata.save_pixel_fit_results": True,
 }
 
 # ============================================================================
@@ -50,6 +52,15 @@ def load_prev_fit_results(options):
 def load_fit_param(options, param_key):
     """Load a previously fit param, of name 'param_key'."""
     return np.loadtxt(options["data_dir"] / (param_key + ".txt"))
+
+
+# ============================================================================
+
+
+def save_pixel_fit_results(options, pixel_fit_params):
+    if pixel_fit_params is not None:
+        for param_key, result in enumerate(pixel_fit_params):
+            np.savetxt(options["data_dir"] / f"{param_key}.txt", result)
 
 
 # ============================================================================

@@ -12,6 +12,7 @@ Functions
  - `QDMPy.io.rawdata.save_options`
  - `QDMPy.io.rawdata.load_image_and_sweep`
  - `QDMPy.io.rawdata.reshape_dataset`
+ - `QDMPy.io.rawdata.save_PL_data`
   - QDMPy.io.rawdata._define_output_dir
  - `QDMPy.io.rawdata._check_if_already_fit`
  - `QDMPy.io.rawdata._prev_options_exist`
@@ -37,6 +38,7 @@ __pdoc__ = {
     "QDMPy.io.rawdata.save_options": True,
     "QDMPy.io.rawdata.load_image_and_sweep": True,
     "QDMPy.io.rawdata.reshape_dataset": True,
+    "QDMPy.io.rawdata.save_PL_data": True,
     "QDMPy.io.rawdata._define_output_dir": True,
     "QDMPy.io.rawdata._check_if_already_fit": True,
     "QDMPy.io.rawdata._prev_options_exist": True,
@@ -54,7 +56,6 @@ __pdoc__ = {
 }
 
 # ============================================================================
-
 
 import numpy as np
 import warnings
@@ -315,6 +316,15 @@ def reshape_dataset(options, image, sweep_list):
 # ============================================================================
 
 
+def save_PL_data(options, PL_image, PL_image_ROI):
+    """Saves PL_image and PL_image_ROI to disk"""
+    np.savetxt(options["data_dir"] / "PL - ROI.txt", PL_image)
+    np.savetxt(options["data_dir"] / "PL - AOIs.txt", PL_image_ROI)
+
+
+# ============================================================================
+
+
 def _define_output_dir(options):
     """
     Defines output_dir and data_dir in options.
@@ -353,12 +363,12 @@ def _check_if_already_fit(options):
 
     Returns nothing.
     """
-
-    options["found_prev_result"] = (
-        _prev_options_exist(options)
-        and _options_compatible(options, _get_prev_options(options))
-        and _prev_pixel_results_exist(options, _get_prev_options(options))
-    )
+    if not options["force_fit"]:
+        options["found_prev_result"] = (
+            _prev_options_exist(options)
+            and _options_compatible(options, _get_prev_options(options))
+            and _prev_pixel_results_exist(options, _get_prev_options(options))
+        )
 
 
 # ============================================================================
@@ -419,16 +429,20 @@ def _options_compatible(options, prev_options):
     # check relevant fit params
     if options["fit_backend"] == "scipyfit":
         for fit_opt_name in [
-            "scipy_fit_method",
-            "scipy_use_analytic_jac",
-            "scipy_fit_jac_acc",
-            "scipy_fit_gtol",
-            "scipy_fit_xtol",
-            "scipy_fit_ftol",
-            "scipy_scale_x",
-            "scipy_loss_fn",
+            "scipyfit_method",
+            "scipyfit_use_analytic_jac",
+            "scipyfit_fit_jac_acc",
+            "scipyfit_fit_gtol",
+            "scipyfit_fit_xtol",
+            "scipyfit_fit_ftol",
+            "scipyfit_scale_x",
+            "scipyfit_loss_fn",
         ]:
-            if options[fit_opt_name] != prev_options[fit_opt_name]:
+            if (
+                fit_opt_name not in options
+                or fit_opt_name not in prev_options
+                or options[fit_opt_name] != prev_options[fit_opt_name]
+            ):
                 return False
     elif options["fit_backend"] == "gpufit":
         for fit_opt_name in [

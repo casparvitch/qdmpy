@@ -18,7 +18,6 @@ Functions
 # ============================================================================
 
 __author__ = "Sam Scholten"
-
 __pdoc__ = {
     "QDMPy.fit.interface.define_fit_model": True,
     "QDMPy.fit.interface.fit_ROI_avg": True,
@@ -34,7 +33,7 @@ import warnings
 # ============================================================================
 
 import QDMPy.fit._models as fit_models
-
+import QDMPy.io.rawdata
 
 # ============================================================================
 
@@ -86,14 +85,14 @@ def _prep_fit_backends(options, fit_model):
             # import, but make it globally available (to module)
             global fit_scipyfit
             _temp = __import__("QDMPy.fit._scipyfit", globals(), locals())
-            fit_scipyfit = _temp.fit_scipyfit
+            fit_scipyfit = _temp.fit._scipyfit
 
         elif fit_backend == "gpufit":
             # here we use a programmatic import as we don't want to load (and crash)
             # if user doesn't have the gpufit stuff installed
             global fit_gpufit
             _temp = __import__("QDMPy.fit._gpufit", globals(), locals())
-            fit_gpufit = _temp.fit_gpufit
+            fit_gpufit = _temp.fit._gpufit
 
             fit_gpufit.prep_gpufit_backend(options, fit_model)
         else:
@@ -155,9 +154,7 @@ def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
 # ============================================================================
 
 
-def fit_AOIs(
-    options, sig_norm, single_pixel_pl, sweep_list, fit_model, AOIs, backend_ROI_results_lst
-):
+def fit_AOIs(options, sig_norm, single_pixel_pl, sweep_list, fit_model, backend_ROI_results_lst):
     """
     Fit AOIs and single pixel with chosen backends and return fit_result_collection_lst
 
@@ -178,10 +175,6 @@ def fit_AOIs(
     fit_model : `QDMPy.fit._models.FitModel`
         Model we're fitting to.
 
-    AOIs : list
-        List of AOI specifications - each a length-2 iterable that can be used to directly index
-        into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].
-
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
         `QDMPy.fit._shared.ROIAvgFitResult` object, to pull `QDMPy.fit._shared.ROIAvgFitResult.fit_options`
         from.
@@ -191,6 +184,7 @@ def fit_AOIs(
     fit_result_collection : `QDMPy.fit._shared.FitResultCollection`
         `QDMPy.fit._shared.FitResultCollection` object.
     """
+    AOIs = QDMPy.io.rawdata._define_AOIs(options)
 
     fit_result_collection_lst = []  # list of FitResultCollection objects
     # iterate through all possible fit backend choices
