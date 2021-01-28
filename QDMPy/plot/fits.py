@@ -46,7 +46,7 @@ import warnings
 import QDMPy.fit._models as fit_models
 import QDMPy.systems
 import QDMPy.io.json2dict
-import QDMPy.io.rawdata
+import QDMPy.io.raw
 import QDMPy.plot.common as plot_common
 
 # ===========================================================================
@@ -86,7 +86,6 @@ def plot_ROI_PL_image(options, PL_image):
         c_map,
         c_range,
         "Counts",
-        options["system"].get_raw_pixel_size() * options["total_bin"],
     )
 
     if options["annotate_image_regions"]:
@@ -140,7 +139,6 @@ def plot_AOI_PL_images(options, PL_image_ROI):
         c_map,
         c_range,
         "Counts",
-        options["system"].get_raw_pixel_size() * options["total_bin"],
     )
 
     if options["annotate_image_regions"]:
@@ -278,7 +276,7 @@ def plot_AOI_spectra(options, sig, ref, sweep_list):
     -------
     fig : matplotlib Figure object
     """
-    AOIs = QDMPy.io.rawdata._define_AOIs(options)
+    AOIs = QDMPy.io.raw._define_AOIs(options)
 
     # pre-process data to plot
     sig_avgs = []
@@ -460,7 +458,7 @@ def plot_AOI_spectra_fit(
     # columns:
     # sig & ref, sub & div norm, fit -> compared to ROI {raw, fit, ROI_avg_fit}
 
-    AOIs = QDMPy.io.rawdata._define_AOIs(options)
+    AOIs = QDMPy.io.raw._define_AOIs(options)
 
     figsize = mpl.rcParams["figure.figsize"].copy()
     figsize[0] *= 3  # number of columns
@@ -705,7 +703,6 @@ def plot_param_image(options, fit_model, pixel_fit_params, param_name, param_num
         c_map,
         c_range,
         c_label,
-        options["system"].get_raw_pixel_size() * options["total_bin"],
     )
     return fig
 
@@ -817,7 +814,6 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
                 c_map,
                 c_range,
                 c_label,
-                options["system"].get_raw_pixel_size() * options["total_bin"],
             )
 
         if options["save_plots"]:

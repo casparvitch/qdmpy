@@ -28,3 +28,5 @@ from QDMPy.plot.fits import (
     plot_param_image,
     plot_param_images,
 )
+
+from QDMPy.plot.bnvs import *

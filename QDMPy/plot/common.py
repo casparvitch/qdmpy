@@ -88,8 +88,6 @@ def plot_image(options, image_data, title, c_map, c_range, c_label, pixel_size):
     c_label : str
         Label for colormap axis
 
-    pixel_size : str
-        Size of each pixel in metres, used to define a scalebar.
 
     Returns
     -------
@@ -100,9 +98,7 @@ def plot_image(options, image_data, title, c_map, c_range, c_label, pixel_size):
 
     fig, ax = plt.subplots(constrained_layout=True)
 
-    fig, ax = plot_image_on_ax(
-        fig, ax, options, image_data, title, c_map, c_range, c_label, pixel_size
-    )
+    fig, ax = plot_image_on_ax(fig, ax, options, image_data, title, c_map, c_range, c_label)
 
     np.savetxt(options["data_dir"] / f"{title}.txt", image_data)
     if options["save_plots"]:
@@ -114,7 +110,7 @@ def plot_image(options, image_data, title, c_map, c_range, c_label, pixel_size):
 # ============================================================================
 
 
-def plot_image_on_ax(fig, ax, options, image_data, title, c_map, c_range, c_label, pixel_size):
+def plot_image_on_ax(fig, ax, options, image_data, title, c_map, c_range, c_label):
     """
     Plots an image given by image_data onto given figure and ax.
 
@@ -143,9 +139,6 @@ def plot_image_on_ax(fig, ax, options, image_data, title, c_map, c_range, c_labe
 
     c_label : str
         Label for colormap axis
-
-    pixel_size : str
-        Size of each pixel in metres, used to define a scalebar.
 
     Returns
     -------

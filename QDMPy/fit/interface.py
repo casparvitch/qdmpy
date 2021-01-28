@@ -33,7 +33,7 @@ import warnings
 # ============================================================================
 
 import QDMPy.fit._models as fit_models
-import QDMPy.io.rawdata
+import QDMPy.io.raw
 
 # ============================================================================
 
@@ -184,7 +184,7 @@ def fit_AOIs(options, sig_norm, single_pixel_pl, sweep_list, fit_model, backend_
     fit_result_collection : `QDMPy.fit._shared.FitResultCollection`
         `QDMPy.fit._shared.FitResultCollection` object.
     """
-    AOIs = QDMPy.io.rawdata._define_AOIs(options)
+    AOIs = QDMPy.io.raw._define_AOIs(options)
 
     fit_result_collection_lst = []  # list of FitResultCollection objects
     # iterate through all possible fit backend choices

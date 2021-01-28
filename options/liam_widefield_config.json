@@ -50,7 +50,7 @@
     		]
     },
 
-    // Required - name of system used (see systems.py)
+    // Name of system used (see systems.py). 
     "system_name": {
         "option_default": "LiamsWidefield",
     	"option_choices":

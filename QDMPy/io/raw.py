@@ -8,25 +8,25 @@ general options dictionary.
 
 Functions
 ---------
- - `QDMPy.io.rawdata.load_options`
- - `QDMPy.io.rawdata.save_options`
- - `QDMPy.io.rawdata.load_image_and_sweep`
- - `QDMPy.io.rawdata.reshape_dataset`
- - `QDMPy.io.rawdata.save_PL_data`
-  - QDMPy.io.rawdata._define_output_dir
- - `QDMPy.io.rawdata._check_if_already_fit`
- - `QDMPy.io.rawdata._prev_options_exist`
- - `QDMPy.io.rawdata._options_compatible`
- - `QDMPy.io.rawdata._prev_pixel_results_exist`
- - `QDMPy.io.rawdata._get_prev_options`
- - `QDMPy.io.rawdata._interpolate_option_str`
- - `QDMPy.io.rawdata._rebin_image`
- - `QDMPy.io.rawdata._remove_unwanted_data`
- - `QDMPy.io.rawdata._define_ROI`
- - `QDMPy.io.rawdata._define_area_roi`
- - `QDMPy.io.rawdata._define_AOIs`
- - `QDMPy.io.rawdata._recursive_dict_update`
- - `QDMPy.io.rawdata._check_start_end_rectangle`
+ - `QDMPy.io.raw.load_options`
+ - `QDMPy.io.raw.save_options`
+ - `QDMPy.io.raw.load_image_and_sweep`
+ - `QDMPy.io.raw.reshape_dataset`
+ - `QDMPy.io.raw.save_PL_data`
+  - QDMPy.io.raw._define_output_dir
+ - `QDMPy.io.raw._check_if_already_fit`
+ - `QDMPy.io.raw._prev_options_exist`
+ - `QDMPy.io.raw._options_compatible`
+ - `QDMPy.io.raw._prev_pixel_results_exist`
+ - `QDMPy.io.raw._get_prev_options`
+ - `QDMPy.io.raw._interpolate_option_str`
+ - `QDMPy.io.raw._rebin_image`
+ - `QDMPy.io.raw._remove_unwanted_data`
+ - `QDMPy.io.raw._define_ROI`
+ - `QDMPy.io.raw._define_area_roi`
+ - `QDMPy.io.raw._define_AOIs`
+ - `QDMPy.io.raw._recursive_dict_update`
+ - `QDMPy.io.raw._check_start_end_rectangle`
 """
 
 
@@ -34,25 +34,25 @@ Functions
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "QDMPy.io.rawdata.load_options": True,
-    "QDMPy.io.rawdata.save_options": True,
-    "QDMPy.io.rawdata.load_image_and_sweep": True,
-    "QDMPy.io.rawdata.reshape_dataset": True,
-    "QDMPy.io.rawdata.save_PL_data": True,
-    "QDMPy.io.rawdata._define_output_dir": True,
-    "QDMPy.io.rawdata._check_if_already_fit": True,
-    "QDMPy.io.rawdata._prev_options_exist": True,
-    "QDMPy.io.rawdata._options_compatible": True,
-    "QDMPy.io.rawdata._prev_pixel_results_exist": True,
-    "QDMPy.io.rawdata._get_prev_options": True,
-    "QDMPy.io.rawdata._interpolate_option_str": True,
-    "QDMPy.io.rawdata._rebin_image": True,
-    "QDMPy.io.rawdata._remove_unwanted_data": True,
-    "QDMPy.io.rawdata._define_ROI": True,
-    "QDMPy.io.rawdata._define_area_roi": True,
-    "QDMPy.io.rawdata._define_AOIs": True,
-    "QDMPy.io.rawdata._recursive_dict_update": True,
-    "QDMPy.io.rawdata._check_start_end_rectangle": True,
+    "QDMPy.io.raw.load_options": True,
+    "QDMPy.io.raw.save_options": True,
+    "QDMPy.io.raw.load_image_and_sweep": True,
+    "QDMPy.io.raw.reshape_dataset": True,
+    "QDMPy.io.raw.save_PL_data": True,
+    "QDMPy.io.raw._define_output_dir": True,
+    "QDMPy.io.raw._check_if_already_fit": True,
+    "QDMPy.io.raw._prev_options_exist": True,
+    "QDMPy.io.raw._options_compatible": True,
+    "QDMPy.io.raw._prev_pixel_results_exist": True,
+    "QDMPy.io.raw._get_prev_options": True,
+    "QDMPy.io.raw._interpolate_option_str": True,
+    "QDMPy.io.raw._rebin_image": True,
+    "QDMPy.io.raw._remove_unwanted_data": True,
+    "QDMPy.io.raw._define_ROI": True,
+    "QDMPy.io.raw._define_area_roi": True,
+    "QDMPy.io.raw._define_AOIs": True,
+    "QDMPy.io.raw._recursive_dict_update": True,
+    "QDMPy.io.raw._check_start_end_rectangle": True,
 }
 
 # ============================================================================
@@ -104,11 +104,12 @@ def load_options(options_dict=None, options_path=None, check_for_prev_result=Fal
         Generic options dict holding all the user options.
     """
 
-    # only options_dict OR options_path
+    # pass options_dict and/or options_path
     if options_dict is not None and options_path is not None:
-        raise RuntimeError("pass either options_dict OR options_path to load_options")
+        # options_dict takes precedence
+        options_path = None
     if options_dict is None and options_path is None:
-        raise RuntimeError("pass one of options_dict OR options_path to load_options")
+        raise RuntimeError("pass at least one of options_dict and options_path to load_options")
 
     if options_path is not None:
         prelim_options = QDMPy.io.json2dict.json_to_dict(options_path)

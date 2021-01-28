@@ -54,7 +54,7 @@
     		]
     },
 
-    // Name of system used (see systems.py)
+    // Name of system used (see systems.py).
     "system_name": {
         "option_default": "Zyla",
     	"option_choices":
@@ -542,7 +542,9 @@
     "colormaps": {
         "option_default": {
             "param_images": "viridis",
-            "PL_images": "Greys_r"
+            "PL_images": "Greys_r",
+            "bnv_images": "RdBu",
+            "dshift_images": "PRGn"
         }
     },
     // choose range of values mapped across to the colormap limits, for each 'type' of image
@@ -554,6 +556,12 @@
             },
             "PL_images": {
                 "type": "_min_max"
+            },
+            "bnv_images": {
+                "type": "_min_max_symmetric_about_mean"
+            },
+            "dshift_images": {
+                "type": "_min_max_symmetric_about_mean"
             }
         }
     },
