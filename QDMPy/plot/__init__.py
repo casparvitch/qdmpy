@@ -15,18 +15,11 @@ This (sub-) package exposes specific functions to the user:
     - `QDMPy.plot.fits.plot_AOI_spectra_fit`
     - `QDMPy.plot.fits.plot_param_image`
     - `QDMPy.plot.fits.plot_param_images`
+- `QDMPy.plot.bfield`, currently all contents... FIXME
 """
 
-from QDMPy.plot.common import set_mpl_rcparams, plot_image, plot_image_on_ax  # noqa: F401
+from QDMPy.plot.common import *
 
-from QDMPy.plot.fits import (
-    plot_ROI_PL_image,
-    plot_AOI_PL_images,
-    plot_ROI_avg_fits,
-    plot_AOI_spectra,
-    plot_AOI_spectra_fit,
-    plot_param_image,
-    plot_param_images,
-)
+from QDMPy.plot.fits import *
 
-from QDMPy.plot.bnvs import *
+from QDMPy.plot.bfield import *

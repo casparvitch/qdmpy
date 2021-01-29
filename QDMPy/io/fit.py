@@ -7,6 +7,7 @@ Functions
  - `QDMPy.io.fit.load_prev_fit_results`
  - `QDMPy.io.fit.load_fit_param`
  - `QDMPy.io.fit.save_pixel_fit_results`
+ - `QDMPy.io.fit.load_reference_experiment_fit_results`
 
 """
 
@@ -17,6 +18,7 @@ __pdoc__ = {
     "QDMPy.io.fit.load_prev_fit_results": True,
     "QDMPy.io.fit.load_fit_param": True,
     "QDMPy.io.fit.save_pixel_fit_results": True,
+    "QDMPy.io.fit.load_reference_experiment_fit_results": True,
 }
 
 # ============================================================================
@@ -24,6 +26,7 @@ __pdoc__ = {
 import numpy as np
 import warnings
 import os
+from pathlib import Path
 
 # ============================================================================
 
@@ -45,6 +48,7 @@ def load_prev_fit_results(options):
             for n in range(num):
                 param_key = param_name + "_" + str(n)
                 fit_param_res_dict[param_key] = load_fit_param(options, param_key)
+    fit_param_res_dict["residual_0"] = load_fit_param(options, "residual_0")
     return fit_param_res_dict
 
 
@@ -109,6 +113,13 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
         warnings.warn(
             "No reference experiment options dict provided, continuing without reference."
         )
+        ref_name = "no"
+        options["sub_ref_dir"] = options["output_dir"].joinpath(f"sub_{ref_name}_Bnv")
+        options["sub_ref_data_dir"] = options["sub_ref_dir"].joinpath("data")
+        if not os.path.isdir(options["sub_ref_dir"]):
+            os.mkdir(options["sub_ref_dir"])
+        if not os.path.isdir(options["sub_ref_data_dir"]):
+            os.mkdir(options["sub_ref_data_dir"])
         return None
 
     if ref_options_dir is not None:
@@ -119,6 +130,15 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
     ref_options = QDMPy.io.raw.load_options(
         options_dict=ref_options, options_path=ref_options_path, check_for_prev_result=True
     )
+
+    ref_name = Path(ref_options["filepath"]).stem
+    # first make a sub ref output folder
+    options["sub_ref_dir"] = options["output_dir"].joinpath(f"sub_{ref_name}_Bnv")
+    options["sub_ref_data_dir"] = options["sub_ref_dir"].joinpath("data")
+    if not os.path.isdir(options["sub_ref_dir"]):
+        os.mkdir(options["sub_ref_dir"])
+    if not os.path.isdir(options["sub_ref_data_dir"]):
+        os.mkdir(options["sub_ref_data_dir"])
 
     # ok now have ref_options dict, time to load params
     if ref_options["found_prev_result"]:

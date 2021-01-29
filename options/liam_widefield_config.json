@@ -394,7 +394,7 @@
     // lm (fast but doesn't use bounds),
     // trf (uses bounds and the most reliable fit method but can be very slow)
     // dogbox (uses bounds and is faster than trf)
-    "scipyfit_fit_method": {
+    "scipyfit_method": {
         "option_default": "trf",
         "option_choices":
             [
@@ -552,7 +552,10 @@
     "colormaps": {
         "option_default": {
             "param_images": "viridis",
-            "PL_images": "Greys_r"
+            "residual_images": "inferno",
+            "PL_images": "Greys_r",
+            "bnv_images": "RdBu",
+            "dshift_images": "PRGn"
         }
     },
     // choose range of values mapped across to the colormap limits, for each 'type' of image
@@ -560,10 +563,19 @@
     "colormap_range_dicts": {
         "option_default": {
             "param_images": {
-                "type": "min_max_symmetric_about_mean"
+                "type": "_min_max_symmetric_about_mean"
+            },
+            "residual_images": {
+                "type": "_min_max",
             },
             "PL_images": {
-                "type": "min_max"
+                "type": "_min_max"
+            },
+            "bnv_images": {
+                "type": "_min_max_symmetric_about_mean"
+            },
+            "dshift_images": {
+                "type": "_min_max_symmetric_about_mean"
             }
         }
     },
@@ -586,7 +598,9 @@
             "scalebar.height_fraction": 0.015,
             "scalebar.box_alpha": 0.5,
             "scalebar.scale_loc": "top",
-            "scalebar.sep": 1
+            "scalebar.sep": 1,
+            "axes.formatter.useoffset": false,
+            "axes.formatter.use_mathtext": true
         }
     },
     // colors to identify with each AOI region
@@ -650,5 +664,7 @@
     "CUDA_version_runtime": {},
     "CUDA_version_driver": {},
     // time for gpu to fit image
-    "fit_time_(s)": {}
+    "fit_time_(s)": {},
+    // directory within output to save data once ref defined (output_dir/sub_ref_dir)
+    "sub_ref_dir" : {}
 }

@@ -183,6 +183,8 @@ def get_param_unit(fit_model, param_name, param_number):
     """
     Get unit for a given param_key (given by param_name + "_" + param_number)
     """
+    if param_name == "residual":
+        return "Error: sum( || residual(sweep_params) || ) (a.u.)"
     param_dict = get_param_odict(fit_model)
     return param_dict[param_name + "_" + str(param_number)]
 

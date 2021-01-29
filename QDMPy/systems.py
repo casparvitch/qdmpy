@@ -153,7 +153,7 @@ class System:
         """
         # most systems will need these {you need to copy to your subclass method}
         # need to know number of threads to call (might be parallel fitting)
-        options["threads"] = cpu_count() - options["scipy_sub_threads"]
+        options["threads"] = cpu_count() - options["scipyfit_sub_threads"]
         if "base_dir" in options and not self.filepath_joined:
             options["filepath"] = options["base_dir"] / options["filepath"]
             self.filepath_joined = True
@@ -210,8 +210,8 @@ class UniMelb(System):
         # set some things that cannot be stored in the json
 
         # need to know number of threads to call (might be parallel fitting)
-        if "scipy_sub_threads" in options:
-            options["threads"] = cpu_count() - options["scipy_sub_threads"]
+        if "scipyfit_sub_threads" in options:
+            options["threads"] = cpu_count() - options["scipyfit_sub_threads"]
 
         # ensure only useful (scipy) loss method is used
         if "scipy_fit_method" in options:

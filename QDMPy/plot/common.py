@@ -64,7 +64,7 @@ def set_mpl_rcparams(options):
 # ===========================================================================
 
 
-def plot_image(options, image_data, title, c_map, c_range, c_label, pixel_size):
+def plot_image(options, image_data, title, c_map, c_range, c_label):
     """
     Plots an image given by image_data. Saves image_data as txt file as well as the figure.
 
@@ -87,7 +87,6 @@ def plot_image(options, image_data, title, c_map, c_range, c_label, pixel_size):
 
     c_label : str
         Label for colormap axis
-
 
     Returns
     -------
@@ -265,9 +264,10 @@ def _get_colormap_range(c_range_dict, image):
     }
 
     c_range_type = c_range_dict["type"]
-    if "values" in c_range_dict:
+
+    try:
         c_range_values = c_range_dict["values"]
-    else:
+    except KeyError:
         c_range_values = None
 
     range_calculator_dict = {
@@ -312,9 +312,7 @@ def _get_colormap_range(c_range_dict, image):
         ):
             warnings.warn(warning_messages[c_range_type])
             return _min_max_sym_mean(image, c_range_values)
-
-    else:
-        return range_calculator_dict[c_range_type](image, c_range_values)
+    return range_calculator_dict[c_range_type](image, c_range_values)
 
 
 # ============================
@@ -399,7 +397,7 @@ def _deviation_from_mean(image, c_range_values):
     c_range_values : unknown (depends on user settings)
         See `QDMPy.plot.common._get_colormap_range`
     """
-    return ([(1 - c_range_values) * np.mean(image), (1 + c_range_values) * np.mean(image)],)
+    return [(1 - c_range_values) * np.mean(image), (1 + c_range_values) * np.mean(image)]
 
 
 def _percentile(image, c_range_values):
@@ -414,7 +412,7 @@ def _percentile(image, c_range_values):
     c_range_values : unknown (depends on user settings)
         See `QDMPy.plot.common._get_colormap_range`
     """
-    return [np.nan_percentile(image, c_range_values)]
+    return np.nanpercentile(image, c_range_values)
 
 
 def _percentile_sym_zero(image, c_range_values):
@@ -429,7 +427,7 @@ def _percentile_sym_zero(image, c_range_values):
     c_range_values : unknown (depends on user settings)
         See `QDMPy.plot.common._get_colormap_range`
     """
-    plow, phigh = np.nan_percentile(image, c_range_values)  # e.g. [10, 90]
+    plow, phigh = np.nanpercentile(image, c_range_values)  # e.g. [10, 90]
     val = max(abs(plow), abs(phigh))
     return [-val, val]
 

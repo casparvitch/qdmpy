@@ -79,7 +79,7 @@ def prep_scipyfit_options(options, fit_model):
 
     # see scipy.optimize.least_squares
     scipyfit_options = {
-        "method": options["scipyfit_fit_method"],
+        "method": options["scipyfit_method"],
         "verbose": options["scipyfit_verbose_fitting"],
         "gtol": options["scipyfit_fit_gtol"],
         "xtol": options["scipyfit_fit_xtol"],
@@ -87,7 +87,7 @@ def prep_scipyfit_options(options, fit_model):
         "loss": options["scipyfit_loss_fn"],
     }
 
-    if options["scipyfit_fit_method"] != "lm":
+    if options["scipyfit_method"] != "lm":
         scipyfit_options["bounds"] = fit_bounds
         scipyfit_options["verbose"] = options["scipyfit_verbose_fitting"]
 
@@ -411,8 +411,9 @@ def fit_pixels_scipyfit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_re
 
     Returns
     -------
-    fit_result_dict : dict
+    fit_image_results : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
+        Also has 'residual' as a key.
     """
     systems.clean_options(options)
 
@@ -467,10 +468,7 @@ def fit_pixels_scipyfit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_re
     # for the record
     options["fit_time_(s)"] = timedelta(seconds=t1 - t0).total_seconds()
 
-    roi_shape = np.shape(sig_norm)
-    res = fit_shared.get_pixel_fitting_results(
-        fit_model, fit_results, (roi_shape[1], roi_shape[2])
-    )
+    res = fit_shared.get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_ar)
     if options["scramble_pixels"]:
         return fit_shared.unshuffle_fit_results(res, unshuffler)
     else:

@@ -486,6 +486,9 @@ def _prev_pixel_results_exist(options, prev_options):
                 param_key = param_name + "_" + str(n)
                 if not os.path.isfile(options["data_dir"] / (param_key + ".txt")):
                     return False
+
+    if not os.path.isfile(options["data_dir"] / "residual_0.txt"):
+        return False
     return True
 
 

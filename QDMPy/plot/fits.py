@@ -11,6 +11,7 @@ Functions
  - `QDMPy.plot.fits.plot_AOI_spectra_fit`
  - `QDMPy.plot.fits.plot_param_image`
  - `QDMPy.plot.fits.plot_param_images`
+ - `QDMPy.plot.fits.plot_params_flattened`
  - `QDMPy.plot.fits._add_patch_rect`
  - `QDMPy.plot.fits._annotate_ROI_image`
  - `QDMPy.plot.fits._annotate_AOI_image`
@@ -36,6 +37,7 @@ __pdoc__ = {
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
 import numpy as np
 import matplotlib.patches as patches
 import math
@@ -48,6 +50,7 @@ import QDMPy.systems
 import QDMPy.io.json2dict
 import QDMPy.io.raw
 import QDMPy.plot.common as plot_common
+import QDMPy.constants
 
 # ===========================================================================
 
@@ -169,10 +172,18 @@ def plot_ROI_avg_fits(options, backend_ROI_results_lst):
     -------
     fig : matplotlib Figure object
     """
+    figsize = mpl.rcParams["figure.figsize"].copy()
+    figsize[0] *= 2
+    figsize[1] *= 1.5
 
-    fig = plt.figure(constrained_layout=False)  # constrained doesn't work well here
+    fig = plt.figure(
+        figsize=figsize, constrained_layout=False
+    )  # constrained doesn't work well here?
     # xstart, ystart, xend, yend [units are fraction of the image frame, from bottom left corner]
     spectrum_frame = fig.add_axes((0.1, 0.3, 0.8, 0.6))
+
+    lspec_names = []
+    lspec_lines = []
 
     spectrum_frame.plot(
         backend_ROI_results_lst[0].sweep_list,
@@ -183,6 +194,18 @@ def plot_ROI_avg_fits(options, backend_ROI_results_lst):
         mfc="w",
         mec="firebrick",
     )
+    lspec_names.append(f"raw data ({options['normalisation']})")
+    lspec_lines.append(
+        Line2D(
+            [0],
+            [0],
+            ls=" ",
+            marker="o",
+            mfc="w",
+            mec="firebrick",
+        )
+    )
+
     high_res_sweep_list = np.linspace(
         np.min(backend_ROI_results_lst[0].sweep_list),
         np.max(backend_ROI_results_lst[0].sweep_list),
@@ -198,15 +221,31 @@ def plot_ROI_avg_fits(options, backend_ROI_results_lst):
         label="init guess",
         c="darkgreen",
     )
+    lspec_names.append("init guess")
+    lspec_lines.append(
+        Line2D(
+            [0],
+            [0],
+            linestyle=(0, (1, 1)),
+            c="darkgreen",
+        )
+    )
+
     spectrum_frame.set_xticklabels([])  # remove from first frame
+
     spectrum_frame.grid()
     spectrum_frame.set_ylabel("PL (a.u.)")
 
     # residual plot
     residual_frame = fig.add_axes((0.1, 0.1, 0.8, 0.2))
 
+    lresid_names = []
+    lresid_lines = []
+
     residual_frame.grid()
+
     residual_frame.set_xlabel("Sweep parameter")
+    residual_frame.set_ylabel("Fit - data (a.u.)")
 
     for res in backend_ROI_results_lst:
 
@@ -219,6 +258,15 @@ def plot_ROI_avg_fits(options, backend_ROI_results_lst):
             linestyle="--",
             label=f"{res.fit_backend} best fit",
             c=options["fit_backend_colors"][res.fit_backend]["roifit_linecolor"],
+        )
+        lspec_names.append(f"{res.fit_backend} best fit")
+        lspec_lines.append(
+            Line2D(
+                [0],
+                [0],
+                linestyle="--",
+                c=options["fit_backend_colors"][res.fit_backend]["roifit_linecolor"],
+            )
         )
 
         residual_xdata = res.sweep_list
@@ -234,11 +282,41 @@ def plot_ROI_avg_fits(options, backend_ROI_results_lst):
             mfc="w",
             mec=options["fit_backend_colors"][res.fit_backend]["residual_linecolor"],
         )
+        lresid_names.append(f"{res.fit_backend} residual")
+        lresid_lines.append(
+            Line2D(
+                [0],
+                [0],
+                ls="dashed",
+                c=options["fit_backend_colors"][res.fit_backend]["residual_linecolor"],
+                marker="o",
+                mfc="w",
+                mec=options["fit_backend_colors"][res.fit_backend]["residual_linecolor"],
+            )
+        )
 
         res.savejson(f"ROI_avg_fit_{res.fit_backend}.json", options["data_dir"])
 
-    residual_frame.legend()
-    spectrum_frame.legend()
+    # https://jdhao.github.io/2018/01/23/matplotlib-legend-outside-of-axes/
+    # https://matplotlib.org/3.2.1/gallery/lines_bars_and_markers/linestyles.html
+    legend_names = lspec_names.copy()
+    legend_names.extend(lresid_names)
+
+    legend_lines = lspec_lines.copy()
+    legend_lines.extend(lresid_lines)
+
+    spectrum_frame.legend(
+        legend_lines,
+        legend_names,
+        loc="lower left",
+        bbox_to_anchor=(0.0, 1.01),
+        fontsize="medium",
+        ncol=len(legend_names),
+        borderaxespad=0,
+        frameon=False,
+    )
+    fig.subplots_adjust(left=0, bottom=0, right=1, top=1, wspace=0, hspace=0)
+    # spectrum_frame.legend()
 
     if options["save_plots"]:
         fig.savefig(
@@ -674,7 +752,7 @@ def plot_param_image(options, fit_model, pixel_fit_params, param_name, param_num
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
 
     param_name : str
-        Name of parameter you want to plot, e.g. 'fwhm'.
+        Name of parameter you want to plot, e.g. 'fwhm'. Can also be 'residual'.
 
 
     Optional arguments
@@ -690,20 +768,32 @@ def plot_param_image(options, fit_model, pixel_fit_params, param_name, param_num
     """
 
     image = pixel_fit_params[param_name + "_" + str(param_number)]
-    c_map = options["colormaps"]["param_images"]
-    c_range = plot_common._get_colormap_range(
-        options["colormap_range_dicts"]["param_images"], image
-    )
+
+    if param_name == "residual":
+        c_range = plot_common._get_colormap_range(
+            options["colormap_range_dicts"]["residual_images"], image
+        )
+        c_map = options["colormaps"]["residual_images"]
+    else:
+        c_range = plot_common._get_colormap_range(
+            options["colormap_range_dicts"]["param_images"], image
+        )
+        c_map = options["colormaps"]["param_images"]
     c_label = fit_models.get_param_unit(fit_model, param_name, param_number)
 
-    fig, ax = plot_common.plot_image(
-        options,
-        image,
-        param_name + "_" + str(param_number),
-        c_map,
-        c_range,
-        c_label,
+    fig, ax = plt.subplots(constrained_layout=True)
+
+    fig, ax = plot_common.plot_image_on_ax(
+        fig, ax, options, image, param_name + "_" + str(param_number), c_map, c_range, c_label
     )
+
+    np.savetxt(options["data_dir"] / (param_name + "_" + str(param_number) + ".txt"), image)
+    if options["save_plots"]:
+        fig.savefig(
+            options["output_dir"]
+            / (param_name + "_" + str(param_number) + "." + options["save_fig_type"])
+        )
+
     return fig
 
 
@@ -726,7 +816,7 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
 
     param_name : str
-        Name of parameter you want to plot, e.g. 'fwhm'.
+        Name of parameter you want to plot, e.g. 'fwhm'. Can also be 'residual'.
 
     Returns
     -------
@@ -759,17 +849,25 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
 
     # sort based on number (just in case)
     our_keys.sort(key=param_sorter)
+    nk = len(our_keys)
 
-    if len(our_keys) == 1:
+    if nk == 1:
         # just one image, so plot normally
         fig = plot_param_image(options, fit_model, pixel_fit_params, param_name, 0)
     else:
-        num_columns = 2
-        num_rows = math.ceil(len(our_keys) / 2)
+        if nk <= 8:
+            num_columns = 4
+            num_rows = 2
+        else:
+            num_columns = 2
+            num_rows = math.ceil(nk / 2)
 
         figsize = mpl.rcParams["figure.figsize"].copy()
         figsize[0] *= num_columns
         figsize[1] *= num_rows
+
+        figsize[0] *= 3 / 4
+        figsize[1] *= 3 / 4
 
         fig, axs = plt.subplots(
             num_rows,
@@ -782,9 +880,14 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
 
         c_map = options["colormaps"]["param_images"]
 
-        # plot 8-lorentzian peaks in a more helpful way (pairs: 0-7, 1-6, etc.)
-        if len(our_keys) == 8 and "lorentzian" in options["fit_functions"]:
-            param_axis_iterator = zip([0, 7, 1, 6, 2, 5, 3, 4], axs.flatten())
+        # plot 8-lorentzian peaks in a more helpful way
+        if nk <= 8 and any([f.startswith("lorentzian") for f in options["fit_functions"]]):
+            param_nums = []  # [0, 1, 2, 3, 7, 6, 5, 4] etc.
+            param_nums.extend(list(range(nk // 2)))
+            if nk % 2:
+                param_nums.append(nk // 2 + 1)
+            param_nums.extend(list(range(nk - 1, (nk - 1) // 2, -1)))  # range(start, stop, step)
+            param_axis_iterator = zip(param_nums, axs.flatten())
         # otherwise plot in a more conventional order
         else:
             param_axis_iterator = enumerate(axs.flatten())
@@ -797,7 +900,7 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
                 image_data = pixel_fit_params[param_key]
             except KeyError:
                 # we have one too many axes (i.e. 7 params, 8 subplots), delete the axs
-                fig.delaxes(ax)  # UNTESTED
+                fig.delaxes(ax)
                 break
 
             c_range = plot_common._get_colormap_range(
@@ -818,6 +921,164 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
 
         if options["save_plots"]:
             fig.savefig(options["output_dir"] / (param_name + "." + options["save_fig_type"]))
+
+    return fig
+
+
+# ============================================================================
+
+
+def plot_params_flattened(options, fit_model, pixel_fit_params, roi_avg_fit_result, param_name):
+    """
+    Compare pixel fits against flattened pixels: initial guess vs roi fit vs fit result.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    fit_model : `QDMPy.fit._models.FitModel`
+        Model we're fitting to.
+
+    pixel_fit_params : dict
+        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
+
+    roi_avg_fit_result
+        `QDMPy.fit._shared.ROIAvgFitResult` object.
+
+    param_name : str
+        Name of parameter you want to plot, e.g. 'fwhm'. Can also be 'residual'.
+
+    Returns
+    -------
+    fig : matplotlib Figure object
+
+    """
+
+    # initial guess vs roi fit vs pixel fit
+
+    param_keys = sorted([p for p in pixel_fit_params if p.startswith(param_name)])
+
+    figsize = mpl.rcParams["figure.figsize"].copy()
+
+    height = len(param_keys)
+    width = 1
+    figsize[0] *= 2  # make some extra space...
+    figsize[1] = figsize[1] * height / 2 if height > 1 else figsize[1]
+
+    fig, axs = plt.subplots(height, width, sharex=True, figsize=figsize, constrained_layout=True)
+    # axs indexed: axs[row, col] (n_cols = 1 here, so index linearly)
+    if type(axs) is not np.ndarray:
+        axs = np.array([axs])
+
+    if param_name == "residual":
+        param_guesses = [
+            fit_model.residuals_scipyfit(
+                roi_avg_fit_result.init_param_guess,
+                roi_avg_fit_result.sweep_list,
+                roi_avg_fit_result.pl_roi,
+            ).sum()
+        ]
+
+        param_roi_fits = [
+            fit_model.residuals_scipyfit(
+                roi_avg_fit_result.best_params,
+                roi_avg_fit_result.sweep_list,
+                roi_avg_fit_result.pl_roi,
+            ).sum()
+        ]
+    else:
+        param_guesses = []
+        param_roi_fits = []
+        for fn_obj in fit_model.fn_chain:
+            for param_num, param_root in enumerate(fn_obj.param_defn):
+                if param_root == param_name:
+                    param_guesses.append(
+                        roi_avg_fit_result.init_param_guess[
+                            fn_obj.this_fn_param_indices[param_num]
+                        ]
+                    )
+                    param_roi_fits.append(
+                        roi_avg_fit_result.best_params[fn_obj.this_fn_param_indices[param_num]]
+                    )
+
+    fig.suptitle(param_name, fontsize=16)
+
+    axs[-1].set_xlabel("Pixel # (flattened)")
+    for ax in axs:
+        ax.set_ylabel(fit_models.get_param_unit(fit_model, param_name, 0))
+        ax.grid()
+
+    # uses the default color cycle... i.e.:
+    prop_cycle = plt.rcParams["axes.prop_cycle"]
+    colors = prop_cycle.by_key()["color"]
+
+    legend_names = ["Initial guesses", "ROI fits"]
+    # https://matplotlib.org/3.2.1/gallery/lines_bars_and_markers/linestyles.html
+    custom_lines = [
+        Line2D([0], [0], color="k", ls=(0, (1, 1)), lw=mpl.rcParams["lines.linewidth"] * 2),
+        Line2D([0], [0], color="k", ls=(0, (5, 1)), lw=mpl.rcParams["lines.linewidth"] * 2),
+    ]
+
+    for i, guess in enumerate(param_guesses):
+        axs[i].axhline(
+            guess,
+            ls=(0, (1, 1)),
+            c="k",
+            zorder=10,
+            lw=mpl.rcParams["lines.linewidth"] * 2,
+        )
+
+    for i, roi_fit in enumerate(param_roi_fits):
+        axs[i].axhline(
+            roi_fit,
+            ls=(0, (5, 1)),
+            lw=mpl.rcParams["lines.linewidth"] * 2,
+            c="k",
+            zorder=5,
+        )
+
+    for i, (param_key, color) in enumerate(zip(param_keys, colors)):
+        axs[i].plot(
+            pixel_fit_params[param_key].flatten(),
+            label=param_key,
+            marker="o",
+            mfc="w",
+            ms=mpl.rcParams["lines.markersize"] // 2,
+            mec=color,
+            ls="",
+        )
+        legend_names.append(param_key)
+        custom_lines.append(
+            Line2D(
+                [0],
+                [0],
+                marker="o",
+                mfc="w",
+                ms=mpl.rcParams["lines.markersize"] * 2,
+                mec=color,
+                ls="",
+            )
+        )
+
+    # https://jdhao.github.io/2018/01/23/matplotlib-legend-outside-of-axes/
+    axs[0].legend(
+        custom_lines,
+        legend_names,
+        loc="lower left",
+        bbox_to_anchor=(0.0, 1.01),
+        ncol=height + 2,
+        borderaxespad=0,
+        frameon=False,
+        fontsize="medium",
+    )
+
+    if options["save_plots"]:
+        fig.savefig(
+            options["output_dir"] / (f"{param_name}_fit_flattened." + options["save_fig_type"])
+        )
+
+    return fig
 
 
 # ============================================================================

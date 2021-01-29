@@ -490,8 +490,9 @@ def fit_pixels_gpufit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
 
     Returns
     -------
-    fit_result_dict : dict
+    fit_image_results : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
+        Also has 'residual' as a key.
     """
     sweep_ar = np.array(sweep_list)
     # data_length = np.shape(sig_norm)[1] * np.shape(sig_norm)[2]
@@ -544,10 +545,7 @@ def fit_pixels_gpufit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
 
     fit_results = gpufit_reshape_result(fitting_results, pixel_posns)
 
-    roi_shape = np.shape(sig_norm)
-    res = fit_shared.get_pixel_fitting_results(
-        fit_model, fit_results, (roi_shape[1], roi_shape[2])
-    )
+    res = fit_shared.get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_ar)
     if options["scramble_pixels"]:
         return fit_shared.unshuffle_fit_results(res, unshuffler)
     else:

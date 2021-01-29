@@ -9,6 +9,7 @@ Functions
  - `QDMPy.io.json2dict.defaultdict_from_d`
  - `QDMPy.io.json2dict.json_to_dict`
  - `QDMPy.io.json2dict.dict_to_json`
+ - `QDMPy.io.json2dict.dict_to_json_str`
  - `QDMPy.io.json2dict.prettyjson`
  - `QDMPy.io.json2dict.getsubitems`
  - `QDMPy.io.json2dict.basictype2str`
@@ -25,6 +26,7 @@ __author__ = {
     "QDMPy.io.json2dict.defaultdict_from_d": True,
     "QDMPy.io.json2dict.json_to_dict": True,
     "QDMPy.io.json2dict.dict_to_json": True,
+    "QDMPy.io.json2dict.dict_to_json_str": True,
     "QDMPy.io.json2dict.prettyjson": True,
     "QDMPy.io.json2dict.getsubitems": True,
     "QDMPy.io.json2dict.basictype2str": True,
@@ -117,10 +119,19 @@ def dict_to_json(dictionary, filename, path_to_dir=None):
 # ============================================================================
 
 
+def dict_to_json_str(obj, indent=4, maxlinelength=80):
+    """Copy of `QDMPy.io.json2dict.prettyjson`"""
+    return prettyjson(obj, indent, maxlinelength)
+
+
 def prettyjson(obj, indent=4, maxlinelength=80):
-    """Renders JSON content with indentation and line splits/concatenations to
+    """
+    Renders JSON content with indentation and line splits/concatenations to
     fit maxlinelength. Only dicts, lists and basic types are supported.
-    <Pass the dict as obj and get back a string>"""
+    Now supports np.ndarrays.
+
+    <Pass the dict as obj and get back a string>
+    """
 
     items, _ = getsubitems(obj, itemkey="", islast=True, maxlinelength=maxlinelength)
     res = indentitems(items, indent, indentcurrent=0)

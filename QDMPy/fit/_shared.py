@@ -16,7 +16,7 @@ Functions
  - `QDMPy.fit._shared.pixel_generator`
  - `QDMPy.fit._shared.gen_init_guesses`
  - `QDMPy.fit._shared.bounds_from_range`
- - `QDMPy.fit._shared.bounds_from_range`
+ - `QDMPy.fit._shared.get_pixel_fitting_results`
 """
 # ============================================================================
 
@@ -30,7 +30,7 @@ __pdoc__ = {
     "QDMPy.fit._shared.pixel_generator": True,
     "QDMPy.fit._shared.gen_init_guesses": True,
     "QDMPy.fit._shared.bounds_from_range": True,
-    "QDMPy.fit._shared.bounds_from_range": True,
+    "QDMPy.fit._shared.get_pixel_fitting_results": True,
 }
 
 # ============================================================================
@@ -214,6 +214,7 @@ def unshuffle_fit_results(fit_result_dict, unshuffler):
     fit_result_dict : dict
         Dictionary, key: param_names, val: image (2D) of param values across FOV. Each image
         requires reshuffling (which this function achieves).
+        Also has 'residual' as a key.
 
     unshuffler : (y_unshuf, x_unshuf)
         Two arrays returned by `QDMPy.fit._shared.shuffle_pixels` that allow unshuffling of data_2d.
@@ -346,7 +347,7 @@ def bounds_from_range(options, param_key):
 # ============================================================================
 
 
-def get_pixel_fitting_results(fit_model, fit_results, roi_shape):
+def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
     """
     Take the fit result data from scipyfit/gpufit and back it down to a dictionary of arrays.
 
@@ -362,21 +363,30 @@ def get_pixel_fitting_results(fit_model, fit_results, roi_shape):
         (see `QDMPy.fit._scipyfit.to_squares_wrapper`, or `QDMPy.fit._gpufit.gpufit_reshape_result`)
         A list of each pixel's parameter array, as well as position in image denoted by (y, x).
 
-    roi_shape : iterable, length 2
-        Shape of the region of interest, to allow us to generate the right shape empty arrays.
-        This is probably a little useless, we could extract from any of the results.
+    pixel_data : np array, 3D
+        Normalised measurement array, shape: [sweep_list, y, x]. i.e. sig_norm.
+        May or may not already be shuffled (i.e. matches fit_results).
+
+    sweep_list : np array, 1D
+        Affine parameter list (e.g. tau or freq).
 
     Returns
     -------
     fit_image_results : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
+        Also has 'residual' as a key.
     """
+
+    roi_shape = np.shape(pixel_data)
+
     # initialise dictionary with key: val = param_name: param_units
     fit_image_results = fit_models.get_param_odict(fit_model)
 
     # override with correct size empty arrays using np.zeros
     for key in fit_image_results.keys():
         fit_image_results[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+
+    fit_image_results["residual_0"] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
     # Fill the arrays element-wise from the results function, which returns a
     # 1D array of flattened best-fit parameters.
@@ -395,5 +405,10 @@ def get_pixel_fitting_results(fit_model, fit_results, roi_shape):
                     filled_params[param_name] += 1
 
                 fit_image_results[key][y, x] = result[fn.this_fn_param_indices[param_num]]
+
+        resid = fit_model.residuals_scipyfit(result, sweep_list, pixel_data[:, y, x])
+        fit_image_results["residual_0"][y, x] = np.sum(
+            np.abs(resid, dtype=np.float64), dtype=np.float64
+        )
 
     return fit_image_results
