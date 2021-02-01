@@ -191,6 +191,7 @@
     // The code automatically detects this by the name of the dictionary key.x
     // range results in bounds of min = guess - range, max = guess + range
     // bounds directly gives these values
+    // range takes precedence over bounds
 
     // Position guess for lorentzian(in MHz)
     "pos_guess": {

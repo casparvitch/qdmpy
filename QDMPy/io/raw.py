@@ -68,6 +68,7 @@ import re
 # ============================================================================
 
 import QDMPy.io.json2dict
+import QDMPy.fit._models as fit_models
 import QDMPy.systems as systems
 import QDMPy.constants
 
@@ -453,6 +454,28 @@ def _options_compatible(options, prev_options):
         ]:
             if options[fit_opt_name] != prev_options[fit_opt_name]:
                 return False
+
+    # ok now the trickiest one, check parameter guesses & bounds
+    unique_params = set(fit_models.get_param_defn(fit_models.FitModel(options["fit_functions"])))
+
+    for param_name in unique_params:
+        if options[param_name + "_guess"] != prev_options[param_name + "_guess"]:
+            return False
+
+        range_opt = param_name + "_range"
+        if range_opt in options and range_opt in prev_options:
+            if options[range_opt] != prev_options[range_opt]:
+                return False
+            else:
+                continue  # this param all g, check others
+        # ok range takes precedence over bounds
+        if range_opt in options and range_opt not in prev_options:
+            return False
+        if range_opt not in options and range_opt in prev_options:
+            return False
+        # finally check bounds
+        if options[param_name + "_bounds"] != prev_options[param_name + "_bounds"]:
+            return False
 
     # if all that was ok, return True
     return True

@@ -148,7 +148,10 @@ class FitModel:
 
 
 def get_param_defn(fit_model):
-    """Returns list of parameters in fit_model"""
+    """
+    Returns list of parameters in fit_model, note there will be duplicates, and they do
+    not have numbers e.g. 'pos_0'. Use `QDMPy.fit._models.get_param_odict` for that purpose.
+    """
     param_defn_ar = []
     for fn in fit_model.fn_chain:
         param_defn_ar.extend(fn.param_defn)
