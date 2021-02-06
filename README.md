@@ -295,6 +295,6 @@ def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
 ```
 
 To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc/#pdoc) tool:
-- navigate to dir: QDMPy_git/QDMPy, e.g. for Sam: ~/src/nv/QDMPy_proj/QDMPy_git/QDMPy
-- cmd: `pdoc --html --force --output-dir doc .`
+- navigate to the root directory, e.g. ~/src/QDMPy_proj/QDMPy_git/ (which should contain the directory QDMPy)
+- cmd: `pdoc --output-dir docs --html --config latex_math=True --force QDMPy`
 - the period at the end of the command above is required!

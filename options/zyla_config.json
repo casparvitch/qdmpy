@@ -184,7 +184,7 @@
     			false
     		]
     },
-     // user must set this one: the functions that make up your fit model (required)
+    // user must set this one: the functions that make up your fit model (required)
     "fit_functions": {},
 
     // All parameters below can either have a range or a bound.

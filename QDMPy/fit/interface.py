@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This module holds the general interface tools for fitting raw data, independent of fit backend
+This module holds the general interface tools for fitting data, independent of fit backend
 (e.g. scipy/gpufit etc.).
 
 All of these functions are automatically loaded into the namespace when the fit

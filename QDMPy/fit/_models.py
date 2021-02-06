@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 
 """
-This module defines the fit model used. We grab/use this regardless of fitting on cpu (scipy) or gpu etc.
+This module defines fit models used to fit QDM photoluminescence data.
+We grab/use this regardless of fitting on cpu (scipy) or gpu etc.
 
 Ensure any fit functions you define are added to the AVAILABLE_FNS module variable.
 Try not to have overlapping parameter names in the same fit.
@@ -223,7 +224,7 @@ class FitFunc:
 
     @staticmethod
     def grad_fn(sweep_vec, *fit_params):
-        """ if you want to use a grad_fn override this in the subclass """
+        """If you want to use a grad_fn override this in the subclass"""
         return None
 
 
