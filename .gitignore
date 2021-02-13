@@ -137,3 +137,4 @@ dmypy.json
 # output test folders
 /tests/test_datasets/ODMR*/
 /tests/test_datasets/Spin*/
+/.idea/*
