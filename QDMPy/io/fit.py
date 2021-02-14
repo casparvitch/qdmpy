@@ -31,7 +31,6 @@ from pathlib import Path
 # ============================================================================
 
 import QDMPy.io.raw
-import QDMPy.constants
 
 # ============================================================================
 
@@ -43,8 +42,10 @@ def load_prev_fit_results(options):
 
     fit_param_res_dict = {}
 
+    from QDMPy.constants import AVAILABLE_FNS as FN_SELECTOR
+
     for fn_type, num in prev_options["fit_functions"].items():
-        for param_name in QDMPy.constants.AVAILABLE_FNS[fn_type].param_defn:
+        for param_name in FN_SELECTOR[fn_type].param_defn:
             for n in range(num):
                 param_key = param_name + "_" + str(n)
                 fit_param_res_dict[param_key] = load_fit_param(options, param_key)

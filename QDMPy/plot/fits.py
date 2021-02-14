@@ -85,7 +85,7 @@ def plot_ROI_PL_image(options, PL_image):
         ax,
         options,
         PL_image,
-        "PL - ROI",
+        "PL - Full & Rebinned",
         c_map,
         c_range,
         "Counts",
@@ -95,7 +95,7 @@ def plot_ROI_PL_image(options, PL_image):
         _annotate_ROI_image(options, ax)
 
     if options["save_plots"]:
-        fig.savefig(options["output_dir"] / ("PL - ROI." + options["save_fig_type"]))
+        fig.savefig(options["output_dir"] / ("PL_full_rebinned." + options["save_fig_type"]))
 
     return fig
 
@@ -138,7 +138,7 @@ def plot_AOI_PL_images(options, PL_image_ROI):
         ax,
         options,
         PL_image_ROI,
-        "PL - AOIs",
+        "PL - ROI & Rebinned",
         c_map,
         c_range,
         "Counts",
@@ -148,7 +148,7 @@ def plot_AOI_PL_images(options, PL_image_ROI):
         _annotate_AOI_image(options, ax)
 
     if options["save_plots"]:
-        fig.savefig(options["output_dir"] / ("PL - AOIs." + options["save_fig_type"]))
+        fig.savefig(options["output_dir"] / ("PL_ROI_rebinned." + options["save_fig_type"]))
 
     return fig
 

@@ -39,7 +39,7 @@ __pdoc__ = {
 # ============================================================================
 
 import QDMPy.systems
-import QDMPy.fit._models
+import QDMPy.fit._funcs
 
 # ============================================================================
 
@@ -52,16 +52,16 @@ Add any systems you define here so you can use them.
 """
 
 AVAILABLE_FNS = {
-    "lorentzian": QDMPy.fit._models.Lorentzian,
-    "lorentzian_hyperfine_14": QDMPy.fit._models.Lorentzian_hyperfine_14,
-    "lorentzian_hyperfine_15": QDMPy.fit._models.Lorentzian_hyperfine_15,
-    "gaussian": QDMPy.fit._models.Gaussian,
-    "gaussian_hyperfine_14": QDMPy.fit._models.Gaussian_hyperfine_14,
-    "gaussian_hyperfine_15": QDMPy.fit._models.Gaussian_hyperfine_15,
-    "constant": QDMPy.fit._models.Constant,
-    "linear": QDMPy.fit._models.Linear,
-    "circular": QDMPy.fit._models.Circular,
-    "stretched_exponential": QDMPy.fit._models.Stretched_exponential,
+    "lorentzian": QDMPy.fit._funcs.Lorentzian,
+    "lorentzian_hyperfine_14": QDMPy.fit._funcs.Lorentzian_hyperfine_14,
+    "lorentzian_hyperfine_15": QDMPy.fit._funcs.Lorentzian_hyperfine_15,
+    "gaussian": QDMPy.fit._funcs.Gaussian,
+    "gaussian_hyperfine_14": QDMPy.fit._funcs.Gaussian_hyperfine_14,
+    "gaussian_hyperfine_15": QDMPy.fit._funcs.Gaussian_hyperfine_15,
+    "constant": QDMPy.fit._funcs.Constant,
+    "linear": QDMPy.fit._funcs.Linear,
+    "circular": QDMPy.fit._funcs.Circular,
+    "stretched_exponential": QDMPy.fit._funcs.Stretched_exponential,
 }
 """
 Dictionary that defines fit functions available for use.

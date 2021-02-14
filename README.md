@@ -25,9 +25,12 @@ Quantum Diamond MicroscoPy
 
 # Installation
 
-### jupyterlab installation
+### Jupyterlab installation
 
-TODO
+https://nodejs.org/en/
+https://ipywidgets.readthedocs.io/en/latest/user_install.html#installing-the-jupyterlab-extension
+
+see: https://stackoverflow.com/questions/49542417/how-to-get-ipywidgets-working-in-jupyter-lab
 
 ### Saving widget state
 

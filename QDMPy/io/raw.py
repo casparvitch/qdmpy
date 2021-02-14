@@ -70,7 +70,6 @@ import re
 import QDMPy.io.json2dict
 import QDMPy.fit._models as fit_models
 import QDMPy.systems as systems
-import QDMPy.constants
 
 # ============================================================================
 
@@ -320,8 +319,8 @@ def reshape_dataset(options, image, sweep_list):
 
 def save_PL_data(options, PL_image, PL_image_ROI):
     """Saves PL_image and PL_image_ROI to disk"""
-    np.savetxt(options["data_dir"] / "PL - ROI.txt", PL_image)
-    np.savetxt(options["data_dir"] / "PL - AOIs.txt", PL_image_ROI)
+    np.savetxt(options["data_dir"] / "PL_full_rebinned.txt", PL_image)
+    np.savetxt(options["data_dir"] / "PL_ROI_rebinned.txt", PL_image_ROI)
 
 
 # ============================================================================
@@ -503,8 +502,11 @@ def _prev_pixel_results_exist(options, prev_options):
     """
     prev_options = _get_prev_options(options)
 
+    # avoid cyclic imports
+    from QDMPy.constants import AVAILABLE_FNS as FN_SELECTOR
+
     for fn_type, num in prev_options["fit_functions"].items():
-        for param_name in QDMPy.constants.AVAILABLE_FNS[fn_type].param_defn:
+        for param_name in FN_SELECTOR[fn_type].param_defn:
             for n in range(num):
                 param_key = param_name + "_" + str(n)
                 if not os.path.isfile(options["data_dir"] / (param_key + ".txt")):

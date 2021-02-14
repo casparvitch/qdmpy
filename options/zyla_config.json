@@ -586,7 +586,7 @@
             "legend.fontsize": "small",
             "legend.loc": "lower left",
             "scalebar.location": "lower right",
-            "scalebar.height_fraction": 0.015,
+            "scalebar.width_fraction": 0.015,
             "scalebar.box_alpha": 0.5,
             "scalebar.scale_loc": "top",
             "scalebar.sep": 1,
