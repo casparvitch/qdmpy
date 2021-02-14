@@ -115,6 +115,9 @@ for details of the g-factor anisotropy.
 
 """
 
+# NOTE for other NV orientations, pass in unvs -> not possible to determine in full
+#   generality the orientations for <111> etc.
+
 # nv orientations (unit vectors) wrt lab frame [x, y, z]
 NV_AXES_100_110 = [
     {"nv_number": 1, "ori": [np.sqrt(2 / 3), 0, np.sqrt(1 / 3)]},

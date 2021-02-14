@@ -24,7 +24,6 @@ from QDMPy.constants import S_MAT_X, S_MAT_Y, S_MAT_Z, GAMMA, NV_AXES_100_110, N
 
 
 class Hamiltonian:
-    """FitModel used to fit to data."""
 
     param_defn = []
     param_units = {}
@@ -68,20 +67,12 @@ class Hamiltonian:
     # =================================
 
     def jacobian_scipyfit(self, param_ar, **kwargs):
-        raise NotImplementedError("Jacobians currently not implemented for Hamiltonians.")
+        raise NotImplementedError(
+            "Analytic jacobians not currently accepted for Hamiltonian fitting."
+        )
 
     # =================================
-
-    def get_param_defn(self):
-        return self.param_defn
-
-    # =================================
-
-    def get_param_odict(self):
-        return self.param_odict
-
-    # =================================
-    def calc_nv_ori(self):
+    def _calc_nv_ori(self):
         # TODO document these variables etc. Declare here to help with sizing etc.
         self.nv_ori = np.zeros((4, 3))
         self.nv_signs = np.zeros(4)
@@ -129,7 +120,10 @@ def get_param_defn(hamiltonian):
     return hamiltonian.param_defn
 
 
-def get_param_odict(hamiltonian):
+# ============================================================================
+
+# TODO add get_param_unit etc.
+def get_param_units(hamiltonian):
     return hamiltonian.param_units
 
 
@@ -142,9 +136,12 @@ def get_param_odict(hamiltonian):
 #                        do:
 #                           \vec{unv}.T \cdot \vec{Bnv} = \vec{B} )
 class ApproxBxyz(Hamiltonian):
-    """
+    r"""
     Diagonal Hamiltonian approximation. To calculate the magnetic field only fields aligned with
     the NV are considered and thus a simple dot product can be used.
+
+    Fits to bnvs rather than frequencies, i.e.:
+    $$ \vec{B}_{\rm NV} = \vec{u}_{\rm NV} \cdot \vec{B} $$
     """
 
     param_defn = ["Bx", "By", "Bz"]
@@ -155,7 +152,11 @@ class ApproxBxyz(Hamiltonian):
     }
 
     def __call__(self, Bx, By, Bz):
-        return np.dot([Bx, By, Bz], self.nv_signed_ori.T)
+        r"""
+        $$ \vec{B}_{\rm NV} = \vec{u}_{\rm NV} \cdot \vec{B} $$
+        Fit to bnv rather than frequency positions.
+        """
+        return np.dot(self.nv_signed_ori, [Bx, By, Bz])
 
 
 # FIXME what to do if < 8 frequencies? Fix this here/somehow.
