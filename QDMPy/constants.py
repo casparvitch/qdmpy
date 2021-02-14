@@ -6,7 +6,7 @@ Of particular interest to the user are the SYSTEMS and AVAILABLE_FNS dictionarie
 
 You can customise/extend the QDMPy package by defining a subclass of the
 `QDMPy.systems.System` object for the specifics of your experimental setup.
-To communicate this additon to QDMPy, add it to the SYSTEMS dictionary
+To communicate this addition to QDMPy, add it to the SYSTEMS dictionary
 (e.g. import QDMPy.constants; QDMPy.constants.SYSTEMS["System_Name"] = MySystem).
 Where we have defined MySystem: class MySystem(QDMPy.systems.System): ... etc.
 Follow the templates in `QDMPy.systems` to construct your object.
@@ -28,13 +28,28 @@ Module variables
 ----------------
  - `QDMPy.constants.SYSTEMS`
  - `QDMPy.constants.AVAILABLE_FNS`
+ - `QDMPy.constants.GAMMA`
+ - `QDMPy.constants.NV_AXES_100_110`
+ - `QDMPy.constants.NV_AXES_100_100`
+ - `QDMPy.constants.NV_AXES_111_110`
+ - `QDMPy.constants.NV_AXES_111_100`
 """
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
     "QDMPy.constants.SYSTEMS": True,
     "QDMPy.constants.AVAILABLE_FNS": True,
+    "QDMPy.constants.choose_system": True,
+    "QDMPy.constants.GAMMA": True,
+    "QDMPy.constants.NV_AXES_100_110": True,
+    "QDMPy.constants.NV_AXES_100_100": True,
+    "QDMPy.constants.NV_AXES_111_110": True,
+    "QDMPy.constants.NV_AXES_111_100": True,
 }
+
+# ============================================================================
+
+import numpy as np
 
 # ============================================================================
 
@@ -75,3 +90,79 @@ Aviod overlapping function parameter names.
 def choose_system(name):
     """Returns `QDMPy.systems.System` object called 'name'"""
     return SYSTEMS[name]()
+
+
+# TODO document these
+S_MAT_X = np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]]) / np.sqrt(2)
+S_MAT_Y = np.array([[0, -1j, 0], [1j, 0, 1j], [0, 1j, 0]]) / np.sqrt(2)
+S_MAT_Z = np.array([[1, 0, 0], [0, 0, 0], [0, 0, -1]])
+S_MAT_X_AR = np.array([S_MAT_X, S_MAT_X, S_MAT_X, S_MAT_X]).T
+S_MAT_Y_AR = np.array([S_MAT_Y, S_MAT_Y, S_MAT_Y, S_MAT_Y]).T
+S_MAT_Z_AR = np.array([S_MAT_Z, S_MAT_Z, S_MAT_Z, S_MAT_Z]).T
+
+GAMMA = 2.8  # MHz/G
+r"""
+The Bohr magneton times the Landé g-factor. See [Doherty2013](https://doi.org/10.1016/j.physrep.2013.02.001)
+for details of the g-factor anisotropy.
+
+|                                                                  |                                                               |
+|------------------------------------------------------------------|---------------------------------------------------------------|
+| \( \gamma_{\rm NV} = \mu_{\rm B} g_e  \)                         |                                                               |
+| \( \mu_B = 1.39962449361 \times 10^{10}\ {\rm Hz} \rm{T}^{-1} \) |  [NIST](https://physics.nist.gov/cgi-bin/cuu/Value?mubshhz)   |
+| \( \mu_B = 1.399...\ {\rm MHz/G} \)                              |                                                               |
+| \( g_e \approx 2.0023 \)                                         |  [Doherty2013](https://doi.org/10.1016/j.physrep.2013.02.001) |
+| \( \Rightarrow  \gamma_{\rm NV} \approx 2.8 {\rm MHz/G} \)       |                                                               |
+
+"""
+
+# NOTE for other NV orientations, pass in unvs -> not possible to determine in full
+#   generality the orientations for <111> etc.
+
+# nv orientations (unit vectors) wrt lab frame [x, y, z]
+NV_AXES_100_110 = [
+    {"nv_number": 1, "ori": [np.sqrt(2 / 3), 0, np.sqrt(1 / 3)]},
+    {"nv_number": 2, "ori": [-np.sqrt(2 / 3), 0, np.sqrt(1 / 3)]},
+    {"nv_number": 3, "ori": [0, np.sqrt(2 / 3), -np.sqrt(1 / 3)]},
+    {"nv_number": 4, "ori": [0, -np.sqrt(2 / 3), -np.sqrt(1 / 3)]},
+]
+"""
+<100> top face oriented, <110> edge face oriented diamond (CVD).
+
+NV orientations (unit vectors) relative to lab frame.
+
+Assuming diamond is square to lab frame:
+
+first 3 numbers: orientation of top face of diamond, e.g. <100>
+
+second 3 numbers: orientation of edges of diamond, e.g. <110>
+
+CVD Diamonds are usually <100>, <110>. HPHT usually <100>, <100>.
+
+![](https://i.imgur.com/Rudnzyo.png)
+
+Purple plane corresponds to top (or bottom) face of diamond, orange planes correspond to edge faces.
+"""
+
+NV_AXES_100_100 = [
+    {"nv_number": 1, "ori": [np.sqrt(1 / 3), np.sqrt(1 / 3), np.sqrt(1 / 3)]},
+    {"nv_number": 2, "ori": [-np.sqrt(1 / 3), -np.sqrt(1 / 3), np.sqrt(1 / 3)]},
+    {"nv_number": 3, "ori": [np.sqrt(1 / 3), -np.sqrt(1 / 3), -np.sqrt(1 / 3)]},
+    {"nv_number": 4, "ori": [-np.sqrt(1 / 3), np.sqrt(1 / 3), -np.sqrt(1 / 3)]},
+]
+"""
+<100> top face oriented, <100> edge face oriented diamond (HPHT).
+
+NV orientations (unit vectors) relative to lab frame.
+
+Assuming diamond is square to lab frame:
+
+first 3 numbers: orientation of top face of diamond, e.g. <100>
+
+second 3 numbers: orientation of edges of diamond, e.g. <110>
+
+CVD Diamonds are usually <100>, <110>. HPHT usually <100>, <100>.
+
+![](https://i.imgur.com/cpErjAH.png)
+
+Purple plane: top face of diamond, orange plane: edge faces.
+"""

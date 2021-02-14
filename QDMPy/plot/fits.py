@@ -28,6 +28,7 @@ __pdoc__ = {
     "QDMPy.plot.fits.plot_AOI_spectra_fit": True,
     "QDMPy.plot.fits.plot_param_image": True,
     "QDMPy.plot.fits.plot_param_images": True,
+    "QDMPy.plot.fits.plot_params_flattened": True,
     "QDMPy.plot.fits._add_patch_rect": True,
     "QDMPy.plot.fits._annotate_ROI_image": True,
     "QDMPy.plot.fits._annotate_AOI_image": True,
