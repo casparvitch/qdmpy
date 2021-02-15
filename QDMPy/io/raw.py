@@ -121,7 +121,9 @@ def load_options(options_dict=None, options_path=None, check_for_prev_result=Fal
         if key not in prelim_options:
             raise RuntimeError(f"Must provide these options: {required_options}")
 
-    chosen_system = QDMPy.constants.choose_system(prelim_options["system_name"])
+    from QDMPy.constants import choose_system # avoid cyclic imports
+
+    chosen_system = choose_system(prelim_options["system_name"])
 
     chosen_system.system_specific_option_update(prelim_options)
 
@@ -370,6 +372,8 @@ def _check_if_already_fit(options):
             and _options_compatible(options, _get_prev_options(options))
             and _prev_pixel_results_exist(options, _get_prev_options(options))
         )
+    else:
+        options["found_prev_result"] = False
 
 
 # ============================================================================
@@ -500,7 +504,6 @@ def _prev_pixel_results_exist(options, prev_options):
     pixels_results_exist : bool
         Whether or not previous pixel result files exist.
     """
-    prev_options = _get_prev_options(options)
 
     # avoid cyclic imports
     from QDMPy.constants import AVAILABLE_FNS as FN_SELECTOR
