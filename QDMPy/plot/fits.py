@@ -117,13 +117,6 @@ def plot_AOI_PL_images(options, PL_image_ROI):
         Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
         cut down to ROI.
 
-    AOIs : list
-        List of AOI regions. Much like ROI object, these are a length-2 list of np meshgrids
-        that can be used to directly index into image to provide a view into just the AOI
-        part of the image. E.g. sig_AOI = sig[:, AOI[0], AOI[1]]. Returns a list as in
-        general we have more than one area of interest.
-        I.e. sig_AOI_1 = sig[:, AOIs[1][0], AOIs[1][1]]
-
     Returns
     -------
     fig : matplotlib Figure object

@@ -168,6 +168,5 @@ def get_param_unit(fit_model, param_name, param_number):
     param_dict = get_param_odict(fit_model)
     return param_dict[param_name + "_" + str(param_number)]
 
+
 # ====================================================================================
-
-
