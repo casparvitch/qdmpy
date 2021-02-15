@@ -29,11 +29,15 @@ Module variables
  - `QDMPy.constants.SYSTEMS`
  - `QDMPy.constants.AVAILABLE_FNS`
  - `QDMPy.constants.GAMMA`
+ - `QDMPy.constants.S_MAT_X`
+ - `QDMPy.constants.S_MAT_Y`
+ - `QDMPy.constants.S_MAT_Z`
  - `QDMPy.constants.NV_AXES_100_110`
  - `QDMPy.constants.NV_AXES_100_100`
  - `QDMPy.constants.NV_AXES_111_110`
  - `QDMPy.constants.NV_AXES_111_100`
 """
+# ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
@@ -41,6 +45,9 @@ __pdoc__ = {
     "QDMPy.constants.AVAILABLE_FNS": True,
     "QDMPy.constants.choose_system": True,
     "QDMPy.constants.GAMMA": True,
+    "QDMPy.constants.S_MAT_X": True,
+    "QDMPy.constants.S_MAT_Y": True,
+    "QDMPy.constants.S_MAT_Z": True,
     "QDMPy.constants.NV_AXES_100_110": True,
     "QDMPy.constants.NV_AXES_100_100": True,
     "QDMPy.constants.NV_AXES_111_110": True,
@@ -55,6 +62,7 @@ import numpy as np
 
 import QDMPy.systems
 import QDMPy.fit._funcs
+import QDMPy.hamiltonian._hamiltonians
 
 # ============================================================================
 
@@ -86,21 +94,38 @@ Add any functions you define here so you can use them.
 Aviod overlapping function parameter names.
 """
 
+AVAILABLE_HAMILTONIANS = {
+    "approx_bxyz": QDMPy.hamiltonian._hamiltonians.ApproxBxyz,
+    "bxyz": QDMPy.hamiltonian._hamiltonians.Bxyz,
+}
+"""
+Dictionary that defines hamiltonians available for use.
+
+Add any classes you define here so you can use them.
+
+You do not need to avoid overlapping parameter names as hamiltonian
+classes can not be used in combination.
+"""
+
 
 def choose_system(name):
     """Returns `QDMPy.systems.System` object called 'name'"""
     return SYSTEMS[name]()
 
 
-# TODO document these
 S_MAT_X = np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]]) / np.sqrt(2)
+r"""Spin-1 operator: S{\rm X}"""
 S_MAT_Y = np.array([[0, -1j, 0], [1j, 0, 1j], [0, 1j, 0]]) / np.sqrt(2)
+r"""Spin-1 operator: S{\rm Y}"""
 S_MAT_Z = np.array([[1, 0, 0], [0, 0, 0], [0, 0, -1]])
+r"""Spin-1 operator: S{\rm Z}"""
+
+# FIXME ARE THESE NEEDED?
 S_MAT_X_AR = np.array([S_MAT_X, S_MAT_X, S_MAT_X, S_MAT_X]).T
 S_MAT_Y_AR = np.array([S_MAT_Y, S_MAT_Y, S_MAT_Y, S_MAT_Y]).T
 S_MAT_Z_AR = np.array([S_MAT_Z, S_MAT_Z, S_MAT_Z, S_MAT_Z]).T
 
-GAMMA = 2.8  # MHz/G
+GAMMA = 2.80  # MHz/G
 r"""
 The Bohr magneton times the Landé g-factor. See [Doherty2013](https://doi.org/10.1016/j.physrep.2013.02.001)
 for details of the g-factor anisotropy.
@@ -111,7 +136,7 @@ for details of the g-factor anisotropy.
 | \( \mu_B = 1.39962449361 \times 10^{10}\ {\rm Hz} \rm{T}^{-1} \) |  [NIST](https://physics.nist.gov/cgi-bin/cuu/Value?mubshhz)   |
 | \( \mu_B = 1.399...\ {\rm MHz/G} \)                              |                                                               |
 | \( g_e \approx 2.0023 \)                                         |  [Doherty2013](https://doi.org/10.1016/j.physrep.2013.02.001) |
-| \( \Rightarrow  \gamma_{\rm NV} \approx 2.8 {\rm MHz/G} \)       |                                                               |
+| \( \Rightarrow  \gamma_{\rm NV} \approx 2.80 {\rm MHz/G} \)       |                                                               |
 
 """
 

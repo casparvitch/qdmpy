@@ -3,18 +3,30 @@
 
 Classes
 -------
- - ``
+ - `QDMPy.hamiltonian._hamiltonians.Hamiltonian`
+ - `QDMPy.hamiltonian._hamiltonians.ApproxBxyz`
+ - `QDMPy.hamiltonian._hamiltonians.Bxyz`
 
 Functions
 ---------
- - `blaa`
+ - `QDMPy.hamiltonian._hamiltonians.get_param_defn`
+ - `QDMPy.hamiltonian._hamiltonians.get_param_units`
 """
+
+__author__ = "Sam Scholten"
+__pdoc__ = {
+    "QDMPy.hamiltonian._hamiltonians.Hamiltonian": True,
+    "QDMPy.hamiltonian._hamiltonians.ApproxBxyz": True,
+    "QDMPy.hamiltonian._hamiltonians.Bxyz": True,
+    "QDMPy.hamiltonian._hamiltonians.get_param_defn": True,
+    "QDMPy.hamiltonian._hamiltonians.get_param_units": True,
+}
 
 # ============================================================================
 
 import numpy as np
 import numpy.linalg as LA
-import math
+from math import radians
 
 # ============================================================================
 
@@ -30,13 +42,15 @@ class Hamiltonian:
 
     # TODO also ask for number of frequences?
     def __init__(self, diamond_ori, Bmag, Btheta, Bphi, unvs=None):
-        self.unvs = unvs  # TODO check unvs shape/size?
+        self.unvs = np.array(unvs)
+        if self.unvs.shape != (4, 3):
+            raise ValueError("Incorrect unvs format passed to Hamiltonian. Expected shape: (4,3).")
         self.diamond_ori = diamond_ori
         self.Bmag = Bmag
         self.Btheta = Btheta
         self.Bphi = Bphi
-        self.Btheta_rad = math.radians(self.theta)
-        self.Bphi_rad = math.radians(self.phi)
+        self.Btheta_rad = radians(self.theta)
+        self.Bphi_rad = radians(self.phi)
 
         # calculate nv signd ori etc. here!
 
@@ -73,31 +87,40 @@ class Hamiltonian:
 
     # =================================
     def _calc_nv_ori(self):
-        # TODO document these variables etc. Declare here to help with sizing etc.
+        # Declare here to help with sizing etc.
         self.nv_ori = np.zeros((4, 3))
         self.nv_signs = np.zeros(4)
-        self.nv_signed_ori = np.zeros((4, 3))
+        self.nv_signed_ori = np.zeros(
+            (4, 3)
+        )  # these are the 'z' unit vectors of the unv frame, in the lab frame
 
         # get the cartesian magnetic fields
         bx = self.Bmag * np.sin(self.Btheta_rad) * np.cos(self.Bphi_rad)
         by = self.Bmag * np.sin(self.Btheta_rad) * np.sin(self.Bphi_rad)
         bz = self.Bmag * np.cos(self.Btheta_rad)
-        # uses these values for the initial guesses
+        # uses these values for the initial guesses (later)
         self.b_guess = {}
         self.b_guess["bx"] = bx
         self.b_guess["by"] = by
         self.b_guess["bz"] = bz
-        # Get the NV orientations B magnitude and sign
+        # Get the NV orientations B magnitude and sign (from the B guess)
         if self.diamond_ori == "<100>_<100>":
-            self.nv_axes = NV_AXES_100_100
+            nv_axes = NV_AXES_100_100
+        elif self.diamond_ori == "<100>_<110>":
+            nv_axes = NV_AXES_100_110
         else:
-            self.nv_axes = NV_AXES_100_110
-        for key in range(len(self.nv_axes)):
-            projection = np.dot(self.nv_axes[key]["ori"], [bx, by, bz])
-            self.nv_axes[key]["mag"] = np.abs(projection)
-            self.nv_axes[key]["sign"] = np.sign(projection)
+            if self.unvs is not None:
+                self.nv_signed_ori = self.unvs
+            else:
+                raise RuntimeError("diamond_ori not recognised and no unvs supplied.")
+            return
+
+        for key in range(len(nv_axes)):
+            projection = np.dot(nv_axes[key]["ori"], [bx, by, bz])
+            nv_axes[key]["mag"] = np.abs(projection)
+            nv_axes[key]["sign"] = np.sign(projection)
         # Sort the dictionary in the correct order
-        sorted_dict = sorted(self.nv_axes, key=lambda x: x["mag"], reverse=True)
+        sorted_dict = sorted(nv_axes, key=lambda x: x["mag"], reverse=True)
         # define the nv orientation list for the fit
         for idx in range(len(sorted_dict)):
             self.nv_ori[idx, :] = sorted_dict[idx]["ori"]
@@ -105,12 +128,11 @@ class Hamiltonian:
             self.nv_signed_ori[idx, :] = (
                 np.array(sorted_dict[idx]["ori"]) * sorted_dict[idx]["sign"]
             )
-        if self.unvs is not None:
-            self.nv_signed_ori = np.array(self.unvs)
-        # Calculate the inverse of the nv orientation matrix
-        self.nv_signed_ori_inv = self.nv_signed_ori.copy()
-        self.nv_signed_ori_inv[self.nv_signed_ori_inv == 0] = np.inf
-        self.nv_signed_ori_inv = 1 / self.nv_signed_ori_inv
+
+        # # Calculate the inverse of the nv orientation matrix - unused???
+        # self.nv_signed_ori_inv = self.nv_signed_ori.copy()
+        # self.nv_signed_ori_inv[self.nv_signed_ori_inv == 0] = np.inf
+        # self.nv_signed_ori_inv = 1 / self.nv_signed_ori_inv
 
 
 # ============================================================================
@@ -183,27 +205,39 @@ class Bxyz(Hamiltonian):
     }
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)  # this calculates nv_signed_ori
         self.rotations = np.zeros((4, 3, 3))
         self.nv_frequencies = np.zeros(8)
         for i in range(4):
-            zrot = self.nv_signed_ori[i].T
-            yrot = np.cross(zrot, self.nv_signed_ori[-i - 1].T)
-            yrot = yrot / LA.norm(yrot)
-            xrot = np.cross(yrot, zrot)
-            self.rotations[i, ::] = [xrot, yrot, zrot]
+            # calculate uNV frame in the lab frame
+            uNV_Z = self.nv_signed_ori[i]
+            # We have full freedom to pick x/y as long as xyz are all orthogonal
+            # we can ensure this by picking Y to be orthog. to both the NV axis
+            # and another NV axis, then get X to be the cross between those two.
+            uNV_Y = np.cross(uNV_Z, self.nv_signed_ori[-i - 1])
+            uNV_Y = uNV_Y / LA.norm(uNV_Y)
+            uNV_X = np.cross(uNV_Y, uNV_Z)
+            self.unv_frame[i, ::] = [uNV_X, uNV_Y, uNV_Z]
 
     def __call__(self, D, Bx, By, Bz):
-        """Hamiltonain of the NV spin using only the zero field splitting D and the magnetic field
+        """
+        Hamiltonain of the NV spin using only the zero field splitting D and the magnetic field
         bxyz. Takes the fit_params in the order [D, bx, by, bz] and returns the nv frequencies.
+
+        The spin operators need to be rotated to the NV reference frame. This is achieved
+        by projecting the magnetic field onto the unv frame.
         """
         Hzero = D * (S_MAT_Z * S_MAT_Z)
         for i in range(4):
-            bx = np.dot([Bx, By, Bz], self.rotations[i, 0, ::])
-            by = np.dot([Bx, By, Bz], self.rotations[i, 1, ::])
-            bz = np.dot([Bx, By, Bz], self.rotations[i, 2, ::])
+            bx_proj_onto_unv = np.dot([Bx, By, Bz], self.unv_frame[i, 0, ::])
+            by_proj_onto_unv = np.dot([Bx, By, Bz], self.unv_frame[i, 1, ::])
+            bz_proj_onto_unv = np.dot([Bx, By, Bz], self.unv_frame[i, 2, ::])
 
-            HB = GAMMA * (bx * S_MAT_X + by * S_MAT_Y + bz * S_MAT_Z)
+            HB = GAMMA * (
+                bx_proj_onto_unv * S_MAT_X
+                + by_proj_onto_unv * S_MAT_Y
+                + bz_proj_onto_unv * S_MAT_Z
+            )
             freq, length = LA.eig(Hzero + HB)
             freq = np.sort(np.real(freq))
             self.nv_frequencies[i] = np.real(freq[1] - freq[0])

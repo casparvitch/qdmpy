@@ -132,7 +132,7 @@
     "AOI_5_end": {
     },
 
-    // ========== Fitting Parameters ==========
+    // ========== Pixel Fitting Parameters ==========
     // Backend used for pixel fitting
     "fit_backend": {
         "option_default": "scipyfit",
@@ -378,6 +378,119 @@
         "option_default": [-0.001, -0.2]
     },
 
+    // ========== Bfield recon/retrievel/calc/fit parameters ==========
+
+    // Method to get bfield from pixel ODMR data
+    "bfield_method": {
+        "option_default": "auto",
+        "option_choices": [
+            "auto",
+            "hamiltonian_fitting",
+            "prop_single_bnv",
+            "invert_unvs",
+        ]
+    },
+
+    // type of hamiltonian to fit, if that bfield method is used
+    "hamiltonian": {
+        "option_default": "bxyz",
+        "option_choices": [
+            "bxyz",
+            "approx_bxyz"
+        ]
+    },
+
+    // diamond crystal orientation -> see QDMPy.constants. Default: HPHT orientation
+    // format: <top face orientation>_<edge face orientation>
+    "diamond_ori": {
+        "option_default": "<100>_<100>",
+        "option_choices": [
+            "<100>_<100>",
+            "<100>_<110>"
+        ]
+    },
+    // Read magnetic field from metaspool (i.e. if applied with vector electromagnet)
+    "auto_read_b": {
+        "option_default": true,
+        "option_choices": 
+            [
+                true,
+                false
+            ]
+    },
+    // Guess mag field (bx, by, bz) from bias field parameters (bias_mag etc.)
+    "auto_guess_b": {
+        "option_default": true,
+        "option_choices": 
+            [
+                true,
+                false
+            ]
+    },
+    // To specify unvs directly (below with "unvs" option) instead of guessing from bias_mag etc.
+    "use_unvs": {
+        "option_default": false,
+        "option_choices": 
+            [
+                true,
+                false
+            ]
+    },
+    // unit vectors of NV orientations, must be shape = (4,3). i.e. NV frame's z axis. 
+    "unvs": {
+        "option_default": [
+            [0.57735, 0.57735, 0.57735],
+            [-0.57735, 0.57735, 0.57735],
+            [0.57735, -0.57735, 0.57735],
+            [-0.57735, -0.57735, 0.57735]
+        ],
+    },
+    // Field of bias field, used to automatically determine uNVs
+    "bias_mag": {
+        "option_default": 80
+    },
+    // in degress
+    "bias_theta": {
+        "option_default": 15
+    },
+    // in degrees
+    "bias_phi": {
+        "option_default": 15
+    },
+
+    // override global scipyfit options with these options, for the bfield fit
+    "bfield_scipyfit_options": {
+        "option_default": {
+            "scipyfit_use_analytic_jac": false
+        }
+    },
+
+    // ========== Bfield Fit Parameters ===========
+    // directly supply guesses and ranges for bxyz (in Gauss)
+    "bx_guess": {
+        "option_default": 10
+    },
+    "bx_range": {
+        "option_default": 30
+    },
+    "by_guess": {
+        "option_default": 10
+    },
+    "by_range": {
+        "option_default": 30
+    },
+    "bz_guess": {
+        "option_default": 10
+    },
+    "bz_range": {
+        "option_default": 30
+    },
+    "d_guess": {
+        "option_default": 2871
+    },
+    "d_range": {
+        "option_default": 1
+    },
 
     // ========== scipy least means square options ===========
     // Method for scipy least means square,
