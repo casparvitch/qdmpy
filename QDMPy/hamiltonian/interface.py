@@ -8,14 +8,13 @@ blaa
 
 import warnings
 
-from QDMPy.constants import AVAILABLE_HAMILTONIANS
 import QDMPy.hamiltonian._hamiltonians
 
 # ============================================================================
 
 
 def define_hamiltonian(options):
-
+    from QDMPy.constants import AVAILABLE_HAMILTONIANS
     ham = AVAILABLE_HAMILTONIANS(options["hamiltonian"])
 
     options["ham_param_defn"] = QDMPy.hamiltonian._hamiltonians.get_param_defn(ham)

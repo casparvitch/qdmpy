@@ -30,7 +30,6 @@ from math import radians
 
 # ============================================================================
 
-from QDMPy.constants import S_MAT_X, S_MAT_Y, S_MAT_Z, GAMMA, NV_AXES_100_110, NV_AXES_100_100
 
 # ============================================================================
 
@@ -49,14 +48,14 @@ class Hamiltonian:
         self.Bmag = Bmag
         self.Btheta = Btheta
         self.Bphi = Bphi
-        self.Btheta_rad = radians(self.theta)
-        self.Bphi_rad = radians(self.phi)
+        self.Btheta_rad = radians(Btheta)
+        self.Bphi_rad = radians(Bphi)
 
         # calculate nv signd ori etc. here!
 
     # =================================
 
-    def __call__(self, param_ar):
+    def __call__(self, *param_ar):
         """
         Evaluates Hamiltonian for given parameter values.
 
@@ -104,6 +103,9 @@ class Hamiltonian:
         self.b_guess["by"] = by
         self.b_guess["bz"] = bz
         # Get the NV orientations B magnitude and sign (from the B guess)
+
+        from QDMPy.constants import NV_AXES_100_110, NV_AXES_100_100 # avoid cyclic dependencies
+
         if self.diamond_ori == "<100>_<100>":
             nv_axes = NV_AXES_100_100
         elif self.diamond_ori == "<100>_<110>":
@@ -206,7 +208,7 @@ class Bxyz(Hamiltonian):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)  # this calculates nv_signed_ori
-        self.rotations = np.zeros((4, 3, 3))
+        self.unv_frame = np.zeros((4, 3, 3))
         self.nv_frequencies = np.zeros(8)
         for i in range(4):
             # calculate uNV frame in the lab frame
@@ -227,6 +229,8 @@ class Bxyz(Hamiltonian):
         The spin operators need to be rotated to the NV reference frame. This is achieved
         by projecting the magnetic field onto the unv frame.
         """
+        from QDMPy.constants import S_MAT_X, S_MAT_Y, S_MAT_Z, GAMMA
+
         Hzero = D * (S_MAT_Z * S_MAT_Z)
         for i in range(4):
             bx_proj_onto_unv = np.dot([Bx, By, Bz], self.unv_frame[i, 0, ::])

@@ -387,7 +387,7 @@
             "auto",
             "hamiltonian_fitting",
             "prop_single_bnv",
-            "invert_unvs",
+            "invert_unvs"
         ]
     },
 
@@ -443,7 +443,7 @@
             [-0.57735, 0.57735, 0.57735],
             [0.57735, -0.57735, 0.57735],
             [-0.57735, -0.57735, 0.57735]
-        ],
+        ]
     },
     // Field of bias field, used to automatically determine uNVs
     "bias_mag": {

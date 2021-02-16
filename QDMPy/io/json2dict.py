@@ -21,7 +21,7 @@ Functions
 
 
 __author__ = "Sam Scholten"
-__author__ = {
+__pdoc__ = {
     "QDMPy.io.json2dict.failfloat": True,
     "QDMPy.io.json2dict.defaultdict_from_d": True,
     "QDMPy.io.json2dict.json_to_dict": True,
@@ -60,7 +60,7 @@ def failfloat(a):
 
 
 def defaultdict_from_d(d):
-    "converts d to a defaultdict, with default value of None for all keys"
+    """converts d to a defaultdict, with default value of None for all keys"""
     dd = defaultdict(lambda: None)
     dd.update(d)
     return dd
@@ -123,6 +123,7 @@ def dict_to_json_str(obj, indent=4, maxlinelength=80):
     """Copy of `QDMPy.io.json2dict.prettyjson`"""
     return prettyjson(obj, indent, maxlinelength)
 
+# ============================================================================
 
 def prettyjson(obj, indent=4, maxlinelength=80):
     """
@@ -172,7 +173,7 @@ def getsubitems(obj, itemkey, islast, maxlinelength):
         # Get list of inner tokens as list
         count = 0
         subitems = []
-        itemkey = ""
+        itemkey = ""  # not used
         for k in keys:
             count += 1
             islast_ = count == len(obj)
@@ -238,7 +239,9 @@ def basictype2str(obj):
     """
     if isinstance(obj, str):
         strobj = '"' + str(obj) + '"'
-    elif isinstance(obj, type(None)):
+    # elif isinstance(obj, type(None)):
+    #     strobj = "null" # seems to fail sometimes?
+    elif str(obj) == "None":
         strobj = "null"
     elif isinstance(obj, bool):
         strobj = {True: "true", False: "false"}[obj]

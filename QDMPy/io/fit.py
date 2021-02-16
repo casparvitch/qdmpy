@@ -73,7 +73,7 @@ def save_pixel_fit_results(options, pixel_fit_params):
     options : dict
         Generic options dict holding all the user options.
 
-    fit_result_dict : OrderedDict
+    pixel_fit_params : OrderedDict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
     """
     if pixel_fit_params is not None:
@@ -128,7 +128,7 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
     else:
         ref_options_path = None
 
-    ref_options = QDMPy.raw.load_options(
+    ref_options = QDMPy.io.raw.load_options(
         options_dict=ref_options,
         options_path=ref_options_path,
         check_for_prev_result=True,
@@ -149,10 +149,7 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
         ref_fit_result_dict = load_prev_fit_results(ref_options)
         return ref_fit_result_dict
     else:
-        from QDMPy.io.json2dict import dict_to_json_str
+        warnings.warn("Didn't find reference experiment fit results?")
+        return None
 
-        print(dict_to_json_str(ref_options))
-        raise RuntimeError("Didn't find reference experiment fit results?")
-
-
-# # ============================================================================
+# ============================================================================

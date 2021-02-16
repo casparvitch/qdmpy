@@ -120,16 +120,12 @@ def check_exp_bnv_compatibility(sig_bnvs, ref_bnvs):
 
 # ============================================================================
 
-
 def bnv_refsub(options, sig_bnvs, ref_bnvs):
-    if options.get("bnv_bsub_method", None) is None:
-        return sig_bnvs
+    if ref_bnvs:
+        check_exp_bnv_compatibility(sig_bnvs, ref_bnvs)
+        return [sig - ref for sig, ref in zip(sig_bnvs, ref_bnvs)]
     else:
-        if ref_bnvs:
-            check_exp_bnv_compatibility(sig_bnvs, ref_bnvs)
-            return [sig - ref for sig, ref in zip(sig_bnvs, ref_bnvs)]
-        else:
-            return sig_bnvs
+        return sig_bnvs
 
 
 # ============================================================================

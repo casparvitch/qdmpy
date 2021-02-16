@@ -338,6 +338,7 @@ def _define_output_dir(options):
     """
     Defines output_dir and data_dir in options.
     """
+
     if options["custom_output_dir"] is not None:
         output_dir = pathlib.PurePosixPath(
             _interpolate_option_str(str(options["custom_output_dir"]), options)
@@ -379,12 +380,12 @@ def _check_if_already_fit(options, reloading=False):
             options["found_prev_result"] = (
                 _prev_options_exist(options)
                 and _options_compatible(options, _get_prev_options(options))
-                and _prev_pixel_results_exist(options, _get_prev_options(options))
+                and _prev_pixel_results_exist(options)
             )
         else:
             options["found_prev_result"] = False
     else:
-        _prev_pixel_results_exist(options)
+        options["found_prev_result"] = _prev_pixel_results_exist(options)
         # wait optns compat needs a different method?
 
 
@@ -841,8 +842,6 @@ def _define_area_roi(start_x, start_y, end_x, end_y):
 
 # ============================================================================
 
-# ============================================================================
-
 
 def _define_AOIs(options):
     """
@@ -881,6 +880,7 @@ def _define_AOIs(options):
             break
     return AOIs
 
+# ============================================================================
 
 def _recursive_dict_update(to_be_updated_dict, updating_dict):
     """
