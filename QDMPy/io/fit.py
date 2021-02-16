@@ -128,10 +128,11 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
     else:
         ref_options_path = None
 
-    ref_options = QDMPy.io.raw.load_options(
+    ref_options = QDMPy.raw.load_options(
         options_dict=ref_options,
         options_path=ref_options_path,
-        check_for_prev_result=True
+        check_for_prev_result=True,
+        reloading=True,
     )
 
     ref_name = Path(ref_options["filepath"]).stem
@@ -149,104 +150,9 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
         return ref_fit_result_dict
     else:
         from QDMPy.io.json2dict import dict_to_json_str
+
         print(dict_to_json_str(ref_options))
         raise RuntimeError("Didn't find reference experiment fit results?")
 
 
-# ============================================================================
-
-
-def load_ref_options(sig_options, ref_options_dict=None, ref_options_path=None):
-    """
-    Load and process options (from json file or dict) into generic options dict used everywhere.
-
-    Also handles directory creation etc. to put results in.
-    Provide either options_dict OR options_path (must provide one!).
-
-    Note the system default options are loaded in, so you only need to set the things you need.
-    In particular, filepath, fit_functions and system_name must be set
-
-    Optional Arguments
-    -------------------
-    options_dict : dict
-        Directly pass in a dictionary of options.
-        Default: None
-
-    path : string
-        Path to fit options .json file. Can be absolute, or from QDMPy.
-        Default: None
-
-    check_for_prev_result : bool
-        Check to see if there's a previous fit result for these options.
-        Default: False
-
-    Returns
-    -------
-    options : dict
-        Generic options dict holding all the user options.
-    """
-
-    # pass options_dict and/or options_path
-    if options_dict is not None and options_path is not None:
-        # options_dict takes precedence
-        options_path = None
-    if options_dict is None and options_path is None:
-        raise RuntimeError("pass at least one of options_dict and options_path to load_options")
-
-    if options_path is not None:
-        prelim_options = QDMPy.io.json2dict.json_to_dict(options_path)
-    else:
-        prelim_options = OrderedDict(options_dict)  # unnescessary py3.7+, leave to describe intent
-
-    required_options = ["filepath", "fit_functions"]
-    for key in required_options:
-        if key not in prelim_options:
-            raise RuntimeError(f"Must provide these options: {required_options}")
-
-    from QDMPy.constants import choose_system # avoid cyclic imports
-
-    chosen_system = choose_system(prelim_options["system_name"])
-
-    chosen_system.system_specific_option_update(prelim_options)
-
-    options = chosen_system.get_default_options()  # first load in default options
-    # now update with what has been decided upon by user
-    options = _recursive_dict_update(options, prelim_options)
-
-    chosen_system.determine_binning(options)
-
-    chosen_system.system_specific_option_update(
-        options
-    )  # do this again on full options to be sure
-
-    options["system"] = chosen_system
-
-    systems.clean_options(options)  # check all the options make sense
-
-    # create output directories
-    _define_output_dir(options)
-
-    if not os.path.isdir(options["output_dir"]):
-        os.mkdir(options["output_dir"])
-    if not os.path.isdir(options["data_dir"]):
-        os.mkdir(options["data_dir"])
-
-    _check_if_ref_fit(options)
-
-    return options
-
-# ============================================================================
-
-
-def _check_if_ref_fit(ref_options, sig_options):
-    """
-    Looks for previous fit result.
-
-    If previous fit result exists, checks for compatibility between option choices.
-
-    Returns nothing.
-    """
-    ref_options["found_prev_result"] = (
-        QDMPy.io.raw._options_compatible(ref_options, sig_options) # need different method...
-        and QDMPy.io.raw._prev_pixel_results_exist(ref_options, sig_options)
-    )
+# # ============================================================================

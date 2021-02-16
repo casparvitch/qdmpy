@@ -74,7 +74,9 @@ import QDMPy.systems as systems
 # ============================================================================
 
 
-def load_options(options_dict=None, options_path=None, check_for_prev_result=False):
+def load_options(
+    options_dict=None, options_path=None, check_for_prev_result=False, reloading=False
+):
     """
     Load and process options (from json file or dict) into generic options dict used everywhere.
 
@@ -97,6 +99,10 @@ def load_options(options_dict=None, options_path=None, check_for_prev_result=Fal
     check_for_prev_result : bool
         Check to see if there's a previous fit result for these options.
         Default: False
+
+    reloading : bool
+        Reloading reference fit result, so ensure we check for previous fit result.
+        Passed on to _check_if_already_fit.
 
     Returns
     -------
@@ -121,7 +127,7 @@ def load_options(options_dict=None, options_path=None, check_for_prev_result=Fal
         if key not in prelim_options:
             raise RuntimeError(f"Must provide these options: {required_options}")
 
-    from QDMPy.constants import choose_system # avoid cyclic imports
+    from QDMPy.constants import choose_system  # avoid cyclic imports
 
     chosen_system = choose_system(prelim_options["system_name"])
 
@@ -150,8 +156,8 @@ def load_options(options_dict=None, options_path=None, check_for_prev_result=Fal
         os.mkdir(options["data_dir"])
 
     # don't always check for prev. results (so we can use this fn in other contexts)
-    if check_for_prev_result:
-        _check_if_already_fit(options)
+    if check_for_prev_result or reloading:
+        _check_if_already_fit(options, reloading=reloading)
 
     return options
 
@@ -358,22 +364,28 @@ def _define_output_dir(options):
 # ============================================================================
 
 
-def _check_if_already_fit(options):
+def _check_if_already_fit(options, reloading=False):
     """
     Looks for previous fit result.
 
     If previous fit result exists, checks for compatibility between option choices.
 
+    reloading (bool): skip shecks for force_fit etc. and just see if prev pixel results exist.
+
     Returns nothing.
     """
-    if not options["force_fit"]:
-        options["found_prev_result"] = (
-            _prev_options_exist(options)
-            and _options_compatible(options, _get_prev_options(options))
-            and _prev_pixel_results_exist(options, _get_prev_options(options))
-        )
+    if not reloading:
+        if not options["force_fit"]:
+            options["found_prev_result"] = (
+                _prev_options_exist(options)
+                and _options_compatible(options, _get_prev_options(options))
+                and _prev_pixel_results_exist(options, _get_prev_options(options))
+            )
+        else:
+            options["found_prev_result"] = False
     else:
-        options["found_prev_result"] = False
+        _prev_pixel_results_exist(options)
+        # wait optns compat needs a different method?
 
 
 # ============================================================================
@@ -487,15 +499,12 @@ def _options_compatible(options, prev_options):
 # ============================================================================
 
 
-def _prev_pixel_results_exist(options, prev_options):
+def _prev_pixel_results_exist(prev_options):
     """
     Check if the actual fit result files exists.
 
     Arguments
     ---------
-    options : dict
-        Generic options dict holding all the user options.
-
     prev_options : dict
         Generic options dict from previous fit result.
 
@@ -512,10 +521,10 @@ def _prev_pixel_results_exist(options, prev_options):
         for param_name in FN_SELECTOR[fn_type].param_defn:
             for n in range(num):
                 param_key = param_name + "_" + str(n)
-                if not os.path.isfile(options["data_dir"] / (param_key + ".txt")):
+                if not os.path.isfile(prev_options["data_dir"] / (param_key + ".txt")):
                     return False
 
-    if not os.path.isfile(options["data_dir"] / "residual_0.txt"):
+    if not os.path.isfile(prev_options["data_dir"] / "residual_0.txt"):
         return False
     return True
 
