@@ -1,15 +1,16 @@
 # - coding: utf-8 -*-
 """
-This module holds functions for plotting Bfields.
+This module holds functions for plotting fields.
 
 Functions
 ---------
+ - `QDMPy.plot.fields.plot_bnvs_and_dshifts`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
-__pdoc__ = {}
+__pdoc__ = {"QDMPy.plot.fields.plot_bnvs_and_dshifts": True}
 
 # ============================================================================
 

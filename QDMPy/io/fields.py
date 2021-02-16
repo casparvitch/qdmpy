@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-This module holds the tools for loading/saving Bfield results.
+This module holds the tools for loading/saving field results.
 
 Functions
 ---------
- - `QDMPy.io.bfield.save_bnvs_and_dshifts`
+ - `QDMPy.io.fields.save_bnvs_and_dshifts`
 
 """
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "QDMPy.io.bfield.save_bnvs_and_dshifts": True,
+    "QDMPy.io.fields.save_bnvs_and_dshifts": True,
 }
 
 # ============================================================================

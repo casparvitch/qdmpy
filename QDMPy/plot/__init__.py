@@ -15,11 +15,11 @@ This (sub-) package exposes specific functions to the user:
     - `QDMPy.plot.fits.plot_AOI_spectra_fit`
     - `QDMPy.plot.fits.plot_param_image`
     - `QDMPy.plot.fits.plot_param_images`
-- `QDMPy.plot.bfield`, currently all contents... FIXME
+- `QDMPy.plot.fields`, currently all contents...
 """
 
 from QDMPy.plot.common import *
 
 from QDMPy.plot.fits import *
 
-from QDMPy.plot.bfield import *
+from QDMPy.plot.fields import *

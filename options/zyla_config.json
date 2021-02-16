@@ -193,7 +193,7 @@
     // bounds directly gives these values
     // range takes precedence over bounds
 
-    // Position guess for lorentzian(in MHz)
+    // Position guess for lorentzian (in MHz)
     "pos_guess": {
     	"option_default": null
     },
@@ -378,13 +378,17 @@
         "option_default": [-0.001, -0.2]
     },
 
-    // ========== Bfield recon/retrievel/calc/fit parameters ==========
+    // ========== Hamiltonian / field retrieval parameters ==========
 
     // Method to get bfield from pixel ODMR data
+    // options:
+    //    - "auto_dc": auto select from number of peaks (+ freqs_to_use)
+    //        -> uses ham for 8 peaks, invert_unvs for 6 peaks, prop_single_bnv for 2
+    //    - "hamiltonian_fitting": fit full hamiltonian
     "bfield_method": {
-        "option_default": "auto",
+        "option_default": "auto_dc",
         "option_choices": [
-            "auto",
+            "auto_dc",
             "hamiltonian_fitting",
             "prop_single_bnv",
             "invert_unvs"
@@ -400,6 +404,12 @@
         ]
     },
 
+    // which frequencies (e.g. lorentzian posns) to use for field retrieval
+    // must be iterable of values that evaluate as True/False (>=1 must be True)
+    "freqs_to_use": {
+        "option_default": [1, 1, 1, 1, 1, 1, 1, 1]
+    },
+
     // diamond crystal orientation -> see QDMPy.constants. Default: HPHT orientation
     // format: <top face orientation>_<edge face orientation>
     "diamond_ori": {
@@ -410,7 +420,7 @@
         ]
     },
     // Read magnetic field from metaspool (i.e. if applied with vector electromagnet)
-    "auto_read_b": {
+    "auto_read_B": {
         "option_default": true,
         "option_choices": 
             [
@@ -418,8 +428,8 @@
                 false
             ]
     },
-    // Guess mag field (bx, by, bz) from bias field parameters (bias_mag etc.)
-    "auto_guess_b": {
+    // Guess mag field (Bx, By, Bz) from bias field parameters (bias_mag etc.)
+    "auto_guess_B": {
         "option_default": true,
         "option_choices": 
             [
@@ -458,8 +468,8 @@
         "option_default": 15
     },
 
-    // override global scipyfit options with these options, for the bfield fit
-    "bfield_scipyfit_options": {
+    // override global scipyfit options with these options, for the hamiltonian fit
+    "hamiltonian_scipyfit_options": {
         "option_default": {
             "scipyfit_use_analytic_jac": false
         }
@@ -467,33 +477,33 @@
 
     // ========== Bfield Fit Parameters ===========
     // directly supply guesses and ranges for bxyz (in Gauss)
-    "bx_guess": {
+    "Bx_guess": {
         "option_default": 10
     },
-    "bx_range": {
+    "Bx_range": {
         "option_default": 30
     },
-    "by_guess": {
+    "By_guess": {
         "option_default": 10
     },
-    "by_range": {
+    "By_range": {
         "option_default": 30
     },
-    "bz_guess": {
+    "Bz_guess": {
         "option_default": 10
     },
-    "bz_range": {
+    "Bz_range": {
         "option_default": 30
     },
-    "d_guess": {
+    "D_guess": {
         "option_default": 2871
     },
-    "d_range": {
+    "D_range": {
         "option_default": 1
     },
 
-    // ========== scipy least means square options ===========
-    // Method for scipy least means square,
+    // ========== scipy least squares fitting options ===========
+    // Method for scipy least squares fitting
     // lm (fast but doesn't use bounds),
     // trf (uses bounds and the most reliable fit method but can be very slow)
     // dogbox (uses bounds and is faster than trf)
@@ -772,5 +782,7 @@
     // time for gpu to fit image
     "fit_time_(s)": {},
     // directory within output to save data once ref defined (output_dir/sub_ref_dir)
-    "sub_ref_dir" : {}
+    "sub_ref_dir" : {},
+    // as above but data dir (above\data)
+    "sub_ref_data_dir" : {}
 }

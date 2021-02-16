@@ -5,18 +5,20 @@ ODMR datasets (after they've been fit with the `QDMPy.fit.interface` tooling).
 
 Functions
 ---------
- - `QDMPy.bfield.bnv.get_bnvs_and_dshifts`
- - `QDMPy.bfield.bnv.check_exp_bnv_compatibility`
- - `QDMPy.bfield.bnv.bnv_refsub`
+ - `QDMPy.fields.bnv.get_bnvs_and_dshifts`
+ - `QDMPy.fields.bnv.check_exp_bnv_compatibility`
+ - `QDMPy.fields.bnv.bnv_refsub`
+ - `QDMPy.fields.bnv.bxyz_from_single_bnv`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "QDMPy.bfield.bnv.get_bnvs_and_dshifts": True,
-    "QDMPy.bfield.bnv.check_exp_bnv_compatibility": True,
-    "QDMPy.bfield.bnv.bnv_refsub": True,
+    "QDMPy.fields.bnv.get_bnvs_and_dshifts": True,
+    "QDMPy.fields.bnv.check_exp_bnv_compatibility": True,
+    "QDMPy.fields.bnv.bnv_refsub": True,
+    "QDMPy.fields.bnv.bxyz_from_single_bnv": True,
 }
 
 # ============================================================================
@@ -120,7 +122,14 @@ def check_exp_bnv_compatibility(sig_bnvs, ref_bnvs):
 
 # ============================================================================
 
+
 def bnv_refsub(options, sig_bnvs, ref_bnvs):
+    """docstring here"""
+    # TODO
+    # documentation +
+    # "bnv_bsub_method" option -> allow other bsubs e.g.
+    # subtract_blurred, subtract_outside_polygons etc. should be defined on any 2D array,
+    # do that later
     if ref_bnvs:
         check_exp_bnv_compatibility(sig_bnvs, ref_bnvs)
         return [sig - ref for sig, ref in zip(sig_bnvs, ref_bnvs)]
@@ -129,3 +138,37 @@ def bnv_refsub(options, sig_bnvs, ref_bnvs):
 
 
 # ============================================================================
+
+
+# TODO
+# - This should be a propagation for just one bnv.
+def bxyz_from_single_bnv(bnvs):
+    """
+    Arguments
+    ---------
+    bnvs : list
+        List of np arrays (2D) giving B_NV for each NV family/orientation.
+        If num_peaks is odd, the bnv is given as the shift of that peak,
+        and the dshifts is left as np.nans.
+
+    Returns
+    -------
+
+    """
+    if len(bnvs) == 1:
+        # only use one bnv
+        pass
+
+
+# ============================================================================
+
+
+def bxyz_from_unv_inversion(options, bnvs):
+
+    # need: diamond_ori/unvs, B guess
+    # --> similar stuff to hamiltonians, so chuck it somewhere else?
+    # --> yeah I think most likely going to be called from fields module
+    # --> so just pass all that stuff into the hamiltonians.
+
+    # return as dict, keys = bx, by, bz?
+    pass

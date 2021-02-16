@@ -30,7 +30,7 @@ from pathlib import Path
 
 # ============================================================================
 
-import QDMPy.io.raw
+import QDMPy.io as Qio
 
 # ============================================================================
 
@@ -38,7 +38,7 @@ import QDMPy.io.raw
 def load_prev_fit_results(options):
     """Load (all) parameter fit results from previous processing."""
 
-    prev_options = QDMPy.io.raw._get_prev_options(options)
+    prev_options = Qio._get_prev_options(options)
 
     fit_param_res_dict = {}
 
@@ -128,7 +128,7 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
     else:
         ref_options_path = None
 
-    ref_options = QDMPy.io.raw.load_options(
+    ref_options = Qio.load_options(
         options_dict=ref_options,
         options_path=ref_options_path,
         check_for_prev_result=True,
@@ -151,5 +151,6 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
     else:
         warnings.warn("Didn't find reference experiment fit results?")
         return None
+
 
 # ============================================================================

@@ -5,16 +5,16 @@ json2dict; functions for loading json files to dicts and the inverse.
 
 Functions
 ---------
- - `QDMPy.io.json2dict.failfloat`
- - `QDMPy.io.json2dict.defaultdict_from_d`
  - `QDMPy.io.json2dict.json_to_dict`
  - `QDMPy.io.json2dict.dict_to_json`
  - `QDMPy.io.json2dict.dict_to_json_str`
- - `QDMPy.io.json2dict.prettyjson`
- - `QDMPy.io.json2dict.getsubitems`
- - `QDMPy.io.json2dict.basictype2str`
- - `QDMPy.io.json2dict.indentitems`
- - `QDMPy.io.json2dict.json_remove_comments`
+ - `QDMPy.io.json2dict._prettyjson`
+ - `QDMPy.io.json2dict._getsubitems`
+ - `QDMPy.io.json2dict._basictype2str`
+ - `QDMPy.io.json2dict._indentitems`
+ - `QDMPy.io.json2dict._json_remove_comments`
+ - `QDMPy.io.json2dict._failfloat`
+ - `QDMPy.io.json2dict._defaultdict_from_d`
 """
 
 # ============================================================================
@@ -22,16 +22,16 @@ Functions
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "QDMPy.io.json2dict.failfloat": True,
-    "QDMPy.io.json2dict.defaultdict_from_d": True,
     "QDMPy.io.json2dict.json_to_dict": True,
     "QDMPy.io.json2dict.dict_to_json": True,
     "QDMPy.io.json2dict.dict_to_json_str": True,
-    "QDMPy.io.json2dict.prettyjson": True,
-    "QDMPy.io.json2dict.getsubitems": True,
-    "QDMPy.io.json2dict.basictype2str": True,
-    "QDMPy.io.json2dict.indentitems": True,
-    "QDMPy.io.json2dict.json_remove_comments": True,
+    "QDMPy.io.json2dict._prettyjson": True,
+    "QDMPy.io.json2dict._getsubitems": True,
+    "QDMPy.io.json2dict._basictype2str": True,
+    "QDMPy.io.json2dict._indentitems": True,
+    "QDMPy.io.json2dict._json_remove_comments": True,
+    "QDMPy.io.json2dict._failfloat": True,
+    "QDMPy.io.json2dict._defaultdict_from_d": True,
 }
 
 # ============================================================================
@@ -46,29 +46,6 @@ import numpy as np
 # ============================================================================
 
 
-def failfloat(a):
-    """Used in particular for reading the metadata to convert all numbers into
-    floats and leave strings as strings.
-    """
-    try:
-        return float(a)
-    except ValueError:
-        return a
-
-
-# ============================================================================
-
-
-def defaultdict_from_d(d):
-    """converts d to a defaultdict, with default value of None for all keys"""
-    dd = defaultdict(lambda: None)
-    dd.update(d)
-    return dd
-
-
-# ============================================================================
-
-
 def json_to_dict(filepath, hook="od"):
     """ read the json file at filepath into a dict """
     _, pattern = os.path.splitext(filepath)
@@ -79,11 +56,11 @@ def json_to_dict(filepath, hook="od"):
         if hook == "od":
             oph = OrderedDict
         elif hook == "dd":
-            oph = defaultdict_from_d
+            oph = _defaultdict_from_d
         else:
             raise RuntimeError("bad choice for dict hook")
 
-        jstring = json_remove_comments(fp.read())
+        jstring = _json_remove_comments(fp.read())
         dct = json.loads(jstring, object_pairs_hook=oph)
         return dct.copy()
 
@@ -113,19 +90,21 @@ def dict_to_json(dictionary, filename, path_to_dir=None):
         filepath = os.path.join(path_to_dir, filename)
 
     with open(filepath, "w") as fp:
-        fp.write(prettyjson(dictionary))
+        fp.write(_prettyjson(dictionary))
 
 
 # ============================================================================
 
 
 def dict_to_json_str(obj, indent=4, maxlinelength=80):
-    """Copy of `QDMPy.io.json2dict.prettyjson`"""
-    return prettyjson(obj, indent, maxlinelength)
+    """Copy of `QDMPy.io.json2dict._prettyjson`"""
+    return _prettyjson(obj, indent, maxlinelength)
+
 
 # ============================================================================
 
-def prettyjson(obj, indent=4, maxlinelength=80):
+
+def _prettyjson(obj, indent=4, maxlinelength=80):
     """
     Renders JSON content with indentation and line splits/concatenations to
     fit maxlinelength. Only dicts, lists and basic types are supported.
@@ -134,15 +113,15 @@ def prettyjson(obj, indent=4, maxlinelength=80):
     <Pass the dict as obj and get back a string>
     """
 
-    items, _ = getsubitems(obj, itemkey="", islast=True, maxlinelength=maxlinelength)
-    res = indentitems(items, indent, indentcurrent=0)
+    items, _ = _getsubitems(obj, itemkey="", islast=True, maxlinelength=maxlinelength)
+    res = _indentitems(items, indent, indentcurrent=0)
     return res
 
 
 # ============================================================================
 
 
-def getsubitems(obj, itemkey, islast, maxlinelength):
+def _getsubitems(obj, itemkey, islast, maxlinelength):
     items = []
     # assume we can concatenate inner content unless a child node returns an
     # expanded list
@@ -179,9 +158,9 @@ def getsubitems(obj, itemkey, islast, maxlinelength):
             islast_ = count == len(obj)
             itemkey_ = ""
             if isdict:
-                itemkey_ = basictype2str(k)
+                itemkey_ = _basictype2str(k)
             # inner = (items, indent)
-            inner, can_concat_ = getsubitems(obj[k], itemkey_, islast_, maxlinelength)
+            inner, can_concat_ = _getsubitems(obj[k], itemkey_, islast_, maxlinelength)
             # inner can be a string or a list
             subitems.extend(inner)
             # if a child couldn't concat, then we are not able either
@@ -222,7 +201,7 @@ def getsubitems(obj, itemkey, islast, maxlinelength):
         strobj = itemkey
         if strobj != "":
             strobj += ": "
-        strobj += basictype2str(obj)
+        strobj += _basictype2str(obj)
         if not islast:
             strobj += ","
         items.append(strobj)
@@ -233,7 +212,7 @@ def getsubitems(obj, itemkey, islast, maxlinelength):
 # ============================================================================
 
 
-def basictype2str(obj):
+def _basictype2str(obj):
     """This is a filter on objects that get sent to the json. Some types
     can't be stored literally in json files, so we can adjust for that here.
     """
@@ -253,14 +232,14 @@ def basictype2str(obj):
 # ============================================================================
 
 
-def indentitems(items, indent, indentcurrent):
+def _indentitems(items, indent, indentcurrent):
     """Recursively traverses the list of json lines, adds indentation based
     on the current depth"""
     res = ""
     indentstr = " " * indentcurrent
     for item in items:
         if isinstance(item, list):
-            res += indentitems(item, indent, indentcurrent + indent)
+            res += _indentitems(item, indent, indentcurrent + indent)
         else:
             res += indentstr + item + "\n"
     return res
@@ -269,7 +248,7 @@ def indentitems(items, indent, indentcurrent):
 # ============================================================================
 
 
-def json_remove_comments(string, strip_space=True):
+def _json_remove_comments(string, strip_space=True):
     tokenizer = re.compile('"|(/\*)|(\*/)|(//)|\n|\r')
     end_slashes_re = re.compile(r"(\\)*$")
 
@@ -325,3 +304,26 @@ def json_remove_comments(string, strip_space=True):
 
     new_str.append(string[index:])
     return "".join(new_str)
+
+
+# ============================================================================
+
+
+def _failfloat(a):
+    """Used in particular for reading the metadata to convert all numbers into
+    floats and leave strings as strings.
+    """
+    try:
+        return float(a)
+    except ValueError:
+        return a
+
+
+# ============================================================================
+
+
+def _defaultdict_from_d(d):
+    """converts d to a defaultdict, with default value of None for all keys"""
+    dd = defaultdict(lambda: None)
+    dd.update(d)
+    return dd

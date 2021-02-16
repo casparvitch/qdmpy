@@ -1,0 +1,111 @@
+# -*- coding: utf-8 -*-
+"""
+This module holds tools for calculating Bxyz from Bnv.
+
+Functions
+---------
+ - `QDMPy.fields.interface.field_retrivel`
+"""
+# ============================================================================
+
+__author__ = "Sam Scholten"
+__pdoc__ = {
+    "QDMPy.fields.interface.field_retrivel": True,
+}
+
+# ============================================================================
+
+import QDMPy.fields.bnv as Qbnv
+import QDMPy.io as Qio
+
+# ============================================================================
+
+
+def field_retrieval(options, sig_fit_params, ref_fit_params):
+    """
+    fit results dict -> field results dict ?
+
+    How to do bsub? well I guess do the bsub afterwards c:
+
+    """
+    # NOTE -> if AC fields etc are instead modelled then this will need rewriting, too many assumps
+
+    # first get bnvs (as in global scope)
+    sig_bnvs, sig_dshifts = Qbnv.get_bnvs_and_dshifts(sig_fit_params)
+    ref_bnvs, ref_dshifts = Qbnv.get_bnvs_and_dshifts(ref_fit_params)
+    bnvs = Qbnv.bnv_refsub(options, sig_bnvs, ref_bnvs)
+
+    Qio.save_bnvs_and_dshifts(options, "sig", sig_bnvs, sig_dshifts)
+    Qio.save_bnvs_and_dshifts(options, "ref", ref_bnvs, ref_dshifts)
+    Qio.save_bnvs_and_dshifts(options, "sig_sub_ref", bnvs, None)
+
+    if options["hamiltonian"] not in ["approx_bxyz", "bxyz"]:
+        # if hamiltonian not a simple bxyz => ham required to get other params, so force it.
+        bmeth = "hamiltonian_fitting"
+    else:
+        # otherwise grab from options
+        bmeth = options["bfield_method"]
+    if bmeth == "auto_dc" and any(map(lambda x: x.startswith("pos"), options["fit_param_defn"])):
+        raise RuntimeError(
+            """
+            bfield_method 'auto_dc' not compatible with fit functions that do not include 'pos'
+            parameters. You are probably not fitting ODMR data. Implement an 'auto_ac' option for
+            field retrieval in that regime. If you've done that you may implement an 'auto'
+            option that selects the more applicable of the two.
+            """
+        )
+
+    # check how many peaks we want to use, and how many are available -> ensure compatible
+    num_peaks_fit = len(options["pos_guess"])
+    num_peaks_wanted = sum(options["freqs_to_use"])
+    if num_peaks_wanted > num_peaks_fit:
+        raise RuntimeError(
+            f"Number of freqs wanted ({num_peaks_wanted}) "
+            + f"is greater than number fit ({num_peaks_fit})."
+        )
+    if len(options["freqs_to_use"]) != num_peaks_fit:
+        raise RuntimeError(
+            f"Length of option 'freqs_to_use' ({len(options['freqs_to_use'])}) does not match "
+            + f"number of peaks fit ({num_peaks_fit})"
+        )
+
+    if bmeth == "auto_dc":
+        # need to select the appropriate one
+        if num_peaks_wanted == 2:
+            bmeth = "prop_single_bnv"
+        elif num_peaks_wanted == 6:
+            bmeth = "invert_unvs"
+        elif num_peaks_wanted in [1, 3, 4, 5, 7, 8]:  # not sure how many of these will be useful
+            bmeth = "hamiltonian_fitting"
+        else:
+            raise RuntimeError(
+                "Number of true values in option 'freqs_to_use' is not between 1 and 8."
+            )
+
+    elif bmeth == "prop_single_bnv":
+        if num_peaks_wanted != 2:
+            raise RuntimeError(
+                "bfield_method option was 'prop_single_bnv', but number of true values in option "
+                + "'freqs_to_use' was not 2."
+            )
+        else:
+            # FIXME
+            raise NotImplementedError()
+    elif bmeth == "invert_unvs":
+        if num_peaks_wanted != 6:
+            raise RuntimeError(
+                "bfield_method option was 'invert_unvs', but number of true values in option "
+                + "'freqs_to_use' was not 6."
+            )
+        else:
+            # FIXME simplest -> do first?
+            raise NotImplementedError()
+    else:
+        # hamiltonian fitting
+        raise NotImplementedError()
+
+    options["bfield_method_used"] = bmeth
+
+    # switch depending on bfield method -> overrides above bxyz if supplied
+    #   - should call other fns
+    return (sig_bnvs, ref_bnvs, bnvs), (sig_dshifts, ref_dshifts), (ham_sig_params, ham_ref_params)

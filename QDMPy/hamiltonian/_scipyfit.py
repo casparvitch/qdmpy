@@ -1,18 +1,18 @@
 # -*- coding: utf-8 -*-
 """
+This module holds scipyfit specific options for hamiltonian fitting
 
-Classes
--------
- - `QDMPy.hamiltonian._scipyfit.`
 Functions
 ---------
- - `QDMPy.hamiltonian._scipyfit.`
+ - `QDMPy.hamiltonian._scipyfit.gen_scipyfit_init_guesses`
+ - `QDMPy.hamiltonian._scipyfit.prep_scipyfit_options`
 """
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "QDMPy.hamiltonian._scipyfit.": True,
+    "QDMPy.hamiltonian._scipyfit.gen_scipyfit_init_guesses": True,
+    "QDMPy.hamiltonian._scipyfit.prep_scipyfit_options": True,
 }
 # ============================================================================
 
@@ -21,6 +21,8 @@ import numpy as np
 # ============================================================================
 
 from QDMPy.constants import AVAILABLE_HAMILTONIANS
+import QDMPy.hamiltonian._shared as fit_shared
+import QDMPy.systems as systems
 
 # ============================================================================
 
@@ -74,7 +76,7 @@ def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
 # ==========================================================================
 
 
-def prep_scipyfit_options(options, fit_model):
+def prep_scipyfit_options(options, ham):
     """
     General options dict -> scipyfit_options
     in format that scipy least_squares expects.
@@ -84,8 +86,8 @@ def prep_scipyfit_options(options, fit_model):
     options : dict
         Generic options dict holding all the user options.
 
-    fit_model : `QDMPy.fit._models.FitModel`
-        Fit model object.
+    fit_model : `QDMPy.hamiltonian._hamiltonians.Hamiltonian`
+        Hamiltonian object.
 
     Returns
     -------
@@ -119,11 +121,46 @@ def prep_scipyfit_options(options, fit_model):
         options["scipyfit_scale_x"] = False
 
     # define jacobian option for least_squares fitting
-    if fit_model.jacobian_scipyfit is None or not options["scipyfit_use_analytic_jac"]:
+    if ham.jacobian_scipyfit is None or not options["scipyfit_use_analytic_jac"]:
         scipyfit_options["jac"] = options["scipyfit_fit_jac_acc"]
     else:
-        scipyfit_options["jac"] = fit_model.jacobian_scipyfit
+        scipyfit_options["jac"] = ham.jacobian_scipyfit
+
+    # override with hamiltonian options
+    for key, val in options["hamiltonian_scipyfit_options"].items():
+        scipyfit_options[key] = val
+
     return scipyfit_options
 
 
 # ==========================================================================
+
+
+def fit_hamiltonian_scipyfit(options, data, hamiltonian):
+    """
+    Fits each pixel ODMR result to hamiltonian and returns dictionary of
+    param_name -> param_image.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    data : np array, 3D
+        Normalised measurement array, shape: [sweep_list, y, x]. E.g. bnvs or freqs
+
+
+    fit_model : `QDMPy.hamiltonian._hamiltonians.Hamiltonian`
+        Model we're fitting to.
+
+    Returns
+    -------
+    ham_results : dict
+        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
+        Also has 'residual' as a key.
+    """
+    systems.clean_options(options)
+
+    threads = options["threads"]
+
+    num_pixels = np.shape(data)[1] * np.shape(data)[2]

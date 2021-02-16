@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """
+The module holds Hamiltonian objects that will be fit to.
 
 Classes
 -------
@@ -27,9 +28,6 @@ __pdoc__ = {
 import numpy as np
 import numpy.linalg as LA
 from math import radians
-
-# ============================================================================
-
 
 # ============================================================================
 
@@ -104,7 +102,7 @@ class Hamiltonian:
         self.b_guess["bz"] = bz
         # Get the NV orientations B magnitude and sign (from the B guess)
 
-        from QDMPy.constants import NV_AXES_100_110, NV_AXES_100_100 # avoid cyclic dependencies
+        from QDMPy.constants import NV_AXES_100_110, NV_AXES_100_100  # avoid cyclic dependencies
 
         if self.diamond_ori == "<100>_<100>":
             nv_axes = NV_AXES_100_100
@@ -131,11 +129,6 @@ class Hamiltonian:
                 np.array(sorted_dict[idx]["ori"]) * sorted_dict[idx]["sign"]
             )
 
-        # # Calculate the inverse of the nv orientation matrix - unused???
-        # self.nv_signed_ori_inv = self.nv_signed_ori.copy()
-        # self.nv_signed_ori_inv[self.nv_signed_ori_inv == 0] = np.inf
-        # self.nv_signed_ori_inv = 1 / self.nv_signed_ori_inv
-
 
 # ============================================================================
 
@@ -146,9 +139,12 @@ def get_param_defn(hamiltonian):
 
 # ============================================================================
 
-# TODO add get_param_unit etc.
+
 def get_param_units(hamiltonian):
     return hamiltonian.param_units
+
+
+# TODO add get_param_unit etc. here for plotting?
 
 
 # ============================================================================

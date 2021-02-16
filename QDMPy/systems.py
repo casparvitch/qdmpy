@@ -218,6 +218,9 @@ class UniMelb(System):
             if options["scipy_fit_method"] == "lm":
                 options["loss"] = "linear"
 
+        if "freqs_to_use" in options:
+            options["freqs_to_use"] = map(lambda x: bool(x), options["freqs_to_use"])
+
         if "base_dir" in options and not self.filepath_joined:
             options["filepath"] = os.path.join(options["base_dir"], options["filepath"])
             self.filepath_joined = True  # just a flag so we don't do this twice

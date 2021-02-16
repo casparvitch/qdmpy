@@ -67,8 +67,8 @@ import re
 
 # ============================================================================
 
-import QDMPy.io.json2dict
-import QDMPy.fit._models as fit_models
+import QDMPy.io as Qio
+import QDMPy.fit as Qfit
 import QDMPy.systems as systems
 
 # ============================================================================
@@ -118,7 +118,7 @@ def load_options(
         raise RuntimeError("pass at least one of options_dict and options_path to load_options")
 
     if options_path is not None:
-        prelim_options = QDMPy.io.json2dict.json_to_dict(options_path)
+        prelim_options = Qio.json_to_dict(options_path)
     else:
         prelim_options = OrderedDict(options_dict)  # unnescessary py3.7+, leave to describe intent
 
@@ -183,9 +183,7 @@ def save_options(options):
             val = str(val).replace("\\", "\\\\")
         if key not in keys_to_remove:
             save_options[key] = val
-    QDMPy.io.json2dict.dict_to_json(
-        save_options, "saved_options.json", path_to_dir=options["output_dir"]
-    )
+    Qio.dict_to_json(save_options, "saved_options.json", path_to_dir=options["output_dir"])
 
 
 # ============================================================================
@@ -472,7 +470,7 @@ def _options_compatible(options, prev_options):
                 return False
 
     # ok now the trickiest one, check parameter guesses & bounds
-    unique_params = set(fit_models.get_param_defn(fit_models.FitModel(options["fit_functions"])))
+    unique_params = set(Qfit.get_param_defn(Qfit.FitModel(options["fit_functions"])))
 
     for param_name in unique_params:
         if options[param_name + "_guess"] != prev_options[param_name + "_guess"]:
@@ -537,7 +535,7 @@ def _get_prev_options(options):
     """
     Reads options file from previous fit result (.json), returns a dictionary.
     """
-    return QDMPy.io.json2dict.json_to_dict(options["output_dir"] / "saved_options.json")
+    return Qio.json_to_dict(options["output_dir"] / "saved_options.json")
 
 
 # ============================================================================
@@ -880,7 +878,9 @@ def _define_AOIs(options):
             break
     return AOIs
 
+
 # ============================================================================
+
 
 def _recursive_dict_update(to_be_updated_dict, updating_dict):
     """

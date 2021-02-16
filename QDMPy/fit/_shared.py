@@ -39,8 +39,8 @@ import numpy as np
 
 # ============================================================================
 
-import QDMPy.fit._models as fit_models
-import QDMPy.io.json2dict
+import QDMPy.fit as Qfit
+import QDMPy.io as Qio
 import QDMPy.constants
 
 # ============================================================================
@@ -137,7 +137,7 @@ class ROIAvgFitResult:
             "best_params": self.best_params,
             "init_param_guess": self.init_param_guess,
         }
-        QDMPy.io.json2dict.dict_to_json(output_dict, filename, dir)
+        Qio.dict_to_json(output_dict, filename, dir)
 
 
 # ============================================================================
@@ -379,7 +379,7 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
     roi_shape = np.shape(pixel_data)
 
     # initialise dictionary with key: val = param_name: param_units
-    fit_image_results = fit_models.get_param_odict(fit_model)
+    fit_image_results = Qfit.get_param_odict(fit_model)
 
     # override with correct size empty arrays using np.zeros
     for key in fit_image_results.keys():
