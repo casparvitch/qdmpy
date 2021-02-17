@@ -385,6 +385,9 @@
     //    - "auto_dc": auto select from number of peaks (+ freqs_to_use)
     //        -> uses ham for 8 peaks, invert_unvs for 6 peaks, prop_single_bnv for 2
     //    - "hamiltonian_fitting": fit full hamiltonian
+    //    - "prop_single_bnv": use fourier method to propagate bnv -> bxyz
+    //    - "invert_unvs": take 3 unvs and (effective) approx_bxyz hamiltonian, 
+    //          but use simple inversion of unv matrix rather than fitting to hamiltonian
     "bfield_method": {
         "option_default": "auto_dc",
         "option_choices": [
@@ -395,7 +398,8 @@
         ]
     },
 
-    // type of hamiltonian to fit, if that bfield method is used
+    // type of hamiltonian to fit, if that bfield method is used 
+    //      (or always fit if not "bxyz" or "approx_bxyz" assuming non-B parameters)
     "hamiltonian": {
         "option_default": "bxyz",
         "option_choices": [
@@ -405,7 +409,7 @@
     },
 
     // which frequencies (e.g. lorentzian posns) to use for field retrieval
-    // must be iterable of values that evaluate as True/False (>=1 must be True)
+    // must be len-8 iterable of values that evaluate as True/False (>=1 must be True)
     "freqs_to_use": {
         "option_default": [1, 1, 1, 1, 1, 1, 1, 1]
     },
@@ -419,8 +423,9 @@
             "<100>_<110>"
         ]
     },
-    // Read magnetic field from metaspool (i.e. if applied with vector electromagnet)
-    "auto_read_B": {
+    // Read magnetic field from options (i.e. if applied with vector electromagnet)
+    // --> system dependent option (i.e. Unimelb reads from metadata)
+    "auto_read_bias": {
         "option_default": true,
         "option_choices": 
             [
@@ -446,7 +451,7 @@
                 false
             ]
     },
-    // unit vectors of NV orientations, must be shape = (4,3). i.e. NV frame's z axis. 
+    // unit vectors of NV orientations, must be shape = (4,3). Equiv. to each NV frame's z axis. 
     "unvs": {
         "option_default": [
             [0.57735, 0.57735, 0.57735],

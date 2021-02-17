@@ -4,31 +4,32 @@ This module holds tools for calculating Bxyz from Bnv.
 
 Functions
 ---------
- - `QDMPy.fields.interface.field_retrivel`
+ - `QDMPy.field.interface.odmr_field_retrieval`
 """
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "QDMPy.fields.interface.field_retrivel": True,
+    "QDMPy.field.interface.odmr_field_retrieval": True,
 }
 
 # ============================================================================
 
-import QDMPy.fields.bnv as Qbnv
+import QDMPy.field._bnv as Qbnv
+import QDMPy.field._bxyz as Qbxyz
 import QDMPy.io as Qio
 
 # ============================================================================
 
 
-def field_retrieval(options, sig_fit_params, ref_fit_params):
+def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
     """
     fit results dict -> field results dict ?
 
     How to do bsub? well I guess do the bsub afterwards c:
 
+    for AC fields/non-odmr datasets, need to write a new module.
     """
-    # NOTE -> if AC fields etc are instead modelled then this will need rewriting, too many assumps
 
     # first get bnvs (as in global scope)
     sig_bnvs, sig_dshifts = Qbnv.get_bnvs_and_dshifts(sig_fit_params)
@@ -49,9 +50,10 @@ def field_retrieval(options, sig_fit_params, ref_fit_params):
         raise RuntimeError(
             """
             bfield_method 'auto_dc' not compatible with fit functions that do not include 'pos'
-            parameters. You are probably not fitting ODMR data. Implement an 'auto_ac' option for
-            field retrieval in that regime. If you've done that you may implement an 'auto'
-            option that selects the more applicable of the two.
+            parameters. You are probably not fitting ODMR data.
+            Implement a module for non-odmr data, and an 'auto_ac' option for field retrieval in
+            that regime. If you've done that you may implement an 'auto' option that selects the
+            most applicable module and method :).
             """
         )
 
@@ -61,19 +63,19 @@ def field_retrieval(options, sig_fit_params, ref_fit_params):
     if num_peaks_wanted > num_peaks_fit:
         raise RuntimeError(
             f"Number of freqs wanted ({num_peaks_wanted}) "
-            + f"is greater than number fit ({num_peaks_fit})."
+            + f"is greater than number fit ({num_peaks_fit}).\n"
+            + "We need to identify which NVs each resonance corresponds to "
+            + "for our algorithm to work, so please define this in the options dict/json."
         )
-    if len(options["freqs_to_use"]) != num_peaks_fit:
-        raise RuntimeError(
-            f"Length of option 'freqs_to_use' ({len(options['freqs_to_use'])}) does not match "
-            + f"number of peaks fit ({num_peaks_fit})"
-        )
-
+    # check that freqs_to_use is symmetric (necessary for bnvs retrieval methods)
+    symmetric_freqs = all(
+        list(reversed(options["freqs_to_use"][4:])) == options["freqs_to_use"][:4]
+    )
     if bmeth == "auto_dc":
         # need to select the appropriate one
-        if num_peaks_wanted == 2:
+        if num_peaks_wanted == 2 and symmetric_freqs:
             bmeth = "prop_single_bnv"
-        elif num_peaks_wanted == 6:
+        elif num_peaks_wanted == 6 and symmetric_freqs:
             bmeth = "invert_unvs"
         elif num_peaks_wanted in [1, 3, 4, 5, 7, 8]:  # not sure how many of these will be useful
             bmeth = "hamiltonian_fitting"
@@ -89,8 +91,8 @@ def field_retrieval(options, sig_fit_params, ref_fit_params):
                 + "'freqs_to_use' was not 2."
             )
         else:
-            # FIXME
-            raise NotImplementedError()
+            sig_params = Qbxyz.from_single_bnv(options, sig_bnvs)
+            ref_params = Qbxyz.from_single_bnv(options, ref_bnvs)
     elif bmeth == "invert_unvs":
         if num_peaks_wanted != 6:
             raise RuntimeError(
@@ -98,14 +100,15 @@ def field_retrieval(options, sig_fit_params, ref_fit_params):
                 + "'freqs_to_use' was not 6."
             )
         else:
-            # FIXME simplest -> do first?
-            raise NotImplementedError()
+            sig_params = Qbxyz.from_unv_inversion(options, sig_bnvs)
+            ref_params = Qbxyz.from_unv_inversion(options, ref_bnvs)
     else:
         # hamiltonian fitting
-        raise NotImplementedError()
+        sig_params = Qbxyz.from_hamiltonian_fitting(options, sig_fit_params)
+        ref_params = Qbxyz.from_hamiltonian_fitting(options, ref_fit_params)
 
     options["bfield_method_used"] = bmeth
 
     # switch depending on bfield method -> overrides above bxyz if supplied
     #   - should call other fns
-    return (sig_bnvs, ref_bnvs, bnvs), (sig_dshifts, ref_dshifts), (ham_sig_params, ham_ref_params)
+    return (sig_bnvs, ref_bnvs, bnvs), (sig_dshifts, ref_dshifts), (sig_params, ref_params)

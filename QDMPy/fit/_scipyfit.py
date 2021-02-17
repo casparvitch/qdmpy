@@ -30,7 +30,6 @@ __pdoc__ = {
 
 # ==========================================================================
 
-
 import numpy as np
 from scipy.optimize import least_squares
 from tqdm.autonotebook import tqdm  # auto detects jupyter
@@ -335,7 +334,7 @@ def fit_AOIs_scipyfit(
 def limit_cpu():
     """Called at every process start, to reduce the priority of this process"""
     p = psutil.Process(os.getpid())
-    # set to lowest priority, this is windows only, on Unix use p.nice(19)
+    # set to lowest priority
     if platform.startswith("linux"):  # linux
         p.nice(19)
     elif platform.startswith("win32"):  # windows

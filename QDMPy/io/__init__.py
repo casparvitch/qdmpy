@@ -11,8 +11,8 @@ This (sub-) package exposes specific functions to the user:
 - `QDMPy.io.fit`:
     - `QDMPy.io.fit.load_prev_fit_results`
     - `QDMPy.io.fit.load_fit_param`
-- `QDMPy.io.fields`:
-    - `QDMPy.io.fields.save_bnvs_and_dshifts`
+- `QDMPy.io.field`:
+    - `QDMPy.io.field.save_bnvs_and_dshifts`
 - `QDMPy.io.json2dict`:
     - `QDMPy.io.json2dict.dict_to_json_str`
     - `QDMPy.io.json2dict.json_to_dict`
@@ -22,5 +22,5 @@ This (sub-) package exposes specific functions to the user:
 
 from QDMPy.io.raw import *
 from QDMPy.io.fit import *
-from QDMPy.io.fields import *
+from QDMPy.io.field import *
 from QDMPy.io.json2dict import dict_to_json_str, json_to_dict, dict_to_json

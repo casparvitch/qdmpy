@@ -4,14 +4,14 @@ This module holds the tools for loading/saving field results.
 
 Functions
 ---------
- - `QDMPy.io.fields.save_bnvs_and_dshifts`
+ - `QDMPy.io.field.save_bnvs_and_dshifts`
 
 """
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "QDMPy.io.fields.save_bnvs_and_dshifts": True,
+    "QDMPy.io.field.save_bnvs_and_dshifts": True,
 }
 
 # ============================================================================

@@ -56,6 +56,7 @@ import re
 import warnings
 import pathlib
 from multiprocessing import cpu_count
+from math import radians
 
 # ============================================================================
 
@@ -145,6 +146,13 @@ class System:
         """
         raise NotImplementedError
 
+    def get_bias_field(self):
+        """
+        Method to get magnet bias field from experiment metadata,
+        i.e. if set with programmed electromagnet. Default: None.
+        """
+        return None
+
     def system_specific_option_update(self, options):
         """
         Hardcoded method that allows updating of the options at runtime with a custom script.
@@ -205,6 +213,28 @@ class UniMelb(System):
 
     def available_options(self):
         return self.options_dict.keys()
+
+    def get_bias_field(self, options):
+        """ get bias field as tuple (mag (G), theta (rad), phi (rad)) """
+        if "metadata" not in options:
+            return None
+        key_ars = [["Field Strength (G)"], ["Theta (deg)"], ["Phi (def)", "Phi (deg)"]]
+        bias_field = []
+        for ar in key_ars:
+            found = False
+            for key in ar:
+                if key in options["metadata"]:
+                    bias_field.append(options["metadata"][key])
+                    found = True
+            if not found:
+                return None
+        if len(bias_field) != 3:
+            warnings.warn(
+                f"Found {len(bias_field)} bias field params in metadata, "
+                + "this shouldn't happen (expected 3)."
+            )
+            return None
+        return bias_field[0], radians(bias_field[1]), radians(bias_field[2])
 
     def system_specific_option_update(self, options):
         # set some things that cannot be stored in the json
@@ -403,6 +433,9 @@ def check_option(key, val, system):
         warnings.warn(f"Option {key} was not recognised by the {system.name} system.")
     elif system.option_choices(key) is not None and val not in system.option_choices(key):
         OptionsError(key, val, system)
+    elif key == "freqs_to_use":
+        if len(val) != 8:
+            OptionsError(key, val, system, custom_msg="Length of option 'freqs_to_use' must be 8.")
 
 
 # ===============================

@@ -4,7 +4,7 @@ This module holds functions for plotting fields.
 
 Functions
 ---------
- - `QDMPy.plot.fields.plot_bnvs_and_dshifts`
+ - `QDMPy.plot.field.plot_bnvs_and_dshifts`
 """
 
 # ============================================================================

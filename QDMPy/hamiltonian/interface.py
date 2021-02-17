@@ -13,14 +13,16 @@ import QDMPy.hamiltonian._hamiltonians
 # ============================================================================
 
 
-def define_hamiltonian(options):
+def define_hamiltonian(options, indices_fn, unv_frames):
     from QDMPy.constants import AVAILABLE_HAMILTONIANS
 
-    ham = AVAILABLE_HAMILTONIANS(options["hamiltonian"])
+    ham = AVAILABLE_HAMILTONIANS(options["hamiltonian"])(indices_fn, unv_frames)
 
     options["ham_param_defn"] = QDMPy.hamiltonian._hamiltonians.get_param_defn(ham)
 
     _prep_fit_backends(options, ham)
+
+    return ham
 
 
 # ============================================================================
@@ -67,7 +69,7 @@ def fit_hamiltonian_pixels(options, data, hamiltonian):
         Normalised measurement array, shape: [sweep_list, y, x]. E.g. bnvs or freqs
 
 
-    fit_model : `QDMPy.hamiltonian._hamiltonians.Hamiltonian`
+    hamiltonian : `QDMPy.hamiltonian._hamiltonians.Hamiltonian`
         Model we're fitting to.
 
     Returns
@@ -76,12 +78,5 @@ def fit_hamiltonian_pixels(options, data, hamiltonian):
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
         Also has 'residual' as a key.
     """
-    # NOTE this shouldn't really be a user-facing function should it?
-    # eh I guess it is ok. We want to reshape data though.
-    # I.e. take bnvs and freqs as they are in nb, reshape into arrays, pass on
-    # depending on fit method.
-    #       -> I guess that would be held in bfield though!
 
-    # Change naming -> change to 'fields' -> that way holds strain, elec, bfield etc.
-    # OK that means a bit of a larger DOCUMENTATION REWRITE
     return fit_scipyfit.fit_hamiltonian_scipyfit(options, data, hamiltonian)

@@ -7,7 +7,7 @@ Ensure any fit functions you define are added to the AVAILABLE_FNS variable in `
 Try not to have overlapping parameter names in the same fit.
 
 For ODMR peaks, ensure the frequency position of the peak is named something
-prefixed by 'pos'. (see `QDMPy.fields.bnv.get_bnvs_and_dshifts` for the reasoning).
+prefixed by 'pos'. (see `QDMPy.field._bnv.get_bnvs_and_dshifts` for the reasoning).
 
 Classes
 -------

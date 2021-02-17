@@ -17,6 +17,16 @@ __pdoc__ = {
 # ============================================================================
 
 import numpy as np
+from scipy.optimize import least_squares
+from tqdm.autonotebook import tqdm  # auto detects jupyter
+import psutil
+import os
+import concurrent.futures
+from itertools import repeat
+import warnings
+from sys import platform
+from timeit import default_timer as timer
+from datetime import timedelta
 
 # ============================================================================
 
@@ -136,6 +146,23 @@ def prep_scipyfit_options(options, ham):
 # ==========================================================================
 
 
+def limit_cpu():
+    """Called at every process start, to reduce the priority of this process"""
+    p = psutil.Process(os.getpid())
+    # set to lowest priority
+    if platform.startswith("linux"):  # linux
+        p.nice(19)
+    elif platform.startswith("win32"):  # windows
+        p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
+    elif platform.startswith("darwin"):  # macOS
+        warnings.warn("Not sure what to use for macOS... skipping cpu limitting")
+    else:  # 'freebsd', 'aix', 'cygwin'...
+        warnings.warn(f"Not sure what to use for your OS: {platform}... skipping cpu limitting")
+
+
+# ==========================================================================
+
+
 def fit_hamiltonian_scipyfit(options, data, hamiltonian):
     """
     Fits each pixel ODMR result to hamiltonian and returns dictionary of
@@ -164,3 +191,56 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
     threads = options["threads"]
 
     num_pixels = np.shape(data)[1] * np.shape(data)[2]
+
+    # this makes low binning work (idk why), else do chunksize = 1
+    chunksize = int(num_pixels / (threads * 100))
+
+    if not chunksize:
+        warnings.warn("chunksize was 0, setting to 1")
+        chunksize = 1
+
+    # randomize order of fitting pixels (will un-scramble later) so ETA is more correct
+    if options["scramble_pixels"]:
+        pixel_data, unshuffler = fit_shared.shuffle_pixels(data)
+    else:
+        pixel_data = data
+
+    # DIFF NAMES HERE?
+    fit_options = prep_scipyfit_options(options, hamiltonian)
+    init_guess_params, _ = gen_scipyfit_init_guesses(
+        options, *fit_shared.gen_init_guesses(options)
+    )
+
+    # TODO add fit over full ROI to get better initial guess?!?!
+
+    # call into the library (measure time)
+    t0 = timer()
+    with concurrent.futures.ProcessPoolExecutor(
+        max_workers=threads, initializer=limit_cpu
+    ) as executor:
+        ham_fit_results = list(
+            tqdm(
+                executor.map(
+                    to_squares_wrapper,  # do we want to use this???...???
+                    repeat(hamiltonian.residuals_scipyfit),
+                    repeat(init_guess_params),
+                    fit_shared.pixel_generator(pixel_data),
+                    repeat(fit_options),
+                    chunksize=chunksize,
+                ),
+                ascii=True,
+                mininterval=1,
+                total=num_pixels,
+                unit=" PX",
+                disable=(not options["scipyfit_show_progressbar"]),
+            )
+        )
+    t1 = timer()
+    # for the record
+    options["ham_fit_time_(s)"] = timedelta(seconds=t1 - t0).total_seconds()
+
+    res = fit_shared.get_pixel_fitting_results(hamiltonian, ham_fit_results, pixel_data)
+    if options["scramble_pixels"]:
+        return fit_shared.unshuffle_fit_results(res, unshuffler)
+    else:
+        return res
