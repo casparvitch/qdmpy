@@ -24,6 +24,7 @@ import numpy as np
 
 
 from QDMPy.constants import AVAILABLE_HAMILTONIANS
+import QDMPy.hamiltonian._hamiltonians
 
 
 # ============================================================================
@@ -115,3 +116,177 @@ def bounds_from_range(options, param_key):
 
 
 # ============================================================================
+
+
+def pixel_generator(our_array):
+    """
+    Simple generator to shape data as expected by to_squares_wrapper in scipy concurrent method.
+
+    Also allows us to track *where* (i.e. which pixel location) each result corresponds to.
+    See also: `QDMPy.hamiltonian._scipyfit.to_squares_wrapper`.
+
+    Arguments
+    ---------
+    our_array : np array, 3D
+        Shape: [idx, y, x] (idx for each bnv, freq etc.)
+
+    Returns
+    -------
+    generator : list
+        [y, x, our_array[:, y, x]] generator (yielded)
+    """
+    len_z, len_y, len_x = np.shape(our_array)
+    for y in range(len_y):
+        for x in range(len_x):
+            yield [y, x, our_array[:, y, x]]
+
+
+# ============================================================================
+
+
+def shuffle_pixels(data_3d):
+    """
+    Simple shuffler
+
+    Arguments
+    ---------
+    data_3d : np array, 3D
+        i.e. freqs/bnv data, [idx, y, x].
+
+    Returns
+    -------
+    shuffled_in_yx : np array, 3D
+        data_3d shuffled in 2nd, 3rd axis.
+
+    unshuffler : (y_unshuf, x_unshuf)
+        Both np array. Can be used to unshuffle shuffled_in_yx, i.e. through
+        `QDMPy.hamiltonian._shared.unshuffle_pixels`.
+    """
+
+    rng = np.random.default_rng()
+
+    y_shuf = rng.permutation(data_3d.shape[1])
+    y_unshuf = np.argsort(y_shuf)
+    x_shuf = rng.permutation(data_3d.shape[2])
+    x_unshuf = np.argsort(x_shuf)
+
+    shuffled_in_y = data_3d[:, y_shuf, :]
+    shuffled_in_yx = shuffled_in_y[:, :, x_shuf]
+
+    # return shuffled pixels, and arrays to unshuffle
+    return shuffled_in_yx.copy(), (y_unshuf, x_unshuf)
+
+
+# =================================
+
+
+def unshuffle_pixels(data_2d, unshuffler):
+    """
+    Simple shuffler
+
+    Arguments
+    ---------
+    data_2d : np array, 2D
+        i.e. 'image' of a single fit parameter, all shuffled up!
+
+    unshuffler : (y_unshuf, x_unshuf)
+        Two arrays returned by `QDMPy.hamiltonian._shared.shuffle_pixels`
+        that allow unshuffling of data_2d.
+
+    Returns
+    -------
+    unshuffled_in_yx: np array, 2D
+        data_2d but the inverse operation of `QDMPy.hamiltonian._shared.shuffle_pixels`
+        has been applied.
+    """
+    y_unshuf, x_unshuf = unshuffler
+    unshuffled_in_y = data_2d[y_unshuf, :]
+    unshuffled_in_yx = unshuffled_in_y[:, x_unshuf]
+    return unshuffled_in_yx.copy()
+
+
+# =================================
+
+
+def unshuffle_fit_results(fit_result_dict, unshuffler):
+    """
+    Simple shuffler
+
+    Arguments
+    ---------
+    fit_result_dict : dict
+        Dictionary, key: param_names, val: image (2D) of param values across FOV. Each image
+        requires reshuffling (which this function achieves).
+        Also has 'residual' as a key.
+
+    unshuffler : (y_unshuf, x_unshuf)
+        Two arrays returned by `QDMPy.hamiltonian._shared.shuffle_pixels` that allow
+        unshuffling of data_2d.
+
+    Returns
+    -------
+    fit_result_dict : dict
+        Same as input, but each fit parameter has been unshuffled.
+    """
+    for key, array in fit_result_dict.items():
+        fit_result_dict[key] = unshuffle_pixels(array, unshuffler)
+    return fit_result_dict
+
+
+# ============================================================================
+
+
+def get_pixel_fitting_results(hamiltonian, fit_results, pixel_data):
+    """
+    Take the fit result data from scipyfit/gpufit and back it down to a dictionary of arrays.
+
+    Each array is 2D, representing the values for each parameter (specified by the dict key).
+
+
+    Arguments
+    ---------
+    fit_model : `QDMPy.hamiltonian._hamiltonians.Hamiltonian`
+        Model we're fitting to.
+
+    fit_results : list of [(y, x), result] objects
+        (see `QDMPy.hamiltonian._scipyfit.to_squares_wrapper`)
+        A list of each pixel's parameter array, as well as position in image denoted by (y, x).
+
+    pixel_data : np array, 3D
+        Normalised measurement array, shape: [idx, y, x]. i.e. bnvs.
+        May or may not already be shuffled (i.e. matches fit_results).
+
+    Returns
+    -------
+    fit_image_results : dict
+        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
+        Also has 'residual' as a key.
+    """
+
+    roi_shape = np.shape(pixel_data)
+
+    # initialise dictionary with key: val = param_name: param_units
+    fit_image_results = QDMPy.hamiltonian._hamiltonians.get_param_odict(hamiltonian)
+
+    # override with correct size empty arrays using np.zeros
+    for key in fit_image_results.keys():
+        fit_image_results[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+
+    fit_image_results["residual_ham"] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+
+    # Fill the arrays element-wise from the results function, which returns a
+    # 1D array of flattened best-fit parameters.
+    for (y, x), result in fit_results:
+        for param_num, param_name in enumerate(hamiltonian.param_defn):
+
+            fit_image_results[key][y, x] = result[param_num]
+
+        # FIXME if weighted, this needs to be updated.
+        # --> define two options: weighted_residuals_scipyfit, unweighted_residuals_scipyfit
+        resid = hamiltonian.residuals_scipyfit(result, pixel_data[:, y, x])
+
+        fit_image_results["residual_ham"][y, x] = np.sum(
+            np.abs(resid, dtype=np.float64), dtype=np.float64
+        )
+
+    return fit_image_results

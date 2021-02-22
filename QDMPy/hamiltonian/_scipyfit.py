@@ -131,7 +131,7 @@ def prep_scipyfit_options(options, ham):
         options["scipyfit_scale_x"] = False
 
     # define jacobian option for least_squares fitting
-    if ham.jacobian_scipyfit is None or not options["scipyfit_use_analytic_jac"]:
+    if not ham.jacobian_defined() or not options["scipyfit_use_analytic_jac"]:
         scipyfit_options["jac"] = options["scipyfit_fit_jac_acc"]
     else:
         scipyfit_options["jac"] = ham.jacobian_scipyfit
@@ -174,7 +174,7 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
         Generic options dict holding all the user options.
 
     data : np array, 3D
-        Normalised measurement array, shape: [sweep_list, y, x]. E.g. bnvs or freqs
+        Normalised measurement array, shape: [idx, y, x]. E.g. bnvs or freqs
 
 
     fit_model : `QDMPy.hamiltonian._hamiltonians.Hamiltonian`
@@ -205,13 +205,7 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
     else:
         pixel_data = data
 
-    # DIFF NAMES HERE?
-    fit_options = prep_scipyfit_options(options, hamiltonian)
-    init_guess_params, _ = gen_scipyfit_init_guesses(
-        options, *fit_shared.gen_init_guesses(options)
-    )
-
-    # TODO add fit over full ROI to get better initial guess?!?!
+    roi_avg_params, fit_options = fit_hamiltonian_ROI_avg_scipyfit(options, data, hamiltonian)
 
     # call into the library (measure time)
     t0 = timer()
@@ -221,9 +215,9 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
         ham_fit_results = list(
             tqdm(
                 executor.map(
-                    to_squares_wrapper,  # do we want to use this???...???
+                    to_squares_wrapper,
                     repeat(hamiltonian.residuals_scipyfit),
-                    repeat(init_guess_params),
+                    repeat(roi_avg_params),
                     fit_shared.pixel_generator(pixel_data),
                     repeat(fit_options),
                     chunksize=chunksize,
@@ -244,3 +238,85 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
         return fit_shared.unshuffle_fit_results(res, unshuffler)
     else:
         return res
+
+
+# ==========================================================================
+
+
+def fit_hamiltonian_ROI_avg_scipyfit(options, data, hamiltonian):
+    """
+    Fits each pixel ODMR result to hamiltonian and returns dictionary of
+    param_name -> param_image.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    data : np array, 3D
+        Normalised measurement array, shape: [idx, y, x]. E.g. bnvs or freqs
+
+
+    fit_model : `QDMPy.hamiltonian._hamiltonians.Hamiltonian`
+        Model we're fitting to.
+
+    Returns
+    -------
+    best_params : array
+        Array of best parameters from ROI average.
+
+    fit_options : dict
+        Options dictionary for this fit method, as will be passed to fitting function.
+        E.g. scipy least_squares is handed various options as a dictionary.
+    """
+    systems.clean_options(options)
+
+    # average freqs/bnvs over image
+    data_roi = np.nanmean(np.nanmean(data, axis=2), axis=1)
+
+    fit_options = prep_scipyfit_options(options, hamiltonian)
+
+    init_param_guess, _ = gen_scipyfit_init_guesses(options, *fit_shared.gen_init_guesses(options))
+
+    ham_result = least_squares(
+        hamiltonian.residuals_scipyfit, init_param_guess, args=(data_roi), **fit_options
+    )
+    best_params = ham_result.x
+
+    return best_params, fit_options
+
+
+# ==========================================================================
+
+
+def to_squares_wrapper(fun, p0, shaped_data, kwargs={}):
+    """
+    Simple wrapper of scipy.optimize.least_squares to allow us to keep track of which
+    solution is which (or where).
+
+    Arguments
+    ---------
+    fun : function
+        Function object acting as residual
+
+    p0 : np array
+        Initial guess: array of parameters
+
+    shaped_data : list (3 elements)
+        array returned by `QDMPy.hamiltonian._shared.pixel_generator`: [y, x, data[:, y, x]]
+
+    kwargs : dict
+        Other options (dict) passed to least_squares, i.e. fit_options
+
+    Returns
+    -------
+    wrapped_squares : tuple
+        (y, x), least_squares(...).x
+        I.e. the position of the fit result, and then the fit result parameters array.
+    """
+    # shaped_data: [y, x, pl]
+    # output: (y, x), result_params
+    return (
+        (shaped_data[0], shaped_data[1]),
+        least_squares(fun, p0, args=(shaped_data[2]), **kwargs).x,
+    )

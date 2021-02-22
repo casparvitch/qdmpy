@@ -96,7 +96,7 @@ def prep_scipyfit_options(options, fit_model):
         options["scipyfit_scale_x"] = False
 
     # define jacobian option for least_squares fitting
-    if fit_model.jacobian_scipyfit is None or not options["scipyfit_use_analytic_jac"]:
+    if not fit_model.jacobian_defined() or not options["scipyfit_use_analytic_jac"]:
         scipyfit_options["jac"] = options["scipyfit_fit_jac_acc"]
     else:
         scipyfit_options["jac"] = fit_model.jacobian_scipyfit

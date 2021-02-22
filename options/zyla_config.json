@@ -398,7 +398,7 @@
         ]
     },
 
-    // type of hamiltonian to fit, if that bfield method is used 
+    // Type of hamiltonian to fit, if that bfield method is used 
     //      (or always fit if not "bxyz" or "approx_bxyz" assuming non-B parameters)
     "hamiltonian": {
         "option_default": "bxyz",
@@ -408,13 +408,21 @@
         ]
     },
 
-    // which frequencies (e.g. lorentzian posns) to use for field retrieval
+    // Which frequencies (e.g. lorentzian posns) to use for field retrieval
     // must be len-8 iterable of values that evaluate as True/False (>=1 must be True)
     "freqs_to_use": {
         "option_default": [1, 1, 1, 1, 1, 1, 1, 1]
     },
 
-    // diamond crystal orientation -> see QDMPy.constants. Default: HPHT orientation
+    // If option 'prop_single_bnv' given for 'bfield_method' but number of frequencies fit
+    // is 2 or 3, this option resolves ambiguity in which bnv to utilize. 
+    // This option is used like so: single_bnv = bnvs[single_bnv_choice + 1]
+    // Note that `freqs_to_use` must still be set (to use 2 freqs only).
+    "single_bnv_choice": {
+        "option_default": 1
+    },
+
+    // Diamond crystal orientation -> see QDMPy.constants. Default: HPHT orientation
     // format: <top face orientation>_<edge face orientation>
     "diamond_ori": {
         "option_default": "<100>_<100>",

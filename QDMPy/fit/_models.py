@@ -103,22 +103,33 @@ class FitModel:
 
     # =================================
 
-    def residuals_scipyfit(self, param_ar, sweep_vec, pl_val):
-        """Evaluates residual: fit model - PL value """
-        return self.__call__(param_ar, sweep_vec) - pl_val
+    def residuals_scipyfit(self, param_ar, sweep_vec, pl_vals):
+        """Evaluates residual: fit model (affine params/sweep_vec) - PL values"""
+        return self.__call__(param_ar, sweep_vec) - pl_vals
 
     # =================================
 
-    def jacobian_scipyfit(self, param_ar, sweep_vec, pl_val):
-        """Evaluates jacobian of fitmodel in format expected by scipy least_squares"""
+    def jacobian_scipyfit(self, param_ar, sweep_vec, pl_vals):
+        """Evaluates (analytic) jacobian of fitmodel in format expected by scipy least_squares"""
 
+        # scipy just wants the jacobian wrt __call__, i.e. just derivs of param_ar
         for i, fn in enumerate(self.fn_chain):
             this_fn_params = param_ar[fn.this_fn_param_indices]
+            grad = fn.grad_fn(sweep_vec, *this_fn_params)
             if not i:
-                val = fn.grad_fn(sweep_vec, *this_fn_params)
+                val = grad
             else:
-                val = np.hstack((val, fn.grad_fn(sweep_vec, *this_fn_params)))
+                val = np.hstack((val, grad))
         return val
+
+    # =================================
+
+    def jacobian_defined(self):
+        """Check if analytic jacobian is defined for this fit model."""
+        for i, fn in enumerate(self.fn_chain):
+            if fn.grad_fn([0], [0]) is None:
+                return False
+        return True
 
 
 # ====================================================================================
@@ -164,7 +175,7 @@ def get_param_unit(fit_model, param_name, param_number):
     Get unit for a given param_key (given by param_name + "_" + param_number)
     """
     if param_name == "residual":
-        return "Error: sum( || residual(sweep_params) || ) (a.u.)"
+        return "Error: sum( || residual(sweep_params) || ) over affine param (a.u.)"
     param_dict = get_param_odict(fit_model)
     return param_dict[param_name + "_" + str(param_number)]
 

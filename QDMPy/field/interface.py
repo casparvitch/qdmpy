@@ -24,7 +24,7 @@ import QDMPy.io as Qio
 
 def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
     """
-    fit results dict -> field results dict ?
+    fit results dict -> field results dict
 
     How to do bsub? well I guess do the bsub afterwards c:
 
@@ -62,7 +62,7 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
     num_peaks_wanted = sum(options["freqs_to_use"])
     if num_peaks_wanted > num_peaks_fit:
         raise RuntimeError(
-            f"Number of freqs wanted ({num_peaks_wanted}) "
+            f"Number of freqs wanted in option 'freqs_to_use' ({num_peaks_wanted})"
             + f"is greater than number fit ({num_peaks_fit}).\n"
             + "We need to identify which NVs each resonance corresponds to "
             + "for our algorithm to work, so please define this in the options dict/json."
