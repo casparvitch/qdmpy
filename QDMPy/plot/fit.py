@@ -4,34 +4,34 @@ This module holds functions for plotting initial processing images and fit resul
 
 Functions
 ---------
- - `QDMPy.plot.fits.plot_ROI_PL_image`
- - `QDMPy.plot.fits.plot_AOI_PL_images`
- - `QDMPy.plot.fits.plot_ROI_avg_fits`
- - `QDMPy.plot.fits.plot_AOI_spectra`
- - `QDMPy.plot.fits.plot_AOI_spectra_fit`
- - `QDMPy.plot.fits.plot_param_image`
- - `QDMPy.plot.fits.plot_param_images`
- - `QDMPy.plot.fits.plot_params_flattened`
- - `QDMPy.plot.fits._add_patch_rect`
- - `QDMPy.plot.fits._annotate_ROI_image`
- - `QDMPy.plot.fits._annotate_AOI_image`
+ - `QDMPy.plot.fit.plot_ROI_PL_image`
+ - `QDMPy.plot.fit.plot_AOI_PL_images`
+ - `QDMPy.plot.fit.plot_ROI_avg_fits`
+ - `QDMPy.plot.fit.plot_AOI_spectra`
+ - `QDMPy.plot.fit.plot_AOI_spectra_fit`
+ - `QDMPy.plot.fit.plot_param_image`
+ - `QDMPy.plot.fit.plot_param_images`
+ - `QDMPy.plot.fit.plot_params_flattened`
+ - `QDMPy.plot.fit._add_patch_rect`
+ - `QDMPy.plot.fit._annotate_ROI_image`
+ - `QDMPy.plot.fit._annotate_AOI_image`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "QDMPy.plot.fits.plot_ROI_PL_image": True,
-    "QDMPy.plot.fits.plot_AOI_PL_images": True,
-    "QDMPy.plot.fits.plot_ROI_avg_fits": True,
-    "QDMPy.plot.fits.plot_AOI_spectra": True,
-    "QDMPy.plot.fits.plot_AOI_spectra_fit": True,
-    "QDMPy.plot.fits.plot_param_image": True,
-    "QDMPy.plot.fits.plot_param_images": True,
-    "QDMPy.plot.fits.plot_params_flattened": True,
-    "QDMPy.plot.fits._add_patch_rect": True,
-    "QDMPy.plot.fits._annotate_ROI_image": True,
-    "QDMPy.plot.fits._annotate_AOI_image": True,
+    "QDMPy.plot.fit.plot_ROI_PL_image": True,
+    "QDMPy.plot.fit.plot_AOI_PL_images": True,
+    "QDMPy.plot.fit.plot_ROI_avg_fits": True,
+    "QDMPy.plot.fit.plot_AOI_spectra": True,
+    "QDMPy.plot.fit.plot_AOI_spectra_fit": True,
+    "QDMPy.plot.fit.plot_param_image": True,
+    "QDMPy.plot.fit.plot_param_images": True,
+    "QDMPy.plot.fit.plot_params_flattened": True,
+    "QDMPy.plot.fit._add_patch_rect": True,
+    "QDMPy.plot.fit._annotate_ROI_image": True,
+    "QDMPy.plot.fit._annotate_AOI_image": True,
 }
 
 # ============================================================================
@@ -49,6 +49,7 @@ import warnings
 import QDMPy.systems
 import QDMPy.constants
 import QDMPy.io as Qio
+import QDMPy.fit as Qfit
 import QDMPy.plot.common as plot_common
 
 # ===========================================================================
@@ -771,7 +772,7 @@ def plot_param_image(options, fit_model, pixel_fit_params, param_name, param_num
             options["colormap_range_dicts"]["param_images"], image
         )
         c_map = options["colormaps"]["param_images"]
-    c_label = fit_models.get_param_unit(fit_model, param_name, param_number)
+    c_label = Qfit.get_param_unit(fit_model, param_name, param_number)
 
     fig, ax = plt.subplots(constrained_layout=True)
 
@@ -898,7 +899,7 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
             c_range = plot_common._get_colormap_range(
                 options["colormap_range_dicts"]["param_images"], image_data
             )
-            c_label = fit_models.get_param_unit(fit_model, param_name, param_number)
+            c_label = Qfit.get_param_unit(fit_model, param_name, param_number)
 
             plot_common.plot_image_on_ax(
                 fig,
@@ -998,7 +999,7 @@ def plot_params_flattened(options, fit_model, pixel_fit_params, roi_avg_fit_resu
 
     axs[-1].set_xlabel("Pixel # (flattened)")
     for ax in axs:
-        ax.set_ylabel(fit_models.get_param_unit(fit_model, param_name, 0))
+        ax.set_ylabel(Qfit.get_param_unit(fit_model, param_name, 0))
         ax.grid()
 
     # uses the default color cycle... i.e.:

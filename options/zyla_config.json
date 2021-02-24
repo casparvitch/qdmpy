@@ -682,7 +682,8 @@
             "residual_images": "inferno",
             "PL_images": "Greys_r",
             "bnv_images": "RdBu",
-            "dshift_images": "PRGn"
+            "dshift_images": "PRGn",
+            "bfield_images": "bwr"
         }
     },
     // choose range of values mapped across to the colormap limits, for each 'type' of image
@@ -702,6 +703,9 @@
                 "type": "_min_max_symmetric_about_mean"
             },
             "dshift_images": {
+                "type": "_min_max_symmetric_about_mean"
+            },
+            "bfield_images": {
                 "type": "_min_max_symmetric_about_mean"
             }
         }
@@ -759,7 +763,7 @@
         }
     },
     // ===========================================================================================
-    // Things set internally, allow to be anything {maybe place some contraints later}
+    // Things set internally, allow to be anything
 
     // was the options dict (after being read from .json) checked/cleaned?
     "cleaned": {},
@@ -797,5 +801,7 @@
     // directory within output to save data once ref defined (output_dir/sub_ref_dir)
     "sub_ref_dir" : {},
     // as above but data dir (above\data)
-    "sub_ref_data_dir" : {}
+    "sub_ref_data_dir" : {},
+    "bfield_method_used" : {},
+    "field_params" : {}
 }

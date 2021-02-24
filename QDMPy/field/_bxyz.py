@@ -28,11 +28,9 @@ import QDMPy.field._bnv as Qbnv
 import QDMPy.hamiltonian as Qham
 
 # ============================================================================
+# FIXME
 
-# FIXME handle NO bnvs/NO fit params (None) -> return something graciously
 
-
-# TODO
 def from_single_bnv(options, bnvs):
     """
     TODO
@@ -45,12 +43,16 @@ def from_single_bnv(options, bnvs):
         List of np arrays (2D) giving B_NV for each NV family/orientation.
         If num_peaks is odd, the bnv is given as the shift of that peak,
         and the dshifts is left as np.nans.
+        if [], returns None
 
     Returns
     -------
     param_results : dict
         Dictionary, key: param_keys (Bx, By, Bz), val: image (2D) of param values across FOV.
     """
+    if not bnvs:
+        return None
+
     chosen_freqs = options["freqs_to_use"]
     if not all(list(reversed(chosen_freqs[4:])) == chosen_freqs[:4]):
         raise ValueError(
@@ -97,11 +99,16 @@ def from_unv_inversion(options, bnvs):
         List of np arrays (2D) giving B_NV for each NV family/orientation.
         If num_peaks is odd, the bnv is given as the shift of that peak,
         and the dshifts is left as np.nans.
+        if [], return None
+
     Returns
     -------
     Bxyz : dict
         Dict of bfield, keys: ["Bx", "By", "Bz"], vals: image of those vals (2D np array)
     """
+    if not bnvs:
+        return None
+
     chosen_freqs = options["freqs_to_use"]
 
     if sum(chosen_freqs) != 6:
@@ -158,6 +165,7 @@ def from_hamiltonian_fitting(options, fit_params):
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
         (fit results from PL fitting).
         Also has 'residual' as a key.
+        If None, returns None
 
     Returns
     -------
@@ -165,6 +173,9 @@ def from_hamiltonian_fitting(options, fit_params):
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
         Also has 'residual' as a key.
     """
+    if fit_params is None:
+        return None
+
     use_bnvs = options["hamiltonian"] in ["approx_bxyz"]
 
     if use_bnvs:
@@ -201,7 +212,6 @@ def from_hamiltonian_fitting(options, fit_params):
 
     else:
         # use freqs, same data shape
-        # how many pos available? What do we identify them with?
         freqs_given_lst = [fit_params[f"pos_{j}"] for j in range(8) if f"pos_{j}" in fit_params]
 
         shape = freqs_given_lst.shape

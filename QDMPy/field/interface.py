@@ -108,7 +108,23 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
         ref_params = Qbxyz.from_hamiltonian_fitting(options, ref_fit_params)
 
     options["bfield_method_used"] = bmeth
+    options["field_params"] = sig_params.keys()
 
-    # switch depending on bfield method -> overrides above bxyz if supplied
-    #   - should call other fns
     return (sig_bnvs, ref_bnvs, bnvs), (sig_dshifts, ref_dshifts), (sig_params, ref_params)
+
+
+# ============================================================================
+
+
+def field_refsub(options, sig_params, ref_params):
+    """
+    sig - ref dictionaries, allow different options
+    (blurred bground etc., see QDMPy.field._bnv.bnv_refsub)
+    """
+    if ref_params:
+        return {
+            key: sig - ref
+            for ((key, sig), (_, ref)) in zip(sig_params.items(), ref_params.items())
+        }
+    else:
+        return sig_params
