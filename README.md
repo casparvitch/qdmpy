@@ -150,10 +150,11 @@ Untested in our lab, follow: [https://gpufit.readthedocs.io/en/latest/installati
 
  - is card cuda-compatible? also, what is the compute capability (roughly the cuda generation/micro-architecture) of the graphics card?
     - nvidea has a website for this, [link](https://developer.nvidia.com/cuda-gpus)
- - what cuda toolkits version can I use with my card?
+ - what cuda toolkits version can I use with my card/driver version?
     - most useful resource for me has been the cuda wiki page [link](https://en.wikipedia.org/wiki/CUDA#GPUs_supported)
     - 'SDK' is equivalent to 'cuda toolkits version'
     - this page also has a table you can use to determine the compute capability of your graphics card
+    - note gpufit was tested by the authors from 6.5-10.1 (but latest should be fine)
  - cuda toolkits archive [link](https://developer.nvidia.com/cuda-toolkit-archive)
     - also links to documentation
     - section: 'installation guide windows' gives info on what OS version and visual studio version will work with the selected toolkit version
@@ -170,7 +171,7 @@ Untested in our lab, follow: [https://gpufit.readthedocs.io/en/latest/installati
 
 ### Installation Procedure
 
- - Install microsoft visual studio (VS)
+ - Install microsoft visual studio (MSVS)
     - NOT TO BE CONFUSED WITH VISUAL STUDIO CODE
     - best to go with an older rather than newer version for compatibility with everything above
     - note 'community' version is free
@@ -210,8 +211,9 @@ Untested in our lab, follow: [https://gpufit.readthedocs.io/en/latest/installati
 
 
 ### Building from source
-
+ 
 - Grab latest QSL fork of gpufit from gitlab [link](https://gitlab.unimelb.edu.au/QSL/gpufit)
+    - MAKE SURE you're on the master_qsl branch!!! -> this branch has our additions/fixes!
 
 - Can basically follow instruction in gpufit docs [link](https://gpufit.readthedocs.io/)
     - In general, the gpufit docs are quite good, but you need to fiddle around quite a bit!
@@ -221,14 +223,15 @@ Untested in our lab, follow: [https://gpufit.readthedocs.io/en/latest/installati
         - `cd C:\src\gpufit-build`
         - `cmake -G "Visual Studio 12 2013 Win64" C:\Sources\Gpufit`
     - I then open up the cmake gui (which will auto-populate fields from this previous cmake run) to edit some more things:
-        - set \_USE_CBLAS flag to be true
-        - add BOOST_ROOT variable to wherever you installed BOOST
+        - set \_USE_CBLAS flag to be true (if you get errors when building try False -> sometimes gpufit gets the name of the cuBLAS dll incorrect)
+        - add BOOST_ROOT variable to wherever you installed/unpacked BOOST
 
 - compiling (visual studio)
     - After configuring and generating the solution files using CMake, go to the desired build directory and open Gpufit.sln using Visual Studio. Select the “Debug” or “Release” build options, as appropriate. Select the build target “ALL_BUILD”, and build this target. If the build process completes without errors, the Gpufit binary files will be created in the corresponding “Debug” or “Release” folders in the build directory.
     - The unit tests can be executed by building the target “RUN_TESTS” or by starting the created executables in the output directory from the command line. (I RECOMMEND YOU RUN SOME TESTS!)
 
 - Building python wheel file
+    - ENSURE wheel installed (pip install wheel) BEFORE compilation
     - uninstall any previous version you installed (`pip uninstall pygpufit`)
     - `pip install C:\src\gpufit-build-Release\pyGpufit\dist\wheel_file_here.wh`
 
