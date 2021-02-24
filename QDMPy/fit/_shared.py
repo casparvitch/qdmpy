@@ -376,7 +376,7 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
         Also has 'residual' as a key.
     """
 
-    roi_shape = np.shape(pixel_data)
+    roi_shape = np.shape(pixel_data)[1:]
 
     # initialise dictionary with key: val = param_name: param_units
     fit_image_results = fit_models.get_param_odict(fit_model)
