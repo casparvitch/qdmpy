@@ -120,6 +120,7 @@ def check_exp_bnv_compatibility(sig_bnvs, ref_bnvs):
 
 # ============================================================================
 
+
 def bnv_refsub(options, sig_bnvs, ref_bnvs):
     if ref_bnvs:
         check_exp_bnv_compatibility(sig_bnvs, ref_bnvs)
