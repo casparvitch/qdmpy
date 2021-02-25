@@ -61,7 +61,7 @@ def prep_scipyfit_options(options, fit_model):
     options : dict
         Generic options dict holding all the user options.
 
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         Fit model object.
 
     Returns
@@ -178,7 +178,7 @@ def fit_ROI_avg_scipyfit(options, sig_norm, sweep_list, fit_model):
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         The fit model object.
 
     Returns
@@ -225,7 +225,7 @@ def fit_single_pixel_scipyfit(options, pixel_pl_ar, sweep_list, fit_model, roi_a
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         The fit model.
 
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
@@ -278,7 +278,7 @@ def fit_AOIs_scipyfit(
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq).
 
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         The model we're fitting to.
 
     AOIs : list
@@ -402,7 +402,7 @@ def fit_pixels_scipyfit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_re
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         The model we're fitting to.
 
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`

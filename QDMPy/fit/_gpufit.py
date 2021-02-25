@@ -39,7 +39,7 @@ import numpy as np
 
 # ============================================================================
 
-import QDMPy.fit._models as fit_models
+import QDMPy.fit.model as fit_models
 import QDMPy.fit._shared as fit_shared
 import QDMPy.constants
 
@@ -90,7 +90,7 @@ def get_gpufit_modelID(options, fit_model):
     options : dict
         Generic options dict holding all the user options.
 
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         Must be one of (in this exact order/format):
         for odmr, LORENTZ8: {'linear': 1, 'lorentzian': 1<=n<=8}
         for t1/etc., STRETCHED_EXP: {'constant': 1, 'stretched_exponential': 1}
@@ -141,7 +141,7 @@ def prep_gpufit_backend(options, fit_model):
     options : dict
         Generic options dict holding all the user options.
 
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         Must be one of (in this exact order/format):
         for odmr, LORENTZ8: {'linear': 1, 'lorentzian': 1<=n<=8}
         for t1/etc., STRETCHED_EXP: {'constant': 1, 'stretched_exponential': 1}
@@ -245,7 +245,7 @@ def fit_single_pixel_gpufit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
 
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
@@ -313,7 +313,7 @@ def fit_ROI_avg_gpufit(options, sig_norm, sweep_list, fit_model):
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
 
     Returns
@@ -396,7 +396,7 @@ def fit_AOIs_gpufit(
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq).
 
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
 
     AOIs : list
@@ -482,7 +482,7 @@ def fit_pixels_gpufit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
 
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`

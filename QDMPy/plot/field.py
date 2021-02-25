@@ -16,7 +16,6 @@ __pdoc__ = {"QDMPy.plot.fields.plot_bnvs_and_dshifts": True}
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
-import warnings
 
 # ============================================================================
 
@@ -216,3 +215,8 @@ def plot_efield(options, name, field_params):
 
 
 # ============================================================================
+
+
+def plot_bfield_consistency(options, field_params):
+    # check Bxyz, Bxyz_recon
+    pass

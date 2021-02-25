@@ -355,7 +355,7 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
 
     Arguments
     ---------
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
 
     fit_results : list of [(y, x), result] objects

@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This module defines the fit functions used in the `QDMPy.fit._models.FitModel`.
+This module defines the fit functions used in the `QDMPy.fit.model.FitModel`.
 We grab/use this regardless of fitting on cpu (scipy) or gpu etc.
 
 Ensure any fit functions you define are added to the AVAILABLE_FNS variable in `QDMPy.constants`.

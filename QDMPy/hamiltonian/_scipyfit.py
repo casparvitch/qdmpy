@@ -136,10 +136,6 @@ def prep_scipyfit_options(options, ham):
     else:
         scipyfit_options["jac"] = ham.jacobian_scipyfit
 
-    # override with hamiltonian options
-    for key, val in options["hamiltonian_scipyfit_options"].items():
-        scipyfit_options[key] = val
-
     return scipyfit_options
 
 
@@ -279,7 +275,7 @@ def fit_hamiltonian_ROI_avg_scipyfit(options, data, hamiltonian):
     init_param_guess, _ = gen_scipyfit_init_guesses(options, *fit_shared.gen_init_guesses(options))
 
     ham_result = least_squares(
-        hamiltonian.residuals_scipyfit, init_param_guess, args=(data_roi), **fit_options
+        hamiltonian.residuals_scipyfit, init_param_guess, args=(data_roi,), **fit_options
     )
     best_params = ham_result.x
 
@@ -318,5 +314,5 @@ def to_squares_wrapper(fun, p0, shaped_data, kwargs={}):
     # output: (y, x), result_params
     return (
         (shaped_data[0], shaped_data[1]),
-        least_squares(fun, p0, args=(shaped_data[2]), **kwargs).x,
+        least_squares(fun, p0, args=(shaped_data[2],), **kwargs).x,
     )

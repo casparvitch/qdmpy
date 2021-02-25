@@ -37,7 +37,7 @@ def save_bnvs_and_dshifts(options, name, bnvs, dshifts):
 # ============================================================================
 
 
-def save_ham_pixel_results(options, pixel_fit_params):
+def save_field_params(options, pixel_fit_params):
     """
     Saves hamiltonian pixel fit results to disk.
 
@@ -57,28 +57,43 @@ def save_ham_pixel_results(options, pixel_fit_params):
 # ============================================================================
 
 
-def load_prev_ham_results(options):
-    prev_options = QDMPy.io.raw._get_prev_options._get_prev_options(options)
+def load_prev_field_params(options):
+    prev_options = QDMPy.io.raw._get_prev_options(options)
 
-    fit_param_res_dict = {}
+    field_param_dict = {}
 
-    from QDMPy.constants import AVAILABLE_FNS as FN_SELECTOR
+    for param in prev_options.field_params():
+        field_param_dict[param] = load_field_param(options, param)
 
-    for fn_type, num in prev_options["fit_functions"].items():
-        for param_name in FN_SELECTOR[fn_type].param_defn:
-            for n in range(num):
-                param_key = param_name + "_" + str(n)
-                fit_param_res_dict[param_key] = load_ham_param(options, param_key)
-    fit_param_res_dict["residual_0"] = load_ham_param(options, "residual_0")
-    return fit_param_res_dict
+    field_param_dict["residual_ham"] = load_field_param(options, "residual_ham")
+    return field_param_dict
 
 
 # ============================================================================
 
 
-def load_ham_param(options, param_key):
-    """Load a previously hamiltonian param, of name 'param_key'."""
-    return np.loadtxt(options["data_dir"] / (param_key + ".txt"))
+def load_field_param(options, param):
+    """Load a previously field param, of name 'param' (string)."""
+    return np.loadtxt(options["sub_ref_data_dir"] / (param + ".txt"))
+
+
+# ============================================================================
+
+
+def load_arb_field_params(path, param_names):
+    """
+    load field params from directory at 'path', of names 'param_names'
+    (e.g. ["Bx", "By", "Bz"] etc.)
+    """
+    return {param: load_arb_field_param(path, param) for param in param_names}
+
+
+# ============================================================================
+
+
+def load_arb_field_param(path, param):
+    """Load a previously field param, of name 'param' (string) stored in dir at 'path'."""
+    return np.loadtxt(path / (param + ".txt"))
 
 
 # ============================================================================

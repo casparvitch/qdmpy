@@ -38,12 +38,12 @@ class Hamiltonian:
     param_units = {}
     jac_defined = False
 
-    def __init__(self, indices_fn, unv_frames):
+    def __init__(self, chooser_obj, unv_frames):
         """
-        indices_fn operates on __call__ and measured_data to return an array
+        chooser_obj is used on __call__ and measured_data to return an array
         of only the required parts.
         """
-        self.indices_fn = indices_fn
+        self.chooser_obj = chooser_obj
         self.unv_frames = unv_frames
 
     # =================================
@@ -63,7 +63,7 @@ class Hamiltonian:
 
     def grad_fn(self, param_ar, measured_data):
         """
-        Return jacobian, shaoe: (len(bnvs/freqs), len(param_ar))
+        Return jacobian, shape: (len(bnvs/freqs), len(param_ar))
         Each column is a partial derivative, with respect to each param in param_ar
             (i.e. rows, or first index, is indexing though the bnvs/freqs.)
         """
@@ -77,15 +77,15 @@ class Hamiltonian:
         Measured data must be a np array (of the same shape that __call__ returns),
         i.e. freqs, or bnvs.
         """
-        return self.indices_fn(self.__call__(param_ar)) - self.indices_fn(measured_data)
+        return self.chooser_obj(self.__call__(param_ar)) - self.chooser_obj(measured_data)
 
     # =================================
 
     def jacobian_scipyfit(self, param_ar, measured_data):
         """Evaluates (analytic) jacobian of ham in format expected by scipy least_squares."""
 
-        # need to take out rows (first index) according to indices_fn.
-        keep_rows = self.indices_fn([i for i in range(len(measured_data))])
+        # need to take out rows (first index) according to chooser_obj.
+        keep_rows = self.chooser_obj([i for i in range(len(measured_data))])
         delete_rows = [r for r in range(len(measured_data)) if r not in keep_rows]
         return np.delete(self.grad_fn(param_ar, measured_data), delete_rows, axis=0)
 

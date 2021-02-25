@@ -384,7 +384,6 @@ def _check_if_already_fit(options, reloading=False):
             options["found_prev_result"] = False
     else:
         options["found_prev_result"] = _prev_pixel_results_exist(options)
-        # wait optns compat needs a different method?
 
 
 # ============================================================================

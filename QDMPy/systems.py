@@ -249,7 +249,7 @@ class UniMelb(System):
                 options["loss"] = "linear"
 
         if "freqs_to_use" in options:
-            options["freqs_to_use"] = map(lambda x: bool(x), options["freqs_to_use"])
+            options["freqs_to_use"] = list(map(lambda x: bool(x), options["freqs_to_use"]))
 
         if "base_dir" in options and not self.filepath_joined:
             options["filepath"] = os.path.join(options["base_dir"], options["filepath"])
@@ -277,7 +277,7 @@ class UniMelb(System):
                 rest_str,
                 re.MULTILINE,
             )
-            metadata = {a: QDMPy.io.json2dict.failfloat(b) for (a, b) in matches}
+            metadata = {a: QDMPy.io.json2dict._failfloat(b) for (a, b) in matches}
         return metadata
 
     def _reshape_raw(self, options, raw_data, sweep_list):

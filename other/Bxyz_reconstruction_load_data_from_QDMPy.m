@@ -135,8 +135,8 @@ if exist(name_current, 'file') == 2
     IVR_res = tempcurrent{4};
     I = mean(IVR_curr)*1e-6;
     fclose(fileIDcurrent);
-    current_on = 1;  
-else 
+    current_on = 1;
+else
     I = 0;
     current_on = 0;
 end

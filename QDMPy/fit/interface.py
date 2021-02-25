@@ -32,8 +32,8 @@ import warnings
 
 # ============================================================================
 
-import QDMPy.fit._models as fit_models
-import QDMPy.io as Qio
+import QDMPy.fit.model as fit_models
+import QDMPy.io.raw
 
 # ============================================================================
 
@@ -70,7 +70,7 @@ def _prep_fit_backends(options, fit_model):
     options : dict
         Generic options dict holding all the user options.
 
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
     """
     # ensure backend we want to use for pixel fittings is in comparison!
@@ -120,7 +120,7 @@ def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
 
     Returns
@@ -172,7 +172,7 @@ def fit_AOIs(options, sig_norm, single_pixel_pl, sweep_list, fit_model, backend_
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq).
 
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
 
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
@@ -184,7 +184,7 @@ def fit_AOIs(options, sig_norm, single_pixel_pl, sweep_list, fit_model, backend_
     fit_result_collection : `QDMPy.fit._shared.FitResultCollection`
         `QDMPy.fit._shared.FitResultCollection` object.
     """
-    AOIs = Qio._define_AOIs(options)
+    AOIs = QDMPy.io.raw._define_AOIs(options)
 
     fit_result_collection_lst = []  # list of FitResultCollection objects
     # iterate through all possible fit backend choices
@@ -238,7 +238,7 @@ def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
 
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`

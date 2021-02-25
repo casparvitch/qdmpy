@@ -27,6 +27,7 @@ import QDMPy.field._geom as Qgeom
 import QDMPy.field._bnv as Qbnv
 import QDMPy.hamiltonian as Qham
 
+
 # ============================================================================
 # FIXME
 
@@ -183,15 +184,12 @@ def from_hamiltonian_fitting(options, fit_params):
             raise ValueError(
                 "'hamiltonian' option used bnvs, but chosen frequencies are not symmetric."
             )
-        chooser = options["freqs_to_use"][:4]  # i.e. bnv chooser
+        chooser_ar = options["freqs_to_use"][:4]  # i.e. bnv chooser
     else:
-        chooser = options["freqs_to_use"]
+        chooser_ar = options["freqs_to_use"]
 
-    # if user doesn't want to fit all freqs, then don't fit em!
-    def _indices_fn(ar):
-        return [ar[i] for i, do_use in enumerate(chooser) if do_use]
-
-    ham = Qham.define_hamiltonian(options, _indices_fn, Qgeom.get_unv_frames(options))
+    # if user doesn't want to fit all freqs, then don't fit em! (with Chooser obj.)
+    ham = Qham.define_hamiltonian(options, Qham.Chooser(chooser_ar), Qgeom.get_unv_frames(options))
 
     # ok now need to get useful data out of fit_params (-> data)
     if use_bnvs:
@@ -214,7 +212,7 @@ def from_hamiltonian_fitting(options, fit_params):
         # use freqs, same data shape
         freqs_given_lst = [fit_params[f"pos_{j}"] for j in range(8) if f"pos_{j}" in fit_params]
 
-        shape = freqs_given_lst.shape
+        shape = freqs_given_lst[0].shape
         missings = np.empty(shape)
         missings[:] = np.nan
         freq_lst = []

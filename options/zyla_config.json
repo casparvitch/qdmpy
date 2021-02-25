@@ -481,13 +481,6 @@
         "option_default": 15
     },
 
-    // override global scipyfit options with these options, for the hamiltonian fit
-    "hamiltonian_scipyfit_options": {
-        "option_default": {
-            "scipyfit_use_analytic_jac": false
-        }
-    },
-
     // ========== Bfield Fit Parameters ===========
     // directly supply guesses and ranges for bxyz (in Gauss)
     "Bx_guess": {

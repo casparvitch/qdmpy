@@ -17,6 +17,7 @@ __pdoc__ = {
 
 import QDMPy.field._bnv as Qbnv
 import QDMPy.field._bxyz as Qbxyz
+import QDMPy.field._geom as Qgeom
 import QDMPy.io as Qio
 
 # ============================================================================
@@ -46,7 +47,9 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
     else:
         # otherwise grab from options
         bmeth = options["bfield_method"]
-    if bmeth == "auto_dc" and any(map(lambda x: x.startswith("pos"), options["fit_param_defn"])):
+    if bmeth == "auto_dc" and not any(
+        map(lambda x: x.startswith("pos"), options["fit_param_defn"])
+    ):
         raise RuntimeError(
             """
             bfield_method 'auto_dc' not compatible with fit functions that do not include 'pos'
@@ -68,15 +71,20 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
             + "for our algorithm to work, so please define this in the options dict/json."
         )
     # check that freqs_to_use is symmetric (necessary for bnvs retrieval methods)
-    symmetric_freqs = all(
-        list(reversed(options["freqs_to_use"][4:])) == options["freqs_to_use"][:4]
-    )
+    symmetric_freqs = options["freqs_to_use"][4:] == options["freqs_to_use"][:4]
+
     if bmeth == "auto_dc":
         # need to select the appropriate one
-        if num_peaks_wanted == 2 and symmetric_freqs:
-            bmeth = "prop_single_bnv"
-        elif num_peaks_wanted == 6 and symmetric_freqs:
-            bmeth = "invert_unvs"
+        if num_peaks_wanted == 2:
+            if symmetric_freqs:
+                bmeth = "prop_single_bnv"
+            else:
+                bmeth = "hamiltonian_fitting"
+        elif num_peaks_wanted == 6:
+            if symmetric_freqs:
+                bmeth = "invert_unvs"
+            else:
+                bmeth = "hamiltonian_fitting"
         elif num_peaks_wanted in [1, 3, 4, 5, 7, 8]:  # not sure how many of these will be useful
             bmeth = "hamiltonian_fitting"
         else:
@@ -84,7 +92,7 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
                 "Number of true values in option 'freqs_to_use' is not between 1 and 8."
             )
 
-    elif bmeth == "prop_single_bnv":
+    if bmeth == "prop_single_bnv":
         if num_peaks_wanted != 2:
             raise RuntimeError(
                 "bfield_method option was 'prop_single_bnv', but number of true values in option "
@@ -107,8 +115,15 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
         sig_params = Qbxyz.from_hamiltonian_fitting(options, sig_fit_params)
         ref_params = Qbxyz.from_hamiltonian_fitting(options, ref_fit_params)
 
+    # for checking self-consistency (e.g. calc Bx from Bz via fourier methods)
+    Qgeom.add_bfield_reconstructed(sig_params)
+    Qgeom.add_bfield_reconstructed(ref_params)
+
     options["bfield_method_used"] = bmeth
     options["field_params"] = sig_params.keys()
+
+    Qio.save_field_params(sig_params)
+    Qio.save_field_params(ref_params)
 
     return (sig_bnvs, ref_bnvs, bnvs), (sig_dshifts, ref_dshifts), (sig_params, ref_params)
 
@@ -120,11 +135,12 @@ def field_refsub(options, sig_params, ref_params):
     """
     sig - ref dictionaries, allow different options
     (blurred bground etc., see QDMPy.field._bnv.bnv_refsub)
+
+    Don't need to be compatible, i.e. will only subtract params that exist in both dicts.
     """
     if ref_params:
         return {
-            key: sig - ref
-            for ((key, sig), (_, ref)) in zip(sig_params.items(), ref_params.items())
+            key: sig - ref_params[key] for (key, sig) in sig_params.items() if key in ref_params
         }
     else:
         return sig_params

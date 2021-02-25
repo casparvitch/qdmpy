@@ -42,12 +42,14 @@ def load_prev_fit_results(options):
 
     fit_param_res_dict = {}
 
-    # avoids cyclic imports
-    from QDMPy.constants import AVAILABLE_HAMILTONIANS as HAM_SELECTOR
+    from QDMPy.constants import AVAILABLE_FNS as FN_SELECTOR
 
-    for param in HAM_SELECTOR[options["hamiltonian"]].param_defn:
-        fit_param_res_dict[param] = load_fit_param(options, param)
-    fit_param_res_dict["residual_ham"] = load_fit_param(options, "residual_ham")
+    for fn_type, num in prev_options["fit_functions"].items():
+        for param_name in FN_SELECTOR[fn_type].param_defn:
+            for n in range(num):
+                param_key = param_name + "_" + str(n)
+                fit_param_res_dict[param_key] = load_fit_param(options, param_key)
+    fit_param_res_dict["residual_0"] = load_fit_param(options, "residual_0")
     return fit_param_res_dict
 
 
@@ -92,7 +94,7 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
     Arguments
     ---------
     options : dict
-        Generic options dict holding all the user options (for the main experiment).
+        Generic options dict holding all the user options (for the main/signal experiment).
 
     ref_options : dict, default=None
         Generic options dict holding all the user options (for the reference experiment).
@@ -132,6 +134,9 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
         check_for_prev_result=True,
         reloading=True,
     )
+
+    # FIXME add another options compatible check here, specific to bnvs/fields?
+    # things to check...: size of images...?
 
     ref_name = Path(ref_options["filepath"]).stem
     # first make a sub ref output folder

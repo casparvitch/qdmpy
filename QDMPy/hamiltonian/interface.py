@@ -5,6 +5,7 @@ blaa
 
 # ============================================================================
 
+import numpy as np
 
 # ============================================================================
 
@@ -13,10 +14,23 @@ import QDMPy.hamiltonian._hamiltonians
 # ============================================================================
 
 
-def define_hamiltonian(options, indices_fn, unv_frames):
+class Chooser:
+    """ DOCSTRING HERE """
+
+    def __init__(self, chooser_ar):
+        self.chooser_ar = chooser_ar
+
+    def __call__(self, some_ar):
+        return np.array([some_ar[i] for i, do_use in enumerate(self.chooser_ar) if do_use])
+
+
+# ============================================================================
+
+
+def define_hamiltonian(options, chooser_obj, unv_frames):
     from QDMPy.constants import AVAILABLE_HAMILTONIANS
 
-    ham = AVAILABLE_HAMILTONIANS(options["hamiltonian"])(indices_fn, unv_frames)
+    ham = AVAILABLE_HAMILTONIANS[options["hamiltonian"]](chooser_obj, unv_frames)
 
     options["ham_param_defn"] = QDMPy.hamiltonian._hamiltonians.get_param_defn(ham)
 

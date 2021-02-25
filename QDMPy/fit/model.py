@@ -12,23 +12,23 @@ prefixed by 'pos'. (see `QDMPy.field._bnv.get_bnvs_and_dshifts` for the reasonin
 
 Classes
 -------
- - `QDMPy.fit._models.FitModel`
+ - `QDMPy.fit.model.FitModel`
 
 Functions
 ---------
- - `QDMPy.fit._models.get_param_defn`
- - `QDMPy.fit._models.get_param_odict`
- - `QDMPy.fit._models.get_param_unit`
+ - `QDMPy.fit.model.get_param_defn`
+ - `QDMPy.fit.model.get_param_odict`
+ - `QDMPy.fit.model.get_param_unit`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "QDMPy.fit._models.FitModel": True,
-    "QDMPy.fit._models.get_param_defn": True,
-    "QDMPy.fit._models.get_param_odict": True,
-    "QDMPy.fit._models.get_param_unit": True,
+    "QDMPy.fit.model.FitModel": True,
+    "QDMPy.fit.model.get_param_defn": True,
+    "QDMPy.fit.model.get_param_odict": True,
+    "QDMPy.fit.model.get_param_unit": True,
 }
 
 # ============================================================================
@@ -127,7 +127,8 @@ class FitModel:
     def jacobian_defined(self):
         """Check if analytic jacobian is defined for this fit model."""
         for i, fn in enumerate(self.fn_chain):
-            if fn.grad_fn([0], [0]) is None:
+            dummy_params = np.array([0 for i in range(len(fn.param_defn))])
+            if fn.grad_fn(np.array([0]), *dummy_params) is None:
                 return False
         return True
 
@@ -138,7 +139,7 @@ class FitModel:
 def get_param_defn(fit_model):
     """
     Returns list of parameters in fit_model, note there will be duplicates, and they do
-    not have numbers e.g. 'pos_0'. Use `QDMPy.fit._models.get_param_odict` for that purpose.
+    not have numbers e.g. 'pos_0'. Use `QDMPy.fit.model.get_param_odict` for that purpose.
     """
     param_defn_ar = []
     for fn in fit_model.fn_chain:

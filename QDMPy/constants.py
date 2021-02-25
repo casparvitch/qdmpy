@@ -11,7 +11,7 @@ To communicate this addition to QDMPy, add it to the SYSTEMS dictionary
 Where we have defined MySystem: class MySystem(QDMPy.systems.System): ... etc.
 Follow the templates in `QDMPy.systems` to construct your object.
 
-The AVAILABLE_FNS dictionary defines the available `QDMPy.fit._models.FitModel`s.
+The AVAILABLE_FNS dictionary defines the available `QDMPy.fit.model.FitModel`s.
 These fit models are used in all fit backends (scipyfit and gpufit at the time of
 writing). However, the numerics (e.g. actually evaluating the model) are only used
 by the scipyfit backend, and only the parameter definitions are used by gpufit.
