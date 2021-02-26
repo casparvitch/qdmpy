@@ -125,7 +125,7 @@ def from_unv_inversion(options, bnvs):
     # cut unvs down to only bnvs (freqs) we want
 
     # first assert chosen freqs is symmetric
-    if not all(list(reversed(chosen_freqs[4:])) == chosen_freqs[:4]):
+    if not list(reversed(chosen_freqs[4:])) == chosen_freqs[:4]:
         raise ValueError(
             """
             'bfield_method' was 'invert_unvs' but option 'freqs_to_use' was not
@@ -180,7 +180,7 @@ def from_hamiltonian_fitting(options, fit_params):
     use_bnvs = options["hamiltonian"] in ["approx_bxyz"]
 
     if use_bnvs:
-        if not all(list(reversed(options["freqs_to_use"][4:])) == options["freqs_to_use"][:4]):
+        if not list(reversed(options["freqs_to_use"][4:])) == options["freqs_to_use"][:4]:
             raise ValueError(
                 "'hamiltonian' option used bnvs, but chosen frequencies are not symmetric."
             )
@@ -195,19 +195,20 @@ def from_hamiltonian_fitting(options, fit_params):
     if use_bnvs:
         # data shape: [bnvs/freqs, y, x]
         bnv_lst, _ = Qbnv.get_bnvs_and_dshifts(fit_params)
-        unwanted_bnvs = np.argwhere(np.array(chooser) == 0)[0]
-
-        shape = bnv_lst[0].shape
-        missings = np.empty(shape)
-        missings[:] = np.nan
-        full_bnv_lst = []
-        for i in range(4):  # insert 'missing' bnvs (as nans)
-            if i in unwanted_bnvs:
-                full_bnv_lst.append(missings)
-            else:
-                full_bnv_lst.append(bnv_lst.pop())
-        data = np.array(full_bnv_lst)
-
+        if sum(chooser_ar) < 4:
+            unwanted_bnvs = np.argwhere(np.array(chooser_ar) == 0)[0]
+            shape = bnv_lst[0].shape
+            missings = np.empty(shape)
+            missings[:] = np.nan
+            full_bnv_lst = []
+            for i in range(4):  # insert 'missing' bnvs (as nans)
+                if i in unwanted_bnvs:
+                    full_bnv_lst.append(missings)
+                else:
+                    full_bnv_lst.append(bnv_lst.pop(0))
+            data = np.array(full_bnv_lst)
+        else:
+            data = np.array(bnv_lst)
     else:
         # use freqs, same data shape
         freqs_given_lst = [fit_params[f"pos_{j}"] for j in range(8) if f"pos_{j}" in fit_params]
@@ -220,7 +221,7 @@ def from_hamiltonian_fitting(options, fit_params):
             if not do_use:
                 freq_lst.append(missings)
             else:
-                freq_lst.append(freqs_given_lst.pop())
+                freq_lst.append(freqs_given_lst.pop(0))
         data = np.array(freq_lst)
 
     return Qham.fit_hamiltonian_pixels(options, data, ham)

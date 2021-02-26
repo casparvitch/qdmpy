@@ -31,7 +31,7 @@ from datetime import timedelta
 # ============================================================================
 
 from QDMPy.constants import AVAILABLE_HAMILTONIANS
-import QDMPy.hamiltonian._shared as fit_shared
+import QDMPy.hamiltonian._shared as ham_shared
 import QDMPy.systems as systems
 
 # ============================================================================
@@ -107,7 +107,7 @@ def prep_scipyfit_options(options, ham):
 
     # this is just constructing the initial parameter guesses and bounds in the right format
     _, fit_param_bound_ar = gen_scipyfit_init_guesses(
-        options, *fit_shared.gen_init_guesses(options)
+        options, *ham_shared.gen_init_guesses(options)
     )
     fit_bounds = (fit_param_bound_ar[:, 0], fit_param_bound_ar[:, 1])
 
@@ -189,7 +189,7 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
     num_pixels = np.shape(data)[1] * np.shape(data)[2]
 
     # this makes low binning work (idk why), else do chunksize = 1
-    chunksize = int(num_pixels / (threads * 100))
+    chunksize = int(num_pixels / (threads * 10))
 
     if not chunksize:
         warnings.warn("chunksize was 0, setting to 1")
@@ -197,7 +197,7 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
 
     # randomize order of fitting pixels (will un-scramble later) so ETA is more correct
     if options["scramble_pixels"]:
-        pixel_data, unshuffler = fit_shared.shuffle_pixels(data)
+        pixel_data, unshuffler = ham_shared.shuffle_pixels(data)
     else:
         pixel_data = data
 
@@ -214,7 +214,7 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
                     to_squares_wrapper,
                     repeat(hamiltonian.residuals_scipyfit),
                     repeat(roi_avg_params),
-                    fit_shared.pixel_generator(pixel_data),
+                    ham_shared.pixel_generator(pixel_data),
                     repeat(fit_options),
                     chunksize=chunksize,
                 ),
@@ -229,9 +229,9 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
     # for the record
     options["ham_fit_time_(s)"] = timedelta(seconds=t1 - t0).total_seconds()
 
-    res = fit_shared.get_pixel_fitting_results(hamiltonian, ham_fit_results, pixel_data)
+    res = ham_shared.get_pixel_fitting_results(hamiltonian, ham_fit_results, pixel_data)
     if options["scramble_pixels"]:
-        return fit_shared.unshuffle_fit_results(res, unshuffler)
+        return ham_shared.unshuffle_fit_results(res, unshuffler)
     else:
         return res
 
@@ -267,12 +267,14 @@ def fit_hamiltonian_ROI_avg_scipyfit(options, data, hamiltonian):
     """
     systems.clean_options(options)
 
-    # average freqs/bnvs over image
-    data_roi = np.nanmean(np.nanmean(data, axis=2), axis=1)
+    # average freqs/bnvs over image -> ignore nanmean of empty slice warning (for nan bnvs etc.)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", category=RuntimeWarning)
+        data_roi = np.nanmean(np.nanmean(data, axis=2), axis=1)
 
     fit_options = prep_scipyfit_options(options, hamiltonian)
 
-    init_param_guess, _ = gen_scipyfit_init_guesses(options, *fit_shared.gen_init_guesses(options))
+    init_param_guess, _ = gen_scipyfit_init_guesses(options, *ham_shared.gen_init_guesses(options))
 
     ham_result = least_squares(
         hamiltonian.residuals_scipyfit, init_param_guess, args=(data_roi,), **fit_options

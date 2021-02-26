@@ -45,6 +45,7 @@ class Hamiltonian:
         """
         self.chooser_obj = chooser_obj
         self.unv_frames = unv_frames
+        self.unvs = unv_frames[:, 2, :].copy()  # i.e. z axis of each nv ref. frame in lab frame
 
     # =================================
 
@@ -61,7 +62,7 @@ class Hamiltonian:
 
     # =================================
 
-    def grad_fn(self, param_ar, measured_data):
+    def grad_fn(self, param_ar):
         """
         Return jacobian, shape: (len(bnvs/freqs), len(param_ar))
         Each column is a partial derivative, with respect to each param in param_ar
@@ -87,7 +88,7 @@ class Hamiltonian:
         # need to take out rows (first index) according to chooser_obj.
         keep_rows = self.chooser_obj([i for i in range(len(measured_data))])
         delete_rows = [r for r in range(len(measured_data)) if r not in keep_rows]
-        return np.delete(self.grad_fn(param_ar, measured_data), delete_rows, axis=0)
+        return np.delete(self.grad_fn(param_ar), delete_rows, axis=0)
 
     # =================================
 
@@ -156,14 +157,20 @@ class ApproxBxyz(Hamiltonian):
 
         param_ar = [Bx, By, Bz]
         """
-        return np.dot(self.unv_frames[:, 2, :], param_ar)
+        return np.dot(self.unvs, param_ar)
 
-    def grad_fn(self, param_ar, measured_data):
-        J = np.array((4, 3))  # size: (len(bnvs), len(param_ar)), both know ahead of time.
-        J[:, 0] = 0
-        J[:, 1] = 0
-        J[:, 2] = 0
-        return
+    def grad_fn(self, param_ar):
+        # Bx, By, Bz = param_ar
+        J = np.empty((4, 3))  # size: (len(bnvs), len(param_ar)), both know ahead of time.
+        J[:, 0] = self.unvs[:, 0]
+        J[:, 1] = self.unvs[:, 1]
+        J[:, 2] = self.unvs[:, 2]
+        # i.e. equiv. to:
+        # for bnv in range(4):
+        #     J[bnv, 0] = self.unvs[bnv][0]  # i.e. ith NV orientation (bnv), x component
+        #     J[bnv, 1] = self.unvs[bnv][1]  # y component
+        #     J[bnv, 2] = self.unvs[bnv][2]  # z component
+        return J
 
 
 # ============================================================================
@@ -198,13 +205,13 @@ class Bxyz(Hamiltonian):
         from QDMPy.constants import S_MAT_X, S_MAT_Y, S_MAT_Z, GAMMA
 
         nv_frequencies = np.zeros(8)
-        D, Bx, By, Bz = param_ar
+        # D, Bx, By, Bz = param_ar
 
-        Hzero = D * (S_MAT_Z * S_MAT_Z)
+        Hzero = param_ar[0] * (S_MAT_Z * S_MAT_Z)
         for i in range(4):
-            bx_proj_onto_unv = np.dot([Bx, By, Bz], self.unv_frames[i, 0, :])
-            by_proj_onto_unv = np.dot([Bx, By, Bz], self.unv_frames[i, 1, :])
-            bz_proj_onto_unv = np.dot([Bx, By, Bz], self.unv_frames[i, 2, :])
+            bx_proj_onto_unv = np.dot(param_ar[1:4], self.unv_frames[i, 0, :])
+            by_proj_onto_unv = np.dot(param_ar[1:4], self.unv_frames[i, 1, :])
+            bz_proj_onto_unv = np.dot(param_ar[1:4], self.unv_frames[i, 2, :])
 
             HB = GAMMA * (
                 bx_proj_onto_unv * S_MAT_X

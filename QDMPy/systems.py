@@ -215,7 +215,7 @@ class UniMelb(System):
         return self.options_dict.keys()
 
     def get_bias_field(self, options):
-        """ get bias field as tuple (mag (G), theta (rad), phi (rad)) """
+        """ get bias on (bool) and field as tuple (mag (G), theta (rad), phi (rad)) """
         if "metadata" not in options:
             return None
         key_ars = [["Field Strength (G)"], ["Theta (deg)"], ["Phi (def)", "Phi (deg)"]]
@@ -234,7 +234,9 @@ class UniMelb(System):
                 + "this shouldn't happen (expected 3)."
             )
             return None
-        return bias_field[0], radians(bias_field[1]), radians(bias_field[2])
+        onoff_str = options["metadata"].get("Mag on/off", "")
+        bias_on = onoff_str == " TRUE"
+        return bias_on, (bias_field[0], radians(bias_field[1]), radians(bias_field[2]))
 
     def system_specific_option_update(self, options):
         # set some things that cannot be stored in the json

@@ -98,7 +98,9 @@ def get_B_bias(options):
     """
     bias_field = None
     if options["auto_read_bias"]:
-        bias_field = options["system"].get_bias_field(options)
+        bias_on, bias_field = options["system"].get_bias_field(options)
+        if not bias_on:
+            bias_field = None
     if bias_field is not None:
         Bmag, Btheta_rad, Bphi_rad = bias_field
     else:

@@ -288,7 +288,7 @@ def gen_init_guesses(options):
         for param_key in fit_func.param_defn:
             guess = options[param_key + "_guess"]
             if param_key + "_range" in options:
-                bounds = bounds_from_range(options, param_key)
+                bounds = bounds_from_range(options, param_key, guess)
             elif param_key + "_bounds" in options:
                 # assumes bounds are passed in with correct formatatting
                 bounds = options[param_key + "_bounds"]
@@ -307,9 +307,8 @@ def gen_init_guesses(options):
 # ============================================================================
 
 
-def bounds_from_range(options, param_key):
+def bounds_from_range(options, param_key, guess):
     """Generate parameter bounds (list, len 2) when given a range option."""
-    guess = options[param_key + "_guess"]
     rang = options[param_key + "_range"]
     if type(guess) is list and len(guess) > 1:
 

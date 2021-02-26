@@ -37,7 +37,7 @@ def save_bnvs_and_dshifts(options, name, bnvs, dshifts):
 # ============================================================================
 
 
-def save_field_params(options, pixel_fit_params):
+def save_field_params(options, name, pixel_fit_params):
     """
     Saves hamiltonian pixel fit results to disk.
 
@@ -46,12 +46,15 @@ def save_field_params(options, pixel_fit_params):
     options : dict
         Generic options dict holding all the user options.
 
+    name : str
+        TODO
+
     pixel_fit_params : OrderedDict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
     """
     if pixel_fit_params is not None:
         for param_key, result in pixel_fit_params.items():
-            np.savetxt(options["sub_ref_data_dir"] / f"{param_key}.txt", result)
+            np.savetxt(options["sub_ref_data_dir"] / f"{name}_{param_key}_.txt", result)
 
 
 # ============================================================================

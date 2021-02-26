@@ -152,7 +152,8 @@ class Linear(FitFunc):
     @staticmethod
     @njit(fastmath=True)
     def grad_fn(x, c, m):
-        """Compute the grad of the residue, excluding PL as a param
+        """
+        Compute the grad of the residual, excluding PL as a param
         {output shape: (len(x), 2)}
         """
         J = np.empty((x.shape[0], 2))

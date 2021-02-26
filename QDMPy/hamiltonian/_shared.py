@@ -19,13 +19,12 @@ __pdoc__ = {
 # ============================================================================
 
 import numpy as np
+from math import radians
 
 # ============================================================================
 
-
 from QDMPy.constants import AVAILABLE_HAMILTONIANS
 import QDMPy.hamiltonian._hamiltonians
-
 
 # ============================================================================
 
@@ -55,12 +54,20 @@ def gen_init_guesses(options):
     """
     init_guesses = {}
     init_bounds = {}
+    if options["auto_guess_B"]:
+        bias_x, bias_y, bias_z = get_B_bias(options)
+        override_guesses = {"Bx": bias_x, "By": bias_y, "Bz": bias_z}
 
     ham = AVAILABLE_HAMILTONIANS[options["hamiltonian"]]
     for param_key in ham.param_defn:
-        guess = options[param_key + "_guess"]
+
+        if param_key in override_guesses:
+            guess = override_guesses[param_key]
+        else:
+            guess = options[param_key + "_guess"]
+
         if param_key + "_range" in options:
-            bounds = bounds_from_range(options, param_key)
+            bounds = bounds_from_range(options, param_key, guess)
         elif param_key + "_bounds" in options:
             # assumes bounds are passed in with correct formatatting
             bounds = options[param_key + "_bounds"]
@@ -79,9 +86,8 @@ def gen_init_guesses(options):
 # ============================================================================
 
 
-def bounds_from_range(options, param_key):
+def bounds_from_range(options, param_key, guess):
     """Generate parameter bounds (list, len 2) when given a range option."""
-    guess = options[param_key + "_guess"]
     rang = options[param_key + "_range"]
     if type(guess) is list and len(guess) > 1:
 
@@ -263,7 +269,7 @@ def get_pixel_fitting_results(hamiltonian, fit_results, pixel_data):
         Also has 'residual' as a key.
     """
 
-    roi_shape = np.shape(pixel_data)
+    roi_shape = np.shape(pixel_data)[1:]
 
     # initialise dictionary with key: val = param_name: param_units
     fit_image_results = QDMPy.hamiltonian._hamiltonians.get_param_odict(hamiltonian)
@@ -278,8 +284,7 @@ def get_pixel_fitting_results(hamiltonian, fit_results, pixel_data):
     # 1D array of flattened best-fit parameters.
     for (y, x), result in fit_results:
         for param_num, param_name in enumerate(hamiltonian.param_defn):
-
-            fit_image_results[key][y, x] = result[param_num]
+            fit_image_results[param_name][y, x] = result[param_num]
 
         # FIXME if weighted, this needs to be updated.
         # --> define two options: weighted_residuals_scipyfit, unweighted_residuals_scipyfit
@@ -290,3 +295,38 @@ def get_pixel_fitting_results(hamiltonian, fit_results, pixel_data):
         )
 
     return fit_image_results
+
+
+# ============================================================================
+
+
+def get_B_bias(options):
+    """
+    Returns (bx, by, bz) for the bias field (supplied in options dict) in Gauss
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    bxyz : tuple
+        (bx, by, bz) for the bias field, in Gauss.
+    """
+    bias_field = None
+    if options["auto_read_bias"]:
+        bias_on, bias_field = options["system"].get_bias_field(options)
+        if not bias_on:
+            bias_field = None
+    if bias_field is not None:
+        Bmag, Btheta_rad, Bphi_rad = bias_field
+    else:
+        Bmag = options["bias_mag"]
+        Btheta_rad = radians(options["bias_theta"])
+        Bphi_rad = radians(options["bias_phi"])
+
+    bx = Bmag * np.sin(Btheta_rad) * np.cos(Bphi_rad)
+    by = Bmag * np.sin(Btheta_rad) * np.sin(Bphi_rad)
+    bz = Bmag * np.cos(Btheta_rad)
+    return bx, by, bz

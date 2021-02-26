@@ -71,7 +71,7 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
             + "for our algorithm to work, so please define this in the options dict/json."
         )
     # check that freqs_to_use is symmetric (necessary for bnvs retrieval methods)
-    symmetric_freqs = options["freqs_to_use"][4:] == options["freqs_to_use"][:4]
+    symmetric_freqs = list(reversed(options["freqs_to_use"][4:])) == options["freqs_to_use"][:4]
 
     if bmeth == "auto_dc":
         # need to select the appropriate one
@@ -120,11 +120,12 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
     Qgeom.add_bfield_reconstructed(ref_params)
 
     options["bfield_method_used"] = bmeth
-    options["field_params"] = sig_params.keys()
+    options["field_params"] = tuple(sig_params.keys())
 
-    Qio.save_field_params(sig_params)
-    Qio.save_field_params(ref_params)
+    Qio.save_field_params(options, "sig", sig_params)
+    Qio.save_field_params(options, "ref", ref_params)
 
+    # TODO add subref paramas as output.
     return (sig_bnvs, ref_bnvs, bnvs), (sig_dshifts, ref_dshifts), (sig_params, ref_params)
 
 

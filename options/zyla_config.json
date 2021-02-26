@@ -434,7 +434,7 @@
     // Read magnetic field from options (i.e. if applied with vector electromagnet)
     // --> system dependent option (i.e. Unimelb reads from metadata)
     "auto_read_bias": {
-        "option_default": true,
+        "option_default": false,
         "option_choices": 
             [
                 true,
@@ -505,7 +505,7 @@
         "option_default": 2871
     },
     "D_range": {
-        "option_default": 1
+        "option_default": 5
     },
 
     // ========== scipy least squares fitting options ===========
@@ -674,7 +674,7 @@
             "param_images": "viridis",
             "residual_images": "inferno",
             "PL_images": "Greys_r",
-            "bnv_images": "RdBu",
+            "bnv_images": "RdBu_r",
             "dshift_images": "PRGn",
             "bfield_images": "bwr"
         }
@@ -684,7 +684,8 @@
     "colormap_range_dicts": {
         "option_default": {
             "param_images": {
-                "type": "_min_max_symmetric_about_mean"
+                "type": "_percentile",
+                "values": [5, 95]
             },
             "residual_images": {
                 "type": "_min_max"
@@ -693,10 +694,12 @@
                 "type": "_min_max"
             },
             "bnv_images": {
-                "type": "_min_max_symmetric_about_mean"
+                "type": "_percentile",
+                "values": [5, 95]
             },
             "dshift_images": {
-                "type": "_min_max_symmetric_about_mean"
+                "type": "_percentile",
+                "values": [5, 95]
             },
             "bfield_images": {
                 "type": "_min_max_symmetric_about_mean"

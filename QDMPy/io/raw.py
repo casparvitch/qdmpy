@@ -417,9 +417,12 @@ def _options_compatible(options, prev_options):
     _options_compatible : bool
         Whether or not options are compatible.
     """
-
+    if not (
+        options["additional_bins"] == prev_options["additional_bins"]
+        or (options["additional_bins"] in [0, 1] and prev_options["additional_bins"] in [0, 1])
+    ):
+        return False
     for option_name in [
-        "additional_bins",
         "normalisation",
         "fit_backend",
         "fit_functions",
