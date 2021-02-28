@@ -156,7 +156,7 @@ def plot_image_on_ax(fig, ax, options, image_data, title, c_map, c_range, c_labe
     cbar.ax.set_ylabel(c_label, rotation=270)
 
     if options["show_scalebar"]:
-        pixel_size = options["system"].get_raw_pixel_size() * options["total_bin"]
+        pixel_size = options["system"].get_raw_pixel_size(options) * options["total_bin"]
         scalebar = ScaleBar(pixel_size)
         ax.add_artist(scalebar)
 

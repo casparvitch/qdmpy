@@ -194,7 +194,9 @@ def fit_ROI_avg_scipyfit(options, sig_norm, sweep_list, fit_model):
 
     fit_options = prep_scipyfit_options(options, fit_model)
 
-    init_param_guess, _ = gen_scipyfit_init_guesses(options, *fit_shared.gen_init_guesses(options))
+    init_param_guess, init_bounds = gen_scipyfit_init_guesses(
+        options, *fit_shared.gen_init_guesses(options)
+    )
 
     fitting_results = least_squares(
         fit_model.residuals_scipyfit, init_param_guess, args=(sweep_list, pl_roi), **fit_options
@@ -203,7 +205,14 @@ def fit_ROI_avg_scipyfit(options, sig_norm, sweep_list, fit_model):
     best_params = fitting_results.x
 
     return fit_shared.ROIAvgFitResult(
-        "scipyfit", fit_options, fit_model, pl_roi, sweep_list, best_params, init_param_guess
+        "scipyfit",
+        fit_options,
+        fit_model,
+        pl_roi,
+        sweep_list,
+        best_params,
+        init_param_guess,
+        init_bounds,
     )
 
 

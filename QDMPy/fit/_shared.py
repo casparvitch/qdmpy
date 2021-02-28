@@ -86,7 +86,9 @@ class ROIAvgFitResult:
         sweep_list,
         best_params,
         init_param_guess,
+        init_param_bounds,
     ):
+        # FIXME documentation
         """
         Arguments
         ---------
@@ -126,6 +128,7 @@ class ROIAvgFitResult:
 
         self.best_params = best_params
         self.init_param_guess = init_param_guess
+        self.init_param_bounds = init_param_bounds
 
     def savejson(self, filename, dir):
         """ Save all attributes as a json file in dir/filename, via `QDMPy.io.json2dict.dict_to_json` """

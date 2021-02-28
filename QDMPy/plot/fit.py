@@ -922,7 +922,9 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
 # ============================================================================
 
 
-def plot_params_flattened(options, fit_model, pixel_fit_params, roi_avg_fit_result, param_name):
+def plot_params_flattened(
+    options, fit_model, pixel_fit_params, roi_avg_fit_result, param_name, plot_bounds=True
+):
     """
     Compare pixel fits against flattened pixels: initial guess vs roi fit vs fit result.
 
@@ -942,6 +944,9 @@ def plot_params_flattened(options, fit_model, pixel_fit_params, roi_avg_fit_resu
 
     param_name : str
         Name of parameter you want to plot, e.g. 'fwhm'. Can also be 'residual'.
+
+    plot_bounds : bool
+        Defaults to True, add fit bounds/constraints to plot. (Does nothing for residual plots)
 
     Returns
     -------
@@ -984,6 +989,7 @@ def plot_params_flattened(options, fit_model, pixel_fit_params, roi_avg_fit_resu
     else:
         param_guesses = []
         param_roi_fits = []
+        param_bounds = []
         for fn_obj in fit_model.fn_chain:
             for param_num, param_root in enumerate(fn_obj.param_defn):
                 if param_root == param_name:
@@ -994,6 +1000,11 @@ def plot_params_flattened(options, fit_model, pixel_fit_params, roi_avg_fit_resu
                     )
                     param_roi_fits.append(
                         roi_avg_fit_result.best_params[fn_obj.this_fn_param_indices[param_num]]
+                    )
+                    param_bounds.append(
+                        roi_avg_fit_result.init_param_bounds[
+                            fn_obj.this_fn_param_indices[param_num]
+                        ]
                     )
 
     fig.suptitle(param_name, fontsize=16)
@@ -1007,12 +1018,25 @@ def plot_params_flattened(options, fit_model, pixel_fit_params, roi_avg_fit_resu
     prop_cycle = plt.rcParams["axes.prop_cycle"]
     colors = prop_cycle.by_key()["color"]
 
-    legend_names = ["Initial guesses", "ROI fits"]
-    # https://matplotlib.org/3.2.1/gallery/lines_bars_and_markers/linestyles.html
-    custom_lines = [
-        Line2D([0], [0], color="k", ls=(0, (1, 1)), lw=mpl.rcParams["lines.linewidth"] * 2),
-        Line2D([0], [0], color="k", ls=(0, (5, 1)), lw=mpl.rcParams["lines.linewidth"] * 2),
-    ]
+    if param_name != "residual" and plot_bounds:
+        legend_names = ["Fit bounds", "Initial guesses", "ROI fits"]
+        custom_lines = [
+            Line2D([0], [0], color="k", ls=(0, (2, 1)), lw=mpl.rcParams["lines.linewidth"]),
+            Line2D([0], [0], color="k", ls=(0, (1, 1)), lw=mpl.rcParams["lines.linewidth"] * 2),
+            Line2D([0], [0], color="k", ls=(0, (5, 1)), lw=mpl.rcParams["lines.linewidth"] * 2),
+        ]
+    else:
+        legend_names = ["Initial guesses", "ROI fits"]
+        # https://matplotlib.org/3.2.1/gallery/lines_bars_and_markers/linestyles.html
+        custom_lines = [
+            Line2D([0], [0], color="k", ls=(0, (1, 1)), lw=mpl.rcParams["lines.linewidth"] * 2),
+            Line2D([0], [0], color="k", ls=(0, (5, 1)), lw=mpl.rcParams["lines.linewidth"] * 2),
+        ]
+
+    if param_name != "residual" and plot_bounds:
+        for i, bounds in enumerate(param_bounds):
+            for b in bounds:
+                axs[i].axhline(b, ls=(0, (2, 1)), c="grey", zorder=9)
 
     for i, guess in enumerate(param_guesses):
         axs[i].axhline(

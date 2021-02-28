@@ -24,9 +24,16 @@
     },
     // =======================================
 
-    // 500e-6 / 2048. In metres. This is for the 4x objective.
-    "raw_pixel_size": {
-        "option_default": 0.000000244140625
+    // this setting is only read from system config file (not runtime options dict/json)
+    // use `objective_magnification` if you've changed objective.
+    // objective details, 4x magnification -> raw pixel size of 500e-6 / 2048
+    "microscope_objective": {
+        "option_default": [4, 0.000000244140625]
+    },
+
+    // magnification of objective. Used to calculate pixel size.
+    "objective_magnification": {
+        "option_default": 4
     },
         
     // If true the reference (often no-MW) measurement is ignored.

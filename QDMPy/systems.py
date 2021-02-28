@@ -182,6 +182,15 @@ class UniMelb(System):
 
     def __init__(self, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
+        # ensure all values default to None (at all levels of reading in json)
+        self.options_dict = QDMPy.io.json2dict.json_to_dict(self.config_path, hook="dd")
+
+    def get_raw_pixel_size(self, options):
+        default_mag, default_pixel_size = self.options_dict["microscope_objective"][
+            "option_default"
+        ]
+        chosen_mag = options["objective_magnification"]
+        return (chosen_mag / default_mag) * default_pixel_size
 
     def read_image(self, filepath, options):
         with open(os.path.normpath(filepath), "r") as fid:
@@ -369,14 +378,6 @@ class Zyla(UniMelb):
     name = "Zyla"
     config_path = _ROOT_PATH / "options/zyla_config.json"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
-        # ensure all values default to None (at all levels of reading in json)
-        self.options_dict = QDMPy.io.json2dict.json_to_dict(self.config_path, hook="dd")
-
-    def get_raw_pixel_size(self):
-        return self.options_dict["raw_pixel_size"]["option_default"]
-
 
 class LiamsWidefield(UniMelb):
     """
@@ -385,14 +386,6 @@ class LiamsWidefield(UniMelb):
 
     name = "Liam's Widefield"
     config_path = _ROOT_PATH / "options/liam_widefield_config.json"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
-        # ensure all values default to None (at all levels of reading in json)
-        self.options_dict = QDMPy.io.json2dict.json_to_dict(self.config_path, hook="dd")
-
-    def get_raw_pixel_size(self):
-        return self.options_dict["raw_pixel_size"]["option_default"]
 
 
 # ============================================================================
