@@ -5,8 +5,11 @@ This module holds the tools for loading/saving fit results.
 Functions
 ---------
  - `QDMPy.io.fit.load_prev_fit_results`
+ - `QDMPy.io.fit.load_prev_fit_sigmas`
  - `QDMPy.io.fit.load_fit_param`
+ - `QDMPy.io.fit.load_fit_sigma`
  - `QDMPy.io.fit.save_pixel_fit_results`
+ - `QDMPy.io.fit.save_pixel_fit_sigmas`
  - `QDMPy.io.fit.load_reference_experiment_fit_results`
 
 """
@@ -16,8 +19,11 @@ Functions
 __author__ = "Sam Scholten"
 __pdoc__ = {
     "QDMPy.io.fit.load_prev_fit_results": True,
+    "QDMPy.io.fit.load_prev_fit_sigmas": True,
     "QDMPy.io.fit.load_fit_param": True,
+    "QDMPy.io.fit.load_fit_sigma": True,
     "QDMPy.io.fit.save_pixel_fit_results": True,
+    "QDMPy.io.fit.save_pixel_fit_sigmas": True,
     "QDMPy.io.fit.load_reference_experiment_fit_results": True,
 }
 
@@ -56,9 +62,45 @@ def load_prev_fit_results(options):
 # ============================================================================
 
 
+def load_prev_fit_sigmas(options):
+    """Load (all) parameter fit results from previous processing."""
+
+    prev_options = QDMPy.io.raw._get_prev_options(options)
+
+    sigmas = {}
+
+    from QDMPy.constants import AVAILABLE_FNS as FN_SELECTOR
+
+    for fn_type, num in prev_options["fit_functions"].items():
+        for param_name in FN_SELECTOR[fn_type].param_defn:
+            for n in range(num):
+                key = param_name + "_" + str(n)
+                sigmas[key] = load_fit_sigma(options, key)
+    return sigmas
+
+
+# ============================================================================
+
+
+def load_fit_sigma(options, key):
+    return np.loadtxt(options["data_dir"] / (key + "_sigma.txt"))
+
+
+# ============================================================================
+
+
 def load_fit_param(options, param_key):
     """Load a previously fit param, of name 'param_key'."""
     return np.loadtxt(options["data_dir"] / (param_key + ".txt"))
+
+
+# ============================================================================
+
+
+def save_pixel_fit_sigmas(options, sigmas):
+    if sigmas is not None:
+        for key, result in sigmas.items():
+            np.savetxt(options["data_dir"] / f"{key}_sigma.txt", result)
 
 
 # ============================================================================
@@ -121,7 +163,7 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
             os.mkdir(options["sub_ref_dir"])
         if not os.path.isdir(options["sub_ref_data_dir"]):
             os.mkdir(options["sub_ref_data_dir"])
-        return None
+        return None, None
 
     if ref_options_dir is not None:
         ref_options_path = os.path.join(ref_options_dir, "saved_options.json")
@@ -150,10 +192,11 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
     # ok now have ref_options dict, time to load params
     if ref_options["found_prev_result"]:
         ref_fit_result_dict = load_prev_fit_results(ref_options)
-        return ref_fit_result_dict
+        ref_sigmas = load_prev_fit_sigmas(ref_options)
+        return ref_fit_result_dict, ref_sigmas
     else:
         warnings.warn("Didn't find reference experiment fit results?")
-        return None
+        return None, None
 
 
 # ============================================================================

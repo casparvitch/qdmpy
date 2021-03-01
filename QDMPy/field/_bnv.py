@@ -85,7 +85,38 @@ def get_bnvs_and_dshifts(pixel_fit_params):
             middle_dshift = np.empty(middle_bnv.shape)
             middle_dshift.fill(np.nan)
             dshifts.append(middle_dshift)
-    return bnvs, dshifts  # not the most elegant data structure ?
+    return bnvs, dshifts
+
+
+# ============================================================================
+
+
+def get_bnv_sd(sigmas):
+    """ get standard deviation of bnvs given SD of peaks. """
+    if sigmas is None:
+        return None
+    # find params for peak position (all must start with 'pos')
+    peak_sd = []
+    for param_name, sigma_map in sigmas.items():
+        if param_name.startswith("pos"):
+            peak_sd.append([int(param_name[-1]), sigma_map])  # [peak num, map]
+
+    # ensure peaks are in correct order by sorting their keys
+    peak_sd.sort(key=lambda x: x[0])
+    peak_sd = [x[1] for x in peak_sd]
+    num_peaks = len(peak_sd)
+
+    if num_peaks == 1:
+        return peak_sd / (2 * QDMPy.constants.GAMMA)
+    elif num_peaks == 2:
+        return (peak_sd[0] + peak_sd[1]) / (2 * QDMPy.constants.GAMMA)
+    else:
+        sd = []
+        for i in range(num_peaks // 2):
+            sd.append((peak_sd[-i - 1] + peak_sd[i]) / (2 * QDMPy.constants.GAMMA))
+        if ((num_peaks // 2) * 2) + 1 == num_peaks:
+            sd.append(peak_sd[num_peaks // 2 + 1] / (2 * QDMPy.constants.GAMMA))
+        return sd
 
 
 # ============================================================================

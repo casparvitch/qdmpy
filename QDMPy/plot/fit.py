@@ -730,7 +730,9 @@ def plot_AOI_spectra_fit(
 # ============================================================================
 
 
-def plot_param_image(options, fit_model, pixel_fit_params, param_name, param_number=0):
+def plot_param_image(
+    options, fit_model, pixel_fit_params, param_name, param_number=0, errorplot=False
+):
     """
     Plots an image corresponding to a single parameter in pixel_fit_params.
 
@@ -755,6 +757,9 @@ def plot_param_image(options, fit_model, pixel_fit_params, param_name, param_num
         Which version of the parameter you want. I.e. there might be 8 independent parameters
         in the fit model called 'pos', each labeled 'pos_0', 'pos_1' etc. Default: 0.
 
+    errorplot : bool
+        Default: false. Denotes that errors dict has been passed in (e.g. sigmas), so
+        ylabel & save names are changed accordingly. Can't be True if param_name='residual'.
 
     Returns
     -------
@@ -768,12 +773,25 @@ def plot_param_image(options, fit_model, pixel_fit_params, param_name, param_num
             options["colormap_range_dicts"]["residual_images"], image
         )
         c_map = options["colormaps"]["residual_images"]
+    elif errorplot:
+        c_range = plot_common._get_colormap_range(
+            options["colormap_range_dicts"]["sigma_images"], image
+        )
+        c_map = options["colormaps"]["sigma_images"]
     else:
         c_range = plot_common._get_colormap_range(
             options["colormap_range_dicts"]["param_images"], image
         )
         c_map = options["colormaps"]["param_images"]
-    c_label = Qfit.get_param_unit(fit_model, param_name, param_number)
+
+    if param_name == "residual" and errorplot:
+        warnings.warn("residual doesn't have an error, can't plot residual sigma (ret. None).")
+        return None
+
+    if errorplot:
+        c_label = "SD: " + Qfit.get_param_unit(fit_model, param_name, param_number)
+    else:
+        c_label = Qfit.get_param_unit(fit_model, param_name, param_number)
 
     fig, ax = plt.subplots(constrained_layout=True)
 
@@ -783,10 +801,15 @@ def plot_param_image(options, fit_model, pixel_fit_params, param_name, param_num
 
     np.savetxt(options["data_dir"] / (param_name + "_" + str(param_number) + ".txt"), image)
     if options["save_plots"]:
-        fig.savefig(
-            options["output_dir"]
-            / (param_name + "_" + str(param_number) + "." + options["save_fig_type"])
-        )
+        if errorplot:
+            path = options["output_dir"] / (
+                param_name + "_" + str(param_number) + "_sigma." + options["save_fig_type"]
+            )
+        else:
+            path = options["output_dir"] / (
+                param_name + "_" + str(param_number) + "." + options["save_fig_type"]
+            )
+        fig.savefig(path)
 
     return fig
 
@@ -794,7 +817,7 @@ def plot_param_image(options, fit_model, pixel_fit_params, param_name, param_num
 # ============================================================================
 
 
-def plot_param_images(options, fit_model, pixel_fit_params, param_name):
+def plot_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=False):
     """
     Plots images for all independent versions of a single parameter type in pixel_fit_params.
 
@@ -812,6 +835,10 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
     param_name : str
         Name of parameter you want to plot, e.g. 'fwhm'. Can also be 'residual'.
 
+    errorplot : bool
+        Default: false. Denotes that errors dict has been passed in (e.g. sigmas), so
+        ylabel & save names are changed accordingly. Can't be True if param_name='residual'.
+
     Returns
     -------
     fig : matplotlib Figure object
@@ -823,6 +850,10 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
             "'pixel_fit_params' arg to function 'plot_param_images' is 'None'.\n"
             + "Probably no pixel fitting completed."  # noqa: W503
         )
+        return None
+
+    if param_name == "residual" and errorplot:
+        warnings.warn("residual doesn't have an error, can't plot residual sigma (ret. None).")
         return None
 
     # plot 2 columns wide, as many rows as required
@@ -842,12 +873,12 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
         return int(num)
 
     # sort based on number (just in case)
-    our_keys.sort(key=param_sorter)
+    our_keys.sort(key=param_sorter)  # i.e. key = lambda x: int(x.split("_")[-1])
     nk = len(our_keys)
 
     if nk == 1:
         # just one image, so plot normally
-        fig = plot_param_image(options, fit_model, pixel_fit_params, param_name, 0)
+        fig = plot_param_image(options, fit_model, pixel_fit_params, param_name, 0, errorplot)
     else:
         if nk <= 8:
             num_columns = 4
@@ -872,8 +903,6 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
             constrained_layout=True,
         )
 
-        c_map = options["colormaps"]["param_images"]
-
         # plot 8-lorentzian peaks in a more helpful way
         if nk <= 8 and any([f.startswith("lorentzian") for f in options["fit_functions"]]):
             param_nums = []  # [0, 1, 2, 3, 7, 6, 5, 4] etc.
@@ -897,10 +926,26 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
                 fig.delaxes(ax)
                 break
 
-            c_range = plot_common._get_colormap_range(
-                options["colormap_range_dicts"]["param_images"], image_data
-            )
-            c_label = Qfit.get_param_unit(fit_model, param_name, param_number)
+            if param_name == "residual":
+                c_range = plot_common._get_colormap_range(
+                    options["colormap_range_dicts"]["residual_images"], image_data
+                )
+                c_map = options["colormaps"]["residual_images"]
+            elif errorplot:
+                c_range = plot_common._get_colormap_range(
+                    options["colormap_range_dicts"]["sigma_images"], image_data
+                )
+                c_map = options["colormaps"]["sigma_images"]
+            else:
+                c_range = plot_common._get_colormap_range(
+                    options["colormap_range_dicts"]["param_images"], image_data
+                )
+                c_map = options["colormaps"]["param_images"]
+
+            if errorplot:
+                c_label = "SD: " + Qfit.get_param_unit(fit_model, param_name, param_number)
+            else:
+                c_label = Qfit.get_param_unit(fit_model, param_name, param_number)
 
             plot_common.plot_image_on_ax(
                 fig,
@@ -914,7 +959,11 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
             )
 
         if options["save_plots"]:
-            fig.savefig(options["output_dir"] / (param_name + "." + options["save_fig_type"]))
+            if errorplot:
+                path = options["output_dir"] / (param_name + "_sigma." + options["save_fig_type"])
+            else:
+                path = options["output_dir"] / (param_name + "." + options["save_fig_type"])
+            fig.savefig(path)
 
     return fig
 
@@ -923,7 +972,14 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name):
 
 
 def plot_params_flattened(
-    options, fit_model, pixel_fit_params, roi_avg_fit_result, param_name, plot_bounds=True
+    options,
+    fit_model,
+    pixel_fit_params,
+    sigmas,
+    roi_avg_fit_result,
+    param_name,
+    plot_bounds=True,
+    plot_sigmas=True,
 ):
     """
     Compare pixel fits against flattened pixels: initial guess vs roi fit vs fit result.
@@ -948,11 +1004,19 @@ def plot_params_flattened(
     plot_bounds : bool
         Defaults to True, add fit bounds/constraints to plot. (Does nothing for residual plots)
 
+    plot_sigmas : bool
+        Defaults to True, add error bars (sigma) to plot. (Does nothing for residual plots)
+
     Returns
     -------
     fig : matplotlib Figure object
 
     """
+    if pixel_fit_params is None:
+        return None
+
+    if not sigmas:
+        plot_sigmas = False
 
     # initial guess vs roi fit vs pixel fit
 
@@ -1057,15 +1121,34 @@ def plot_params_flattened(
         )
 
     for i, (param_key, color) in enumerate(zip(param_keys, colors)):
-        axs[i].plot(
-            pixel_fit_params[param_key].flatten(),
-            label=param_key,
-            marker="o",
-            mfc="w",
-            ms=mpl.rcParams["lines.markersize"] // 2,
-            mec=color,
-            ls="",
-        )
+        if param_name == "residual" or not plot_sigmas:
+            axs[i].plot(
+                pixel_fit_params[param_key].flatten(),
+                label=param_key,
+                marker="o",
+                mfc="w",
+                ms=mpl.rcParams["lines.markersize"],
+                mec=color,
+                ls="",
+                zorder=20,
+            )
+        else:
+            yvals = pixel_fit_params[param_key].flatten()
+            xvals = list(range(len(yvals)))
+            axs[i].errorbar(
+                xvals,
+                yvals,
+                xerr=None,
+                yerr=sigmas[param_key].flatten(),
+                label=param_key,
+                marker="o",
+                mfc="w",
+                ms=mpl.rcParams["lines.markersize"],
+                mec=color,
+                ecolor=color,
+                ls="",
+                zorder=20,
+            )
         legend_names.append(param_key)
         custom_lines.append(
             Line2D(

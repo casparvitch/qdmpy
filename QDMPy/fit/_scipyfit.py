@@ -382,15 +382,13 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, kwargs={}):
     Returns
     -------
     wrapped_squares : tuple
-        (y, x), least_squares(...).x
-        I.e. the position of the fit result, and then the fit result parameters array.
+        (y, x), least_squares(...).x, leas_squares(...).jac
+        I.e. the position of the fit result, the fit result parameters array, jacobian at solution
     """
     # shaped_data: [y, x, pl]
-    # output: (y, x), result_params
-    return (
-        (shaped_data[0], shaped_data[1]),
-        least_squares(fun, p0, args=(sweep_vec, shaped_data[2]), **kwargs).x,
-    )
+    # output: (y, x), result_params, jac
+    fitres = least_squares(fun, p0, args=(sweep_vec, shaped_data[2]), **kwargs)
+    return ((shaped_data[0], shaped_data[1]), fitres.x, fitres.jac)
 
 
 # ==========================================================================
@@ -476,8 +474,11 @@ def fit_pixels_scipyfit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_re
     # for the record
     options["fit_time_(s)"] = timedelta(seconds=t1 - t0).total_seconds()
 
-    res = fit_shared.get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_ar)
+    res, sigmas = fit_shared.get_pixel_fitting_results(
+        fit_model, fit_results, pixel_data, sweep_ar
+    )
     if options["scramble_pixels"]:
-        return fit_shared.unshuffle_fit_results(res, unshuffler)
-    else:
-        return res
+        res = fit_shared.unshuffle_fit_results(res, unshuffler)
+        sigmas = fit_shared.unshuffle_fit_results(sigmas, unshuffler)
+
+    return res, sigmas

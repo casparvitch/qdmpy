@@ -249,6 +249,9 @@ def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
     fit_image_results : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
         Also has 'residual' as a key.
+
+    sigmas : dict
+        As above, but standard deviation for each param
     """
 
     # here only use only chosen backend!

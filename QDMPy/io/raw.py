@@ -379,11 +379,14 @@ def _check_if_already_fit(options, reloading=False):
                 _prev_options_exist(options)
                 and _options_compatible(options, _get_prev_options(options))
                 and _prev_pixel_results_exist(options)
+                and _prev_sigma_results_exist(options)
             )
         else:
             options["found_prev_result"] = False
     else:
-        options["found_prev_result"] = _prev_pixel_results_exist(options)
+        options["found_prev_result"] = _prev_pixel_results_exist(
+            options
+        ) and _prev_sigma_results_exist(options)
 
 
 # ============================================================================
@@ -527,6 +530,24 @@ def _prev_pixel_results_exist(prev_options):
 
     if not os.path.isfile(prev_options["data_dir"] / "residual_0.txt"):
         return False
+    return True
+
+
+# ============================================================================
+
+
+def _prev_sigma_results_exist(prev_options):
+    """ as `QDMPy.io.raw._prev_pixel_results_exist` but for sigmas """
+    # avoid cyclic imports
+    from QDMPy.constants import AVAILABLE_FNS as FN_SELECTOR
+
+    for fn_type, num in prev_options["fit_functions"].items():
+        for param_name in FN_SELECTOR[fn_type].param_defn:
+            for n in range(num):
+                param_key = param_name + "_" + str(n)
+                if not os.path.isfile(prev_options["data_dir"] / (param_key + "_sigma.txt")):
+                    return False
+
     return True
 
 

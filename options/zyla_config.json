@@ -219,11 +219,11 @@
 
     // Full width half maximum of the peaks
     "fwhm_guess": {
-    	"option_default": -0.0015
+    	"option_default": 9
     },
 
     "fwhm_bounds": {
-    	"option_default": [5, 20]
+    	"option_default": [3, 40]
     },
 
     // As above but for Gaussian
@@ -253,14 +253,14 @@
     	"option_default": 1
     },
     "c_bounds": {
-    	"option_default": [0.9995,1.0005]
+    	"option_default": [0.98,1.02]
     },
 
     "m_guess": {
     	"option_default": 0
     },
     "m_bounds": {
-    	"option_default": [-1e-8, 1e-8]
+    	"option_default": [-1e-5, 1e-5]
     },
 
     // constant background
@@ -680,6 +680,7 @@
         "option_default": {
             "param_images": "viridis",
             "residual_images": "inferno",
+            "sigma_images": "magma",
             "PL_images": "Greys_r",
             "bnv_images": "RdBu_r",
             "dshift_images": "PRGn",
@@ -695,6 +696,9 @@
                 "values": [5, 95]
             },
             "residual_images": {
+                "type": "_min_max"
+            },
+            "sigma_images": {
                 "type": "_min_max"
             },
             "PL_images": {
@@ -718,6 +722,7 @@
         "option_default": {
             "figure.figsize": [6.4, 4.8],
             "figure.dpi": 80,
+            "figure.max_open_warning": 30,
             "lines.linewidth": 0.8,
             "lines.markersize" : 3,
             "xtick.labelsize": 10,
@@ -734,7 +739,8 @@
             "scalebar.scale_loc": "top",
             "scalebar.sep": 1,
             "axes.formatter.useoffset": false,
-            "axes.formatter.use_mathtext": true
+            "axes.formatter.use_mathtext": true,
+            "errorbar.capsize": 3.0
         }
     },
     // colors to identify with each AOI region

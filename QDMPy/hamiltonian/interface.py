@@ -82,7 +82,6 @@ def fit_hamiltonian_pixels(options, data, hamiltonian):
     data : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x]. E.g. bnvs or freqs
 
-
     hamiltonian : `QDMPy.hamiltonian._hamiltonians.Hamiltonian`
         Model we're fitting to.
 

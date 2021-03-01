@@ -518,7 +518,7 @@ def fit_pixels_gpufit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
     guess_params = np.array([init_guess_params], dtype=np.float32)
     init_guess_params_reshaped = np.repeat(guess_params, repeats=num_pixels, axis=0)
 
-    # only fit the params we want to :)
+    # only fit the params we want to :) {i.e. < 8 peak ODMR fit etc.}
     if options["ModelID"] == gf.ModelID.LORENTZ8:
         params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
         while len(params_to_fit) < 26:
@@ -544,13 +544,19 @@ def fit_pixels_gpufit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
     # for the record
     options["fit_time_(s)"] = execution_time
 
-    fit_results = gpufit_reshape_result(fitting_results, pixel_posns)
+    # calculate jacobians via scipy as gpufit doesn't return them at soln
+    jacs = [fit_model.jacobian_scipyfit(param_ar, sweep_ar, None) for param_ar in fitting_results]
 
-    res = fit_shared.get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_ar)
+    fit_results = gpufit_reshape_result(fitting_results, pixel_posns, jacs)
+
+    res, sigmas = fit_shared.get_pixel_fitting_results(
+        fit_model, fit_results, pixel_data, sweep_ar
+    )
     if options["scramble_pixels"]:
-        return fit_shared.unshuffle_fit_results(res, unshuffler)
-    else:
-        return res
+        res = fit_shared.unshuffle_fit_results(res, unshuffler)
+        sigmas = fit_shared.unshuffle_fit_results(sigmas, unshuffler)
+
+    return res, sigmas
 
 
 # ============================================================================
@@ -586,7 +592,7 @@ def gpufit_data_shape(sig_norm):
 # ============================================================================
 
 
-def gpufit_reshape_result(pixel_param_results, pixel_posns):
+def gpufit_reshape_result(pixel_param_results, pixel_posns, jacs):
     """
     Mimics `QDMPy.fit._scipy.to_squares_wrapper`, so gpufit can use the
     `QDMPy.fit._shared.get_pixel_fitting_results` function to get the nice
@@ -601,14 +607,17 @@ def gpufit_reshape_result(pixel_param_results, pixel_posns):
         List of pixel positions (x,y) as returned by `QDMPy.fit.gpufit._gpufit_data_shape`.
         I.e. the position of pixel positions associated with rows of pixel_param_results.
 
+    jacs : np array, 2D
+        Same as pixel_param_results but containing jacobian at solution
+
     Returns
     -------
     fit_results : list
-        List of [(y, x), best_fit_parameter] lists
+        List of [(y, x), best_fit_parameter, jac] lists
     """
     fit_results = []
-    for params, pos in zip(pixel_param_results, pixel_posns):
-        fit_results.append([pos, params])
+    for params, pos, jac in zip(pixel_param_results, pixel_posns, jacs):
+        fit_results.append([pos, params, jac])
 
     return fit_results
 
