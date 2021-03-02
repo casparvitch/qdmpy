@@ -5,12 +5,16 @@ This module holds tools for calculating Bxyz from Bnv.
 Functions
 ---------
  - `QDMPy.field.interface.odmr_field_retrieval`
+ - `QDMPy.field.interface.field_refsub`
+ - `QDMPy.field.interface.get_B_bias`
 """
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
     "QDMPy.field.interface.odmr_field_retrieval": True,
+    "QDMPy.field.interface.field_refsub": True,
+    "QDMPy.field.interface.get_B_bias": True,
 }
 
 # ============================================================================
@@ -101,6 +105,7 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
         else:
             sig_params = Qbxyz.from_single_bnv(options, sig_bnvs)
             ref_params = Qbxyz.from_single_bnv(options, ref_bnvs)
+            sig_sigmas, ref_sigmas = None, None
     elif bmeth == "invert_unvs":
         if num_peaks_wanted != 6:
             raise RuntimeError(
@@ -110,10 +115,11 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
         else:
             sig_params = Qbxyz.from_unv_inversion(options, sig_bnvs)
             ref_params = Qbxyz.from_unv_inversion(options, ref_bnvs)
+            sig_sigmas, ref_sigmas = None, None
     else:
         # hamiltonian fitting
-        sig_params = Qbxyz.from_hamiltonian_fitting(options, sig_fit_params)
-        ref_params = Qbxyz.from_hamiltonian_fitting(options, ref_fit_params)
+        sig_params, sig_sigmas = Qbxyz.from_hamiltonian_fitting(options, sig_fit_params)
+        ref_params, ref_sigmas = Qbxyz.from_hamiltonian_fitting(options, ref_fit_params)
 
     # for checking self-consistency (e.g. calc Bx from Bz via fourier methods)
     Qgeom.add_bfield_reconstructed(sig_params)
@@ -125,8 +131,13 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
     Qio.save_field_params(options, "sig", sig_params)
     Qio.save_field_params(options, "ref", ref_params)
 
-    # TODO add subref paramas as output.
-    return (sig_bnvs, ref_bnvs, bnvs), (sig_dshifts, ref_dshifts), (sig_params, ref_params)
+    # TODO add subref params as output. Also combine sigmas
+    return (
+        (sig_bnvs, ref_bnvs, bnvs),
+        (sig_dshifts, ref_dshifts),
+        (sig_params, ref_params),
+        (sig_sigmas, ref_sigmas),
+    )
 
 
 # ============================================================================
@@ -145,3 +156,23 @@ def field_refsub(options, sig_params, ref_params):
         }
     else:
         return sig_params
+
+
+# ============================================================================
+
+
+def get_B_bias(options):
+    """
+    Returns (bx, by, bz) for the bias field (supplied in options dict) in Gauss
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    bxyz : tuple
+        (bx, by, bz) for the bias field, in Gauss.
+    """
+    return Qgeom.get_B_bias(options)

@@ -90,7 +90,7 @@ class ROIAvgFitResult:
         init_param_guess,
         init_param_bounds,
     ):
-        # FIXME documentation
+        # TODO documentation
         """
         Arguments
         ---------

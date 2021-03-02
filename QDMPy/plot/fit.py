@@ -975,11 +975,12 @@ def plot_params_flattened(
     options,
     fit_model,
     pixel_fit_params,
-    sigmas,
     roi_avg_fit_result,
     param_name,
+    sigmas=None,
     plot_bounds=True,
     plot_sigmas=True,
+    errorevery=1,
 ):
     """
     Compare pixel fits against flattened pixels: initial guess vs roi fit vs fit result.
@@ -1071,8 +1072,6 @@ def plot_params_flattened(
                         ]
                     )
 
-    fig.suptitle(param_name, fontsize=16)
-
     axs[-1].set_xlabel("Pixel # (flattened)")
     for ax in axs:
         ax.set_ylabel(Qfit.get_param_unit(fit_model, param_name, 0))
@@ -1148,6 +1147,7 @@ def plot_params_flattened(
                 ecolor=color,
                 ls="",
                 zorder=20,
+                errorevery=errorevery,
             )
         legend_names.append(param_key)
         custom_lines.append(

@@ -177,9 +177,6 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
         reloading=True,
     )
 
-    # FIXME add another options compatible check here, specific to bnvs/fields?
-    # things to check...: size of images...?
-
     ref_name = Path(ref_options["filepath"]).stem
     # first make a sub ref output folder
     options["sub_ref_dir"] = options["output_dir"].joinpath(f"sub_{ref_name}")

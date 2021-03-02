@@ -10,6 +10,7 @@ import numpy as np
 # ============================================================================
 
 import QDMPy.hamiltonian._hamiltonians
+import QDMPy.hamiltonian._shared
 
 # ============================================================================
 
@@ -93,3 +94,32 @@ def fit_hamiltonian_pixels(options, data, hamiltonian):
     """
 
     return fit_scipyfit.fit_hamiltonian_scipyfit(options, data, hamiltonian)
+
+
+# ============================================================================
+
+
+def get_ham_guess_and_bounds(options):
+    """
+    Generate initial guesses (and bounds) in fit parameters from options dictionary.
+
+    Both are returned as dictionaries, you need to use 'gen_{scipy/gpufit/...}_init_guesses'
+    to convert to the correct (array) format for each specific fitting backend.
+
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    init_guesses : dict
+        Dict holding guesses for each parameter, e.g. key -> list of guesses for each independent
+        version of that fn_type.
+
+    init_bounds : dict
+        Dict holding guesses for each parameter, e.g. key -> list of bounds for each independent
+        version of that fn_type.
+    """
+    return QDMPy.hamiltonian._shared.gen_init_guesses(options)

@@ -29,7 +29,7 @@ import QDMPy.hamiltonian as Qham
 
 
 # ============================================================================
-# FIXME
+# TODO
 
 
 def from_single_bnv(options, bnvs):
@@ -175,7 +175,7 @@ def from_hamiltonian_fitting(options, fit_params):
         Also has 'residual' as a key.
     """
     if fit_params is None:
-        return None
+        return None, None
 
     use_bnvs = options["hamiltonian"] in ["approx_bxyz"]
 

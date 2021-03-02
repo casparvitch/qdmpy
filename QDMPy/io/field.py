@@ -85,7 +85,7 @@ def load_field_param(options, param):
 
 def load_arb_field_params(path, param_names):
     """
-    load field params from directory at 'path', of names 'param_names'
+    load field params from directory at 'path', of names 'param_names' (iterable of strings)
     (e.g. ["Bx", "By", "Bz"] etc.)
     """
     return {param: load_arb_field_param(path, param) for param in param_names}
@@ -100,3 +100,8 @@ def load_arb_field_param(path, param):
 
 
 # ============================================================================
+
+
+def check_for_prev_field_result(options):
+    # FIXME
+    pass

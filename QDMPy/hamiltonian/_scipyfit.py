@@ -229,11 +229,12 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
     # for the record
     options["ham_fit_time_(s)"] = timedelta(seconds=t1 - t0).total_seconds()
 
-    res = ham_shared.get_pixel_fitting_results(hamiltonian, ham_fit_results, pixel_data)
+    res, sigmas = ham_shared.get_pixel_fitting_results(hamiltonian, ham_fit_results, pixel_data)
     if options["scramble_pixels"]:
-        return ham_shared.unshuffle_fit_results(res, unshuffler)
-    else:
-        return res
+        res = ham_shared.unshuffle_fit_results(res, unshuffler)
+        sigmas = ham_shared.unshuffle_fit_results(sigmas, unshuffler)
+
+    return res, sigmas
 
 
 # ==========================================================================
@@ -314,7 +315,5 @@ def to_squares_wrapper(fun, p0, shaped_data, kwargs={}):
     """
     # shaped_data: [y, x, pl]
     # output: (y, x), result_params
-    return (
-        (shaped_data[0], shaped_data[1]),
-        least_squares(fun, p0, args=(shaped_data[2],), **kwargs).x,
-    )
+    res = least_squares(fun, p0, args=(shaped_data[2],), **kwargs)
+    return ((shaped_data[0], shaped_data[1]), res.x, res.jac)

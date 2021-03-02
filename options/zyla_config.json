@@ -449,7 +449,7 @@
             ]
     },
     // Guess mag field (Bx, By, Bz) from bias field parameters (bias_mag etc.)
-    "auto_guess_B": {
+    "auto_read_B": {
         "option_default": true,
         "option_choices": 
             [

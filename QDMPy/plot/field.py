@@ -16,10 +16,14 @@ __pdoc__ = {"QDMPy.plot.fields.plot_bnvs_and_dshifts": True}
 
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+import warnings
 
 # ============================================================================
 
 import QDMPy.plot.common as plot_common
+import QDMPy.hamiltonian as Qham
+import QDMPy.field as Qfield
 
 # ============================================================================
 
@@ -203,6 +207,172 @@ def plot_ham_residual(options, name, field_params):
 # ============================================================================
 
 
+def plot_field_param(
+    options,
+    name,  # i.e. "sig"/"ref" etc.
+    param_name,  # "Bx" etc.
+    field_params,
+    c_map=None,
+    c_map_type="param_images",
+    c_range_type="_percentile",
+    c_range_vals=[5, 95],
+    cbar_label="",
+):
+    if field_params is None:
+        return None
+    if param_name not in field_params:
+        warnings.warn(f"No param (key) called {param_name} in field_params.")
+        return None
+
+    fig, ax = plt.subplots(constrained_layout=True)
+
+    if c_map is None:
+        c_range = plot_common._get_colormap_range(
+            {"type": c_range_type, "values": c_range_vals}, field_params[param_name]
+        )
+        c_map = options["colormaps"][c_map_type]
+
+    title = f"{name}"
+
+    plot_common.plot_image_on_ax(
+        fig, ax, options, field_params[param_name], title, c_map, c_range, cbar_label
+    )
+
+    if options["save_plots"]:
+        fig.savefig(
+            options["sub_ref_dir"]
+            / (f"residual_ham_{name}_{param_name}." + options["save_fig_type"])
+        )
+
+
+# ============================================================================
+
+
+def field_param_flattened(
+    options,
+    name,
+    param_name,
+    field_params,
+    sigmas=None,
+    plot_sigmas=True,
+    plot_bounds=True,
+    y_label="",
+    errorevery=1,
+):
+    if field_params is None:
+        return None
+    if param_name not in field_params:
+        warnings.warn(f"Couldn't find {param_name} in field_params.")
+        return None
+    if not sigmas or param_name not in sigmas:
+        plot_sigmas = False
+
+    figsize = mpl.rcParams["figure.figsize"].copy()
+    figsize[0] *= 2  # make some extra space...
+
+    fig, ax = plt.subplots(figsize=figsize, constrained_layout=True)
+
+    # get guesses and bounds
+    if param_name.startswith("residual"):
+        guess = None
+        bounds = None
+        plot_sigmas = False
+    elif options["bfield_method_used"] == "hamiltonian_fitting":
+        guess_dict, bound_dict = Qham.get_ham_guess_and_bounds(options)
+        guess = guess_dict[param_name]
+        bounds = bound_dict[param_name]
+    else:
+        bounds = None  # no bounds if not a fit
+        comps = ["Bx", "By", "Bz"]
+        if param_name in comps:
+            Bguesses = Qfield.get_B_bias(options)
+            guess = Bguesses[comps.index(param_name)]
+
+    ax.set_xlabel("Pixel # (flattened)")
+    ax.set_ylabel(y_label)
+    ax.grid()
+
+    color = "blue"
+    if plot_sigmas:
+        yvals = field_params[param_name].flatten()
+        xvals = list(range(len(yvals)))
+        ax.errorbar(
+            xvals,
+            yvals,
+            xerr=None,
+            yerr=sigmas[param_name].flatten(),
+            marker="o",
+            mfc="w",
+            ms=mpl.rcParams["lines.markersize"],
+            mec=color,
+            ecolor=color,
+            ls="",
+            zorder=20,
+            errorevery=errorevery,
+        )
+    else:
+        ax.plot(
+            field_params[param_name].flatten(),
+            marker="o",
+            mfc="w",
+            ms=mpl.rcParams["lines.markersize"],
+            mec=color,
+            ls="",
+            zorder=20,
+        )
+    legend_names = [name + "_" + param_name]
+    custom_lines = [
+        Line2D(
+            [0],
+            [0],
+            marker="o",
+            mfc="w",
+            ms=mpl.rcParams["lines.markersize"] * 2,
+            mec=color,
+            ls="",
+        )
+    ]
+    if guess is not None:
+        ax.axhline(
+            guess,
+            ls=(0, (1, 1)),
+            c="k",
+            zorder=10,
+            lw=mpl.rcParams["lines.linewidth"] * 2,
+        )
+        legend_names.append("Guess")
+        custom_lines.append(
+            Line2D([0], [0], color="k", ls=(0, (1, 1)), lw=mpl.rcParams["lines.linewidth"] * 2)
+        )
+    if bounds is not None and type(bounds) == list and len(bounds) == 2:
+        for b in bounds:
+            ax.axhline(b, ls=(0, (2, 1)), c="grey", zorder=9)
+        legend_names.append("Bounds")
+        custom_lines.append(
+            Line2D([0], [0], color="k", ls=(0, (2, 1)), lw=mpl.rcParams["lines.linewidth"])
+        )
+
+    ax.legend(
+        custom_lines,
+        legend_names,
+        loc="lower left",
+        bbox_to_anchor=(0.0, 1.01),
+        borderaxespad=0,
+        frameon=False,
+        ncol=len(legend_names),
+        fontsize="medium",
+    )
+
+    if options["save_plots"]:
+        fig.savefig(
+            options["sub_ref_dir"]
+            / (f"{name}_{param_name}_fit_flattened." + options["save_fig_type"])
+        )
+
+
+# ============================================================================
+
+
 def plot_strain(options, name, field_params):
     raise NotImplementedError()
 
@@ -219,4 +389,8 @@ def plot_efield(options, name, field_params):
 
 def plot_bfield_consistency(options, field_params):
     # check Bxyz, Bxyz_recon
+    # TODO
     pass
+
+
+# ============================================================================

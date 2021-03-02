@@ -19,12 +19,13 @@ __pdoc__ = {
 # ============================================================================
 
 import numpy as np
-from math import radians
+from scipy.linalg import svd
+import copy
 
 # ============================================================================
 
-from QDMPy.constants import AVAILABLE_HAMILTONIANS
 import QDMPy.hamiltonian._hamiltonians
+import QDMPy.field as Qfield
 
 # ============================================================================
 
@@ -54,9 +55,11 @@ def gen_init_guesses(options):
     """
     init_guesses = {}
     init_bounds = {}
-    if options["auto_guess_B"]:
-        bias_x, bias_y, bias_z = get_B_bias(options)
+    if options["auto_read_B"]:
+        bias_x, bias_y, bias_z = Qfield.get_B_bias(options)
         override_guesses = {"Bx": bias_x, "By": bias_y, "Bz": bias_z}
+
+    from QDMPy.constants import AVAILABLE_HAMILTONIANS  # avoid circ. imports
 
     ham = AVAILABLE_HAMILTONIANS[options["hamiltonian"]]
     for param_key in ham.param_defn:
@@ -254,7 +257,7 @@ def get_pixel_fitting_results(hamiltonian, fit_results, pixel_data):
     fit_model : `QDMPy.hamiltonian._hamiltonians.Hamiltonian`
         Model we're fitting to.
 
-    fit_results : list of [(y, x), result] objects
+    fit_results : list of [(y, x), result, jac] objects
         (see `QDMPy.hamiltonian._scipyfit.to_squares_wrapper`)
         A list of each pixel's parameter array, as well as position in image denoted by (y, x).
 
@@ -273,60 +276,35 @@ def get_pixel_fitting_results(hamiltonian, fit_results, pixel_data):
 
     # initialise dictionary with key: val = param_name: param_units
     fit_image_results = QDMPy.hamiltonian._hamiltonians.get_param_odict(hamiltonian)
+    sigmas = copy.copy(fit_image_results)
 
     # override with correct size empty arrays using np.zeros
     for key in fit_image_results.keys():
         fit_image_results[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+        sigmas[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
     fit_image_results["residual_ham"] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
     # Fill the arrays element-wise from the results function, which returns a
     # 1D array of flattened best-fit parameters.
-    for (y, x), result in fit_results:
-        for param_num, param_name in enumerate(hamiltonian.param_defn):
-            fit_image_results[param_name][y, x] = result[param_num]
-
-        # FIXME if weighted, this needs to be updated.
-        # --> define two options: weighted_residuals_scipyfit, unweighted_residuals_scipyfit
+    for (y, x), result, jac in fit_results:
         resid = hamiltonian.residuals_scipyfit(result, pixel_data[:, y, x])
-
         fit_image_results["residual_ham"][y, x] = np.sum(
             np.abs(resid, dtype=np.float64), dtype=np.float64
         )
+        # uncertainty (covariance matrix), copied from scipy.optimize.curve_fit
+        _, s, VT = svd(jac, full_matrices=False)
+        threshold = np.finfo(float).eps * max(jac.shape) * s[0]
+        s = s[s > threshold]
+        VT = VT[: s.size]
+        pcov = np.dot(VT.T / s ** 2, VT)
+        perr = np.sqrt(np.diag(pcov))  # array of standard deviations
 
-    return fit_image_results
+        for param_num, param_name in enumerate(hamiltonian.param_defn):
+            fit_image_results[param_name][y, x] = result[param_num]
+            sigmas[param_name][y, x] = perr[param_num]
+
+    return fit_image_results, sigmas
 
 
 # ============================================================================
-
-
-def get_B_bias(options):
-    """
-    Returns (bx, by, bz) for the bias field (supplied in options dict) in Gauss
-
-    Arguments
-    ---------
-    options : dict
-        Generic options dict holding all the user options.
-
-    Returns
-    -------
-    bxyz : tuple
-        (bx, by, bz) for the bias field, in Gauss.
-    """
-    bias_field = None
-    if options["auto_read_bias"]:
-        bias_on, bias_field = options["system"].get_bias_field(options)
-        if not bias_on:
-            bias_field = None
-    if bias_field is not None:
-        Bmag, Btheta_rad, Bphi_rad = bias_field
-    else:
-        Bmag = options["bias_mag"]
-        Btheta_rad = radians(options["bias_theta"])
-        Bphi_rad = radians(options["bias_phi"])
-
-    bx = Bmag * np.sin(Btheta_rad) * np.cos(Bphi_rad)
-    by = Bmag * np.sin(Btheta_rad) * np.sin(Bphi_rad)
-    bz = Bmag * np.cos(Btheta_rad)
-    return bx, by, bz
