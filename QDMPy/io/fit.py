@@ -149,7 +149,11 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
         ref_fit_result_dict = load_prev_fit_results(ref_options)
         return ref_fit_result_dict
     else:
-        warnings.warn("Didn't find reference experiment fit results?")
+        warnings.warn(
+            "Didn't find reference experiment fit results? Reason:\n"
+            + ref_options["found_prev_result_reason"]
+        )
         return None
+
 
 # ============================================================================

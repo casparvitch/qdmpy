@@ -948,7 +948,8 @@ def plot_params_flattened(options, fit_model, pixel_fit_params, roi_avg_fit_resu
     fig : matplotlib Figure object
 
     """
-
+    if pixel_fit_params is None:
+        return None
     # initial guess vs roi fit vs pixel fit
 
     param_keys = sorted([p for p in pixel_fit_params if p.startswith(param_name)])

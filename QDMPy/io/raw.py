@@ -139,9 +139,7 @@ def load_options(
 
     chosen_system.determine_binning(options)
 
-    chosen_system.system_specific_option_update(
-        options
-    )  # do this again on full options to be sure
+    chosen_system.system_specific_option_update(options)  # do this again on full options to be sure
 
     options["system"] = chosen_system
 
@@ -158,7 +156,6 @@ def load_options(
     # don't always check for prev. results (so we can use this fn in other contexts)
     if check_for_prev_result or reloading:
         _check_if_already_fit(options, reloading=reloading)
-
     return options
 
 
@@ -338,7 +335,6 @@ def _define_output_dir(options):
     """
     Defines output_dir and data_dir in options.
     """
-
     if options["custom_output_dir"] is not None:
         output_dir = pathlib.PurePosixPath(
             _interpolate_option_str(str(options["custom_output_dir"]), options)
@@ -362,6 +358,7 @@ def _define_output_dir(options):
     options["data_dir"] = options["output_dir"].joinpath("data")
 
 
+
 # ============================================================================
 
 
@@ -371,23 +368,33 @@ def _check_if_already_fit(options, reloading=False):
 
     If previous fit result exists, checks for compatibility between option choices.
 
-    reloading (bool): skip shecks for force_fit etc. and just see if prev pixel results exist.
+    reloading (bool): skip checks for force_fit etc. and just see if prev pixel results exist.
 
     Returns nothing.
     """
     if not reloading:
         if not options["force_fit"]:
-            options["found_prev_result"] = (
-                _prev_options_exist(options)
-                and _options_compatible(options, _get_prev_options(options))
-                and _prev_pixel_results_exist(options)
-            )
+            if not _prev_options_exist(options):
+                options["found_prev_result_reason"] = "couldn't find previous options"
+                options["found_prev_result"] = False
+            elif not (res := _options_compatible(options, _get_prev_options(options)))[0]:
+                options["found_prev_result_reason"] = "option not compatible:\n" + res[1]
+                options["found_prev_result"] = False
+            elif not(res2 := _prev_pixel_results_exist(options))[0]:
+                options["found_prev_result_reason"] = "couldn't find prev pixel results:\n" + res2[1]
+                options["found_prev_result"] = False
+            else:
+                options["found_prev_result_reason"] = "found prev result :)"
+                options["found_prev_result"] = True
         else:
+            options["found_prev_result_reason"] = "option 'force_fit' was True"
             options["found_prev_result"] = False
+    elif not(res3 := _prev_pixel_results_exist(options))[0]:
+        options["found_prev_result_reason"] = "couldn't find prev pixel results:\n" + res3[1]
+        options["found_prev_result"] = False
     else:
-        options["found_prev_result"] = _prev_pixel_results_exist(options)
-        # wait optns compat needs a different method?
-
+        options["found_prev_result_reason"] = "found prev result :)"
+        options["found_prev_result"] = True
 
 # ============================================================================
 
@@ -421,8 +428,11 @@ def _options_compatible(options, prev_options):
         Whether or not options are compatible.
     """
 
+    if not (options["additional_bins"] == prev_options["additional_bins"] or (
+        options["additional_bins"] in [0, 1] and prev_options["additional_bins"] in [0, 1]
+    )):
+        return False, "different binning"
     for option_name in [
-        "additional_bins",
         "normalisation",
         "fit_backend",
         "fit_functions",
@@ -434,13 +444,13 @@ def _options_compatible(options, prev_options):
         "use_ROI_avg_fit_res_for_all_pixels",
     ]:
         if options[option_name] != prev_options[option_name]:
-            return False
+            return False, f"different option: {option_name}"
     # check relevant roi params
     if options["ROI"] == "Rectangle" and (
         options["ROI_start"] != prev_options["ROI_start"]
         and options["ROI_end"] != prev_options["ROI_end"]
     ):
-        return False
+        return False, "different ROI rectangle bounds"
 
     # check relevant param guesses/bounds
 
@@ -461,40 +471,36 @@ def _options_compatible(options, prev_options):
                 or fit_opt_name not in prev_options
                 or options[fit_opt_name] != prev_options[fit_opt_name]
             ):
-                return False
+                return False, f"scipyfit option different: {fit_opt_name}"
     elif options["fit_backend"] == "gpufit":
-        for fit_opt_name in [
-            "gpufit_tolerance",
-            "gpufit_max_iterations",
-            "gpufit_estimator_id",
-        ]:
+        for fit_opt_name in ["gpufit_tolerance", "gpufit_max_iterations", "gpufit_estimator_id"]:
             if options[fit_opt_name] != prev_options[fit_opt_name]:
-                return False
+                return False, f"gpufit option different: {fit_opt_name}"
 
     # ok now the trickiest one, check parameter guesses & bounds
     unique_params = set(fit_models.get_param_defn(fit_models.FitModel(options["fit_functions"])))
 
     for param_name in unique_params:
         if options[param_name + "_guess"] != prev_options[param_name + "_guess"]:
-            return False
+            return False, f"param guess different: {param_name}"
 
         range_opt = param_name + "_range"
         if range_opt in options and range_opt in prev_options:
             if options[range_opt] != prev_options[range_opt]:
-                return False
+                return False,  f"different range options: {param_name}"
             else:
                 continue  # this param all g, check others
         # ok range takes precedence over bounds
         if range_opt in options and range_opt not in prev_options:
-            return False
+            return False, f"different range/bound options: {param_name}"
         if range_opt not in options and range_opt in prev_options:
-            return False
+            return False, f"different range/bound options: {param_name}"
         # finally check bounds
         if options[param_name + "_bounds"] != prev_options[param_name + "_bounds"]:
-            return False
+            return False, f"param range different: {param_name}"
 
     # if all that was ok, return True
-    return True
+    return True, "all g"
 
 
 # ============================================================================
@@ -523,11 +529,11 @@ def _prev_pixel_results_exist(prev_options):
             for n in range(num):
                 param_key = param_name + "_" + str(n)
                 if not os.path.isfile(prev_options["data_dir"] / (param_key + ".txt")):
-                    return False
+                    return False, f"couldn't find previous param: {param_key}"
 
     if not os.path.isfile(prev_options["data_dir"] / "residual_0.txt"):
-        return False
-    return True
+        return False, "couldn't find previous residual"
+    return True, "found all prev pixel results :)"
 
 
 # ============================================================================
@@ -880,7 +886,9 @@ def _define_AOIs(options):
             break
     return AOIs
 
+
 # ============================================================================
+
 
 def _recursive_dict_update(to_be_updated_dict, updating_dict):
     """

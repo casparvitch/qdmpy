@@ -246,14 +246,14 @@
     	"option_default": 1
     },
     "c_bounds": {
-    	"option_default": [0.9995,1.0005]
+    	"option_default": [0.95,1.05]
     },
 
     "m_guess": {
     	"option_default": 0
     },
     "m_bounds": {
-    	"option_default": [-1e-8, 1e-8]
+    	"option_default": [-1e-4, 1e-4]
     },
 
     // constant background
@@ -663,11 +663,12 @@
         }
     },
     // choose range of values mapped across to the colormap limits, for each 'type' of image
-    // see options in QDMPy.plot._get_colormap_range
+    // see options in QDMPy.plot.common._get_colormap_range
     "colormap_range_dicts": {
         "option_default": {
             "param_images": {
-                "type": "_min_max_symmetric_about_mean"
+                "type": "_percentile",
+                "values": [5, 95]
             },
             "residual_images": {
                 "type": "_min_max"
@@ -676,10 +677,12 @@
                 "type": "_min_max"
             },
             "bnv_images": {
-                "type": "_min_max_symmetric_about_mean"
+                "type": "_percentile",
+                "values": [5, 95]
             },
             "dshift_images": {
-                "type": "_min_max_symmetric_about_mean"
+                "type": "_percentile",
+                "values": [5, 95]
             }
         }
     },
@@ -754,6 +757,8 @@
     "reloaded_prev_fit": {},
     // did we find a previous fit result?
     "found_prev_result": {},
+    // reason for above
+    "found_prev_result_reason": {},
     // directory to save results (directly in this dir: images)
     "output_dir": {},
     // directory within output to save data (output_dir/data_dir)

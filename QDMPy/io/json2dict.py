@@ -237,12 +237,12 @@ def basictype2str(obj):
     """This is a filter on objects that get sent to the json. Some types
     can't be stored literally in json files, so we can adjust for that here.
     """
-    if isinstance(obj, str):
-        strobj = '"' + str(obj) + '"'
-    # elif isinstance(obj, type(None)):
-    #     strobj = "null" # seems to fail sometimes?
-    elif str(obj) == "None":
+    if str(obj) == "None":
         strobj = "null"
+    elif isinstance(obj, type(None)):
+        strobj = "null" # seems to fail sometimes?
+    elif isinstance(obj, str):
+        strobj = '"' + str(obj) + '"'
     elif isinstance(obj, bool):
         strobj = {True: "true", False: "false"}[obj]
     else:
