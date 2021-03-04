@@ -823,10 +823,10 @@
     "CUDA_version_driver": {},
     // time for gpu to fit image
     "fit_time_(s)": {},
-    // directory within output to save data once ref defined (output_dir/sub_ref_dir)
-    "sub_ref_dir" : {},
-    // as above but data dir (above\data)
-    "sub_ref_data_dir" : {},
+    // field result directories
+    "field_dir": {},
+    "field_sig_dir": {},
+    "field_ref_dir": {},
     "bfield_method_used" : {},
     "field_params" : {}
 }

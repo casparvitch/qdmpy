@@ -139,7 +139,9 @@ def load_options(
 
     chosen_system.determine_binning(options)
 
-    chosen_system.system_specific_option_update(options)  # do this again on full options to be sure
+    chosen_system.system_specific_option_update(
+        options
+    )  # do this again on full options to be sure
 
     options["system"] = chosen_system
 
@@ -340,9 +342,7 @@ def _define_output_dir(options):
             _interpolate_option_str(str(options["custom_output_dir"]), options)
         )
     else:
-        output_dir = pathlib.PurePosixPath(
-            str(options["filepath"]) + "_processed" + "_bin_" + str(options["total_bin"])
-        )
+        output_dir = pathlib.PurePosixPath(str(options["filepath"]))
 
     if options["custom_output_dir_prefix"] is not None:
         prefix = _interpolate_option_str(str(options["custom_output_dir_prefix"]), options)
@@ -356,7 +356,6 @@ def _define_output_dir(options):
 
     options["output_dir"] = output_dir.parent.joinpath(prefix + output_dir.stem + suffix)
     options["data_dir"] = options["output_dir"].joinpath("data")
-
 
 
 # ============================================================================
@@ -380,8 +379,10 @@ def _check_if_already_fit(options, reloading=False):
             elif not (res := _options_compatible(options, _get_prev_options(options)))[0]:
                 options["found_prev_result_reason"] = "option not compatible:\n" + res[1]
                 options["found_prev_result"] = False
-            elif not(res2 := _prev_pixel_results_exist(options))[0]:
-                options["found_prev_result_reason"] = "couldn't find prev pixel results:\n" + res2[1]
+            elif not (res2 := _prev_pixel_results_exist(options))[0]:
+                options["found_prev_result_reason"] = (
+                    "couldn't find prev pixel results:\n" + res2[1]
+                )
                 options["found_prev_result"] = False
             else:
                 options["found_prev_result_reason"] = "found prev result :)"
@@ -389,12 +390,13 @@ def _check_if_already_fit(options, reloading=False):
         else:
             options["found_prev_result_reason"] = "option 'force_fit' was True"
             options["found_prev_result"] = False
-    elif not(res3 := _prev_pixel_results_exist(options))[0]:
+    elif not (res3 := _prev_pixel_results_exist(options))[0]:
         options["found_prev_result_reason"] = "couldn't find prev pixel results:\n" + res3[1]
         options["found_prev_result"] = False
     else:
         options["found_prev_result_reason"] = "found prev result :)"
         options["found_prev_result"] = True
+
 
 # ============================================================================
 
@@ -428,9 +430,10 @@ def _options_compatible(options, prev_options):
         Whether or not options are compatible.
     """
 
-    if not (options["additional_bins"] == prev_options["additional_bins"] or (
-        options["additional_bins"] in [0, 1] and prev_options["additional_bins"] in [0, 1]
-    )):
+    if not (
+        options["additional_bins"] == prev_options["additional_bins"]
+        or (options["additional_bins"] in [0, 1] and prev_options["additional_bins"] in [0, 1])
+    ):
         return False, "different binning"
     for option_name in [
         "normalisation",
@@ -487,7 +490,7 @@ def _options_compatible(options, prev_options):
         range_opt = param_name + "_range"
         if range_opt in options and range_opt in prev_options:
             if options[range_opt] != prev_options[range_opt]:
-                return False,  f"different range options: {param_name}"
+                return False, f"different range options: {param_name}"
             else:
                 continue  # this param all g, check others
         # ok range takes precedence over bounds
@@ -561,7 +564,7 @@ def _get_prev_options(options):
     """
     Reads options file from previous fit result (.json), returns a dictionary.
     """
-    return Qio.json_to_dict(options["output_dir"] / "saved_options.json")
+    return QDMPy.io.json_to_dict(options["output_dir"] / "saved_options.json")
 
 
 # ============================================================================

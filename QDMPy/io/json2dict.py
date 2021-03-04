@@ -219,7 +219,7 @@ def _basictype2str(obj):
     if str(obj) == "None":
         strobj = "null"
     elif isinstance(obj, type(None)):
-        strobj = "null" # seems to fail sometimes?
+        strobj = "null"  # seems to fail sometimes?
     elif isinstance(obj, str):
         strobj = '"' + str(obj) + '"'
     elif isinstance(obj, bool):

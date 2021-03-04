@@ -13,6 +13,7 @@ Functions
  - `QDMPy.fit.interface.fit_AOIs`
  - `QDMPy.fit.interface.fit_pixels`
  - `QDMPy.fit.interface._prep_fit_backends`
+ - `QDMPy.fit.interface.get_pixel_fit_results`
 """
 
 # ============================================================================
@@ -24,6 +25,7 @@ __pdoc__ = {
     "QDMPy.fit.interface.fit_AOIs": True,
     "QDMPy.fit.interface.fit_pixels": True,
     "QDMPy.fit.interface._prep_fit_backends": True,
+    "QDMPy.fit.interface.get_pixel_fit_results": True,
 }
 
 # ============================================================================
@@ -33,6 +35,7 @@ import warnings
 # ============================================================================
 
 import QDMPy.fit.model as fit_models
+import QDMPy.io as Qio
 import QDMPy.io.raw
 
 # ============================================================================
@@ -265,3 +268,23 @@ def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
         )
     else:
         raise RuntimeError(f"No fit_pixels fn defined for fit_backend = {options['fit_backend']}")
+
+
+# ============================================================================
+
+
+def get_pixel_fit_results(options, sig_norm, sweep_list, fit_model, wanted_roi_result):
+    """ TODO documentation """
+
+    if options["found_prev_result"]:
+        pixel_fit_params = Qio.load_prev_fit_results(options)
+        sigmas = Qio.load_prev_fit_sigmas(options)
+        warnings.warn("Using previous fit results.")
+    elif options["fit_pixels"]:
+        pixel_fit_params, sigmas = fit_pixels(
+            options, sig_norm, sweep_list, fit_model, wanted_roi_result
+        )
+    else:
+        pixel_fit_params = None  # not fitting pixels, this stops plotting (e.g. via plot_param_images) from erroring
+        sigmas = None
+    return pixel_fit_params, sigmas

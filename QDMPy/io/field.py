@@ -25,13 +25,36 @@ import QDMPy.io.raw
 # ============================================================================
 
 
+def save_field_results(options, bnv_tuple, dshift_tuple, params_tuple, sigmas_tuple):
+    # save in correct places...
+    # sig, ref, sig_sub_ref as name etc.
+    save_bnvs_and_dshifts(options, "sig", bnv_tuple[0], dshift_tuple[0])
+    save_bnvs_and_dshifts(options, "ref", bnv_tuple[1], dshift_tuple[1])
+    save_bnvs_and_dshifts(options, "sig_sub_ref", bnv_tuple[3], [])
+
+    save_field_params(options, "sig", params_tuple[0])
+    save_field_params(options, "ref", params_tuple[1])
+    # save_field_params(options, "sig_sub_ref", params_tuple[2]) # not implemented yet
+
+    # FIXME continue this work eh
+
+
+# ============================================================================
+
+
 def save_bnvs_and_dshifts(options, name, bnvs, dshifts):
     if bnvs:
         for i, bnv in enumerate(bnvs):
-            np.savetxt(options["sub_ref_data_dir"] / f"{name}_bnv_{i}.txt", bnv)
+            if name == "sig_sub_ref":
+                np.savetxt(options["field_dir"] / f"sig_sub_ref_bnv_{i}.txt", bnv)
+            else:
+                np.savetxt(options[f"field_{name}_dir"] / f"{name}_bnv_{i}.txt", bnv)
     if dshifts:
         for i, dshift in enumerate(dshifts):
-            np.savetxt(options["sub_ref_data_dir"] / f"{name}_dshift_{i}.txt", dshift)
+            if name == "sig_sub_ref":
+                np.savetxt(options["field_dir"] / f"sig_sub_ref_dshift_{i}.txt", bnv)
+            else:
+                np.savetxt(options[f"field_{name}_dir"] / f"{name}_dshift_{i}.txt", bnv)
 
 
 # ============================================================================

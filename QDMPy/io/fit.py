@@ -156,20 +156,17 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
         warnings.warn(
             "No reference experiment options dict provided, continuing without reference."
         )
-        ref_name = "nothing"
-        # FIXME
-        # # no data dirs from hereon out...?
-        # options["field_dir"]
-        # options["field_sig_dir"]
-        # options["field_ref_dir"]
+        options["field_dir"] = options["output_dir"].jointpath("field")
+        options["field_sig_dir"] = options["field_dir"].joinpath("sig")
+        options["field_ref_dir"] = options["field_dir"].joinpath("ref_nothing")
 
-        options["sub_ref_dir"] = options["output_dir"].joinpath(f"sub_{ref_name}")
-        options["sub_ref_data_dir"] = options["sub_ref_dir"].joinpath("data")
-        if not os.path.isdir(options["sub_ref_dir"]):
-            os.mkdir(options["sub_ref_dir"])
-        if not os.path.isdir(options["sub_ref_data_dir"]):
-            os.mkdir(options["sub_ref_data_dir"])
-        return None
+        if not os.path.isdir(options["field_dir"]):
+            os.mkdir(options["field_dir"])
+        if not os.path.isdir(options["field_sig_dir"]):
+            os.mkdir(options["field_sig_dir"])
+        if not os.path.isdir(options["field_ref_dir"]):
+            os.mkdir(options["field_ref_dir"])
+        return None, None
 
     if ref_options_dir is not None:
         ref_options_path = os.path.join(ref_options_dir, "saved_options.json")
@@ -184,13 +181,15 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
     )
 
     ref_name = Path(ref_options["filepath"]).stem
-    # first make a sub ref output folder
-    options["sub_ref_dir"] = options["output_dir"].joinpath(f"sub_{ref_name}")
-    options["sub_ref_data_dir"] = options["sub_ref_dir"].joinpath("data")
-    if not os.path.isdir(options["sub_ref_dir"]):
-        os.mkdir(options["sub_ref_dir"])
-    if not os.path.isdir(options["sub_ref_data_dir"]):
-        os.mkdir(options["sub_ref_data_dir"])
+    options["field_dir"] = options["output_dir"].jointpath("field")
+    options["field_sig_dir"] = options["field_dir"].joinpath("sig")
+    options["field_ref_dir"] = options["field_dir"].joinpath(f"ref_{ref_name}")
+    if not os.path.isdir(options["field_dir"]):
+        os.mkdir(options["field_dir"])
+    if not os.path.isdir(options["field_sig_dir"]):
+        os.mkdir(options["field_sig_dir"])
+    if not os.path.isdir(options["field_ref_dir"]):
+        os.mkdir(options["field_ref_dir"])
 
     # ok now have ref_options dict, time to load params
     if ref_options["found_prev_result"]:
@@ -202,7 +201,7 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
             "Didn't find reference experiment fit results? Reason:\n"
             + ref_options["found_prev_result_reason"]
         )
-        return None
+        return None, None
 
 
 # ============================================================================
