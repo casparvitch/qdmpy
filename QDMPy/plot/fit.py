@@ -43,6 +43,8 @@ import numpy as np
 import matplotlib.patches as patches
 import math
 import warnings
+import pandas as pd
+import os
 
 # ============================================================================
 
@@ -1180,6 +1182,38 @@ def plot_params_flattened(
         )
 
     return fig
+
+
+# ============================================================================
+
+
+def plot_other_measurements(options, suffixes=["_IV", "_T"]):
+    """
+    Plot any other tsv/csv datasets (at base_path + s for s in
+    options["other_measurement_suffixes"]). Assumes first column is some form of ind. dataset
+    """
+    suffixes = options["other_measurement_suffixes"]
+    if not suffixes:
+        return None
+    paths = [(s, options["filepath"] + s) for s in suffixes]
+
+    good_paths = [(s, path) for s, path in paths if os.path.isfile(path)]
+
+    dfs = {s: pd.read_csv(path, sep=None) for s, path in good_paths}
+
+    for s, df in dfs.items():
+
+        num_series = len(df.columns)
+        figsize = mpl.rcParams["figure.figsize"].copy()
+        figsize[0] *= 2
+        figsize[1] *= num_series  # extra height
+
+        fig, axs = plt.subplots(
+            num_series, 1, figsize=figsize, constrained_layout=True, sharex=True
+        )
+        for i, col in enumerate(df.columns[1:]):
+            pass
+        # test as we go, on smaller dataset?
 
 
 # ============================================================================

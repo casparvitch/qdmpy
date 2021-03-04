@@ -157,6 +157,12 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
             "No reference experiment options dict provided, continuing without reference."
         )
         ref_name = "nothing"
+        # FIXME
+        # # no data dirs from hereon out...?
+        # options["field_dir"]
+        # options["field_sig_dir"]
+        # options["field_ref_dir"]
+
         options["sub_ref_dir"] = options["output_dir"].joinpath(f"sub_{ref_name}")
         options["sub_ref_data_dir"] = options["sub_ref_dir"].joinpath("data")
         if not os.path.isdir(options["sub_ref_dir"]):

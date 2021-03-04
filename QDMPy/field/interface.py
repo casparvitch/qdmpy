@@ -126,7 +126,10 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
     Qgeom.add_bfield_reconstructed(ref_params)
 
     options["bfield_method_used"] = bmeth
-    options["field_params"] = tuple(sig_params.keys())
+    if sig_params is not None:
+        options["field_params"] = tuple(sig_params.keys())
+    else:
+        options["field_params"] = None
 
     Qio.save_field_params(options, "sig", sig_params)
     Qio.save_field_params(options, "ref", ref_params)

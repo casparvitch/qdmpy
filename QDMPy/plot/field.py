@@ -268,7 +268,7 @@ def field_param_flattened(
         plot_sigmas = False
 
     figsize = mpl.rcParams["figure.figsize"].copy()
-    figsize[0] *= 2  # make some extra space...
+    figsize[0] *= 2  # make some extra space in width...
 
     fig, ax = plt.subplots(figsize=figsize, constrained_layout=True)
 

@@ -186,11 +186,25 @@ class UniMelb(System):
         self.options_dict = QDMPy.io.json2dict.json_to_dict(self.config_path, hook="dd")
 
     def get_raw_pixel_size(self, options):
-        default_mag, default_pixel_size = self.options_dict["microscope_objective"][
-            "option_default"
-        ]
-        chosen_mag = options["objective_magnification"]
-        return (chosen_mag / default_mag) * default_pixel_size
+        # override keys available as options
+        override_keys = ["objective_mag", "objective_reference_focal_length", "camera_tube_lens"]
+        # not the cleanest way to do this... eh it works
+        default_keys = ["default_" + key for key in override_keys]
+        default_keys.insert(0, "sensor_pixel_size")
+        settings_dict = self.options_dict["microscope_setup"]
+        settings = [settings_dict[key] for key in default_keys]
+
+        for i, s in enumerate(override_keys):
+            if options[s] is not None:
+                settings[i + 1] = options[s]  # +1 to skip sensor pixel size (set)
+
+        sensor_pixel_size, mag, f_ref, f_tube = settings
+
+        f_obj = f_ref / mag
+
+        cam_pixel_size = sensor_pixel_size * (f_obj / f_tube)
+
+        return cam_pixel_size
 
     def read_image(self, filepath, options):
         with open(os.path.normpath(filepath), "r") as fid:

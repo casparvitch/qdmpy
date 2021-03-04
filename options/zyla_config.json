@@ -24,18 +24,32 @@
     },
     // =======================================
 
-    // this setting is only read from system config file (not runtime options dict/json)
-    // use `objective_magnification` if you've changed objective.
-    // objective details, 4x magnification -> raw pixel size of 500e-6 / 2048
-    "microscope_objective": {
-        "option_default": [4, 0.000000244140625]
+    // Default options for the Zyla microscope
+    "microscope_setup": {
+        "sensor_pixel_size": 6.5e-6,
+        "default_objective_mag": 4,
+        "default_objective_reference_focal_length":  200e-3,
+        "default_camera_tube_lens": 300e-3
     },
 
-    // magnification of objective. Used to calculate pixel size.
-    "objective_magnification": {
-        "option_default": 4
+    "other_measurement_suffixes": {
+        "option_default": ["_IV.txt"]
     },
-        
+
+    // override default microscope settings.
+    // pixel_size = sensor_pixel_size * (focal length objective / focal length camera tube lens)
+    // where tube lens is the lens that focuses onto the camera, and:
+    // focal length objective = objective reference focal length / objective mag
+    // leave as null to use defaults (above)
+    "objective_mag": {
+        "option_default": null
+    },
+    "objective_reference_focal_length": {
+        "option_default": null
+    },
+    "camera_tube_lens": {
+        "option_default": null
+    },  
     // If true the reference (often no-MW) measurement is ignored.
     "ignore_ref": {
     	"option_default": false,
