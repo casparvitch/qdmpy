@@ -11,7 +11,7 @@ To communicate this addition to QDMPy, add it to the SYSTEMS dictionary
 Where we have defined MySystem: class MySystem(QDMPy.systems.System): ... etc.
 Follow the templates in `QDMPy.systems` to construct your object.
 
-The AVAILABLE_FNS dictionary defines the available `QDMPy.fit._models.FitModel`s.
+The AVAILABLE_FNS dictionary defines the available `QDMPy.fit.model.FitModel`s.
 These fit models are used in all fit backends (scipyfit and gpufit at the time of
 writing). However, the numerics (e.g. actually evaluating the model) are only used
 by the scipyfit backend, and only the parameter definitions are used by gpufit.
@@ -120,10 +120,6 @@ r"""Spin-1 operator: S{\rm Y}"""
 S_MAT_Z = np.array([[1, 0, 0], [0, 0, 0], [0, 0, -1]])
 r"""Spin-1 operator: S{\rm Z}"""
 
-# FIXME ARE THESE NEEDED?
-S_MAT_X_AR = np.array([S_MAT_X, S_MAT_X, S_MAT_X, S_MAT_X]).T
-S_MAT_Y_AR = np.array([S_MAT_Y, S_MAT_Y, S_MAT_Y, S_MAT_Y]).T
-S_MAT_Z_AR = np.array([S_MAT_Z, S_MAT_Z, S_MAT_Z, S_MAT_Z]).T
 
 GAMMA = 2.80  # MHz/G
 r"""
@@ -136,7 +132,7 @@ for details of the g-factor anisotropy.
 | \( \mu_B = 1.39962449361 \times 10^{10}\ {\rm Hz} \rm{T}^{-1} \) |  [NIST](https://physics.nist.gov/cgi-bin/cuu/Value?mubshhz)   |
 | \( \mu_B = 1.399...\ {\rm MHz/G} \)                              |                                                               |
 | \( g_e \approx 2.0023 \)                                         |  [Doherty2013](https://doi.org/10.1016/j.physrep.2013.02.001) |
-| \( \Rightarrow  \gamma_{\rm NV} \approx 2.80 {\rm MHz/G} \)       |                                                               |
+| \( \Rightarrow  \gamma_{\rm NV} \approx 2.80 {\rm MHz/G} \)      |                                                               |
 
 """
 

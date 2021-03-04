@@ -4,7 +4,7 @@ Quantum Diamond MicroscoPy
 <!-- MarkdownTOC -->
 
 - [Installation](#installation)
-    - [jupyterlab installation](#jupyterlab-installation)
+    - [Jupyterlab installation](#jupyterlab-installation)
     - [Saving widget state](#saving-widget-state)
     - [Exporting notebook to pdf](#exporting-notebook-to-pdf)
     - [Version Control](#version-control)
@@ -292,7 +292,7 @@ def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
 
-    fit_model : `QDMPy.fit._models.FitModel` object.
+    fit_model : `QDMPy.fit.model.FitModel` object.
 
     Returns
     -------

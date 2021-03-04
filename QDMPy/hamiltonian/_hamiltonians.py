@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 """
+The module holds Hamiltonian objects that will be fit to.
 
 Classes
 -------
@@ -10,7 +11,7 @@ Classes
 Functions
 ---------
  - `QDMPy.hamiltonian._hamiltonians.get_param_defn`
- - `QDMPy.hamiltonian._hamiltonians.get_param_units`
+ - `QDMPy.hamiltonian._hamiltonians.get_param_odict`
 """
 
 __author__ = "Sam Scholten"
@@ -19,17 +20,14 @@ __pdoc__ = {
     "QDMPy.hamiltonian._hamiltonians.ApproxBxyz": True,
     "QDMPy.hamiltonian._hamiltonians.Bxyz": True,
     "QDMPy.hamiltonian._hamiltonians.get_param_defn": True,
-    "QDMPy.hamiltonian._hamiltonians.get_param_units": True,
+    "QDMPy.hamiltonian._hamiltonians.get_param_odict": True,
 }
 
 # ============================================================================
 
 import numpy as np
 import numpy.linalg as LA
-from math import radians
-
-# ============================================================================
-
+from collections import OrderedDict
 
 # ============================================================================
 
@@ -38,34 +36,39 @@ class Hamiltonian:
 
     param_defn = []
     param_units = {}
+    jac_defined = False
 
-    # TODO also ask for number of frequences?
-    def __init__(self, diamond_ori, Bmag, Btheta, Bphi, unvs=None):
-        self.unvs = np.array(unvs)
-        if self.unvs.shape != (4, 3):
-            raise ValueError("Incorrect unvs format passed to Hamiltonian. Expected shape: (4,3).")
-        self.diamond_ori = diamond_ori
-        self.Bmag = Bmag
-        self.Btheta = Btheta
-        self.Bphi = Bphi
-        self.Btheta_rad = radians(Btheta)
-        self.Bphi_rad = radians(Bphi)
-
-        # calculate nv signd ori etc. here!
+    def __init__(self, chooser_obj, unv_frames):
+        """
+        chooser_obj is used on __call__ and measured_data to return an array
+        of only the required parts.
+        """
+        self.chooser_obj = chooser_obj
+        self.unv_frames = unv_frames
+        self.unvs = unv_frames[:, 2, :].copy()  # i.e. z axis of each nv ref. frame in lab frame
 
     # =================================
 
-    def __call__(self, *param_ar):
+    def __call__(self, param_ar):
         """
         Evaluates Hamiltonian for given parameter values.
 
         Arguments
         ---------
         param_ar : np array, 1D
-            Array of parameters fed in.
-
+            Array of hamiltonian parameters fed in.
         """
         raise NotImplementedError("You MUST override __call__, check your spelling.")
+
+    # =================================
+
+    def grad_fn(self, param_ar):
+        """
+        Return jacobian, shape: (len(bnvs/freqs), len(param_ar))
+        Each column is a partial derivative, with respect to each param in param_ar
+            (i.e. rows, or first index, is indexing though the bnvs/freqs.)
+        """
+        raise NotImplementedError("No grad_fn defined for this Hamiltonian.")
 
     # =================================
 
@@ -75,66 +78,22 @@ class Hamiltonian:
         Measured data must be a np array (of the same shape that __call__ returns),
         i.e. freqs, or bnvs.
         """
-        return self.__call__(param_ar) - measured_data
+        return self.chooser_obj(self.__call__(param_ar)) - self.chooser_obj(measured_data)
 
     # =================================
 
-    def jacobian_scipyfit(self, param_ar, **kwargs):
-        raise NotImplementedError(
-            "Analytic jacobians not currently accepted for Hamiltonian fitting."
-        )
+    def jacobian_scipyfit(self, param_ar, measured_data):
+        """Evaluates (analytic) jacobian of ham in format expected by scipy least_squares."""
+
+        # need to take out rows (first index) according to chooser_obj.
+        keep_rows = self.chooser_obj([i for i in range(len(measured_data))])
+        delete_rows = [r for r in range(len(measured_data)) if r not in keep_rows]
+        return np.delete(self.grad_fn(param_ar), delete_rows, axis=0)
 
     # =================================
-    def _calc_nv_ori(self):
-        # Declare here to help with sizing etc.
-        self.nv_ori = np.zeros((4, 3))
-        self.nv_signs = np.zeros(4)
-        self.nv_signed_ori = np.zeros(
-            (4, 3)
-        )  # these are the 'z' unit vectors of the unv frame, in the lab frame
 
-        # get the cartesian magnetic fields
-        bx = self.Bmag * np.sin(self.Btheta_rad) * np.cos(self.Bphi_rad)
-        by = self.Bmag * np.sin(self.Btheta_rad) * np.sin(self.Bphi_rad)
-        bz = self.Bmag * np.cos(self.Btheta_rad)
-        # uses these values for the initial guesses (later)
-        self.b_guess = {}
-        self.b_guess["bx"] = bx
-        self.b_guess["by"] = by
-        self.b_guess["bz"] = bz
-        # Get the NV orientations B magnitude and sign (from the B guess)
-
-        from QDMPy.constants import NV_AXES_100_110, NV_AXES_100_100 # avoid cyclic dependencies
-
-        if self.diamond_ori == "<100>_<100>":
-            nv_axes = NV_AXES_100_100
-        elif self.diamond_ori == "<100>_<110>":
-            nv_axes = NV_AXES_100_110
-        else:
-            if self.unvs is not None:
-                self.nv_signed_ori = self.unvs
-            else:
-                raise RuntimeError("diamond_ori not recognised and no unvs supplied.")
-            return
-
-        for key in range(len(nv_axes)):
-            projection = np.dot(nv_axes[key]["ori"], [bx, by, bz])
-            nv_axes[key]["mag"] = np.abs(projection)
-            nv_axes[key]["sign"] = np.sign(projection)
-        # Sort the dictionary in the correct order
-        sorted_dict = sorted(nv_axes, key=lambda x: x["mag"], reverse=True)
-        # define the nv orientation list for the fit
-        for idx in range(len(sorted_dict)):
-            self.nv_ori[idx, :] = sorted_dict[idx]["ori"]
-            self.nv_signs[idx] = sorted_dict[idx]["sign"]
-            self.nv_signed_ori[idx, :] = (
-                np.array(sorted_dict[idx]["ori"]) * sorted_dict[idx]["sign"]
-            )
-
-        # # Calculate the inverse of the nv orientation matrix - unused???
-        # self.nv_signed_ori_inv = self.nv_signed_ori.copy()
-        # self.nv_signed_ori_inv[self.nv_signed_ori_inv == 0] = np.inf
-        # self.nv_signed_ori_inv = 1 / self.nv_signed_ori_inv
+    def jacobian_defined(self):
+        return self.jac_defined
 
 
 # ============================================================================
@@ -144,28 +103,41 @@ def get_param_defn(hamiltonian):
     return hamiltonian.param_defn
 
 
+# ====================================
+
+
+def get_param_odict(hamiltonian):
+    """
+    get ordered dict of key: param_key (param_name), val: param_unit for all parameters in ham
+    """
+    return OrderedDict(hamiltonian.param_units)
+
+
+# ====================================
+
+
+def get_param_unit(hamiltonian, param_key):
+    """
+    Get unit for a given param_key
+    """
+    if param_key == "residual_ham":
+        return "Error: sum( || residual(params) || ) over bnvs/freqs (a.u.)"
+    param_dict = get_param_odict(hamiltonian)
+    return param_dict[param_key]
+
+
 # ============================================================================
 
-# TODO add get_param_unit etc.
-def get_param_units(hamiltonian):
-    return hamiltonian.param_units
 
-
-# ============================================================================
-
-
-# Note just invert matrix if three bnvs? How to encode that... elsewhere...
-# (i.e. instead of fitting:
-#                           \vec{Bnv} = \tensor{unv} \cdot \vec{B},
-#                        do:
-#                           \vec{unv}.T \cdot \vec{Bnv} = \vec{B} )
 class ApproxBxyz(Hamiltonian):
     r"""
     Diagonal Hamiltonian approximation. To calculate the magnetic field only fields aligned with
     the NV are considered and thus a simple dot product can be used.
 
     Fits to bnvs rather than frequencies, i.e.:
-    $$ \vec{B}_{\rm NV} = \vec{u}_{\rm NV} \cdot \vec{B} $$
+    $$ \overline{\overline{B}}_{\rm NV} = overline{\overline{u}}_{\rm NV} \cdot \overline{B} $$
+    Where overline denotes qst-order tensor (vector), double overline denotes 2nd-order tensor
+    (matrix).
     """
 
     param_defn = ["Bx", "By", "Bz"]
@@ -174,21 +146,36 @@ class ApproxBxyz(Hamiltonian):
         "By": "Magnetic field, By (G)",
         "Bz": "Magnetic field, Bz (G)",
     }
+    jac_defined = True
 
-    def __call__(self, Bx, By, Bz):
+    def __call__(self, param_ar):
         r"""
-        $$ \vec{B}_{\rm NV} = \vec{u}_{\rm NV} \cdot \vec{B} $$
+        $$ \overline{\overline{B}}_{\rm NV} = overline{\overline{u}}_{\rm NV} \cdot \overline{B} $$
+        Where overline denotes qst-order tensor (vector), double overline denotes 2nd-order tensor
+        (matrix).
         Fit to bnv rather than frequency positions.
+
+        param_ar = [Bx, By, Bz]
         """
-        return np.dot(self.nv_signed_ori, [Bx, By, Bz])
+        return np.dot(self.unvs, param_ar)
+
+    def grad_fn(self, param_ar):
+        # Bx, By, Bz = param_ar
+        J = np.empty((4, 3))  # size: (len(bnvs), len(param_ar)), both know ahead of time.
+        J[:, 0] = self.unvs[:, 0]
+        J[:, 1] = self.unvs[:, 1]
+        J[:, 2] = self.unvs[:, 2]
+        # i.e. equiv. to:
+        # for bnv in range(4):
+        #     J[bnv, 0] = self.unvs[bnv][0]  # i.e. ith NV orientation (bnv), x component
+        #     J[bnv, 1] = self.unvs[bnv][1]  # y component
+        #     J[bnv, 2] = self.unvs[bnv][2]  # z component
+        return J
 
 
-# FIXME what to do if < 8 frequencies? Fix this here/somehow.
-# I think it matters which NVs they are yeah? Or assume they're the outside nv fams
-# otherwise the user can supply the unvs? -> need to actually think through the maths
-#  of what this would entail etc.
-#       ALSO: then for e.g. single nv ori, what do we do? pass in unv? Critical for <111>
-#           -> 111 they can just chuck in [0, 0, 1] and be fine.
+# ============================================================================
+
+
 class Bxyz(Hamiltonian):
     r"""
     $$ H_i = D S_{Z_i}^{2} + \gamma_{\rm{NV}} \bf{B} \cdot \bf{S} $$
@@ -205,23 +192,9 @@ class Bxyz(Hamiltonian):
         "By": "Magnetic field, By (G)",
         "Bz": "Magnetic field, Bz (G)",
     }
+    jac_defined = False
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)  # this calculates nv_signed_ori
-        self.unv_frame = np.zeros((4, 3, 3))
-        self.nv_frequencies = np.zeros(8)
-        for i in range(4):
-            # calculate uNV frame in the lab frame
-            uNV_Z = self.nv_signed_ori[i]
-            # We have full freedom to pick x/y as long as xyz are all orthogonal
-            # we can ensure this by picking Y to be orthog. to both the NV axis
-            # and another NV axis, then get X to be the cross between those two.
-            uNV_Y = np.cross(uNV_Z, self.nv_signed_ori[-i - 1])
-            uNV_Y = uNV_Y / LA.norm(uNV_Y)
-            uNV_X = np.cross(uNV_Y, uNV_Z)
-            self.unv_frame[i, ::] = [uNV_X, uNV_Y, uNV_Z]
-
-    def __call__(self, D, Bx, By, Bz):
+    def __call__(self, param_ar):
         """
         Hamiltonain of the NV spin using only the zero field splitting D and the magnetic field
         bxyz. Takes the fit_params in the order [D, bx, by, bz] and returns the nv frequencies.
@@ -231,11 +204,14 @@ class Bxyz(Hamiltonian):
         """
         from QDMPy.constants import S_MAT_X, S_MAT_Y, S_MAT_Z, GAMMA
 
-        Hzero = D * (S_MAT_Z * S_MAT_Z)
+        nv_frequencies = np.zeros(8)
+        # D, Bx, By, Bz = param_ar
+
+        Hzero = param_ar[0] * (S_MAT_Z * S_MAT_Z)
         for i in range(4):
-            bx_proj_onto_unv = np.dot([Bx, By, Bz], self.unv_frame[i, 0, ::])
-            by_proj_onto_unv = np.dot([Bx, By, Bz], self.unv_frame[i, 1, ::])
-            bz_proj_onto_unv = np.dot([Bx, By, Bz], self.unv_frame[i, 2, ::])
+            bx_proj_onto_unv = np.dot(param_ar[1:4], self.unv_frames[i, 0, :])
+            by_proj_onto_unv = np.dot(param_ar[1:4], self.unv_frames[i, 1, :])
+            bz_proj_onto_unv = np.dot(param_ar[1:4], self.unv_frames[i, 2, :])
 
             HB = GAMMA * (
                 bx_proj_onto_unv * S_MAT_X
@@ -244,6 +220,6 @@ class Bxyz(Hamiltonian):
             )
             freq, length = LA.eig(Hzero + HB)
             freq = np.sort(np.real(freq))
-            self.nv_frequencies[i] = np.real(freq[1] - freq[0])
-            self.nv_frequencies[7 - i] = np.real(freq[2] - freq[0])
-        return self.nv_frequencies
+            nv_frequencies[i] = np.real(freq[1] - freq[0])
+            nv_frequencies[7 - i] = np.real(freq[2] - freq[0])
+        return nv_frequencies

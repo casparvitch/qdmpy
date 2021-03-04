@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-This module defines the fit functions used in the `QDMPy.fit._models.FitModel`.
+This module defines the fit functions used in the `QDMPy.fit.model.FitModel`.
 We grab/use this regardless of fitting on cpu (scipy) or gpu etc.
 
 Ensure any fit functions you define are added to the AVAILABLE_FNS variable in `QDMPy.constants`.
 Try not to have overlapping parameter names in the same fit.
 
 For ODMR peaks, ensure the frequency position of the peak is named something
-prefixed by 'pos'. (see `QDMPy.bfield.calc.calc_bnv` for the reasoning).
+prefixed by 'pos'. (see `QDMPy.field._bnv.get_bnvs_and_dshifts` for the reasoning).
 
 Classes
 -------
@@ -152,7 +152,8 @@ class Linear(FitFunc):
     @staticmethod
     @njit(fastmath=True)
     def grad_fn(x, c, m):
-        """Compute the grad of the residue, excluding PL as a param
+        """
+        Compute the grad of the residual, excluding PL as a param
         {output shape: (len(x), 2)}
         """
         J = np.empty((x.shape[0], 2))
@@ -203,7 +204,11 @@ class Gaussian(FitFunc):
     """Gaussian function"""
 
     param_defn = ["fwhm_gauss", "pos_gauss", "amp_gauss"]
-    param_units = {"fwhm_gauss": "Freq (MHz)", "pos_gauss": "Freq (MHz)", "amp_gauss": "Amp (a.u.)"}
+    param_units = {
+        "fwhm_gauss": "Freq (MHz)",
+        "pos_gauss": "Freq (MHz)",
+        "amp_gauss": "Amp (a.u.)",
+    }
 
     # =================================
 
@@ -364,9 +369,9 @@ class Lorentzian_hyperfine_15(FitFunc):
     def eval(x, pos, amp_1_hyp, amp_2_hyp, fwhm_1_hyp, fwhm_2_hyp):
         hwhmsqr1 = fwhm_1_hyp ** 2 / 4
         hwhmsqr2 = fwhm_2_hyp ** 2 / 4
-        return amp_1_hyp * hwhmsqr1 / ((x - pos - 1.515) ** 2 + hwhmsqr1) + amp_2_hyp * hwhmsqr2 / (
-            (x - pos + 1.515) ** 2 + hwhmsqr2
-        )
+        return amp_1_hyp * hwhmsqr1 / (
+            (x - pos - 1.515) ** 2 + hwhmsqr1
+        ) + amp_2_hyp * hwhmsqr2 / ((x - pos + 1.515) ** 2 + hwhmsqr2)
 
 
 # ==========================================================================

@@ -56,6 +56,7 @@ import re
 import warnings
 import pathlib
 from multiprocessing import cpu_count
+from math import radians
 
 # ============================================================================
 
@@ -145,6 +146,13 @@ class System:
         """
         raise NotImplementedError
 
+    def get_bias_field(self):
+        """
+        Method to get magnet bias field from experiment metadata,
+        i.e. if set with programmed electromagnet. Default: None.
+        """
+        return None
+
     def system_specific_option_update(self, options):
         """
         Hardcoded method that allows updating of the options at runtime with a custom script.
@@ -174,6 +182,29 @@ class UniMelb(System):
 
     def __init__(self, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
+        # ensure all values default to None (at all levels of reading in json)
+        self.options_dict = QDMPy.io.json2dict.json_to_dict(self.config_path, hook="dd")
+
+    def get_raw_pixel_size(self, options):
+        # override keys available as options
+        override_keys = ["objective_mag", "objective_reference_focal_length", "camera_tube_lens"]
+        # not the cleanest way to do this... eh it works
+        default_keys = ["default_" + key for key in override_keys]
+        default_keys.insert(0, "sensor_pixel_size")
+        settings_dict = self.options_dict["microscope_setup"]
+        settings = [settings_dict[key] for key in default_keys]
+
+        for i, s in enumerate(override_keys):
+            if options[s] is not None:
+                settings[i + 1] = options[s]  # +1 to skip sensor pixel size (set)
+
+        sensor_pixel_size, mag, f_ref, f_tube = settings
+
+        f_obj = f_ref / mag
+
+        cam_pixel_size = sensor_pixel_size * (f_obj / f_tube)
+
+        return cam_pixel_size
 
     def read_image(self, filepath, options):
         with open(os.path.normpath(filepath), "r") as fid:
@@ -206,6 +237,30 @@ class UniMelb(System):
     def available_options(self):
         return self.options_dict.keys()
 
+    def get_bias_field(self, options):
+        """ get bias on (bool) and field as tuple (mag (G), theta (rad), phi (rad)) """
+        if "metadata" not in options:
+            return None
+        key_ars = [["Field Strength (G)"], ["Theta (deg)"], ["Phi (def)", "Phi (deg)"]]
+        bias_field = []
+        for ar in key_ars:
+            found = False
+            for key in ar:
+                if key in options["metadata"]:
+                    bias_field.append(options["metadata"][key])
+                    found = True
+            if not found:
+                return None
+        if len(bias_field) != 3:
+            warnings.warn(
+                f"Found {len(bias_field)} bias field params in metadata, "
+                + "this shouldn't happen (expected 3)."
+            )
+            return None
+        onoff_str = options["metadata"].get("Mag on/off", "")
+        bias_on = onoff_str == " TRUE"
+        return bias_on, (bias_field[0], radians(bias_field[1]), radians(bias_field[2]))
+
     def system_specific_option_update(self, options):
         # set some things that cannot be stored in the json
 
@@ -217,6 +272,9 @@ class UniMelb(System):
         if "scipy_fit_method" in options:
             if options["scipy_fit_method"] == "lm":
                 options["loss"] = "linear"
+
+        if "freqs_to_use" in options:
+            options["freqs_to_use"] = list(map(lambda x: bool(x), options["freqs_to_use"]))
 
         if "base_dir" in options and not self.filepath_joined:
             options["filepath"] = os.path.join(options["base_dir"], options["filepath"])
@@ -244,7 +302,7 @@ class UniMelb(System):
                 rest_str,
                 re.MULTILINE,
             )
-            metadata = {a: QDMPy.io.json2dict.failfloat(b) for (a, b) in matches}
+            metadata = {a: QDMPy.io.json2dict._failfloat(b) for (a, b) in matches}
         return metadata
 
     def _reshape_raw(self, options, raw_data, sweep_list):
@@ -334,14 +392,6 @@ class Zyla(UniMelb):
     name = "Zyla"
     config_path = _ROOT_PATH / "options/zyla_config.json"
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
-        # ensure all values default to None (at all levels of reading in json)
-        self.options_dict = QDMPy.io.json2dict.json_to_dict(self.config_path, hook="dd")
-
-    def get_raw_pixel_size(self):
-        return self.options_dict["raw_pixel_size"]["option_default"]
-
 
 class LiamsWidefield(UniMelb):
     """
@@ -350,14 +400,6 @@ class LiamsWidefield(UniMelb):
 
     name = "Liam's Widefield"
     config_path = _ROOT_PATH / "options/liam_widefield_config.json"
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
-        # ensure all values default to None (at all levels of reading in json)
-        self.options_dict = QDMPy.io.json2dict.json_to_dict(self.config_path, hook="dd")
-
-    def get_raw_pixel_size(self):
-        return self.options_dict["raw_pixel_size"]["option_default"]
 
 
 # ============================================================================
@@ -400,6 +442,9 @@ def check_option(key, val, system):
         warnings.warn(f"Option {key} was not recognised by the {system.name} system.")
     elif system.option_choices(key) is not None and val not in system.option_choices(key):
         OptionsError(key, val, system)
+    elif key == "freqs_to_use":
+        if len(val) != 8:
+            OptionsError(key, val, system, custom_msg="Length of option 'freqs_to_use' must be 8.")
 
 
 # ===============================

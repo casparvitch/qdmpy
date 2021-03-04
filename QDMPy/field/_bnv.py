@@ -5,18 +5,18 @@ ODMR datasets (after they've been fit with the `QDMPy.fit.interface` tooling).
 
 Functions
 ---------
- - `QDMPy.bfield.bnv.get_bnvs_and_dshifts`
- - `QDMPy.bfield.bnv.check_exp_bnv_compatibility`
- - `QDMPy.bfield.bnv.bnv_refsub`
+ - `QDMPy.field._bnv.get_bnvs_and_dshifts`
+ - `QDMPy.field._bnv.check_exp_bnv_compatibility`
+ - `QDMPy.field._bnv.bnv_refsub`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "QDMPy.bfield.bnv.get_bnvs_and_dshifts": True,
-    "QDMPy.bfield.bnv.check_exp_bnv_compatibility": True,
-    "QDMPy.bfield.bnv.bnv_refsub": True,
+    "QDMPy.field._bnv.get_bnvs_and_dshifts": True,
+    "QDMPy.field._bnv.check_exp_bnv_compatibility": True,
+    "QDMPy.field._bnv.bnv_refsub": True,
 }
 
 # ============================================================================
@@ -72,20 +72,51 @@ def get_bnvs_and_dshifts(pixel_fit_params):
         dshifts.fill(np.nan)
     elif num_peaks == 2:
         bnvs = [np.abs(peak_posns[1] - peak_posns[0]) / (2 * QDMPy.constants.GAMMA)]
-        dshifts = [(peak_posns[1] + peak_posns[0])]
+        dshifts = [(peak_posns[1] + peak_posns[0]) / 2]
     else:
         bnvs = []
         dshifts = []
         for i in range(num_peaks // 2):
             bnvs.append(np.abs(peak_posns[-i - 1] - peak_posns[i]) / (2 * QDMPy.constants.GAMMA))
-            dshifts.append(peak_posns[-i - 1] + peak_posns[i])
+            dshifts.append((peak_posns[-i - 1] + peak_posns[i]) / 2)
         if ((num_peaks // 2) * 2) + 1 == num_peaks:
             middle_bnv = np.abs(peak_posns[num_peaks // 2 + 1]) / (2 * QDMPy.constants.GAMMA)
             bnvs.append(middle_bnv)
             middle_dshift = np.empty(middle_bnv.shape)
             middle_dshift.fill(np.nan)
             dshifts.append(middle_dshift)
-    return bnvs, dshifts  # not the most elegant data structure ?
+    return bnvs, dshifts
+
+
+# ============================================================================
+
+
+def get_bnv_sd(sigmas):
+    """ get standard deviation of bnvs given SD of peaks. """
+    if sigmas is None:
+        return None
+    # find params for peak position (all must start with 'pos')
+    peak_sd = []
+    for param_name, sigma_map in sigmas.items():
+        if param_name.startswith("pos"):
+            peak_sd.append([int(param_name[-1]), sigma_map])  # [peak num, map]
+
+    # ensure peaks are in correct order by sorting their keys
+    peak_sd.sort(key=lambda x: x[0])
+    peak_sd = [x[1] for x in peak_sd]
+    num_peaks = len(peak_sd)
+
+    if num_peaks == 1:
+        return peak_sd / (2 * QDMPy.constants.GAMMA)
+    elif num_peaks == 2:
+        return (peak_sd[0] + peak_sd[1]) / (2 * QDMPy.constants.GAMMA)
+    else:
+        sd = []
+        for i in range(num_peaks // 2):
+            sd.append((peak_sd[-i - 1] + peak_sd[i]) / (2 * QDMPy.constants.GAMMA))
+        if ((num_peaks // 2) * 2) + 1 == num_peaks:
+            sd.append(peak_sd[num_peaks // 2 + 1] / (2 * QDMPy.constants.GAMMA))
+        return sd
 
 
 # ============================================================================
@@ -122,11 +153,14 @@ def check_exp_bnv_compatibility(sig_bnvs, ref_bnvs):
 
 
 def bnv_refsub(options, sig_bnvs, ref_bnvs):
+    """docstring here"""
+    # TODO
+    # documentation +
+    # "bnv_bsub_method" option -> allow other bsubs e.g.
+    # subtract_blurred, subtract_outside_polygons etc. should be defined on any 2D array,
+    # do that later
     if ref_bnvs:
         check_exp_bnv_compatibility(sig_bnvs, ref_bnvs)
         return [sig - ref for sig, ref in zip(sig_bnvs, ref_bnvs)]
     else:
         return sig_bnvs
-
-
-# ============================================================================

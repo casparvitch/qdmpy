@@ -36,11 +36,13 @@ __pdoc__ = {
 # ============================================================================
 
 import numpy as np
+import copy
+from scipy.linalg import svd
 
 # ============================================================================
 
-import QDMPy.fit._models as fit_models
-import QDMPy.io.json2dict
+import QDMPy.fit as Qfit
+import QDMPy.io as Qio
 import QDMPy.constants
 
 # ============================================================================
@@ -86,7 +88,9 @@ class ROIAvgFitResult:
         sweep_list,
         best_params,
         init_param_guess,
+        init_param_bounds,
     ):
+        # TODO documentation
         """
         Arguments
         ---------
@@ -126,6 +130,7 @@ class ROIAvgFitResult:
 
         self.best_params = best_params
         self.init_param_guess = init_param_guess
+        self.init_param_bounds = init_param_bounds
 
     def savejson(self, filename, dir):
         """ Save all attributes as a json file in dir/filename, via `QDMPy.io.json2dict.dict_to_json` """
@@ -137,7 +142,7 @@ class ROIAvgFitResult:
             "best_params": self.best_params,
             "init_param_guess": self.init_param_guess,
         }
-        QDMPy.io.json2dict.dict_to_json(output_dict, filename, dir)
+        Qio.dict_to_json(output_dict, filename, dir)
 
 
 # ============================================================================
@@ -288,7 +293,7 @@ def gen_init_guesses(options):
         for param_key in fit_func.param_defn:
             guess = options[param_key + "_guess"]
             if param_key + "_range" in options:
-                bounds = bounds_from_range(options, param_key)
+                bounds = bounds_from_range(options, param_key, guess)
             elif param_key + "_bounds" in options:
                 # assumes bounds are passed in with correct formatatting
                 bounds = options[param_key + "_bounds"]
@@ -307,9 +312,8 @@ def gen_init_guesses(options):
 # ============================================================================
 
 
-def bounds_from_range(options, param_key):
+def bounds_from_range(options, param_key, guess):
     """Generate parameter bounds (list, len 2) when given a range option."""
-    guess = options[param_key + "_guess"]
     rang = options[param_key + "_range"]
     if type(guess) is list and len(guess) > 1:
 
@@ -355,10 +359,10 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
 
     Arguments
     ---------
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
 
-    fit_results : list of [(y, x), result] objects
+    fit_results : list of [(y, x), result, jac] objects
         (see `QDMPy.fit._scipyfit.to_squares_wrapper`, or `QDMPy.fit._gpufit.gpufit_reshape_result`)
         A list of each pixel's parameter array, as well as position in image denoted by (y, x).
 
@@ -374,24 +378,43 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
     fit_image_results : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
         Also has 'residual' as a key.
+
+    sigmas : dict
+        Dictionary, key: param_keys, val: image (2D) of param uncertainties across FOV.
+        Calculated
     """
 
     roi_shape = np.shape(pixel_data)[1:]
 
     # initialise dictionary with key: val = param_name: param_units
-    fit_image_results = fit_models.get_param_odict(fit_model)
+    fit_image_results = Qfit.get_param_odict(fit_model)
+    sigmas = copy.copy(fit_image_results)
 
     # override with correct size empty arrays using np.zeros
     for key in fit_image_results.keys():
         fit_image_results[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+        sigmas[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
     fit_image_results["residual_0"] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
     # Fill the arrays element-wise from the results function, which returns a
     # 1D array of flattened best-fit parameters.
 
-    for (y, x), result in fit_results:
+    for (y, x), result, jac in fit_results:
         filled_params = {}  # keep track of index, i.e. pos_0, for this pixel
+
+        resid = fit_model.residuals_scipyfit(result, sweep_list, pixel_data[:, y, x])
+        fit_image_results["residual_0"][y, x] = np.sum(
+            np.abs(resid, dtype=np.float64), dtype=np.float64
+        )
+        # uncertainty (covariance matrix), copied from scipy.optimize.curve_fit
+        _, s, VT = svd(jac, full_matrices=False)
+        threshold = np.finfo(float).eps * max(jac.shape) * s[0]
+        s = s[s > threshold]
+        VT = VT[: s.size]
+        pcov = np.dot(VT.T / s ** 2, VT)
+        perr = np.sqrt(np.diag(pcov))  # array of standard deviations
+
         for fn in fit_model.fn_chain:
             for param_num, param_name in enumerate(fn.param_defn):
 
@@ -404,10 +427,6 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
                     filled_params[param_name] += 1
 
                 fit_image_results[key][y, x] = result[fn.this_fn_param_indices[param_num]]
+                sigmas[key][y, x] = perr[fn.this_fn_param_indices[param_num]]
 
-        resid = fit_model.residuals_scipyfit(result, sweep_list, pixel_data[:, y, x])
-        fit_image_results["residual_0"][y, x] = np.sum(
-            np.abs(resid, dtype=np.float64), dtype=np.float64
-        )
-
-    return fit_image_results
+    return fit_image_results, sigmas

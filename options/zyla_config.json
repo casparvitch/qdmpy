@@ -24,11 +24,32 @@
     },
     // =======================================
 
-    // 500e-6 / 2048. In metres. This is for the 4x objective.
-    "raw_pixel_size": {
-        "option_default": 0.000000244140625
+    // Default options for the Zyla microscope
+    "microscope_setup": {
+        "sensor_pixel_size": 6.5e-6,
+        "default_objective_mag": 4,
+        "default_objective_reference_focal_length":  200e-3,
+        "default_camera_tube_lens": 300e-3
     },
-        
+
+    "other_measurement_suffixes": {
+        "option_default": ["_IV.txt"]
+    },
+
+    // override default microscope settings.
+    // pixel_size = sensor_pixel_size * (focal length objective / focal length camera tube lens)
+    // where tube lens is the lens that focuses onto the camera, and:
+    // focal length objective = objective reference focal length / objective mag
+    // leave as null to use defaults (above)
+    "objective_mag": {
+        "option_default": null
+    },
+    "objective_reference_focal_length": {
+        "option_default": null
+    },
+    "camera_tube_lens": {
+        "option_default": null
+    },  
     // If true the reference (often no-MW) measurement is ignored.
     "ignore_ref": {
     	"option_default": false,
@@ -193,7 +214,7 @@
     // bounds directly gives these values
     // range takes precedence over bounds
 
-    // Position guess for lorentzian(in MHz)
+    // Position guess for lorentzian (in MHz)
     "pos_guess": {
     	"option_default": null
     },
@@ -212,11 +233,11 @@
 
     // Full width half maximum of the peaks
     "fwhm_guess": {
-    	"option_default": -0.0015
+    	"option_default": 9
     },
 
     "fwhm_bounds": {
-    	"option_default": [5, 20]
+    	"option_default": [3, 40]
     },
 
     // As above but for Gaussian
@@ -378,20 +399,28 @@
         "option_default": [-0.001, -0.2]
     },
 
-    // ========== Bfield recon/retrievel/calc/fit parameters ==========
+    // ========== Hamiltonian / field retrieval parameters ==========
 
     // Method to get bfield from pixel ODMR data
+    // options:
+    //    - "auto_dc": auto select from number of peaks (+ freqs_to_use)
+    //        -> uses ham for 8 peaks, invert_unvs for 6 peaks, prop_single_bnv for 2
+    //    - "hamiltonian_fitting": fit full hamiltonian
+    //    - "prop_single_bnv": use fourier method to propagate bnv -> bxyz
+    //    - "invert_unvs": take 3 unvs and (effective) approx_bxyz hamiltonian, 
+    //          but use simple inversion of unv matrix rather than fitting to hamiltonian
     "bfield_method": {
-        "option_default": "auto",
+        "option_default": "auto_dc",
         "option_choices": [
-            "auto",
+            "auto_dc",
             "hamiltonian_fitting",
             "prop_single_bnv",
             "invert_unvs"
         ]
     },
 
-    // type of hamiltonian to fit, if that bfield method is used
+    // Type of hamiltonian to fit, if that bfield method is used 
+    //      (or always fit if not "bxyz" or "approx_bxyz" assuming non-B parameters)
     "hamiltonian": {
         "option_default": "bxyz",
         "option_choices": [
@@ -400,7 +429,21 @@
         ]
     },
 
-    // diamond crystal orientation -> see QDMPy.constants. Default: HPHT orientation
+    // Which frequencies (e.g. lorentzian posns) to use for field retrieval
+    // must be len-8 iterable of values that evaluate as True/False (>=1 must be True)
+    "freqs_to_use": {
+        "option_default": [1, 1, 1, 1, 1, 1, 1, 1]
+    },
+
+    // If option 'prop_single_bnv' given for 'bfield_method' but number of frequencies fit
+    // is 2 or 3, this option resolves ambiguity in which bnv to utilize. 
+    // This option is used like so: single_bnv = bnvs[single_bnv_choice + 1]
+    // Note that `freqs_to_use` must still be set (to use 2 freqs only).
+    "single_bnv_choice": {
+        "option_default": 1
+    },
+
+    // Diamond crystal orientation -> see QDMPy.constants. Default: HPHT orientation
     // format: <top face orientation>_<edge face orientation>
     "diamond_ori": {
         "option_default": "<100>_<100>",
@@ -409,17 +452,18 @@
             "<100>_<110>"
         ]
     },
-    // Read magnetic field from metaspool (i.e. if applied with vector electromagnet)
-    "auto_read_b": {
-        "option_default": true,
+    // Read magnetic field from options (i.e. if applied with vector electromagnet)
+    // --> system dependent option (i.e. Unimelb reads from metadata)
+    "auto_read_bias": {
+        "option_default": false,
         "option_choices": 
             [
                 true,
                 false
             ]
     },
-    // Guess mag field (bx, by, bz) from bias field parameters (bias_mag etc.)
-    "auto_guess_b": {
+    // Guess mag field (Bx, By, Bz) from bias field parameters (bias_mag etc.)
+    "auto_read_B": {
         "option_default": true,
         "option_choices": 
             [
@@ -436,7 +480,7 @@
                 false
             ]
     },
-    // unit vectors of NV orientations, must be shape = (4,3). i.e. NV frame's z axis. 
+    // unit vectors of NV orientations, must be shape = (4,3). Equiv. to each NV frame's z axis. 
     "unvs": {
         "option_default": [
             [0.57735, 0.57735, 0.57735],
@@ -458,42 +502,35 @@
         "option_default": 15
     },
 
-    // override global scipyfit options with these options, for the bfield fit
-    "bfield_scipyfit_options": {
-        "option_default": {
-            "scipyfit_use_analytic_jac": false
-        }
-    },
-
     // ========== Bfield Fit Parameters ===========
     // directly supply guesses and ranges for bxyz (in Gauss)
-    "bx_guess": {
+    "Bx_guess": {
         "option_default": 10
     },
-    "bx_range": {
+    "Bx_range": {
         "option_default": 30
     },
-    "by_guess": {
+    "By_guess": {
         "option_default": 10
     },
-    "by_range": {
+    "By_range": {
         "option_default": 30
     },
-    "bz_guess": {
+    "Bz_guess": {
         "option_default": 10
     },
-    "bz_range": {
+    "Bz_range": {
         "option_default": 30
     },
-    "d_guess": {
+    "D_guess": {
         "option_default": 2871
     },
-    "d_range": {
-        "option_default": 1
+    "D_range": {
+        "option_default": 5
     },
 
-    // ========== scipy least means square options ===========
-    // Method for scipy least means square,
+    // ========== scipy least squares fitting options ===========
+    // Method for scipy least squares fitting
     // lm (fast but doesn't use bounds),
     // trf (uses bounds and the most reliable fit method but can be very slow)
     // dogbox (uses bounds and is faster than trf)
@@ -657,9 +694,11 @@
         "option_default": {
             "param_images": "viridis",
             "residual_images": "inferno",
+            "sigma_images": "magma",
             "PL_images": "Greys_r",
-            "bnv_images": "RdBu",
-            "dshift_images": "PRGn"
+            "bnv_images": "RdBu_r",
+            "dshift_images": "PRGn",
+            "bfield_images": "bwr"
         }
     },
     // choose range of values mapped across to the colormap limits, for each 'type' of image
@@ -673,6 +712,9 @@
             "residual_images": {
                 "type": "_min_max"
             },
+            "sigma_images": {
+                "type": "_min_max"
+            },
             "PL_images": {
                 "type": "_min_max"
             },
@@ -683,6 +725,9 @@
             "dshift_images": {
                 "type": "_percentile",
                 "values": [5, 95]
+            },
+            "bfield_images": {
+                "type": "_min_max_symmetric_about_mean"
             }
         }
     },
@@ -691,6 +736,7 @@
         "option_default": {
             "figure.figsize": [6.4, 4.8],
             "figure.dpi": 80,
+            "figure.max_open_warning": 30,
             "lines.linewidth": 0.8,
             "lines.markersize" : 3,
             "xtick.labelsize": 10,
@@ -707,7 +753,8 @@
             "scalebar.scale_loc": "top",
             "scalebar.sep": 1,
             "axes.formatter.useoffset": false,
-            "axes.formatter.use_mathtext": true
+            "axes.formatter.use_mathtext": true,
+            "errorbar.capsize": 3.0
         }
     },
     // colors to identify with each AOI region
@@ -739,7 +786,7 @@
         }
     },
     // ===========================================================================================
-    // Things set internally, allow to be anything {maybe place some contraints later}
+    // Things set internally, allow to be anything
 
     // was the options dict (after being read from .json) checked/cleaned?
     "cleaned": {},
@@ -777,5 +824,9 @@
     // time for gpu to fit image
     "fit_time_(s)": {},
     // directory within output to save data once ref defined (output_dir/sub_ref_dir)
-    "sub_ref_dir" : {}
+    "sub_ref_dir" : {},
+    // as above but data dir (above\data)
+    "sub_ref_data_dir" : {},
+    "bfield_method_used" : {},
+    "field_params" : {}
 }

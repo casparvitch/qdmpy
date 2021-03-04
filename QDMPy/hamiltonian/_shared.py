@@ -3,14 +3,10 @@
 This module holds some functions and classes that are shared between different
 fitting backends, but are not a part of the user-facing interface.
 
-
 Functions
 ---------
  - `QDMPy.hamiltonian._shared.gen_init_guesses`
  - `QDMPy.hamiltonian._shared.bounds_from_range`
- - `QDMPy.hamiltonian._shared.shuffle_pixels`
- - `QDMPy.hamiltonian._shared.unshuffle_pixels`
- - `QDMPy.hamiltonian._shared.unshuffle_fit_results`
 """
 
 # ============================================================================
@@ -23,12 +19,13 @@ __pdoc__ = {
 # ============================================================================
 
 import numpy as np
+from scipy.linalg import svd
+import copy
 
 # ============================================================================
 
-
-from QDMPy.constants import AVAILABLE_HAMILTONIANS
-
+import QDMPy.hamiltonian._hamiltonians
+import QDMPy.field as Qfield
 
 # ============================================================================
 
@@ -58,12 +55,22 @@ def gen_init_guesses(options):
     """
     init_guesses = {}
     init_bounds = {}
+    if options["auto_read_B"]:
+        bias_x, bias_y, bias_z = Qfield.get_B_bias(options)
+        override_guesses = {"Bx": bias_x, "By": bias_y, "Bz": bias_z}
+
+    from QDMPy.constants import AVAILABLE_HAMILTONIANS  # avoid circ. imports
 
     ham = AVAILABLE_HAMILTONIANS[options["hamiltonian"]]
     for param_key in ham.param_defn:
-        guess = options[param_key + "_guess"]
+
+        if param_key in override_guesses:
+            guess = override_guesses[param_key]
+        else:
+            guess = options[param_key + "_guess"]
+
         if param_key + "_range" in options:
-            bounds = bounds_from_range(options, param_key)
+            bounds = bounds_from_range(options, param_key, guess)
         elif param_key + "_bounds" in options:
             # assumes bounds are passed in with correct formatatting
             bounds = options[param_key + "_bounds"]
@@ -82,9 +89,8 @@ def gen_init_guesses(options):
 # ============================================================================
 
 
-def bounds_from_range(options, param_key):
+def bounds_from_range(options, param_key, guess):
     """Generate parameter bounds (list, len 2) when given a range option."""
-    guess = options[param_key + "_guess"]
     rang = options[param_key + "_range"]
     if type(guess) is list and len(guess) > 1:
 
@@ -121,6 +127,32 @@ def bounds_from_range(options, param_key):
 # ============================================================================
 
 
+def pixel_generator(our_array):
+    """
+    Simple generator to shape data as expected by to_squares_wrapper in scipy concurrent method.
+
+    Also allows us to track *where* (i.e. which pixel location) each result corresponds to.
+    See also: `QDMPy.hamiltonian._scipyfit.to_squares_wrapper`.
+
+    Arguments
+    ---------
+    our_array : np array, 3D
+        Shape: [idx, y, x] (idx for each bnv, freq etc.)
+
+    Returns
+    -------
+    generator : list
+        [y, x, our_array[:, y, x]] generator (yielded)
+    """
+    len_z, len_y, len_x = np.shape(our_array)
+    for y in range(len_y):
+        for x in range(len_x):
+            yield [y, x, our_array[:, y, x]]
+
+
+# ============================================================================
+
+
 def shuffle_pixels(data_3d):
     """
     Simple shuffler
@@ -128,7 +160,7 @@ def shuffle_pixels(data_3d):
     Arguments
     ---------
     data_3d : np array, 3D
-        i.e. sig_norm data, [affine param, y, x].
+        i.e. freqs/bnv data, [idx, y, x].
 
     Returns
     -------
@@ -167,12 +199,14 @@ def unshuffle_pixels(data_2d, unshuffler):
         i.e. 'image' of a single fit parameter, all shuffled up!
 
     unshuffler : (y_unshuf, x_unshuf)
-        Two arrays returned by `QDMPy.hamiltonian._shared.shuffle_pixels that allow unshuffling of data_2d.
+        Two arrays returned by `QDMPy.hamiltonian._shared.shuffle_pixels`
+        that allow unshuffling of data_2d.
 
     Returns
     -------
     unshuffled_in_yx: np array, 2D
-        data_2d but the inverse operation of `QDMPy.hamiltonian._shared.shuffle_pixels` has been applied
+        data_2d but the inverse operation of `QDMPy.hamiltonian._shared.shuffle_pixels`
+        has been applied.
     """
     y_unshuf, x_unshuf = unshuffler
     unshuffled_in_y = data_2d[y_unshuf, :]
@@ -195,7 +229,8 @@ def unshuffle_fit_results(fit_result_dict, unshuffler):
         Also has 'residual' as a key.
 
     unshuffler : (y_unshuf, x_unshuf)
-        Two arrays returned by `QDMPy.hamiltonian._shared.shuffle_pixels` that allow unshuffling of data_2d.
+        Two arrays returned by `QDMPy.hamiltonian._shared.shuffle_pixels` that allow
+        unshuffling of data_2d.
 
     Returns
     -------
@@ -205,6 +240,71 @@ def unshuffle_fit_results(fit_result_dict, unshuffler):
     for key, array in fit_result_dict.items():
         fit_result_dict[key] = unshuffle_pixels(array, unshuffler)
     return fit_result_dict
+
+
+# ============================================================================
+
+
+def get_pixel_fitting_results(hamiltonian, fit_results, pixel_data):
+    """
+    Take the fit result data from scipyfit/gpufit and back it down to a dictionary of arrays.
+
+    Each array is 2D, representing the values for each parameter (specified by the dict key).
+
+
+    Arguments
+    ---------
+    fit_model : `QDMPy.hamiltonian._hamiltonians.Hamiltonian`
+        Model we're fitting to.
+
+    fit_results : list of [(y, x), result, jac] objects
+        (see `QDMPy.hamiltonian._scipyfit.to_squares_wrapper`)
+        A list of each pixel's parameter array, as well as position in image denoted by (y, x).
+
+    pixel_data : np array, 3D
+        Normalised measurement array, shape: [idx, y, x]. i.e. bnvs.
+        May or may not already be shuffled (i.e. matches fit_results).
+
+    Returns
+    -------
+    fit_image_results : dict
+        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
+        Also has 'residual' as a key.
+    """
+
+    roi_shape = np.shape(pixel_data)[1:]
+
+    # initialise dictionary with key: val = param_name: param_units
+    fit_image_results = QDMPy.hamiltonian._hamiltonians.get_param_odict(hamiltonian)
+    sigmas = copy.copy(fit_image_results)
+
+    # override with correct size empty arrays using np.zeros
+    for key in fit_image_results.keys():
+        fit_image_results[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+        sigmas[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+
+    fit_image_results["residual_ham"] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+
+    # Fill the arrays element-wise from the results function, which returns a
+    # 1D array of flattened best-fit parameters.
+    for (y, x), result, jac in fit_results:
+        resid = hamiltonian.residuals_scipyfit(result, pixel_data[:, y, x])
+        fit_image_results["residual_ham"][y, x] = np.sum(
+            np.abs(resid, dtype=np.float64), dtype=np.float64
+        )
+        # uncertainty (covariance matrix), copied from scipy.optimize.curve_fit
+        _, s, VT = svd(jac, full_matrices=False)
+        threshold = np.finfo(float).eps * max(jac.shape) * s[0]
+        s = s[s > threshold]
+        VT = VT[: s.size]
+        pcov = np.dot(VT.T / s ** 2, VT)
+        perr = np.sqrt(np.diag(pcov))  # array of standard deviations
+
+        for param_num, param_name in enumerate(hamiltonian.param_defn):
+            fit_image_results[param_name][y, x] = result[param_num]
+            sigmas[param_name][y, x] = perr[param_num]
+
+    return fit_image_results, sigmas
 
 
 # ============================================================================
