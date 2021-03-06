@@ -111,7 +111,7 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
             )
 
     options["field_method_used"] = meth
-    Qio._check_for_prev_field_result(options)
+    Qio.check_for_prev_field_calc(options)
 
     if options["found_prev_field_calc"]:
         warnings.warn("Using previous field calculation.")
@@ -165,6 +165,7 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
         dshift_tuple = (sig_dshifts, ref_dshifts)
         params_tuple = (sig_params, ref_params, sub_ref_params)
         sigmas_tuple = (sig_sigmas, ref_sigmas, field_sigma_add(options, sig_sigmas, ref_sigmas))
+
         Qio.save_field_calcs(options, bnv_tuple, dshift_tuple, params_tuple, sigmas_tuple)
     else:
         bnv_tuple, dshift_tuple, params_tuple, sigmas_tuple = (

@@ -29,7 +29,7 @@ __pdoc__ = {
     "QDMPy.io.fit._prev_options_exist": True,
     "QDMPy.io.fit._options_compatible": True,
     "QDMPy.io.fit._prev_pixel_results_exist": True,
-    "QDMPy.io.raw._get_prev_options": True,
+    "QDMPy.io.fit._get_prev_options": True,
 }
 
 # ============================================================================
@@ -41,8 +41,8 @@ from pathlib import Path
 
 # ============================================================================
 
-import QDMPy.io.raw
-import QDMPY.fit as Qfit
+import QDMPy.io.fit
+import QDMPy.fit as Qfit
 
 # ============================================================================
 
@@ -50,7 +50,7 @@ import QDMPY.fit as Qfit
 def load_prev_fit_results(options):
     """Load (all) parameter fit results from previous processing."""
 
-    prev_options = QDMPy.io.raw._get_prev_options(options)
+    prev_options = QDMPy.io.fit._get_prev_options(options)
 
     fit_param_res_dict = {}
 
@@ -71,7 +71,7 @@ def load_prev_fit_results(options):
 def load_prev_fit_sigmas(options):
     """Load (all) parameter fit results from previous processing."""
 
-    prev_options = QDMPy.io.raw._get_prev_options(options)
+    prev_options = QDMPy.io.fit._get_prev_options(options)
 
     sigmas = {}
 

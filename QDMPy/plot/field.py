@@ -107,7 +107,9 @@ def plot_bfield(options, name, field_params):
 
     for p in ["B" + comp for comp in components]:
         if p not in field_params:
-            raise ValueError(f"bfield param '{p} missing from field_params, skipping bfield plot.")
+            warnings.warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
+            return None
+        elif field_params[p] is None:
             return None
 
     bfields = [field_params["B" + comp] for comp in components]
@@ -144,7 +146,9 @@ def plot_dshift_fit(options, name, field_params):
         return None
 
     if "D" not in field_params:
-        raise ValueError("'D' param missing from field_params, skipping Dshift_fit plot.")
+        warnings.warn("'D' param missing from field_params, skipping Dshift_fit plot.")
+        return None
+    elif field_params["D"] is None:
         return None
 
     fig, ax = plt.subplots(constrained_layout=True)
@@ -173,9 +177,11 @@ def plot_field_residual(options, name, field_params):
         return None
 
     if "residual_field" not in field_params:
-        raise ValueError(
+        warnings.warn(
             "'residual_field' param missing from field_params, skipping field residual plot."
         )
+        return None
+    elif field_params["residual_field"] is None:
         return None
 
     fig, ax = plt.subplots(constrained_layout=True)

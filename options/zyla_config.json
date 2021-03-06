@@ -863,5 +863,5 @@
     // found previous field calculation result that matches current options
     "found_prev_field_calc": {},
     // reason for above
-    "found_prev_field_calc_reason": {},
+    "found_prev_field_calc_reason": {}
 }
