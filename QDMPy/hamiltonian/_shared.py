@@ -25,7 +25,6 @@ import copy
 # ============================================================================
 
 import QDMPy.hamiltonian._hamiltonians
-import QDMPy.field as Qfield
 
 # ============================================================================
 
@@ -56,6 +55,8 @@ def gen_init_guesses(options):
     init_guesses = {}
     init_bounds = {}
     if options["auto_read_B"]:
+        import QDMPy.field as Qfield  # avoid circular import...
+
         bias_x, bias_y, bias_z = Qfield.get_B_bias(options)
         override_guesses = {"Bx": bias_x, "By": bias_y, "Bz": bias_z}
 
@@ -283,13 +284,13 @@ def get_pixel_fitting_results(hamiltonian, fit_results, pixel_data):
         fit_image_results[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
         sigmas[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
-    fit_image_results["residual_ham"] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+    fit_image_results["residual_field"] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
     # Fill the arrays element-wise from the results function, which returns a
     # 1D array of flattened best-fit parameters.
     for (y, x), result, jac in fit_results:
         resid = hamiltonian.residuals_scipyfit(result, pixel_data[:, y, x])
-        fit_image_results["residual_ham"][y, x] = np.sum(
+        fit_image_results["residual_field"][y, x] = np.sum(
             np.abs(resid, dtype=np.float64), dtype=np.float64
         )
         # uncertainty (covariance matrix), copied from scipy.optimize.curve_fit

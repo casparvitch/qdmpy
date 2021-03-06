@@ -29,7 +29,6 @@ import QDMPy.hamiltonian as Qham
 
 
 # ============================================================================
-# TODO
 
 
 def from_single_bnv(options, bnvs):
@@ -48,8 +47,9 @@ def from_single_bnv(options, bnvs):
 
     Returns
     -------
-    param_results : dict
+    field_result : dict
         Dictionary, key: param_keys (Bx, By, Bz), val: image (2D) of param values across FOV.
+        Also contains "residual_field" as a key/val.
     """
     if not bnvs:
         return None
@@ -58,7 +58,7 @@ def from_single_bnv(options, bnvs):
     if not all(list(reversed(chosen_freqs[4:])) == chosen_freqs[:4]):
         raise ValueError(
             """
-            'bfield_method' method was 'prop_single_bnv' but option 'freqs_to_use' was not
+            'field_method' method was 'prop_single_bnv' but option 'freqs_to_use' was not
             symmetric. Change method to 'auto_dc' or 'hamiltonian_fitting'.
             """
         )
@@ -74,6 +74,8 @@ def from_single_bnv(options, bnvs):
 
     # (get unv data from chosen freqs, method in _geom)
     # (then follow methodology in DB code -> import a `fourier` module, separeate to source.)
+
+    # don't forget to set some sort of residual
     raise NotImplementedError()
 
 
@@ -104,8 +106,9 @@ def from_unv_inversion(options, bnvs):
 
     Returns
     -------
-    Bxyz : dict
+    field_result : dict
         Dict of bfield, keys: ["Bx", "By", "Bz"], vals: image of those vals (2D np array)
+        Also contains "residual_field" as a key/val.
     """
     if not bnvs:
         return None
@@ -117,7 +120,7 @@ def from_unv_inversion(options, bnvs):
 
     if not len(bnvs) >= 3:
         raise ValueError(
-            "'bfield_method' was 'invert_unvs' but there were not 3 or 4 bnvs in the dataset."
+            "'field_method' was 'invert_unvs' but there were not 3 or 4 bnvs in the dataset."
         )
 
     unvs = Qgeom.get_unvs(options)  # z unit vectors of unv frame (in lab frame) = nv orientations
@@ -128,7 +131,7 @@ def from_unv_inversion(options, bnvs):
     if not list(reversed(chosen_freqs[4:])) == chosen_freqs[:4]:
         raise ValueError(
             """
-            'bfield_method' was 'invert_unvs' but option 'freqs_to_use' was not
+            'field_method' was 'invert_unvs' but option 'freqs_to_use' was not
             symmetric. Change method to 'auto_dc' or 'hamiltonian_fitting'.
             """
         )
@@ -137,17 +140,24 @@ def from_unv_inversion(options, bnvs):
         bnvs_to_use = bnvs  # if only 3 bnvs passed, well we just use em all :)
     else:
         bnvs_to_use = [bnvs[j] for j in nv_idxs_to_use]
-    unvs_to_use = np.vstack([unvs[j] for j in nv_idxs_to_use])  # 3x3 matrix
+    unvs_to_use = np.vstack(
+        [unvs[j] for j, do_use in enumerate(nv_idxs_to_use) if do_use]
+    )  # 3x3 matrix
 
     unv_inv = LA.inv(unvs_to_use)
 
     # reshape bnvs to be [bnv_1, bnv_2, bnv_3] for each pixel of image
     bnvs_reshaped = np.stack(bnvs_to_use, axis=-1)
 
-    # unv_inv * [bnv_1, bnv_2, bnv_3] for pxl in image -> VERY fast.
+    # unv_inv * [bnv_1, bnv_2, bnv_3] for pxl in image -> VERY fast. (applied over last axis)
     bxyzs = np.apply_along_axis(lambda bnv_vec: np.matmul(unv_inv, bnv_vec), -1, bnvs_reshaped)
 
-    return {"Bx": bxyzs[:, :, 0], "By": bxyzs[:, :, 1], "Bz": bxyzs[:, :, 2]}
+    return {
+        "Bx": bxyzs[:, :, 0],
+        "By": bxyzs[:, :, 1],
+        "Bz": bxyzs[:, :, 2],
+        "residual_field": np.zeros((bxyzs[:, :, 2]).shape),  # no residual as there's no fit
+    }
 
 
 # ============================================================================
@@ -172,7 +182,10 @@ def from_hamiltonian_fitting(options, fit_params):
     -------
     ham_results : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
-        Also has 'residual' as a key.
+        Also has 'residual_field' as a key.
+
+    sigmas : dict
+        ? TODO
     """
     if fit_params is None:
         return None, None
@@ -210,8 +223,12 @@ def from_hamiltonian_fitting(options, fit_params):
         else:
             data = np.array(bnv_lst)
     else:
+        # get pos_param_name
         # use freqs, same data shape
-        freqs_given_lst = [fit_params[f"pos_{j}"] for j in range(8) if f"pos_{j}" in fit_params]
+        freqs_given_lst = []
+        for param_name, param_map in fit_params.items():
+            if param_name.startswith("pos"):
+                freqs_given_lst.append(param_map)
 
         shape = freqs_given_lst[0].shape
         missings = np.empty(shape)

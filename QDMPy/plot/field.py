@@ -90,7 +90,7 @@ def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
         )
 
     if options["save_plots"]:
-        fig.savefig(options["sub_ref_dir"] / (f"Bnv_{name}." + options["save_fig_type"]))
+        fig.savefig(options["field_dir"] / (f"Bnv_{name}." + options["save_fig_type"]))
 
     return fig
 
@@ -131,7 +131,7 @@ def plot_bfield(options, name, field_params):
         )
 
     if options["save_plots"]:
-        fig.savefig(options["sub_ref_dir"] / (f"Bfield_{name}." + options["save_fig_type"]))
+        fig.savefig(options["field_dir"] / (f"Bfield_{name}." + options["save_fig_type"]))
 
     return fig
 
@@ -159,7 +159,7 @@ def plot_dshift_fit(options, name, field_params):
     )
 
     if options["save_plots"]:
-        fig.savefig(options["sub_ref_dir"] / (f"Dshift_fit_{name}." + options["save_fig_type"]))
+        fig.savefig(options["field_dir"] / (f"Dshift_fit_{name}." + options["save_fig_type"]))
 
     return fig
 
@@ -167,21 +167,21 @@ def plot_dshift_fit(options, name, field_params):
 # ============================================================================
 
 
-def plot_ham_residual(options, name, field_params):
+def plot_field_residual(options, name, field_params):
 
     if field_params is None:
         return None
 
-    if "residual_ham" not in field_params:
+    if "residual_field" not in field_params:
         raise ValueError(
-            "'residual_ham' param missing from field_params, skipping residual ham plot."
+            "'residual_field' param missing from field_params, skipping field residual plot."
         )
         return None
 
     fig, ax = plt.subplots(constrained_layout=True)
 
     c_range = plot_common._get_colormap_range(
-        options["colormap_range_dicts"]["residual_images"], field_params["residual_ham"]
+        options["colormap_range_dicts"]["residual_images"], field_params["residual_field"]
     )
     c_map = options["colormaps"]["residual_images"]
 
@@ -191,7 +191,7 @@ def plot_ham_residual(options, name, field_params):
         fig,
         ax,
         options,
-        field_params["residual_ham"],
+        field_params["residual_field"],
         title,
         c_map,
         c_range,
@@ -199,7 +199,7 @@ def plot_ham_residual(options, name, field_params):
     )
 
     if options["save_plots"]:
-        fig.savefig(options["sub_ref_dir"] / (f"residual_ham_{name}." + options["save_fig_type"]))
+        fig.savefig(options["field_dir"] / (f"residual_field_{name}." + options["save_fig_type"]))
 
     return fig
 
@@ -240,8 +240,8 @@ def plot_field_param(
 
     if options["save_plots"]:
         fig.savefig(
-            options["sub_ref_dir"]
-            / (f"residual_ham_{name}_{param_name}." + options["save_fig_type"])
+            options["field_dir"]
+            / (f"residual_field_{name}_{param_name}." + options["save_fig_type"])
         )
 
 
@@ -277,7 +277,7 @@ def field_param_flattened(
         guess = None
         bounds = None
         plot_sigmas = False
-    elif options["bfield_method_used"] == "hamiltonian_fitting":
+    elif options["field_method_used"] == "hamiltonian_fitting":
         guess_dict, bound_dict = Qham.get_ham_guess_and_bounds(options)
         guess = guess_dict[param_name]
         bounds = bound_dict[param_name]
@@ -365,7 +365,7 @@ def field_param_flattened(
 
     if options["save_plots"]:
         fig.savefig(
-            options["sub_ref_dir"]
+            options["field_dir"]
             / (f"{name}_{param_name}_fit_flattened." + options["save_fig_type"])
         )
 
