@@ -60,7 +60,7 @@ from math import radians
 
 # ============================================================================
 
-import QDMPy.io.json2dict
+import QDMPy.io as Qio
 
 # ============================================================================
 
@@ -183,7 +183,7 @@ class UniMelb(System):
     def __init__(self, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
         # ensure all values default to None (at all levels of reading in json)
-        self.options_dict = QDMPy.io.json2dict.json_to_dict(self.config_path, hook="dd")
+        self.options_dict = Qio.json_to_dict(self.config_path, hook="dd")
 
     def get_raw_pixel_size(self, options):
         # override keys available as options
@@ -302,7 +302,7 @@ class UniMelb(System):
                 rest_str,
                 re.MULTILINE,
             )
-            metadata = {a: QDMPy.io.json2dict._failfloat(b) for (a, b) in matches}
+            metadata = {a: Qio.json2dict._failfloat(b) for (a, b) in matches}
         return metadata
 
     def _reshape_raw(self, options, raw_data, sweep_list):

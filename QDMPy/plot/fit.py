@@ -50,8 +50,7 @@ import os
 
 import QDMPy.systems
 import QDMPy.constants
-import QDMPy.io.json2dict
-import QDMPy.io.raw
+import QDMPy.io as Qio
 import QDMPy.fit as Qfit
 import QDMPy.plot.common as plot_common
 
@@ -350,7 +349,7 @@ def plot_AOI_spectra(options, sig, ref, sweep_list):
     -------
     fig : matplotlib Figure object
     """
-    AOIs = QDMPy.io.raw._define_AOIs(options)
+    AOIs = Qio._define_AOIs(options)
 
     # pre-process data to plot
     sig_avgs = []
@@ -473,7 +472,7 @@ def plot_AOI_spectra(options, sig, ref, sweep_list):
         output_dict["AOI_sig_avg" + "_" + str(i + 1)] = sig_avgs[i]
         output_dict["AOI_ref_avg" + "_" + str(i + 1)] = ref_avgs[i]
 
-    QDMPy.io.json2dict.dict_to_json(output_dict, "AOI_spectra.json", options["data_dir"])
+    Qio.dict_to_json(output_dict, "AOI_spectra.json", options["data_dir"])
 
     if options["save_plots"]:
         fig.savefig(options["output_dir"] / ("AOI_spectra." + options["save_fig_type"]))
@@ -532,7 +531,7 @@ def plot_AOI_spectra_fit(
     # columns:
     # sig & ref, sub & div norm, fit -> compared to ROI {raw, fit, ROI_avg_fit}
 
-    AOIs = QDMPy.io.raw._define_AOIs(options)
+    AOIs = Qio._define_AOIs(options)
 
     figsize = mpl.rcParams["figure.figsize"].copy()
     figsize[0] *= 3  # number of columns

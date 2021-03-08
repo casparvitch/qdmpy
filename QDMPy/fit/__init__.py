@@ -3,7 +3,7 @@
 Sub-package for fitting widefield NV microscopy (photoluminescence) data.
 
 This (sub-) package exposes all of the concents of `QDMPy.fit.interface`, as well
-as 1QDMPy.fit.model1 (FitModel class etc.)
+as QDMPy.fit.model (FitModel class etc.)
 """
 
 __author__ = "Sam Scholten"

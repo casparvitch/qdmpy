@@ -22,7 +22,7 @@ import os
 # ============================================================================
 
 import QDMPy.io.fit
-import QDMPy.hamiltonian._shared
+import QDMPy.hamiltonian
 
 # ============================================================================
 
@@ -313,7 +313,7 @@ def _field_options_compatible(options):
         if options["hamiltonian"] != prev_options["hamiltonian"]:
             return False, "different hamiltonian selected for sig & ref."
 
-        guesser = QDMPy.hamiltonian._shared.gen_init_guesses
+        guesser = QDMPy.hamiltonian.ham_guesses
         this_guess, this_bounds = guesser(options)
         prev_guess, prev_bounds = guesser(prev_options)
 

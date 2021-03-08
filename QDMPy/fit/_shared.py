@@ -41,7 +41,7 @@ from scipy.linalg import svd
 
 # ============================================================================
 
-import QDMPy.fit as Qfit
+import QDMPy.fit.model as Qmodel
 import QDMPy.io as Qio
 import QDMPy.constants
 
@@ -387,7 +387,7 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
     roi_shape = np.shape(pixel_data)[1:]
 
     # initialise dictionary with key: val = param_name: param_units
-    fit_image_results = Qfit.get_param_odict(fit_model)
+    fit_image_results = Qmodel.get_param_odict(fit_model)
     sigmas = copy.copy(fit_image_results)
 
     # override with correct size empty arrays using np.zeros

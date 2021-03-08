@@ -39,8 +39,6 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
     for AC fields/non-odmr datasets, need to write a new module.
     Yeah this is quite specific to things that contain bxyz data
     """
-    # hings to check? Same size pos maps, same number of posz
-
     # first check sig/ref consistency
     if not any(map(lambda x: x.startswith("pos"), sig_fit_params.keys())):
         raise RuntimeError("no 'pos' keys found in sig_fit_params")
