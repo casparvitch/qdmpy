@@ -28,8 +28,8 @@ import QDMPy.itools._polygon
 def mask_polygons(image, polygons=None):
     image = np.array(image)
     if polygons is None:
-        return np.ma.masked_array(image)
-    if image.shape[-1] != 2:
+        return np.ma.masked_array(image, mask=np.zeros(image.shape))
+    if len(image.shape) != 2:
         raise ValueError("image is not a 2D array")
 
     if type(polygons) != list or type(polygons[0]) != QDMPy.itools._polygon.Polygon:

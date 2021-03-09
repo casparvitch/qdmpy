@@ -28,7 +28,7 @@ from scipy.interpolate import griddata
 
 # ============================================================================
 
-import QDMPy.i
+import QDMPy.itools._filter
 
 # ============================================================================
 
@@ -36,7 +36,10 @@ import QDMPy.i
 def zero_background(image, zero):
     if type(zero) != int and type(zero) != float:
         return TypeError("'zero' must be an int or a float.")
-    return zero
+    mn = zero
+    bg = np.empty(image)
+    bg[:] = mn
+    return bg
 
 
 # ============================================================================
@@ -62,7 +65,7 @@ def points_to_params(points):
 
 
 def three_point_background(image, points):
-    """ points: iterable of 3 iterables: [y, x, z] """
+    """ points: iterable of 2 iterables: [y, x] """
     # https://stackoverflow.com/questions/20699821/find-and-draw-regression-plane-to-a-set-of-points
     # https://www.geeksforgeeks.org/program-to-find-equation-of-a-plane-passing-through-3-points/
 
@@ -70,13 +73,15 @@ def three_point_background(image, points):
     # if one of the points is masked, do poly fit and warn user!
 
     if len(points) != 3:
-        raise ValueError("points needs to be iterable of 3 iterables: [y, x, z].")
+        raise ValueError("points needs to be len 3 of format: [y, x] (int or floats).")
     for p in points:
-        if len(p) != 3:
-            raise ValueError("points needs to be iterable of 3 iterables: [y, x, z].")
+        if len(p) != 2:
+            raise ValueError("points needs to be len 3 of format: [y, x] (int or floats).")
         for c in p:
             if type(c) != int and type(c) != float:
-                raise ValueError("points needs to be iterable of 3 iterables: [y, x, z].")
+                raise ValueError("points needs to be len 3 of format: [y, x] (int or floats).")
+
+    points = np.array([np.append(p, image[p[0], p[1]]) for p in points])
     Y, X = np.indices(image.shape)
     return equation_plane(points_to_params(points), Y, X)
 
@@ -85,7 +90,10 @@ def three_point_background(image, points):
 
 
 def mean_background(image):
-    return np.nanmean(image)
+    bg = np.empty(image.shape)
+    mn = np.nanmean(image)
+    bg[:] = mn
+    return bg
 
 
 # ============================================================================
@@ -93,22 +101,37 @@ def mean_background(image):
 
 def residual_poly(params, y, x, z, order):
     # z = image data, order = highest polynomial order to go to
+    # y, x: index meshgrids
     # get params to matrix form (as expected by polyval)
+    params = np.append(
+        params, 0
+    )  # add on c[-1, -1] term we don't want (i.e. cross term of next order)
     c = params.reshape((order + 1, order + 1))
-    return polyval2d(y, x, c) - z
+    return polyval2d(y, x, c) - z  # note z is flattened, as is polyval
 
 
 def poly_background(image, order):
+    # from numpy.random import random_sample
+
+    # image = np.ones(image.shape)  # FIXME testing only
+    # image = image + random_sample(image.shape) - 0.5  # FIXME testing only
+    # image = np.ma.masked_array(image)  # FIXME too...
 
     init_params = np.zeros((order + 1, order + 1))
     init_params[0, 0] = np.nanmean(image)  # set zeroth term to be mean to get it started
     Y, X = np.indices(image.shape)
-    mask = np.logical_or(~np.isnan(image), image.mask)
-    y = Y[mask]
-    x = X[mask]
-    data = image[mask]
-    best_c = least_squares(residual_poly, init_params, method="lm", args=(y, x, data, order)).x
-    return polyval2d(Y, X, best_c)  # eval at non-masked regions too!
+    good_vals = np.logical_and(~np.isnan(image), ~image.mask)
+    y = Y[good_vals]
+    x = X[good_vals]
+    # print(init_params.flatten())
+    # res = polyval2d(y, x, init_params)
+    # print(res)
+    # return res.reshape(image.shape)
+    data = image[good_vals]  # flattened
+    best_c = least_squares(residual_poly, init_params.flatten()[:-1], args=(y, x, data, order)).x
+    best_c = np.append(best_c, 0)
+    c = best_c.reshape((order + 1, order + 1))
+    return polyval2d(Y.flatten(), X.flatten(), c).reshape(image.shape)  # eval over full image
 
 
 # ============================================================================
@@ -127,15 +150,15 @@ def moments(image):
 
     center_y = np.nansum(Y * image) / total
     center_x = np.nansum(X * image) / total
-    if center_y > np.max(X) or center_x < 0:
-        center_x = np.max(X) / 2
-    if center_y > np.max(X) or center_y < 0:
+    if center_y > np.max(Y) or center_y < 0:
         center_y = np.max(Y) / 2
+    if center_x > np.max(X) or center_x < 0:
+        center_x = np.max(X) / 2
 
     col = image[int(center_y), :]
     row = image[:, int(center_x)]
-    width_x = np.nansum(np.sqrt(abs((np.arange(row.size) - center_x) ** 2 * col)) / np.nansum(row))
-    width_y = np.nansum(np.sqrt(abs((np.arange(col.size) - center_y) ** 2 * row)) / np.nansum(col))
+    width_x = np.nansum(np.sqrt(abs((np.arange(col.size) - center_y) ** 2 * col)) / np.nansum(col))
+    width_y = np.nansum(np.sqrt(abs((np.arange(row.size) - center_x) ** 2 * row)) / np.nansum(row))
     height = np.nanmax(image)
     return height, center_y, center_x, width_y, width_x
 
@@ -147,10 +170,10 @@ def residual_gaussian(p, y, x, data):
 def gaussian_background(image):
     params = moments(image)
     Y, X = np.indices(image.shape)
-    mask = np.logical_or(~np.isnan(image), image.mask)
-    y = Y[mask]
-    x = X[mask]
-    data = image[mask]
+    good_vals = np.logical_and(~np.isnan(image), ~image.mask)
+    y = Y[good_vals]
+    x = X[good_vals]
+    data = image[good_vals]
     p = least_squares(residual_gaussian, params, method="lm", args=(y, x, data)).x
     return gaussian(p, Y, X)
 
@@ -187,7 +210,7 @@ def interpolated_background(image, method, polygons, sigma):
 
     bg_interp = griddata(pts, vals, (grid_x, grid_y), method=method)  # method=interp_method
 
-    return = filter_background(bg_interp, "gaussian", sigma)
+    return QDMPy.itools._filter.filter_background(bg_interp, "gaussian", sigma)
 
 
 # ============================================================================

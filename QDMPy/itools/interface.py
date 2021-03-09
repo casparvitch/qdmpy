@@ -26,14 +26,14 @@ import QDMPy.itools._mask
 # ============================================================================
 
 
-def get_background(image, method, method_settings_dict, polygons=None):
+def get_background(image, method, polygons=None, **method_settings_dict):
     method_required_settings = {
         "fix_zero": ["zero"],
         "three_point_background": ["points"],
         "mean": [],
         "poly": ["order"],
         "gaussian": [],
-        "interpolate": ["method", "polygons", "sigma"],
+        "interpolate": ["method", "sigma"],
         "gaussian_filter": ["sigma"],
     }
     method_fns = {
@@ -46,7 +46,7 @@ def get_background(image, method, method_settings_dict, polygons=None):
         "gaussian_filter": QDMPy.itools._bground.filtered_background,
     }
     image = np.array(image)
-    if image.shape[-1] != 2:
+    if len(image.shape) != 2:
         raise ValueError("image is not a 2D array")
     if type(method) != str:
         raise TypeError("method must be a string.")
@@ -67,6 +67,9 @@ def get_background(image, method, method_settings_dict, polygons=None):
 
     if method == "gaussian_filter":
         method_settings_dict["filter_type"] = "gaussian"
+
+    if method == "interpolate":
+        method_settings_dict["polygons"] = polygons
 
     return method_fns[method](image, **method_settings_dict)
 

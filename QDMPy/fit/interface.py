@@ -186,7 +186,7 @@ def fit_AOIs(options, sig_norm, single_pixel_pl, sweep_list, fit_model, backend_
     fit_result_collection : `QDMPy.fit._shared.FitResultCollection`
         `QDMPy.fit._shared.FitResultCollection` object.
     """
-    AOIs = Qio._define_AOIs(options)
+    AOIs = Qio.define_AOIs(options)
 
     fit_result_collection_lst = []  # list of FitResultCollection objects
     # iterate through all possible fit backend choices

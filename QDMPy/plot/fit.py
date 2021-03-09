@@ -349,7 +349,7 @@ def plot_AOI_spectra(options, sig, ref, sweep_list):
     -------
     fig : matplotlib Figure object
     """
-    AOIs = Qio._define_AOIs(options)
+    AOIs = Qio.define_AOIs(options)
 
     # pre-process data to plot
     sig_avgs = []
@@ -531,7 +531,7 @@ def plot_AOI_spectra_fit(
     # columns:
     # sig & ref, sub & div norm, fit -> compared to ROI {raw, fit, ROI_avg_fit}
 
-    AOIs = Qio._define_AOIs(options)
+    AOIs = Qio.define_AOIs(options)
 
     figsize = mpl.rcParams["figure.figsize"].copy()
     figsize[0] *= 3  # number of columns

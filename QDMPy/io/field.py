@@ -313,7 +313,7 @@ def _field_options_compatible(options):
         if options["hamiltonian"] != prev_options["hamiltonian"]:
             return False, "different hamiltonian selected for sig & ref."
 
-        guesser = QDMPy.hamiltonian.ham_guesses
+        guesser = QDMPy.hamiltonian.get_ham_guess_and_bounds
         this_guess, this_bounds = guesser(options)
         prev_guess, prev_bounds = guesser(prev_options)
 

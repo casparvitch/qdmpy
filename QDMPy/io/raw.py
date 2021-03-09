@@ -19,7 +19,7 @@ Functions
  - `QDMPy.io.raw._remove_unwanted_data`
  - `QDMPy.io.raw._define_ROI`
  - `QDMPy.io.raw._define_area_roi`
- - `QDMPy.io.raw._define_AOIs`
+ - `QDMPy.io.raw.define_AOIs`
  - `QDMPy.io.raw._recursive_dict_update`
  - `QDMPy.io.raw._check_start_end_rectangle`
 """
@@ -40,7 +40,7 @@ __pdoc__ = {
     "QDMPy.io.raw._remove_unwanted_data": True,
     "QDMPy.io.raw._define_ROI": True,
     "QDMPy.io.raw._define_area_roi": True,
-    "QDMPy.io.raw._define_AOIs": True,
+    "QDMPy.io.raw.define_AOIs": True,
     "QDMPy.io.raw._recursive_dict_update": True,
     "QDMPy.io.raw._check_start_end_rectangle": True,
 }
@@ -653,7 +653,7 @@ def _define_area_roi(start_x, start_y, end_x, end_y):
 # ============================================================================
 
 
-def _define_AOIs(options):
+def define_AOIs(options):
     """
     Defines areas of interest (AOIs).
 

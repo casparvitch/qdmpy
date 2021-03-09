@@ -23,6 +23,7 @@ pyzmq = "*"
 pandas = "*"
 scikit-image = "*"
 scikit-learn = "*"
+pyfftw = "*"
 
 [dev-packages]
 

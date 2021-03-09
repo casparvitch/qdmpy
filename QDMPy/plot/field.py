@@ -105,6 +105,9 @@ def plot_bfield(options, name, field_params):
 
     components = ["x", "y", "z"]
 
+    if name == "bground":
+        components = [i + "_bground" for i in components]
+
     for p in ["B" + comp for comp in components]:
         if p not in field_params:
             warnings.warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
@@ -127,7 +130,10 @@ def plot_bfield(options, name, field_params):
         c_range = plot_common._get_colormap_range(
             options["colormap_range_dicts"]["bfield_images"], bcomponent
         )
-        title = f"{name} B" + components[i]
+        if name != "bground":
+            title = f"{name} B" + components[i]
+        else:
+            title = "B" + components[i]
         plot_common.plot_image_on_ax(
             fig, ax[i], options, bcomponent, title, c_map, c_range, "B (G)"
         )

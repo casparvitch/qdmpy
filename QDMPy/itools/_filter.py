@@ -23,7 +23,8 @@ import scipy.ndimage
 
 # hands off to other filters
 def get_im_filtered(image, filter_type, **kwargs):
-    image = np.array(image)
+    if type(image) != np.ma.core.MaskedArray:
+        image = np.ma.masked_array(image)
     filter_fns = {
         "gaussian": get_im_filtered_gaussian,
     }
@@ -42,3 +43,6 @@ def get_im_filtered(image, filter_type, **kwargs):
 
 def get_im_filtered_gaussian(image, sigma):
     return scipy.ndimage.gaussian_filter(image, sigma=sigma)
+
+
+# ============================================================================

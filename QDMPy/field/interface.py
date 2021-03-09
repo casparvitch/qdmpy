@@ -19,6 +19,7 @@ __pdoc__ = {
 # ============================================================================
 
 import warnings
+import numpy as np
 
 # ============================================================================
 
@@ -26,6 +27,7 @@ import QDMPy.field._bnv as Qbnv
 import QDMPy.field._bxyz as Qbxyz
 import QDMPy.field._geom as Qgeom
 import QDMPy.io as Qio
+import QDMPy.itools as Qitools
 
 # ============================================================================
 
@@ -191,6 +193,50 @@ def field_refsub(options, sig_params, ref_params):
         }
     else:
         return sig_params
+
+
+# ============================================================================
+
+
+def sub_bground_Bxyz(options, field_params, field_sigmas, method, **method_settings):
+    """
+    sig_sub_ref -> i.e. params to use going forward
+    """
+
+    for b in ["Bx", "By", "Bz"]:
+        if b not in field_params:
+            warnings.warn("no B params found in field_params? Doing nothing.")
+            return field_params, field_sigmas
+
+    x_bground = Qitools.get_background(field_params["Bx"], method, **method_settings)
+    y_bground = Qitools.get_background(field_params["By"], method, **method_settings)
+    z_bground = Qitools.get_background(field_params["Bz"], method, **method_settings)
+
+    field_params["Bx_bground"] = x_bground
+    field_params["By_bground"] = y_bground
+    field_params["Bz_bground"] = z_bground
+
+    field_params["Bx_full"] = field_params["Bx"]
+    field_params["By_full"] = field_params["By"]
+    field_params["Bz_full"] = field_params["Bz"]
+
+    field_params["Bx"] = field_params["Bx_full"] - x_bground
+    field_params["By"] = field_params["By_full"] - y_bground
+    field_params["Bz"] = field_params["Bz_full"] - z_bground
+
+    if "Bx" in field_sigmas and "By" in field_sigmas and "Bz" in field_sigmas:
+        field_sigmas["Bx_full"] = field_sigmas["Bx"]
+        field_sigmas["By_full"] = field_sigmas["By"]
+        field_sigmas["Bz_full"] = field_sigmas["Bz"]
+
+        missing = np.empty(field_sigmas["Bx"].shape)
+        missing[:] = np.nan
+        field_sigmas["Bx_bground"] = missing
+        field_sigmas["Bx_bground"] = missing
+        field_sigmas["Bx_bground"] = missing
+        # leave field_sigmas["Bx"] etc. the same
+
+    return field_params, field_sigmas
 
 
 # ============================================================================

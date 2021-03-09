@@ -126,10 +126,3 @@ def get_ham_guess_and_bounds(options):
         version of that fn_type.
     """
     return QDMPy.hamiltonian._shared.gen_init_guesses(options)
-
-
-# ============================================================================
-
-
-def ham_guesses(options):
-    return QDMPy.hamiltonian._shared(options)
