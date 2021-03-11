@@ -158,6 +158,10 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
         If no reference experiment is given (i.e. ref_options and ref_options_dir are None) then
         returns None
     """
+    if not ref_options:
+        ref_options = None
+    if not ref_options_dir:
+        ref_options_dir = None
     if ref_options is None and ref_options_dir is None:
         warnings.warn(
             "No reference experiment options dict provided, continuing without reference."
@@ -165,6 +169,7 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
         options["field_dir"] = options["output_dir"].joinpath("field")
         options["field_sig_dir"] = options["field_dir"].joinpath("sig")
         options["field_ref_dir"] = options["field_dir"].joinpath("ref_nothing")
+        options["field_sig_sub_ref_dir"] = options["field_dir"].joinpath("sig_sub_ref")
 
         if not os.path.isdir(options["field_dir"]):
             os.mkdir(options["field_dir"])
@@ -172,6 +177,8 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
             os.mkdir(options["field_sig_dir"])
         if not os.path.isdir(options["field_ref_dir"]):
             os.mkdir(options["field_ref_dir"])
+        if not os.path.isdir(options["field_sig_sub_ref_dir"]):
+            os.mkdir(options["field_sig_sub_ref_dir"])
         return None, None
 
     if ref_options_dir is not None:
@@ -190,12 +197,15 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
     options["field_dir"] = options["output_dir"].joinpath("field")
     options["field_sig_dir"] = options["field_dir"].joinpath("sig")
     options["field_ref_dir"] = options["field_dir"].joinpath(f"ref_{ref_name}")
+    options["field_sig_sub_ref_dir"] = options["field_dir"].joinpath("sig_sub_ref")
     if not os.path.isdir(options["field_dir"]):
         os.mkdir(options["field_dir"])
     if not os.path.isdir(options["field_sig_dir"]):
         os.mkdir(options["field_sig_dir"])
     if not os.path.isdir(options["field_ref_dir"]):
         os.mkdir(options["field_ref_dir"])
+    if not os.path.isdir(options["field_sig_sub_ref_dir"]):
+        os.mkdir(options["field_sig_sub_ref_dir"])
 
     # ok now have ref_options dict, time to load params
     if ref_options["found_prev_result"]:
@@ -204,7 +214,7 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
         return ref_fit_result_dict, ref_sigmas
     else:
         warnings.warn(
-            "Didn't find reference experiment fit results? Reason:\n"
+            "Didn't find reference experiment fit results? Reason: "
             + ref_options["found_prev_result_reason"]
         )
         return None, None
@@ -229,11 +239,11 @@ def _check_if_already_fit(options, loading_ref=False):
                 options["found_prev_result_reason"] = "couldn't find previous options"
                 options["found_prev_result"] = False
             elif not (res := _options_compatible(options, _get_prev_options(options)))[0]:
-                options["found_prev_result_reason"] = "option not compatible:\n" + res[1]
+                options["found_prev_result_reason"] = "option not compatible: " + res[1]
                 options["found_prev_result"] = False
             elif not (res2 := _prev_pixel_results_exist(options))[0]:
                 options["found_prev_result_reason"] = (
-                    "couldn't find prev pixel results:\n" + res2[1]
+                    "couldn't find prev pixel results: " + res2[1]
                 )
                 options["found_prev_result"] = False
             else:
@@ -243,7 +253,7 @@ def _check_if_already_fit(options, loading_ref=False):
             options["found_prev_result_reason"] = "option 'force_fit' was True"
             options["found_prev_result"] = False
     elif not (res3 := _prev_pixel_results_exist(options))[0]:
-        options["found_prev_result_reason"] = "couldn't find prev pixel results:\n" + res3[1]
+        options["found_prev_result_reason"] = "couldn't find prev pixel results: " + res3[1]
         options["found_prev_result"] = False
     else:
         options["found_prev_result_reason"] = "found prev result :)"

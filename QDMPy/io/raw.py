@@ -60,6 +60,7 @@ import re
 import QDMPy.io.json2dict
 import QDMPy.io.fit
 import QDMPy.systems as systems
+import QDMPy.itools as Qitools
 
 # ============================================================================
 
@@ -147,6 +148,8 @@ def load_options(
     if not os.path.isdir(options["data_dir"]):
         os.mkdir(options["data_dir"])
 
+    load_polygons(options)
+
     # don't always check for prev. results (so we can use this fn in other contexts)
     if check_for_prev_result or loading_ref:
         QDMPy.io.fit._check_if_already_fit(options, loading_ref=loading_ref)
@@ -177,6 +180,18 @@ def save_options(options):
     QDMPy.io.json2dict.dict_to_json(
         save_options, "saved_options.json", path_to_dir=options["output_dir"]
     )
+
+
+# ============================================================================
+
+
+def load_polygons(options):
+    if options["polygon_nodes_path"]:
+        options["polygon_nodes"] = QDMPy.io.jsonson2dict(options["polygon_nodes_path"])["nodes"]
+        options["polygons"] = [Qitools.Polygon(node) for node in options["polygon_nodes"]]
+    else:
+        options["polygon_nodes"] = None
+        options["polygons"] = None
 
 
 # ============================================================================

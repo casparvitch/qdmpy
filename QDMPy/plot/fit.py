@@ -43,8 +43,8 @@ import numpy as np
 import matplotlib.patches as patches
 import math
 import warnings
-import pandas as pd
 import os
+from pathlib import Path
 
 # ============================================================================
 
@@ -903,14 +903,16 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name, errorplo
             sharey=False,
             constrained_layout=True,
         )
-
         # plot 8-lorentzian peaks in a more helpful way
         if nk <= 8 and any([f.startswith("lorentzian") for f in options["fit_functions"]]):
             param_nums = []  # [0, 1, 2, 3, 7, 6, 5, 4] etc.
             param_nums.extend(list(range(nk // 2)))
             if nk % 2:
                 param_nums.append(nk // 2 + 1)
+            if len(param_nums) < 4:
+                param_nums.extend([-1 for _ in range(4 - len(param_nums))])  # dummies
             param_nums.extend(list(range(nk - 1, (nk - 1) // 2, -1)))  # range(start, stop, step)
+            param_nums.extend([-1 for _ in range(8 - len(param_nums))])  # add on dummies
             param_axis_iterator = zip(param_nums, axs.flatten())
         # otherwise plot in a more conventional order
         else:
@@ -919,13 +921,12 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name, errorplo
         for param_number, ax in param_axis_iterator:
 
             param_key = param_name + "_" + str(param_number)
-
             try:
                 image_data = pixel_fit_params[param_key]
             except KeyError:
-                # we have one too many axes (i.e. 7 params, 8 subplots), delete the axs
+                # we have too many axes (i.e. 7 params, 8 subplots), delete the axs
                 fig.delaxes(ax)
-                break
+                continue
 
             if param_name == "residual":
                 c_range = plot_common._get_colormap_range(
@@ -1186,7 +1187,7 @@ def plot_params_flattened(
 # ============================================================================
 
 
-def plot_other_measurements(options, suffixes=["_IV", "_T"]):
+def plot_other_measurements(options, skip_first=0):
     """
     Plot any other tsv/csv datasets (at base_path + s for s in
     options["other_measurement_suffixes"]). Assumes first column is some form of ind. dataset
@@ -1195,14 +1196,14 @@ def plot_other_measurements(options, suffixes=["_IV", "_T"]):
     if not suffixes:
         return None
     paths = [(s, options["filepath"] + s) for s in suffixes]
-
     good_paths = [(s, path) for s, path in paths if os.path.isfile(path)]
+    datasets = {}
+    for s, path in good_paths:
+        datasets[s] = options["system"].get_headers_and_read_csv(options, path)
 
-    dfs = {s: pd.read_csv(path, sep=None) for s, path in good_paths}
+    for s, (headers, dset) in datasets.items():
 
-    for s, df in dfs.items():
-
-        num_series = len(df.columns)
+        num_series = len(headers) - 1  # 0th is 'time' array etc. (indep. vals)
         figsize = mpl.rcParams["figure.figsize"].copy()
         figsize[0] *= 2
         figsize[1] *= num_series  # extra height
@@ -1210,10 +1211,27 @@ def plot_other_measurements(options, suffixes=["_IV", "_T"]):
         fig, axs = plt.subplots(
             num_series, 1, figsize=figsize, constrained_layout=True, sharex=True
         )
-        for i, col in enumerate(df.columns[1:]):
-            pass
-        # test as we go, on smaller dataset?
-    # FIXME
+        for i, header in enumerate(headers[1:]):
+            axs[i].plot(
+                dset[skip_first:, 0],
+                dset[skip_first:, i + 1],
+                label=header,
+                marker="o",
+                mfc="w",
+                ms=mpl.rcParams["lines.markersize"],
+                mec="purple",
+                ls="",
+                zorder=20,
+            )
+            axs[i].set_xlabel(headers[0])
+            axs[i].set_ylabel(headers[i + 1])
+            axs[i].legend()
+            axs[i].grid()
+
+        if options["save_plots"]:
+            fig.savefig(
+                options["output_dir"] / (f"other-meas-{Path(s).stem}." + options["save_fig_type"])
+            )
 
 
 # ============================================================================

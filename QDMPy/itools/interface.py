@@ -26,10 +26,10 @@ import QDMPy.itools._mask
 # ============================================================================
 
 
-def get_background(image, method, polygons=None, **method_settings_dict):
+def get_background(image, method, polygons=None, **method_params_dict):
     method_required_settings = {
         "fix_zero": ["zero"],
-        "three_point_background": ["points"],
+        "three_point": ["points"],
         "mean": [],
         "poly": ["order"],
         "gaussian": [],
@@ -38,7 +38,7 @@ def get_background(image, method, polygons=None, **method_settings_dict):
     }
     method_fns = {
         "fix_zero": QDMPy.itools._bground.zero_background,
-        "three_point_background": QDMPy.itools._bground.three_point_background,
+        "three_point": QDMPy.itools._bground.three_point_background,
         "mean": QDMPy.itools._bground.mean_background,
         "poly": QDMPy.itools._bground.poly_background,
         "gaussian": QDMPy.itools._bground.gaussian_background,
@@ -50,28 +50,26 @@ def get_background(image, method, polygons=None, **method_settings_dict):
         raise ValueError("image is not a 2D array")
     if type(method) != str:
         raise TypeError("method must be a string.")
-    if type(method_settings_dict) != dict:
-        raise TypeError("method_settings_dict must be a dict.")
+    if type(method_params_dict) != dict:
+        raise TypeError("method_params_dict must be a dict.")
     if method not in method_required_settings:
         raise ValueError(
             "'method' argument to get_background not in implemented_methods: "
             + f"{method_required_settings.keys()}"
         )
     for setting in method_required_settings[method]:
-        if setting not in method_settings_dict:
-            raise ValueError(
-                f"'setting' key missing from method_settings_dict for method: {method}"
-            )
+        if setting not in method_params_dict:
+            raise ValueError(f"{setting} key missing from method_params_dict for method: {method}")
 
     image = QDMPy.itools._mask.mask_polygons(image, polygons)
 
     if method == "gaussian_filter":
-        method_settings_dict["filter_type"] = "gaussian"
+        method_params_dict["filter_type"] = "gaussian"
 
     if method == "interpolate":
-        method_settings_dict["polygons"] = polygons
+        method_params_dict["polygons"] = polygons
 
-    return method_fns[method](image, **method_settings_dict)
+    return method_fns[method](image, **method_params_dict)
 
 
 # ============================================================================

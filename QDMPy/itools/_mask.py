@@ -38,7 +38,7 @@ def mask_polygons(image, polygons=None):
     ylen, xlen = image.shape
     masked_area = np.full(image.shape, True)  # all masked to start with
 
-    # coordinate grid for all coordinates TODO check the 'ij' indexing here...
+    # coordinate grid for all coordinates TODO check the 'ij' indexing here... (I think xy...)
     grid_y, grid_x = np.meshgrid(range(ylen), range(xlen), indexing="ij")
 
     for p in polygons:
@@ -48,3 +48,11 @@ def mask_polygons(image, polygons=None):
         masked_area = np.logical_and(masked_area, ~m)
 
     return np.ma.masked_array(image, mask=masked_area)
+
+
+# ============================================================================
+
+# TODO add circle, elliptical mask -> not sure how to define though
+# -- define once at PL stage perhaps (separate tool)
+#       as they're surely going to be due to laser profile
+# -- yeah separate pysimplegui that can be called, and then dragged to resize + move???

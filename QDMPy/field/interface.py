@@ -55,8 +55,8 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
 
         if not sig_fit_params[sig_poskey + "_0"].shape == ref_fit_params[ref_poskey + "_0"].shape:
             raise RuntimeError("Different FOV shape between sig & ref.")
-        if not len(filter(lambda x: x.startswith("pos"), sig_fit_params)) == len(
-            filter(lambda x: x.startswith("pos"), ref_fit_params)
+        if not len(list(filter(lambda x: x.startswith("pos"), sig_fit_params))) == len(
+            list(filter(lambda x: x.startswith("pos"), ref_fit_params))
         ):
             raise RuntimeError("Different number of frequencies fit in sig & ref.")
 
@@ -116,12 +116,22 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
     if options["found_prev_field_calc"]:
         warnings.warn("Using previous field calculation.")
 
-        bnv_tuple, dshift_tuple, params_tuple, sigmas_tuple = Qio.load_prev_field_calcs(options)
-        Qgeom.add_bfield_reconstructed(params_tuple[0])
-        Qgeom.add_bfield_reconstructed(params_tuple[1])
-        Qgeom.add_bfield_reconstructed(params_tuple[2])
-        if params_tuple[0] is not None:
-            options["field_params"] = tuple(params_tuple[0].keys())
+        bnv_lst, dshift_lst, params_lst, sigmas_lst = Qio.load_prev_field_calcs(options)
+        # Qgeom.add_bfield_reconstructed(params_lst[0])
+        # Qgeom.add_bfield_reconstructed(params_lst[1])
+        # Qgeom.add_bfield_reconstructed(params_lst[2])
+
+        if options["bfield_bground_method"]:
+            params_lst[2], sigmas_lst[2] = sub_bground_Bxyz(
+                options,
+                params_lst[2],
+                sigmas_lst[2],
+                method=options["bfield_bground_method"],
+                **options["bfield_bground_params"],
+            )
+
+        if params_lst[0] is not None:
+            options["field_params"] = tuple(params_lst[0].keys())
 
     elif options["calc_field_pixels"]:
         if options["field_method_used"] == "prop_single_bnv":
@@ -153,28 +163,36 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
         # for checking self-consistency (e.g. calc Bx from Bz via fourier methods) TODO
         # Qgeom.add_bfield_reconstructed(sig_params)
         # Qgeom.add_bfield_reconstructed(ref_params)
-        # Qgeom.add_bfield_reconstructed(sub_ref_params)
+        # Qgeom.add_bfield_reconstruczted(sub_ref_params)
+
+        # both params and sigmas need a sub_ref method
+        bnv_lst = [sig_bnvs, ref_bnvs, Qbnv.bnv_refsub(options, sig_bnvs, ref_bnvs)]
+        dshift_lst = [sig_dshifts, ref_dshifts]
+        params_lst = [sig_params, ref_params, sub_ref_params]
+        sigmas_lst = [sig_sigmas, ref_sigmas, field_sigma_add(options, sig_sigmas, ref_sigmas)]
+
+        if options["bfield_bground_method"]:
+            params_lst[2], sigmas_lst[2] = sub_bground_Bxyz(
+                options,
+                params_lst[2],
+                sigmas_lst[2],
+                method=options["bfield_bground_method"],
+                **options["bfield_bground_params"],
+            )
 
         if sig_params is not None:
             options["field_params"] = tuple(sig_params.keys())
         else:
             options["field_params"] = None
 
-        # both params and sigmas need a sub_ref method
-        bnv_tuple = (sig_bnvs, ref_bnvs, Qbnv.bnv_refsub(options, sig_bnvs, ref_bnvs))
-        dshift_tuple = (sig_dshifts, ref_dshifts)
-        params_tuple = (sig_params, ref_params, sub_ref_params)
-        sigmas_tuple = (sig_sigmas, ref_sigmas, field_sigma_add(options, sig_sigmas, ref_sigmas))
-
-        Qio.save_field_calcs(options, bnv_tuple, dshift_tuple, params_tuple, sigmas_tuple)
     else:
-        bnv_tuple, dshift_tuple, params_tuple, sigmas_tuple = (
-            (None, None, None),
-            (None, None),
-            (None, None, None),
-            (None, None, None),
+        bnv_lst, dshift_lst, params_lst, sigmas_lst = (
+            [None, None, None],
+            [None, None],
+            [None, None, None],
+            [None, None, None],
         )
-    return bnv_tuple, dshift_tuple, params_tuple, sigmas_tuple
+    return bnv_lst, dshift_lst, params_lst, sigmas_lst
 
 
 # ============================================================================
@@ -199,18 +217,28 @@ def field_refsub(options, sig_params, ref_params):
 
 
 def sub_bground_Bxyz(options, field_params, field_sigmas, method, **method_settings):
-    """
-    sig_sub_ref -> i.e. params to use going forward
-    """
+    """docstring"""
+    if not field_params:
+        return field_params, field_sigmas
 
     for b in ["Bx", "By", "Bz"]:
         if b not in field_params:
             warnings.warn("no B params found in field_params? Doing nothing.")
             return field_params, field_sigmas
 
-    x_bground = Qitools.get_background(field_params["Bx"], method, **method_settings)
-    y_bground = Qitools.get_background(field_params["By"], method, **method_settings)
-    z_bground = Qitools.get_background(field_params["Bz"], method, **method_settings)
+    if options["mask_polygons_bground"]:
+        polygons = options["polygons"]
+    else:
+        polygons = None
+    x_bground = Qitools.get_background(
+        field_params["Bx"], method, polygons=polygons, **method_settings
+    )
+    y_bground = Qitools.get_background(
+        field_params["By"], method, polygons=polygons, **method_settings
+    )
+    z_bground = Qitools.get_background(
+        field_params["Bz"], method, polygons=polygons, **method_settings
+    )
 
     field_params["Bx_bground"] = x_bground
     field_params["By_bground"] = y_bground
@@ -232,8 +260,8 @@ def sub_bground_Bxyz(options, field_params, field_sigmas, method, **method_setti
         missing = np.empty(field_sigmas["Bx"].shape)
         missing[:] = np.nan
         field_sigmas["Bx_bground"] = missing
-        field_sigmas["Bx_bground"] = missing
-        field_sigmas["Bx_bground"] = missing
+        field_sigmas["By_bground"] = missing
+        field_sigmas["Bz_bground"] = missing
         # leave field_sigmas["Bx"] etc. the same
 
     return field_params, field_sigmas

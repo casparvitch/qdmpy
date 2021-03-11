@@ -10,3 +10,4 @@ __pdoc__ = {
     "QDMPy.itools.interface": True,
 }
 from QDMPy.itools.interface import *
+from QDMPy.itools._polygon import Polygon

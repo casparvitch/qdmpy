@@ -48,18 +48,20 @@ def save_field_calcs(options, bnv_tuple, dshift_tuple, params_tuple, sigmas_tupl
 def save_bnvs_and_dshifts(options, name, bnvs, dshifts):
     if bnvs:
         for i, bnv in enumerate(bnvs):
-            if name in ["sig", "ref"]:
-                path = options[f"field_{name}_dir"] / f"{name}_bnv_{i}.txt"
-            else:
-                path = options["field_dir"] / f"{name}_bnv_{i}.txt"
-            np.savetxt(path, bnv)
+            if bnv is not None:
+                if name in ["sig", "ref", "sig_sub_ref"]:
+                    path = options[f"field_{name}_dir"] / f"{name}_bnv_{i}.txt"
+                else:
+                    path = options["field_dir"] / f"{name}_bnv_{i}.txt"
+                np.savetxt(path, bnv)
     if dshifts:
         for i, dshift in enumerate(dshifts):
-            if name in ["sig", "ref"]:
-                path = options[f"field_{name}_dir"] / f"{name}_dshift_{i}.txt"
-            else:
-                path = options["field_dir"] / f"{name}_dshift_{i}.txt"
-            np.savetxt(path, dshift)
+            if dshift is not None:
+                if name in ["sig", "ref"]:
+                    path = options[f"field_{name}_dir"] / f"{name}_dshift_{i}.txt"
+                else:
+                    path = options["field_dir"] / f"{name}_dshift_{i}.txt"
+                np.savetxt(path, dshift)
 
 
 # ============================================================================
@@ -80,13 +82,14 @@ def save_field_params(options, name, pixel_fit_params):
     pixel_fit_params : OrderedDict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
     """
-    if pixel_fit_params is not None:
+    if pixel_fit_params:
         for param_key, result in pixel_fit_params.items():
-            if name in ["sig", "ref"]:
-                path = options[f"field_{name}_dir"] / f"{name}_{param_key}.txt"
-            else:
-                path = options["field_dir"] / f"{name}_{param_key}.txt"
-            np.savetxt(path, result)
+            if result is not None:
+                if name in ["sig", "ref", "sig_sub_ref"]:
+                    path = options[f"field_{name}_dir"] / f"{name}_{param_key}.txt"
+                else:
+                    path = options["field_dir"] / f"{name}_{param_key}.txt"
+                np.savetxt(path, result)
 
 
 # ============================================================================
@@ -107,13 +110,14 @@ def save_field_sigmas(options, name, sigmas):
     sigmas : OrderedDict
         Dictionary, key: param_keys, val: image (2D) of sigmas across FOV.
     """
-    if sigmas is not None:
+    if sigmas:
         for param_key, sigma in sigmas.items():
-            if name in ["sig", "ref"]:
-                path = options[f"field_{name}_dir"] / f"{name}_{param_key}_sigma.txt"
-            else:
-                path = options["field_dir"] / f"{name}_{param_key}_sigma.txt"
-            np.savetxt(path, sigma)
+            if sigma is not None:
+                if name in ["sig", "ref", "sig_sub_ref"]:
+                    path = options[f"field_{name}_dir"] / f"{name}_{param_key}_sigma.txt"
+                else:
+                    path = options["field_dir"] / f"{name}_{param_key}_sigma.txt"
+                np.savetxt(path, sigma)
 
 
 # ============================================================================
@@ -133,10 +137,10 @@ def load_prev_field_calcs(options):
     sig_sub_ref_sigmas = load_prev_field_sigmas(options, "sig_sub_ref")
 
     return (
-        (sig_bnvs, ref_bnvs, sig_sub_ref_bnvs),
-        (sig_dshifts, ref_dshifts),
-        (sig_params, ref_params, sig_sub_ref_params),
-        (sig_sigmas, ref_sigmas, sig_sub_ref_sigmas),
+        [sig_bnvs, ref_bnvs, sig_sub_ref_bnvs],
+        [sig_dshifts, ref_dshifts],
+        [sig_params, ref_params, sig_sub_ref_params],
+        [sig_sigmas, ref_sigmas, sig_sub_ref_sigmas],
     )
 
 
@@ -147,7 +151,7 @@ def load_prev_bnvs_and_dshifts(options, name):
     bnvs = []
     dshifts = []
     for i in range(4):
-        if name in ["sig", "ref"]:
+        if name in ["sig", "ref", "sig_sub_ref"]:
             bpath = options[f"field_{name}_dir"] / f"{name}_bnv_{i}.txt"
             dpath = options[f"field_{name}_dir"] / f"{name}_dshift_{i}.txt"
         else:
@@ -195,7 +199,7 @@ def load_prev_field_sigmas(options, name):
 
 def load_field_param(options, name, param):
     """Load a previously field param, 'param' (string), of type 'name' (e.g. sig/ref etc.)"""
-    if name in ["sig", "ref"]:
+    if name in ["sig", "ref", "sig_sub_ref"]:
         path = options[f"field_{name}_dir"] / f"{name}_{param}.txt"
     else:
         path = options["field_dir"] / f"{name}_{param}.txt"
@@ -212,7 +216,7 @@ def load_field_param(options, name, param):
 
 def load_field_sigma(options, name, sigma):
     """Load a previously field sigma, 'sigma' (string), of type 'name' (e.g. sig/ref etc.)"""
-    if name in ["sig", "ref"]:
+    if name in ["sig", "ref", "sig_sub_ref"]:
         path = options[f"field_{name}_dir"] / f"{name}_{sigma}_sigma.txt"
     else:
         path = options["field_dir"] / f"{name}_{sigma}_sigma.txt"
@@ -256,11 +260,11 @@ def check_for_prev_field_calc(options):
             options["found_prev_field_calc_reason"] = "couldn't find previous options"
         elif not (res := _field_options_compatible(options))[0]:
             options["found_prev_field_calc"] = False
-            options["found_prev_field_calc_reason"] = "option not compatible:\n" + res[1]
+            options["found_prev_field_calc_reason"] = "option not compatible: " + res[1]
         elif not (res2 := _prev_pixel_field_calcs_exist(options))[0]:
             options["found_prev_field_calc"] = False
             options["found_prev_field_calc_reason"] = (
-                "couldn't find prev field pixel results:\n" + res2[1]
+                "couldn't find prev field pixel results: " + res2[1]
             )
         else:
             options["found_prev_field_calc"] = True
@@ -280,7 +284,7 @@ def _prev_pixel_field_calcs_exist(options):
         spath = options["field_sig_dir"] / f"sig_{param_key}.txt"
         if not os.path.isfile(spath):
             return False, f"couldn't find previous field param: sig_{param_key}"
-        ssfpath = options["field_dir"] / f"sig_sub_ref_{param_key}.txt"
+        ssfpath = options["field_sig_sub_ref_dir"] / f"sig_sub_ref_{param_key}.txt"
         if not os.path.isfile(ssfpath):
             return False, f"couldn't find previous field param: sig_sub_ref_{param_key}"
 
@@ -296,22 +300,31 @@ def _field_options_compatible(options):
         return False, "method was different to that selected (or auto-selected) presently."
 
     if options["freqs_to_use"] != prev_options["freqs_to_use"]:
-        return False, "different freqs_to_use option for sig & ref."
+        return False, "different freqs_to_use option."
 
     if options["field_method_used"] == "prop_single_bnv":
         if options["single_bnv_choice"] != prev_options["single_bnv_choice"]:
-            return False, "different single_bnv_choice option for sig & ref."
+            return False, "different single_bnv_choice option."
 
     if options["use_unvs"] != prev_options["use_unvs"]:
-        return False, "different 'use_unvs' options for sig & ref."
+        return False, "different 'use_unvs' option."
 
     if options["use_unvs"]:
         if options["unvs"] != prev_options["unvs"]:
-            return False, "different unvs chosen for sig & ref."
+            return False, "different unvs chosen."
+
+    if str(options["field_ref_dir"]) != str(prev_options["field_ref_dir"]):
+        return False, "different reference (field_ref_dir name is different)."
+
+    if options["bfield_bground_method"] != prev_options["bfield_bground_method"]:
+        return False, "different bfield_bground_method"
+
+    if options["bfield_bground_params"] != prev_options["bfield_bground_params"]:
+        return False, "different bfield_bground_params"
 
     if options["field_method_used"] == "hamiltonian_fitting":
         if options["hamiltonian"] != prev_options["hamiltonian"]:
-            return False, "different hamiltonian selected for sig & ref."
+            return False, "different hamiltonian selected."
 
         guesser = QDMPy.hamiltonian.get_ham_guess_and_bounds
         this_guess, this_bounds = guesser(options)

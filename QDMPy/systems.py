@@ -51,6 +51,7 @@ __pdoc__ = {
 # ============================================================================
 
 import numpy as np
+import pandas as pd
 import os
 import re
 import warnings
@@ -166,6 +167,10 @@ class System:
             options["filepath"] = options["base_dir"] / options["filepath"]
             self.filepath_joined = True
 
+    def get_headers_and_read_csv(self, options, path):
+        """ DOCSTRING """
+        raise NotImplementedError
+
 
 # ============================================================================
 
@@ -186,12 +191,14 @@ class UniMelb(System):
         self.options_dict = Qio.json_to_dict(self.config_path, hook="dd")
 
     def get_raw_pixel_size(self, options):
+        if "pixel_size" in options and options["pixel_size"]:
+            return options["pixel_size"]
         # override keys available as options
         override_keys = ["objective_mag", "objective_reference_focal_length", "camera_tube_lens"]
         # not the cleanest way to do this... eh it works
         default_keys = ["default_" + key for key in override_keys]
         default_keys.insert(0, "sensor_pixel_size")
-        settings_dict = self.options_dict["microscope_setup"]
+        settings_dict = self.options_dict["microscope_setup"]["option_default"]
         settings = [settings_dict[key] for key in default_keys]
 
         for i, s in enumerate(override_keys):
@@ -377,6 +384,14 @@ class UniMelb(System):
         # Transpose the dataset to get the correct x and y orientations ([y, x])
         # will work for non-square images
         return image.transpose([0, 2, 1]).copy()
+
+    def get_headers_and_read_csv(self, options, path):
+        # first get headers
+        headers = pd.read_csv(path, sep=None, engine="python").columns.tolist()
+        # then load dataset
+        dataset = np.genfromtxt(path, skip_header=1, autostrip=True, delimiter="\t")
+
+        return headers, dataset
 
 
 # ============================================================================
