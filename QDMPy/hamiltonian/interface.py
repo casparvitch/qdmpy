@@ -91,6 +91,9 @@ def fit_hamiltonian_pixels(options, data, hamiltonian):
     ham_results : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
         Also has 'residual' as a key.
+
+    sigmas : dict
+        ? TODO
     """
 
     return fit_scipyfit.fit_hamiltonian_scipyfit(options, data, hamiltonian)

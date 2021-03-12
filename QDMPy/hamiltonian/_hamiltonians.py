@@ -120,7 +120,7 @@ def get_param_unit(hamiltonian, param_key):
     """
     Get unit for a given param_key
     """
-    if param_key == "residual_ham":
+    if param_key == "residual_field":
         return "Error: sum( || residual(params) || ) over bnvs/freqs (a.u.)"
     param_dict = get_param_odict(hamiltonian)
     return param_dict[param_key]
@@ -160,17 +160,18 @@ class ApproxBxyz(Hamiltonian):
         return np.dot(self.unvs, param_ar)
 
     def grad_fn(self, param_ar):
-        # Bx, By, Bz = param_ar
-        J = np.empty((4, 3))  # size: (len(bnvs), len(param_ar)), both know ahead of time.
-        J[:, 0] = self.unvs[:, 0]
-        J[:, 1] = self.unvs[:, 1]
-        J[:, 2] = self.unvs[:, 2]
+        return self.unvs
+        # J = np.empty((4, 3))  # size: (len(bnvs), len(param_ar)), both known ahead of time.
+        # J[:, 0] = self.unvs[:, 0]
+        # J[:, 1] = self.unvs[:, 1]
+        # J[:, 2] = self.unvs[:, 2]
+        # return J
         # i.e. equiv. to:
         # for bnv in range(4):
         #     J[bnv, 0] = self.unvs[bnv][0]  # i.e. ith NV orientation (bnv), x component
         #     J[bnv, 1] = self.unvs[bnv][1]  # y component
         #     J[bnv, 2] = self.unvs[bnv][2]  # z component
-        return J
+        # should be rather obvious from __call__
 
 
 # ============================================================================
@@ -201,6 +202,10 @@ class Bxyz(Hamiltonian):
 
         The spin operators need to be rotated to the NV reference frame. This is achieved
         by projecting the magnetic field onto the unv frame.
+
+        i.e. we use the spin operatores in the NV frame, the unvs in the NV frame,
+        and thus project the magnetic field into this frame (from the lab frame) to determine
+        the nv frequencies (eigenvalues of hamiltonian).
         """
         from QDMPy.constants import S_MAT_X, S_MAT_Y, S_MAT_Z, GAMMA
 
@@ -218,8 +223,47 @@ class Bxyz(Hamiltonian):
                 + by_proj_onto_unv * S_MAT_Y
                 + bz_proj_onto_unv * S_MAT_Z
             )
-            freq, length = LA.eig(Hzero + HB)
+            freq, _ = LA.eig(Hzero + HB)
             freq = np.sort(np.real(freq))
+            # freqs: ms=0, ms=+-1 -> transition freq is delta
             nv_frequencies[i] = np.real(freq[1] - freq[0])
             nv_frequencies[7 - i] = np.real(freq[2] - freq[0])
         return nv_frequencies
+
+    # this method didn't work.
+    # def grad_fn(self, param_ar):
+    # method here: do partial before calculating evalues
+    # from QDMPy.constants import S_MAT_X, S_MAT_Y, S_MAT_Z, GAMMA
+
+    # J = np.empty((8, 4))  # shape: num freqs, num params
+
+    # # p equiv. to D, Bx, By, Bz
+    # for p in range(4):
+    #     if not p:  # sort out D
+    #         dH = S_MAT_Z * S_MAT_Z
+    #         for i in range(4):
+    #             df, _ = LA.eig(dH)
+    #             df = np.sort(np.real(df))
+    #             J[i, p] = np.real(df[1] - df[0])
+    #             J[7 - i, p] = np.real(df[2] - df[0])
+    #     else:  # sort out \vec{B}
+    #         dparams = np.zeros(4)
+    #         dparams[p] = 1  # no polynomials or anything like that so B_comp -> 1, others -> 0
+    #         for i in range(4):
+
+    #             dbx_proj_onto_unv = np.dot(dparams[1:4], self.unv_frames[i, 0, :])
+    #             dby_proj_onto_unv = np.dot(dparams[1:4], self.unv_frames[i, 1, :])
+    #             dbz_proj_onto_unv = np.dot(dparams[1:4], self.unv_frames[i, 2, :])
+
+    #             dH = GAMMA * (
+    #                 dbx_proj_onto_unv * S_MAT_X
+    #                 + dby_proj_onto_unv * S_MAT_Y
+    #                 + dbz_proj_onto_unv * S_MAT_Z
+    #             )
+    #             df, _ = LA.eig(dH)
+    #             df = np.sort(np.real(df))
+    #             # freqs: ms=0, ms=+-1 -> transition freq is delta
+    #             J[i, p] = np.real(df[1] - df[0])
+    #             J[7 - i, p] = np.real(df[2] - df[0])
+
+    # return J

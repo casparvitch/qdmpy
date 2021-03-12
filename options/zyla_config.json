@@ -400,6 +400,34 @@
     },
 
     // ========== Hamiltonian / field retrieval parameters ==========
+    // Note: it is assumed the reference experiment is run under the same
+    // measurement parameters, except for some single parameter changed
+    // (e.g. voltage on/off), thus all of the below settings are used for the
+    // reference field retrieval as well. This is to simplify analysis.
+    // otherwise, run the field retrieval seperately on each file,
+    // then subtract the magnetic fields (etc.) 'manually' before moving on.
+    // Only difference is that plotting will not be handled so neatly :)
+    
+    // do you want to calculate field result for each pixel? (will auto reload prev result)
+    "calc_field_pixels": {
+        "option_default": true,
+        "option_choices":
+            [
+                true,
+                false
+            ]
+    },
+
+    // force field calculate (don't reload prev. calculation)
+    "force_field_calc": {
+        "option_default": false,
+        "option_choices":
+            [
+                true,
+                false
+            ]
+    },
+
 
     // Method to get bfield from pixel ODMR data
     // options:
@@ -409,7 +437,7 @@
     //    - "prop_single_bnv": use fourier method to propagate bnv -> bxyz
     //    - "invert_unvs": take 3 unvs and (effective) approx_bxyz hamiltonian, 
     //          but use simple inversion of unv matrix rather than fitting to hamiltonian
-    "bfield_method": {
+    "field_method": {
         "option_default": "auto_dc",
         "option_choices": [
             "auto_dc",
@@ -435,7 +463,7 @@
         "option_default": [1, 1, 1, 1, 1, 1, 1, 1]
     },
 
-    // If option 'prop_single_bnv' given for 'bfield_method' but number of frequencies fit
+    // If option 'prop_single_bnv' given for 'field_method' but number of frequencies fit
     // is 2 or 3, this option resolves ambiguity in which bnv to utilize. 
     // This option is used like so: single_bnv = bnvs[single_bnv_choice + 1]
     // Note that `freqs_to_use` must still be set (to use 2 freqs only).
@@ -802,7 +830,7 @@
     "rebinned_image_shape": {},
     // did we automatically reload a previous fit result?
     "reloaded_prev_fit": {},
-    // did we find a previous fit result?
+    // did we find a previous fit result (that matches current options)?
     "found_prev_result": {},
     // reason for above
     "found_prev_result_reason": {},
@@ -821,12 +849,19 @@
     // CUDA information, stored for the record
     "CUDA_version_runtime": {},
     "CUDA_version_driver": {},
-    // time for gpu to fit image
+    // time to fit image
     "fit_time_(s)": {},
+    // as above but for any hamiltonian fitting
+    "ham_fit_time_(s)": {},
     // field result directories
     "field_dir": {},
     "field_sig_dir": {},
     "field_ref_dir": {},
-    "bfield_method_used" : {},
-    "field_params" : {}
+    "field_method_used" : {},
+    // name of field params used in field retrieval model
+    "field_params" : {},
+    // found previous field calculation result that matches current options
+    "found_prev_field_calc": {},
+    // reason for above
+    "found_prev_field_calc_reason": {},
 }

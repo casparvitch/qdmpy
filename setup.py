@@ -30,3 +30,4 @@
 #         zip_safe=False,
 #         include_package_data=True,
 #     )
+# NOTE requires python > 3.8
