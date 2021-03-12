@@ -65,9 +65,7 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
     ref_bnvs, ref_dshifts = Qbnv.get_bnvs_and_dshifts(ref_fit_params)
 
     meth = options["field_method"]
-    if meth == "auto_dc" and not any(
-        map(lambda x: x.startswith("pos"), options["fit_param_defn"])
-    ):
+    if meth == "auto_dc" and not any(map(lambda x: x.startswith("pos"), options["fit_param_defn"])):
         raise RuntimeError(
             """
             field_method 'auto_dc' not compatible with fit functions that do not include 'pos'
@@ -192,6 +190,8 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
             [None, None, None],
             [None, None, None],
         )
+        if options["bnv_bground_method"]:
+            bnv_lst[2] = sub_bground_bnvs(options, bnv_lst[2], method=options["bnv_bground_method"], **options["bnv_bground_params"])
     return bnv_lst, dshift_lst, params_lst, sigmas_lst
 
 
@@ -200,8 +200,7 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
 
 def field_refsub(options, sig_params, ref_params):
     """
-    sig - ref dictionaries, allow different options
-    (blurred bground etc., see QDMPy.field._bnv.bnv_refsub)
+    sig - ref dictionaries
 
     Don't need to be compatible, i.e. will only subtract params that exist in both dicts.
     """
@@ -226,7 +225,7 @@ def sub_bground_Bxyz(options, field_params, field_sigmas, method, **method_setti
             warnings.warn("no B params found in field_params? Doing nothing.")
             return field_params, field_sigmas
 
-    if options["mask_polygons_bground"]:
+    if options["mask_polygons_bground"] and "polygons" in options:
         polygons = options["polygons"]
     else:
         polygons = None
@@ -265,6 +264,26 @@ def sub_bground_Bxyz(options, field_params, field_sigmas, method, **method_setti
         # leave field_sigmas["Bx"] etc. the same
 
     return field_params, field_sigmas
+
+
+# ============================================================================
+
+
+def sub_bground_bnvs(options, bnvs, method, **method_settings):
+    if options["mask_polygons_bground"] and "polygons" in options:
+        polygons = options["polygons"]
+    else:
+        polygons = None
+    output_bnvs = []
+    for bnv in bnvs:
+        if not bnvs:
+            continue
+        bground = Qitools.get_background(
+            bnv, method, polygons=polygons, **method_settings
+        )
+        output_bnvs.append(bnv - bground)
+
+    return output_bnvs
 
 
 # ============================================================================

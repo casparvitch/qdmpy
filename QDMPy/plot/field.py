@@ -76,17 +76,24 @@ def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
             options["colormap_range_dicts"]["bnv_images"], bnv
         )
         title = f"{name} B NV_{i}"
-        ax = axs[i] if not dshifts else axs[0, i]
+        if width == 1 and not dshifts:
+            ax = axs
+        elif width == 1:
+            ax = axs[0]
+        elif not dshifts:
+            ax = axs[i]
+        else:
+            ax = axs[0, i]
         plot_common.plot_image_on_ax(fig, ax, options, bnv, title, c_map, c_range, "B (G)")
-
     c_map = options["colormaps"]["dshift_images"]
     for i, dshift in enumerate(dshifts):
         c_range = plot_common._get_colormap_range(
             options["colormap_range_dicts"]["dshift_images"], dshift
         )
         title = f"{name} D_{i}"
+        ax = axs[1] if width == 1 else axs[1, i]
         plot_common.plot_image_on_ax(
-            fig, axs[1, i], options, dshift, title, c_map, c_range, "D (MHz)"
+            fig, ax, options, dshift, title, c_map, c_range, "D (MHz)"
         )
 
     if options["save_plots"]:
