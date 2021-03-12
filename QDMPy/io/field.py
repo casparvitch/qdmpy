@@ -279,6 +279,8 @@ def check_for_prev_field_calc(options):
 
 def _prev_pixel_field_calcs_exist(options):
     prev_options = QDMPy.io.fit._get_prev_options(options)
+    if "field_params" not in prev_options or prev_options["field_params"] is None:
+        return False, "no key 'field params' in prev_options"
     # skip 'ref' check, as it isn't always there!
     for param_key in prev_options["field_params"]:
         spath = options["field_sig_dir"] / f"sig_{param_key}.txt"

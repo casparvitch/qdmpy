@@ -187,8 +187,8 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
 
     else:
         bnv_lst, dshift_lst, params_lst, sigmas_lst = (
-            [None, None, None],
-            [None, None],
+            [sig_bnvs, ref_bnvs, Qbnv.bnv_refsub(options, sig_bnvs, ref_bnvs)],
+            [sig_dshifts, ref_dshifts],
             [None, None, None],
             [None, None, None],
         )
