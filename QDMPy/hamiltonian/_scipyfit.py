@@ -30,7 +30,6 @@ from datetime import timedelta
 
 # ============================================================================
 
-from QDMPy.constants import AVAILABLE_HAMILTONIANS
 import QDMPy.hamiltonian._shared as ham_shared
 import QDMPy.systems as systems
 
@@ -65,6 +64,8 @@ def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
     """
     param_lst = []
     bound_lst = []
+
+    from QDMPy.constants import AVAILABLE_HAMILTONIANS
 
     for pos, key in enumerate(AVAILABLE_HAMILTONIANS[options["hamiltonian"]].param_defn):
         # this check is to handle the edge case of guesses/bounds
@@ -104,7 +105,6 @@ def prep_scipyfit_options(options, ham):
     scipy_fit_options : dict
         Dictionary with options that scipy.optimize.least_squares expects, specific to fitting.
     """
-
     # this is just constructing the initial parameter guesses and bounds in the right format
     _, fit_param_bound_ar = gen_scipyfit_init_guesses(
         options, *ham_shared.gen_init_guesses(options)

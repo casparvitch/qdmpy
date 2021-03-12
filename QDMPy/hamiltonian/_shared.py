@@ -25,7 +25,6 @@ import copy
 # ============================================================================
 
 import QDMPy.hamiltonian._hamiltonians
-import QDMPy.field as Qfield
 
 # ============================================================================
 
@@ -56,6 +55,7 @@ def gen_init_guesses(options):
     init_guesses = {}
     init_bounds = {}
     if options["auto_read_B"]:
+        import QDMPy.field as Qfield # avoid circular import
         bias_x, bias_y, bias_z = Qfield.get_B_bias(options)
         override_guesses = {"Bx": bias_x, "By": bias_y, "Bz": bias_z}
 

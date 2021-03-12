@@ -90,7 +90,7 @@ def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
         )
 
     if options["save_plots"]:
-        fig.savefig(options["sub_ref_dir"] / (f"Bnv_{name}." + options["save_fig_type"]))
+        fig.savefig(options["field_dir"] / (f"Bnv_{name}." + options["save_fig_type"]))
 
     return fig
 
@@ -107,7 +107,7 @@ def plot_bfield(options, name, field_params):
 
     for p in ["B" + comp for comp in components]:
         if p not in field_params:
-            raise ValueError(f"bfield param '{p} missing from field_params, skipping bfield plot.")
+            warnings.warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
             return None
 
     bfields = [field_params["B" + comp] for comp in components]
@@ -131,7 +131,7 @@ def plot_bfield(options, name, field_params):
         )
 
     if options["save_plots"]:
-        fig.savefig(options["sub_ref_dir"] / (f"Bfield_{name}." + options["save_fig_type"]))
+        fig.savefig(options["field_dir"] / (f"Bfield_{name}." + options["save_fig_type"]))
 
     return fig
 
@@ -144,7 +144,7 @@ def plot_dshift_fit(options, name, field_params):
         return None
 
     if "D" not in field_params:
-        raise ValueError("'D' param missing from field_params, skipping Dshift_fit plot.")
+        warnings.warn("'D' param missing from field_params, skipping Dshift_fit plot.")
         return None
 
     fig, ax = plt.subplots(constrained_layout=True)
@@ -159,7 +159,7 @@ def plot_dshift_fit(options, name, field_params):
     )
 
     if options["save_plots"]:
-        fig.savefig(options["sub_ref_dir"] / (f"Dshift_fit_{name}." + options["save_fig_type"]))
+        fig.savefig(options["field_dir"] / (f"Dshift_fit_{name}." + options["save_fig_type"]))
 
     return fig
 
@@ -173,7 +173,7 @@ def plot_ham_residual(options, name, field_params):
         return None
 
     if "residual_ham" not in field_params:
-        raise ValueError(
+        warnings.warn(
             "'residual_ham' param missing from field_params, skipping residual ham plot."
         )
         return None
@@ -199,7 +199,7 @@ def plot_ham_residual(options, name, field_params):
     )
 
     if options["save_plots"]:
-        fig.savefig(options["sub_ref_dir"] / (f"residual_ham_{name}." + options["save_fig_type"]))
+        fig.savefig(options["field_dir"] / (f"residual_ham_{name}." + options["save_fig_type"]))
 
     return fig
 
@@ -240,7 +240,7 @@ def plot_field_param(
 
     if options["save_plots"]:
         fig.savefig(
-            options["sub_ref_dir"]
+            options["field_dir"]
             / (f"residual_ham_{name}_{param_name}." + options["save_fig_type"])
         )
 
@@ -365,7 +365,7 @@ def field_param_flattened(
 
     if options["save_plots"]:
         fig.savefig(
-            options["sub_ref_dir"]
+            options["field_dir"]
             / (f"{name}_{param_name}_fit_flattened." + options["save_fig_type"])
         )
 

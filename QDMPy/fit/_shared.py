@@ -141,6 +141,7 @@ class ROIAvgFitResult:
             "sweep_list": self.sweep_list,
             "best_params": self.best_params,
             "init_param_guess": self.init_param_guess,
+            "init_param_bounds": self.init_param_bounds
         }
         Qio.dict_to_json(output_dict, filename, dir)
 

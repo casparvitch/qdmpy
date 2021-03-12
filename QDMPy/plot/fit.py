@@ -911,7 +911,10 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name, errorplo
             param_nums.extend(list(range(nk // 2)))
             if nk % 2:
                 param_nums.append(nk // 2 + 1)
+            if len(param_nums) < 4:
+                param_nums.extend([-1 for _ in range(4 - len(param_nums))]) # dummies
             param_nums.extend(list(range(nk - 1, (nk - 1) // 2, -1)))  # range(start, stop, step)
+            param_nums.extend([-1 for _ in range(8 - len(param_nums))]) # add on dummies
             param_axis_iterator = zip(param_nums, axs.flatten())
         # otherwise plot in a more conventional order
         else:
@@ -920,13 +923,12 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name, errorplo
         for param_number, ax in param_axis_iterator:
 
             param_key = param_name + "_" + str(param_number)
-
             try:
                 image_data = pixel_fit_params[param_key]
             except KeyError:
-                # we have one too many axes (i.e. 7 params, 8 subplots), delete the axs
+                # we have too many axes (i.e. 7 params, 8 subplots), delete the axs
                 fig.delaxes(ax)
-                break
+                continue
 
             if param_name == "residual":
                 c_range = plot_common._get_colormap_range(
@@ -959,6 +961,7 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name, errorplo
                 c_range,
                 c_label,
             )
+
 
         if options["save_plots"]:
             if errorplot:

@@ -131,8 +131,8 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
     else:
         options["field_params"] = None
 
-    Qio.save_field_params(options, "sig", sig_params)
-    Qio.save_field_params(options, "ref", ref_params)
+    # Qio.save_field_params(options, "sig", sig_params)
+    # Qio.save_field_params(options, "ref", ref_params)
 
     # TODO add subref params as output. Also combine sigmas
     return (

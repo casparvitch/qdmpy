@@ -360,7 +360,6 @@ def fit_ROI_avg_gpufit(options, sig_norm, sweep_list, fit_model):
         parameters_to_fit=params_to_fit,
         **gpufit_fit_options,
     )
-
     return fit_shared.ROIAvgFitResult(
         "gpufit",
         gpufit_fit_options,
@@ -369,7 +368,7 @@ def fit_ROI_avg_gpufit(options, sig_norm, sweep_list, fit_model):
         sweep_list,
         best_params[0, :],  # only take one of the results
         init_guess_params[0],  # return the params un-repeated
-        init_bounds[0],
+        init_bounds,
     )
 
 

@@ -156,7 +156,7 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
         warnings.warn(
             "No reference experiment options dict provided, continuing without reference."
         )
-        options["field_dir"] = options["output_dir"].jointpath("field")
+        options["field_dir"] = options["output_dir"].joinpath("field")
         options["field_sig_dir"] = options["field_dir"].joinpath("sig")
         options["field_ref_dir"] = options["field_dir"].joinpath("ref_nothing")
 
@@ -181,7 +181,7 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
     )
 
     ref_name = Path(ref_options["filepath"]).stem
-    options["field_dir"] = options["output_dir"].jointpath("field")
+    options["field_dir"] = options["output_dir"].joinpath("field")
     options["field_sig_dir"] = options["field_dir"].joinpath("sig")
     options["field_ref_dir"] = options["field_dir"].joinpath(f"ref_{ref_name}")
     if not os.path.isdir(options["field_dir"]):
