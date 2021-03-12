@@ -169,7 +169,7 @@ def save_options(options):
         Generic options dict holding all the user options.
     """
 
-    keys_to_remove = ["system"]
+    keys_to_remove = ["system", "polygons"]
     save_options = {}
 
     for key, val in options.items():
@@ -187,8 +187,13 @@ def save_options(options):
 
 def load_polygons(options):
     if options["polygon_nodes_path"]:
-        options["polygon_nodes"] = QDMPy.io.jsonson2dict(options["polygon_nodes_path"])["nodes"]
-        options["polygons"] = [Qitools.Polygon(node) for node in options["polygon_nodes"]]
+        options["polygon_nodes"] = [
+            np.array(polygon)
+            for polygon in QDMPy.io.json2dict.json_to_dict(options["polygon_nodes_path"])["nodes"]
+        ]
+        options["polygons"] = [
+            Qitools.Polygon(nodes[:, 0], nodes[:, 1]) for nodes in options["polygon_nodes"]
+        ]
     else:
         options["polygon_nodes"] = None
         options["polygons"] = None

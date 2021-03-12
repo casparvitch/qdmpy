@@ -252,7 +252,7 @@ def sub_bground_Bxyz(options, field_params, field_sigmas, method, **method_setti
     field_params["By"] = field_params["By_full"] - y_bground
     field_params["Bz"] = field_params["Bz_full"] - z_bground
 
-    if "Bx" in field_sigmas and "By" in field_sigmas and "Bz" in field_sigmas:
+    if field_sigmas and "Bx" in field_sigmas and "By" in field_sigmas and "Bz" in field_sigmas:
         field_sigmas["Bx_full"] = field_sigmas["Bx"]
         field_sigmas["By_full"] = field_sigmas["By"]
         field_sigmas["Bz_full"] = field_sigmas["Bz"]

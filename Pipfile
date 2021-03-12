@@ -25,6 +25,7 @@ scikit-image = "*"
 scikit-learn = "*"
 pyfftw = "*"
 pysimplegui = "*"
+pyqt5 = "*"
 
 [dev-packages]
 

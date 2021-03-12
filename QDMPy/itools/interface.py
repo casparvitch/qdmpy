@@ -22,6 +22,7 @@ import numpy as np
 
 import QDMPy.itools._bground
 import QDMPy.itools._mask
+import QDMPy.itools._polygon
 
 # ============================================================================
 
@@ -77,3 +78,10 @@ def get_background(image, method, polygons=None, **method_params_dict):
 
 def im_filter(*args, **kwargs):
     return QDMPy.itools._filter.im_filter(*args, **kwargs)
+
+
+# ============================================================================
+
+
+def polygon_gui(image=None):
+    return QDMPy.itools._polygon.polygon_gui(image)

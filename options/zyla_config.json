@@ -852,12 +852,14 @@
             "errorbar.capsize": 3.0
         }
     },
+    // parameters for annotating polygon patches onto images (passed to matplotlib.patches.Polygon)
     "polygon_patch_params": {
         "option_default": {
             "facecolor": null,
             "edgecolor": "k",
-            "linestyle": [0, [5,5]]
-        } 
+            "linestyle": "dashed",
+            "fill": false
+        }
     },
     // colors to identify with each AOI region
     "AOI_colors": {
