@@ -83,14 +83,7 @@ def plot_ROI_PL_image(options, PL_image):
     fig, ax = plt.subplots(constrained_layout=True)
 
     fig, ax = plot_common.plot_image_on_ax(
-        fig,
-        ax,
-        options,
-        PL_image,
-        "PL - Full & Rebinned",
-        c_map,
-        c_range,
-        "Counts",
+        fig, ax, options, PL_image, "PL - Full & Rebinned", c_map, c_range, "Counts"
     )
 
     if options["annotate_image_regions"]:
@@ -129,14 +122,7 @@ def plot_AOI_PL_images(options, PL_image_ROI):
     )
 
     fig, ax = plot_common.plot_image_on_ax(
-        fig,
-        ax,
-        options,
-        PL_image_ROI,
-        "PL - ROI & Rebinned",
-        c_map,
-        c_range,
-        "Counts",
+        fig, ax, options, PL_image_ROI, "PL - ROI & Rebinned", c_map, c_range, "Counts"
     )
 
     if options["annotate_image_regions"]:
@@ -190,16 +176,7 @@ def plot_ROI_avg_fits(options, backend_ROI_results_lst):
         mec="firebrick",
     )
     lspec_names.append(f"raw data ({options['normalisation']})")
-    lspec_lines.append(
-        Line2D(
-            [0],
-            [0],
-            ls=" ",
-            marker="o",
-            mfc="w",
-            mec="firebrick",
-        )
-    )
+    lspec_lines.append(Line2D([0], [0], ls=" ", marker="o", mfc="w", mec="firebrick"))
 
     high_res_sweep_list = np.linspace(
         np.min(backend_ROI_results_lst[0].sweep_list),
@@ -217,14 +194,7 @@ def plot_ROI_avg_fits(options, backend_ROI_results_lst):
         c="darkgreen",
     )
     lspec_names.append("init guess")
-    lspec_lines.append(
-        Line2D(
-            [0],
-            [0],
-            linestyle=(0, (1, 1)),
-            c="darkgreen",
-        )
-    )
+    lspec_lines.append(Line2D([0], [0], linestyle=(0, (1, 1)), c="darkgreen"))
 
     spectrum_frame.set_xticklabels([])  # remove from first frame
 
@@ -395,10 +365,7 @@ def plot_AOI_spectra(options, sig, ref, sweep_list):
 
         axs[0, i].legend()
         axs[0, i].grid(True)
-        axs[0, i].set_title(
-            "AOI " + str(i + 1),
-            fontdict={"color": options["AOI_colors"][i + 1]},
-        )
+        axs[0, i].set_title("AOI " + str(i + 1), fontdict={"color": options["AOI_colors"][i + 1]})
         axs[0, i].set_ylabel("PL (a.u.)")
 
     linestyles = [
@@ -482,14 +449,7 @@ def plot_AOI_spectra(options, sig, ref, sweep_list):
 # ============================================================================
 
 
-def plot_AOI_spectra_fit(
-    options,
-    sig,
-    ref,
-    sweep_list,
-    fit_result_collection_lst,
-    fit_model,
-):
+def plot_AOI_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_lst, fit_model):
     """
     Plots sig and ref spectra, sub and div normalisation and fit for the ROI average, a single
     pixel, and each of the AOIs. All stacked on top of each other for comparison. The ROI
@@ -688,8 +648,7 @@ def plot_AOI_spectra_fit(
                     axs[i, 2].set_title("ROI avg - Fit")
                 elif i == 1:
                     axs[i, 2].set_title(
-                        "Single Pixel Check - Fit",
-                        fontdict={"color": options["AOI_colors"][0]},
+                        "Single Pixel Check - Fit", fontdict={"color": options["AOI_colors"][0]}
                     )
                 else:
                     axs[i, 2].set_title(
@@ -950,14 +909,7 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name, errorplo
                 c_label = Qfit.get_param_unit(fit_model, param_name, param_number)
 
             plot_common.plot_image_on_ax(
-                fig,
-                ax,
-                options,
-                image_data,
-                param_key,
-                c_map,
-                c_range,
-                c_label,
+                fig, ax, options, image_data, param_key, c_map, c_range, c_label
             )
 
         if options["save_plots"]:
@@ -1061,9 +1013,7 @@ def plot_params_flattened(
             for param_num, param_root in enumerate(fn_obj.param_defn):
                 if param_root == param_name:
                     param_guesses.append(
-                        roi_avg_fit_result.init_param_guess[
-                            fn_obj.this_fn_param_indices[param_num]
-                        ]
+                        roi_avg_fit_result.init_param_guess[fn_obj.this_fn_param_indices[param_num]]
                     )
                     param_roi_fits.append(
                         roi_avg_fit_result.best_params[fn_obj.this_fn_param_indices[param_num]]
@@ -1105,20 +1055,12 @@ def plot_params_flattened(
 
     for i, guess in enumerate(param_guesses):
         axs[i].axhline(
-            guess,
-            ls=(0, (1, 1)),
-            c="k",
-            zorder=10,
-            lw=mpl.rcParams["lines.linewidth"] * 2,
+            guess, ls=(0, (1, 1)), c="k", zorder=10, lw=mpl.rcParams["lines.linewidth"] * 2
         )
 
     for i, roi_fit in enumerate(param_roi_fits):
         axs[i].axhline(
-            roi_fit,
-            ls=(0, (5, 1)),
-            lw=mpl.rcParams["lines.linewidth"] * 2,
-            c="k",
-            zorder=5,
+            roi_fit, ls=(0, (5, 1)), lw=mpl.rcParams["lines.linewidth"] * 2, c="k", zorder=5
         )
 
     for i, (param_key, color) in enumerate(zip(param_keys, colors)):

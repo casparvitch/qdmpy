@@ -105,7 +105,6 @@ def prep_scipyfit_options(options, ham):
     scipy_fit_options : dict
         Dictionary with options that scipy.optimize.least_squares expects, specific to fitting.
     """
-
     # this is just constructing the initial parameter guesses and bounds in the right format
     _, fit_param_bound_ar = gen_scipyfit_init_guesses(
         options, *ham_shared.gen_init_guesses(options)
