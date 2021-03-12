@@ -140,9 +140,7 @@ def from_unv_inversion(options, bnvs):
         bnvs_to_use = bnvs  # if only 3 bnvs passed, well we just use em all :)
     else:
         bnvs_to_use = [bnvs[j] for j in nv_idxs_to_use]
-    unvs_to_use = np.vstack(
-        [unvs[j] for j, do_use in enumerate(nv_idxs_to_use) if do_use]
-    )  # 3x3 matrix
+    unvs_to_use = np.vstack([unvs[j] for j in nv_idxs_to_use])  # 3x3 matrix
 
     unv_inv = LA.inv(unvs_to_use)
 

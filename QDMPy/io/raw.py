@@ -19,7 +19,7 @@ Functions
  - `QDMPy.io.raw._remove_unwanted_data`
  - `QDMPy.io.raw._define_ROI`
  - `QDMPy.io.raw._define_area_roi`
- - `QDMPy.io.raw._define_AOIs`
+ - `QDMPy.io.raw.define_AOIs`
  - `QDMPy.io.raw._recursive_dict_update`
  - `QDMPy.io.raw._check_start_end_rectangle`
 """
@@ -40,7 +40,7 @@ __pdoc__ = {
     "QDMPy.io.raw._remove_unwanted_data": True,
     "QDMPy.io.raw._define_ROI": True,
     "QDMPy.io.raw._define_area_roi": True,
-    "QDMPy.io.raw._define_AOIs": True,
+    "QDMPy.io.raw.define_AOIs": True,
     "QDMPy.io.raw._recursive_dict_update": True,
     "QDMPy.io.raw._check_start_end_rectangle": True,
 }
@@ -60,6 +60,7 @@ import re
 import QDMPy.io.json2dict
 import QDMPy.io.fit
 import QDMPy.systems as systems
+import QDMPy.itools as Qitools
 
 # ============================================================================
 
@@ -147,6 +148,8 @@ def load_options(
     if not os.path.isdir(options["data_dir"]):
         os.mkdir(options["data_dir"])
 
+    load_polygons(options)
+
     # don't always check for prev. results (so we can use this fn in other contexts)
     if check_for_prev_result or loading_ref:
         QDMPy.io.fit._check_if_already_fit(options, loading_ref=loading_ref)
@@ -166,7 +169,7 @@ def save_options(options):
         Generic options dict holding all the user options.
     """
 
-    keys_to_remove = ["system"]
+    keys_to_remove = ["system", "polygons"]
     save_options = {}
 
     for key, val in options.items():
@@ -177,6 +180,23 @@ def save_options(options):
     QDMPy.io.json2dict.dict_to_json(
         save_options, "saved_options.json", path_to_dir=options["output_dir"]
     )
+
+
+# ============================================================================
+
+
+def load_polygons(options):
+    if options["polygon_nodes_path"]:
+        options["polygon_nodes"] = [
+            np.array(polygon)
+            for polygon in QDMPy.io.json2dict.json_to_dict(options["polygon_nodes_path"])["nodes"]
+        ]
+        options["polygons"] = [
+            Qitools.Polygon(nodes[:, 0], nodes[:, 1]) for nodes in options["polygon_nodes"]
+        ]
+    else:
+        options["polygon_nodes"] = None
+        options["polygons"] = None
 
 
 # ============================================================================
@@ -653,7 +673,7 @@ def _define_area_roi(start_x, start_y, end_x, end_y):
 # ============================================================================
 
 
-def _define_AOIs(options):
+def define_AOIs(options):
     """
     Defines areas of interest (AOIs).
 

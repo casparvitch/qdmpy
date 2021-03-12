@@ -230,9 +230,11 @@ class Bxyz(Hamiltonian):
             nv_frequencies[7 - i] = np.real(freq[2] - freq[0])
         return nv_frequencies
 
-    # this method didn't work.
+    # this method didn't work :(
     # def grad_fn(self, param_ar):
-    # method here: do partial before calculating evalues
+
+    # method here: do partial before calculating eigenvalues
+
     # from QDMPy.constants import S_MAT_X, S_MAT_Y, S_MAT_Z, GAMMA
 
     # J = np.empty((8, 4))  # shape: num freqs, num params

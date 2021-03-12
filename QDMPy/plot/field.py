@@ -105,9 +105,14 @@ def plot_bfield(options, name, field_params):
 
     components = ["x", "y", "z"]
 
+    if name == "bground":
+        components = [i + "_bground" for i in components]
+
     for p in ["B" + comp for comp in components]:
         if p not in field_params:
             warnings.warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
+            return None
+        elif field_params[p] is None:
             return None
 
     bfields = [field_params["B" + comp] for comp in components]
@@ -125,7 +130,10 @@ def plot_bfield(options, name, field_params):
         c_range = plot_common._get_colormap_range(
             options["colormap_range_dicts"]["bfield_images"], bcomponent
         )
-        title = f"{name} B" + components[i]
+        if name != "bground":
+            title = f"{name} B" + components[i]
+        else:
+            title = "B" + components[i]
         plot_common.plot_image_on_ax(
             fig, ax[i], options, bcomponent, title, c_map, c_range, "B (G)"
         )
@@ -145,6 +153,8 @@ def plot_dshift_fit(options, name, field_params):
 
     if "D" not in field_params:
         warnings.warn("'D' param missing from field_params, skipping Dshift_fit plot.")
+        return None
+    elif field_params["D"] is None:
         return None
 
     fig, ax = plt.subplots(constrained_layout=True)
@@ -167,21 +177,23 @@ def plot_dshift_fit(options, name, field_params):
 # ============================================================================
 
 
-def plot_ham_residual(options, name, field_params):
+def plot_field_residual(options, name, field_params):
 
     if field_params is None:
         return None
 
-    if "residual_ham" not in field_params:
+    if "residual_field" not in field_params:
         warnings.warn(
-            "'residual_ham' param missing from field_params, skipping residual ham plot."
+            "'residual_field' param missing from field_params, skipping field residual plot."
         )
+        return None
+    elif field_params["residual_field"] is None:
         return None
 
     fig, ax = plt.subplots(constrained_layout=True)
 
     c_range = plot_common._get_colormap_range(
-        options["colormap_range_dicts"]["residual_images"], field_params["residual_ham"]
+        options["colormap_range_dicts"]["residual_images"], field_params["residual_field"]
     )
     c_map = options["colormaps"]["residual_images"]
 
@@ -191,7 +203,7 @@ def plot_ham_residual(options, name, field_params):
         fig,
         ax,
         options,
-        field_params["residual_ham"],
+        field_params["residual_field"],
         title,
         c_map,
         c_range,
@@ -199,7 +211,7 @@ def plot_ham_residual(options, name, field_params):
     )
 
     if options["save_plots"]:
-        fig.savefig(options["field_dir"] / (f"residual_ham_{name}." + options["save_fig_type"]))
+        fig.savefig(options["field_dir"] / (f"residual_field_{name}." + options["save_fig_type"]))
 
     return fig
 
@@ -241,7 +253,7 @@ def plot_field_param(
     if options["save_plots"]:
         fig.savefig(
             options["field_dir"]
-            / (f"residual_ham_{name}_{param_name}." + options["save_fig_type"])
+            / (f"residual_field_{name}_{param_name}." + options["save_fig_type"])
         )
 
 
@@ -277,7 +289,7 @@ def field_param_flattened(
         guess = None
         bounds = None
         plot_sigmas = False
-    elif options["bfield_method_used"] == "hamiltonian_fitting":
+    elif options["field_method_used"] == "hamiltonian_fitting":
         guess_dict, bound_dict = Qham.get_ham_guess_and_bounds(options)
         guess = guess_dict[param_name]
         bounds = bound_dict[param_name]

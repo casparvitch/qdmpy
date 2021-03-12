@@ -46,6 +46,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib_scalebar.scalebar import ScaleBar
 from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
+import matplotlib.patches
 import warnings
 
 # ===========================================================================
@@ -159,6 +160,12 @@ def plot_image_on_ax(fig, ax, options, image_data, title, c_map, c_range, c_labe
         pixel_size = options["system"].get_raw_pixel_size(options) * options["total_bin"]
         scalebar = ScaleBar(pixel_size)
         ax.add_artist(scalebar)
+
+    if options["polygon_nodes"] and options["annotate_polygons"]:
+        for p in options["polygon_nodes"]:
+            ax.add_patch(
+                matplotlib.patches.Polygon(np.array(p), **options["polygon_patch_params"])
+            )
 
     return fig, ax
 

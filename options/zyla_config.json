@@ -23,20 +23,47 @@
         "option_default": null
     },
     // =======================================
-
+    // === microscope settings ===
     // Default options for the Zyla microscope
     "microscope_setup": {
-        "sensor_pixel_size": 6.5e-6,
-        "default_objective_mag": 4,
-        "default_objective_reference_focal_length":  200e-3,
-        "default_camera_tube_lens": 300e-3
+        "option_default": {
+            "sensor_pixel_size": 6.5e-6,
+            "default_objective_mag": 4,
+            "default_objective_reference_focal_length":  200e-3,
+            "default_camera_tube_lens": 300e-3
+        }
     },
 
     "other_measurement_suffixes": {
-        "option_default": ["_IV.txt"]
+        "option_default": ["_T.txt", "_IV.txt"]
+    },
+    // =======================================
+    // === polygon settings ===
+    "polygon_nodes_path": {
+        "option_default": null
     },
 
-    // override default microscope settings.
+    "mask_polygons_bground": {
+        "option_default": false,
+        "option_choices": [
+            true,
+            false
+        ]
+    },
+
+    "annotate_polygons": {
+        "option_default": false,
+        "option_choices": [
+            true,
+            false
+        ]
+    },
+
+    // === override default microscope settings ===
+    // provide pixel size manually
+    "pixel_size": {
+        "option_default": null
+    },
     // pixel_size = sensor_pixel_size * (focal length objective / focal length camera tube lens)
     // where tube lens is the lens that focuses onto the camera, and:
     // focal length objective = objective reference focal length / objective mag
@@ -50,6 +77,8 @@
     "camera_tube_lens": {
         "option_default": null
     },  
+
+    // === ===
     // If true the reference (often no-MW) measurement is ignored.
     "ignore_ref": {
     	"option_default": false,
@@ -530,6 +559,44 @@
         "option_default": 15
     },
 
+    // ========== Bfield background subtraction parameters ===========
+    // Method for bfield background subtraction (or null to avoid)
+    // TODO: how do they handle polygons? what documentation to put here?
+    // Descriptions
+    // ------------
+    //  - fix_zero: constant offset, set zero to chosen value (key 'zero' in bfield_bground_params)
+    //  - three_point: plane background, calculated from three points (key 'points')
+    //  - mean: constant offset of mean of image
+    //  - poly: key 'order' polynomial fit to image
+    //  - gaussian: gaussian fit to image
+    //  - interpolate: image gaussian filtered (key 'sigma'), with data interpolated over
+    //     polygons (key 'method')
+    //  - gaussian_filter: image gaussian filtered (key 'sigma')
+    "bfield_bground_method": {
+        "option_default": null,
+        "option_choices": [
+            "fix_zero",
+            "three_point",
+            "mean",
+            "poly",
+            "gaussian",
+            "interpolate",
+            "gaussian_filter"
+        ]
+    },
+    // parameters for chosen bground method
+    // required:
+    //  - fix_zero: 'zero', a number
+    //  - three_point: 'points' a length three iterable of [y, x] positions in image
+    //  - mean: none
+    //  - poly: key 'order', a natural number
+    //  - gaussian: none
+    //  - interpolate: key 'method' (interpolation method in scipy griddata: nearest, linear, cubic)
+    //     and key 'sigma'
+    "bfield_bground_params": {
+        "option_default": {}
+    },
+
     // ========== Bfield Fit Parameters ===========
     // directly supply guesses and ranges for bxyz (in Gauss)
     "Bx_guess": {
@@ -785,6 +852,15 @@
             "errorbar.capsize": 3.0
         }
     },
+    // parameters for annotating polygon patches onto images (passed to matplotlib.patches.Polygon)
+    "polygon_patch_params": {
+        "option_default": {
+            "facecolor": null,
+            "edgecolor": "k",
+            "linestyle": "dashed",
+            "fill": false
+        }
+    },
     // colors to identify with each AOI region
     "AOI_colors": {
         "option_default": [
@@ -864,4 +940,7 @@
     "found_prev_field_calc": {},
     // reason for above
     "found_prev_field_calc_reason": {},
+    // TODO
+    "polygon_nodes": {},
+    "polygons": {}
 }
