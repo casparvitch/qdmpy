@@ -154,11 +154,6 @@ def check_exp_bnv_compatibility(sig_bnvs, ref_bnvs):
 
 def bnv_refsub(options, sig_bnvs, ref_bnvs):
     """docstring here"""
-    # TODO
-    # documentation +
-    # "bnv_bsub_method" option -> allow other bsubs e.g.
-    # subtract_blurred, subtract_outside_polygons etc. should be defined on any 2D array,
-    # do that later
     if ref_bnvs:
         check_exp_bnv_compatibility(sig_bnvs, ref_bnvs)
         return [sig - ref for sig, ref in zip(sig_bnvs, ref_bnvs)]

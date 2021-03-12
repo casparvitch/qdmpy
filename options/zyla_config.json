@@ -597,6 +597,23 @@
         "option_default": {}
     },
 
+    // same for bnvs
+    "bnv_bground_method":{
+        "option_default": null,
+        "option_choices": [
+            "fix_zero",
+            "three_point",
+            "mean",
+            "poly",
+            "gaussian",
+            "interpolate",
+            "gaussian_filter"
+        ]
+    },
+    "bnv_bground_params": {
+        "option_default": {}
+    },
+
     // ========== Bfield Fit Parameters ===========
     // directly supply guesses and ranges for bxyz (in Gauss)
     "Bx_guess": {
