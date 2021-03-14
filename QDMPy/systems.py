@@ -168,7 +168,12 @@ class System:
             self.filepath_joined = True
 
     def get_headers_and_read_csv(self, options, path):
-        """ DOCSTRING """
+        """
+        Harcoded method that allows reading of a csv file with 'other' measurement
+        data (e.g. temperature) from a csv file. Needs to return
+        headers, csv_data (as a list of strings, and a numpy array).
+        The 1st column should be some sort of independ. data e.g. time.
+        """
         raise NotImplementedError
 
 
@@ -321,10 +326,8 @@ class UniMelb(System):
         ---------
         options : dict
             Generic options dict holding all the user options.
-
         raw_data : np array, 1D (unshaped)
             Raw unshaped data read from binary file
-
         sweep_list : list
             List of sweep parameter values
 
@@ -333,7 +336,6 @@ class UniMelb(System):
         image : np array, 3D
             Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
             not been rebinned. Unwanted sweep values not removed.
-
         """
 
         options["used_ref"] = False  # flag for later

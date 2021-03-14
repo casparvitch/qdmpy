@@ -71,7 +71,6 @@ __pdoc__ = {
 
 # ==========================================================================
 
-
 import numpy as np
 from scipy.optimize import least_squares
 from tqdm.autonotebook import tqdm  # auto detects jupyter
@@ -87,8 +86,8 @@ from datetime import timedelta
 # ============================================================================
 
 import QDMPy.systems as systems
-import QDMPy.fit._shared as fit_shared
 import QDMPy.constants
+import QDMPy.fit._shared as fit_shared
 
 # ==========================================================================
 
@@ -102,8 +101,7 @@ def prep_scipyfit_options(options, fit_model):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         Fit model object.
 
     Returns
@@ -138,7 +136,7 @@ def prep_scipyfit_options(options, fit_model):
         options[&#34;scipyfit_scale_x&#34;] = False
 
     # define jacobian option for least_squares fitting
-    if fit_model.jacobian_scipyfit is None or not options[&#34;scipyfit_use_analytic_jac&#34;]:
+    if not fit_model.jacobian_defined() or not options[&#34;scipyfit_use_analytic_jac&#34;]:
         scipyfit_options[&#34;jac&#34;] = options[&#34;scipyfit_fit_jac_acc&#34;]
     else:
         scipyfit_options[&#34;jac&#34;] = fit_model.jacobian_scipyfit
@@ -161,11 +159,9 @@ def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     init_guesses : dict
         Dict holding guesses for each parameter, e.g. key -&gt; list of guesses for each independent
         version of that fn_type.
-
     init_bounds : dict
         Dict holding guesses for each parameter, e.g. key -&gt; list of bounds for each independent
         version of that fn_type.
@@ -174,8 +170,7 @@ def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
     -------
     fit_param_ar : np array, shape: num_params
         The initial fit parameter guesses.
-
-    fi_param_bound_ar : np array, shape: (num_params, 2)
+    fit_param_bound_ar : np array, shape: (num_params, 2)
         Fit parameter bounds.
     &#34;&#34;&#34;
     param_lst = []
@@ -213,14 +208,11 @@ def fit_ROI_avg_scipyfit(options, sig_norm, sweep_list, fit_model):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     sig_norm : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x].
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         The fit model object.
 
     Returns
@@ -236,7 +228,9 @@ def fit_ROI_avg_scipyfit(options, sig_norm, sweep_list, fit_model):
 
     fit_options = prep_scipyfit_options(options, fit_model)
 
-    init_param_guess, _ = gen_scipyfit_init_guesses(options, *fit_shared.gen_init_guesses(options))
+    init_param_guess, init_bounds = gen_scipyfit_init_guesses(
+        options, *fit_shared.gen_init_guesses(options)
+    )
 
     fitting_results = least_squares(
         fit_model.residuals_scipyfit, init_param_guess, args=(sweep_list, pl_roi), **fit_options
@@ -245,7 +239,14 @@ def fit_ROI_avg_scipyfit(options, sig_norm, sweep_list, fit_model):
     best_params = fitting_results.x
 
     return fit_shared.ROIAvgFitResult(
-        &#34;scipyfit&#34;, fit_options, fit_model, pl_roi, sweep_list, best_params, init_param_guess
+        &#34;scipyfit&#34;,
+        fit_options,
+        fit_model,
+        pl_roi,
+        sweep_list,
+        best_params,
+        init_param_guess,
+        init_bounds,
     )
 
 
@@ -260,16 +261,12 @@ def fit_single_pixel_scipyfit(options, pixel_pl_ar, sweep_list, fit_model, roi_a
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     pixel_pl_ar : np array, 1D
         Normalised PL as function of sweep_list for a single pixel.
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         The fit model.
-
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
         `QDMPy.fit._shared.ROIAvgFitResult` object, to pull fit_options from.
 
@@ -310,23 +307,17 @@ def fit_AOIs_scipyfit(
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     sig_norm : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x].
-
     single_pixel_pl : np array, 1D
         Normalised measurement array, for chosen single pixel check.
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq).
-
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         The model we&#39;re fitting to.
-
     AOIs : list
         List of AOI specifications - each a length-2 iterable that can be used to directly index
         into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].
-
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
         `QDMPy.fit._shared.ROIAvgFitResult` object, to pull `QDMPy.fit._shared.ROIAvgFitResult.fit_options`
         from.
@@ -376,7 +367,7 @@ def fit_AOIs_scipyfit(
 def limit_cpu():
     &#34;&#34;&#34;Called at every process start, to reduce the priority of this process&#34;&#34;&#34;
     p = psutil.Process(os.getpid())
-    # set to lowest priority, this is windows only, on Unix use p.nice(19)
+    # set to lowest priority
     if platform.startswith(&#34;linux&#34;):  # linux
         p.nice(19)
     elif platform.startswith(&#34;win32&#34;):  # windows
@@ -399,31 +390,25 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, kwargs={}):
     ---------
     fun : function
         Function object acting as residual (fit model minus pl value)
-
     p0 : np array
         Initial guess: array of parameters
-
     sweep_vec : np array
         Array (or I guess single value, anything iterable) of affine parameter (tau/freq)
-
     shaped_data : list (3 elements)
         array returned by `QDMPy.fit._shared.pixel_generator`: [y, x, sig_norm[:, y, x]]
-
     kwargs : dict
         Other options (dict) passed to least_squares, i.e. fit_options
 
     Returns
     -------
     wrapped_squares : tuple
-        (y, x), least_squares(...).x
-        I.e. the position of the fit result, and then the fit result parameters array.
+        (y, x), least_squares(...).x, leas_squares(...).jac
+        I.e. the position of the fit result, the fit result parameters array, jacobian at solution
     &#34;&#34;&#34;
     # shaped_data: [y, x, pl]
-    # output: (y, x), result_params
-    return (
-        (shaped_data[0], shaped_data[1]),
-        least_squares(fun, p0, args=(sweep_vec, shaped_data[2]), **kwargs).x,
-    )
+    # output: (y, x), result_params, jac
+    fitres = least_squares(fun, p0, args=(sweep_vec, shaped_data[2]), **kwargs)
+    return ((shaped_data[0], shaped_data[1]), fitres.x, fitres.jac)
 
 
 # ==========================================================================
@@ -437,16 +422,12 @@ def fit_pixels_scipyfit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_re
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     sig_norm : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x].
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         The model we&#39;re fitting to.
-
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
         `QDMPy.fit._shared.ROIAvgFitResult` object, to pull fit_options from.
 
@@ -509,11 +490,14 @@ def fit_pixels_scipyfit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_re
     # for the record
     options[&#34;fit_time_(s)&#34;] = timedelta(seconds=t1 - t0).total_seconds()
 
-    res = fit_shared.get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_ar)
+    res, sigmas = fit_shared.get_pixel_fitting_results(
+        fit_model, fit_results, pixel_data, sweep_ar
+    )
     if options[&#34;scramble_pixels&#34;]:
-        return fit_shared.unshuffle_fit_results(res, unshuffler)
-    else:
-        return res</code></pre>
+        res = fit_shared.unshuffle_fit_results(res, unshuffler)
+        sigmas = fit_shared.unshuffle_fit_results(sigmas, unshuffler)
+
+    return res, sigmas</code></pre>
 </details>
 </section>
 <section>
@@ -539,7 +523,7 @@ using scipy.</p>
 <dd>Normalised measurement array, for chosen single pixel check.</dd>
 <dt><strong><code>sweep_list</code></strong> :&ensp;<code>np array, 1D</code></dt>
 <dd>Affine parameter list (e.g. tau or freq).</dd>
-<dt><strong><code>fit_model</code></strong> :&ensp;<code><a title="QDMPy.fit._models.FitModel" href="_models.html#QDMPy.fit._models.FitModel">FitModel</a></code></dt>
+<dt><strong><code>fit_model</code></strong> :&ensp;<code><a title="QDMPy.fit.model.FitModel" href="model.html#QDMPy.fit.model.FitModel">FitModel</a></code></dt>
 <dd>The model we're fitting to.</dd>
 <dt><strong><code>AOIs</code></strong> :&ensp;<code>list</code></dt>
 <dd>List of AOI specifications - each a length-2 iterable that can be used to directly index
@@ -568,23 +552,17 @@ from.</dd>
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     sig_norm : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x].
-
     single_pixel_pl : np array, 1D
         Normalised measurement array, for chosen single pixel check.
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq).
-
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         The model we&#39;re fitting to.
-
     AOIs : list
         List of AOI specifications - each a length-2 iterable that can be used to directly index
         into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].
-
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
         `QDMPy.fit._shared.ROIAvgFitResult` object, to pull `QDMPy.fit._shared.ROIAvgFitResult.fit_options`
         from.
@@ -641,7 +619,7 @@ from.</dd>
 <dd>Normalised measurement array, shape: [sweep_list, y, x].</dd>
 <dt><strong><code>sweep_list</code></strong> :&ensp;<code>np array, 1D</code></dt>
 <dd>Affine parameter list (e.g. tau or freq)</dd>
-<dt><strong><code>fit_model</code></strong> :&ensp;<code><a title="QDMPy.fit._models.FitModel" href="_models.html#QDMPy.fit._models.FitModel">FitModel</a></code></dt>
+<dt><strong><code>fit_model</code></strong> :&ensp;<code><a title="QDMPy.fit.model.FitModel" href="model.html#QDMPy.fit.model.FitModel">FitModel</a></code></dt>
 <dd>The fit model object.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
@@ -658,14 +636,11 @@ from.</dd>
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     sig_norm : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x].
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         The fit model object.
 
     Returns
@@ -681,7 +656,9 @@ from.</dd>
 
     fit_options = prep_scipyfit_options(options, fit_model)
 
-    init_param_guess, _ = gen_scipyfit_init_guesses(options, *fit_shared.gen_init_guesses(options))
+    init_param_guess, init_bounds = gen_scipyfit_init_guesses(
+        options, *fit_shared.gen_init_guesses(options)
+    )
 
     fitting_results = least_squares(
         fit_model.residuals_scipyfit, init_param_guess, args=(sweep_list, pl_roi), **fit_options
@@ -690,7 +667,14 @@ from.</dd>
     best_params = fitting_results.x
 
     return fit_shared.ROIAvgFitResult(
-        &#34;scipyfit&#34;, fit_options, fit_model, pl_roi, sweep_list, best_params, init_param_guess
+        &#34;scipyfit&#34;,
+        fit_options,
+        fit_model,
+        pl_roi,
+        sweep_list,
+        best_params,
+        init_param_guess,
+        init_bounds,
     )</code></pre>
 </details>
 </dd>
@@ -707,7 +691,7 @@ from.</dd>
 <dd>Normalised measurement array, shape: [sweep_list, y, x].</dd>
 <dt><strong><code>sweep_list</code></strong> :&ensp;<code>np array, 1D</code></dt>
 <dd>Affine parameter list (e.g. tau or freq)</dd>
-<dt><strong><code>fit_model</code></strong> :&ensp;<code><a title="QDMPy.fit._models.FitModel" href="_models.html#QDMPy.fit._models.FitModel">FitModel</a></code></dt>
+<dt><strong><code>fit_model</code></strong> :&ensp;<code><a title="QDMPy.fit.model.FitModel" href="model.html#QDMPy.fit.model.FitModel">FitModel</a></code></dt>
 <dd>The model we're fitting to.</dd>
 <dt><strong><code>roi_avg_fit_result</code></strong> :&ensp;<code><a title="QDMPy.fit._shared.ROIAvgFitResult" href="_shared.html#QDMPy.fit._shared.ROIAvgFitResult">ROIAvgFitResult</a></code></dt>
 <dd><code><a title="QDMPy.fit._shared.ROIAvgFitResult" href="_shared.html#QDMPy.fit._shared.ROIAvgFitResult">ROIAvgFitResult</a></code> object, to pull fit_options from.</dd>
@@ -730,16 +714,12 @@ Also has 'residual' as a key.</dd>
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     sig_norm : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x].
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         The model we&#39;re fitting to.
-
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
         `QDMPy.fit._shared.ROIAvgFitResult` object, to pull fit_options from.
 
@@ -802,11 +782,14 @@ Also has 'residual' as a key.</dd>
     # for the record
     options[&#34;fit_time_(s)&#34;] = timedelta(seconds=t1 - t0).total_seconds()
 
-    res = fit_shared.get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_ar)
+    res, sigmas = fit_shared.get_pixel_fitting_results(
+        fit_model, fit_results, pixel_data, sweep_ar
+    )
     if options[&#34;scramble_pixels&#34;]:
-        return fit_shared.unshuffle_fit_results(res, unshuffler)
-    else:
-        return res</code></pre>
+        res = fit_shared.unshuffle_fit_results(res, unshuffler)
+        sigmas = fit_shared.unshuffle_fit_results(sigmas, unshuffler)
+
+    return res, sigmas</code></pre>
 </details>
 </dd>
 <dt id="QDMPy.fit._scipyfit.fit_single_pixel_scipyfit"><code class="name flex">
@@ -822,7 +805,7 @@ Also has 'residual' as a key.</dd>
 <dd>Normalised PL as function of sweep_list for a single pixel.</dd>
 <dt><strong><code>sweep_list</code></strong> :&ensp;<code>np array, 1D</code></dt>
 <dd>Affine parameter list (e.g. tau or freq)</dd>
-<dt><strong><code>fit_model</code></strong> :&ensp;<code><a title="QDMPy.fit._models.FitModel" href="_models.html#QDMPy.fit._models.FitModel">FitModel</a></code></dt>
+<dt><strong><code>fit_model</code></strong> :&ensp;<code><a title="QDMPy.fit.model.FitModel" href="model.html#QDMPy.fit.model.FitModel">FitModel</a></code></dt>
 <dd>The fit model.</dd>
 <dt><strong><code>roi_avg_fit_result</code></strong> :&ensp;<code><a title="QDMPy.fit._shared.ROIAvgFitResult" href="_shared.html#QDMPy.fit._shared.ROIAvgFitResult">ROIAvgFitResult</a></code></dt>
 <dd><code><a title="QDMPy.fit._shared.ROIAvgFitResult" href="_shared.html#QDMPy.fit._shared.ROIAvgFitResult">ROIAvgFitResult</a></code> object, to pull fit_options from.</dd>
@@ -844,16 +827,12 @@ Also has 'residual' as a key.</dd>
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     pixel_pl_ar : np array, 1D
         Normalised PL as function of sweep_list for a single pixel.
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         The fit model.
-
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
         `QDMPy.fit._shared.ROIAvgFitResult` object, to pull fit_options from.
 
@@ -904,7 +883,7 @@ version of that fn_type.</dd>
 <dl>
 <dt><strong><code>fit_param_ar</code></strong> :&ensp;<code>np array, shape: num_params</code></dt>
 <dd>The initial fit parameter guesses.</dd>
-<dt><strong><code>fi_param_bound_ar</code></strong> :&ensp;<code>np array, shape: (num_params, 2)</code></dt>
+<dt><strong><code>fit_param_bound_ar</code></strong> :&ensp;<code>np array, shape: (num_params, 2)</code></dt>
 <dd>Fit parameter bounds.</dd>
 </dl></div>
 <details class="source">
@@ -924,11 +903,9 @@ version of that fn_type.</dd>
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     init_guesses : dict
         Dict holding guesses for each parameter, e.g. key -&gt; list of guesses for each independent
         version of that fn_type.
-
     init_bounds : dict
         Dict holding guesses for each parameter, e.g. key -&gt; list of bounds for each independent
         version of that fn_type.
@@ -937,8 +914,7 @@ version of that fn_type.</dd>
     -------
     fit_param_ar : np array, shape: num_params
         The initial fit parameter guesses.
-
-    fi_param_bound_ar : np array, shape: (num_params, 2)
+    fit_param_bound_ar : np array, shape: (num_params, 2)
         Fit parameter bounds.
     &#34;&#34;&#34;
     param_lst = []
@@ -977,7 +953,7 @@ version of that fn_type.</dd>
 <pre><code class="python">def limit_cpu():
     &#34;&#34;&#34;Called at every process start, to reduce the priority of this process&#34;&#34;&#34;
     p = psutil.Process(os.getpid())
-    # set to lowest priority, this is windows only, on Unix use p.nice(19)
+    # set to lowest priority
     if platform.startswith(&#34;linux&#34;):  # linux
         p.nice(19)
     elif platform.startswith(&#34;win32&#34;):  # windows
@@ -998,7 +974,7 @@ in format that scipy least_squares expects.</p>
 <dl>
 <dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
 <dd>Generic options dict holding all the user options.</dd>
-<dt><strong><code>fit_model</code></strong> :&ensp;<code><a title="QDMPy.fit._models.FitModel" href="_models.html#QDMPy.fit._models.FitModel">FitModel</a></code></dt>
+<dt><strong><code>fit_model</code></strong> :&ensp;<code><a title="QDMPy.fit.model.FitModel" href="model.html#QDMPy.fit.model.FitModel">FitModel</a></code></dt>
 <dd>Fit model object.</dd>
 </dl>
 <h2 id="returns">Returns</h2>
@@ -1019,8 +995,7 @@ in format that scipy least_squares expects.</p>
     ---------
     options : dict
         Generic options dict holding all the user options.
-
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         Fit model object.
 
     Returns
@@ -1055,7 +1030,7 @@ in format that scipy least_squares expects.</p>
         options[&#34;scipyfit_scale_x&#34;] = False
 
     # define jacobian option for least_squares fitting
-    if fit_model.jacobian_scipyfit is None or not options[&#34;scipyfit_use_analytic_jac&#34;]:
+    if not fit_model.jacobian_defined() or not options[&#34;scipyfit_use_analytic_jac&#34;]:
         scipyfit_options[&#34;jac&#34;] = options[&#34;scipyfit_fit_jac_acc&#34;]
     else:
         scipyfit_options[&#34;jac&#34;] = fit_model.jacobian_scipyfit
@@ -1084,8 +1059,8 @@ solution is which (or where).</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>wrapped_squares</code></strong> :&ensp;<code>tuple</code></dt>
-<dd>(y, x), least_squares(&hellip;).x
-I.e. the position of the fit result, and then the fit result parameters array.</dd>
+<dd>(y, x), least_squares(&hellip;).x, leas_squares(&hellip;).jac
+I.e. the position of the fit result, the fit result parameters array, jacobian at solution</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -1100,31 +1075,25 @@ I.e. the position of the fit result, and then the fit result parameters array.</
     ---------
     fun : function
         Function object acting as residual (fit model minus pl value)
-
     p0 : np array
         Initial guess: array of parameters
-
     sweep_vec : np array
         Array (or I guess single value, anything iterable) of affine parameter (tau/freq)
-
     shaped_data : list (3 elements)
         array returned by `QDMPy.fit._shared.pixel_generator`: [y, x, sig_norm[:, y, x]]
-
     kwargs : dict
         Other options (dict) passed to least_squares, i.e. fit_options
 
     Returns
     -------
     wrapped_squares : tuple
-        (y, x), least_squares(...).x
-        I.e. the position of the fit result, and then the fit result parameters array.
+        (y, x), least_squares(...).x, leas_squares(...).jac
+        I.e. the position of the fit result, the fit result parameters array, jacobian at solution
     &#34;&#34;&#34;
     # shaped_data: [y, x, pl]
-    # output: (y, x), result_params
-    return (
-        (shaped_data[0], shaped_data[1]),
-        least_squares(fun, p0, args=(sweep_vec, shaped_data[2]), **kwargs).x,
-    )</code></pre>
+    # output: (y, x), result_params, jac
+    fitres = least_squares(fun, p0, args=(sweep_vec, shaped_data[2]), **kwargs)
+    return ((shaped_data[0], shaped_data[1]), fitres.x, fitres.jac)</code></pre>
 </details>
 </dd>
 </dl>

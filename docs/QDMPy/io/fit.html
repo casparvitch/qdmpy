@@ -27,8 +27,11 @@
 <h2 id="functions">Functions</h2>
 <ul>
 <li><code><a title="QDMPy.io.fit.load_prev_fit_results" href="#QDMPy.io.fit.load_prev_fit_results">load_prev_fit_results()</a></code></li>
+<li><code><a title="QDMPy.io.fit.load_prev_fit_sigmas" href="#QDMPy.io.fit.load_prev_fit_sigmas">load_prev_fit_sigmas()</a></code></li>
 <li><code><a title="QDMPy.io.fit.load_fit_param" href="#QDMPy.io.fit.load_fit_param">load_fit_param()</a></code></li>
+<li><code><a title="QDMPy.io.fit.load_fit_sigma" href="#QDMPy.io.fit.load_fit_sigma">load_fit_sigma()</a></code></li>
 <li><code><a title="QDMPy.io.fit.save_pixel_fit_results" href="#QDMPy.io.fit.save_pixel_fit_results">save_pixel_fit_results()</a></code></li>
+<li><code><a title="QDMPy.io.fit.save_pixel_fit_sigmas" href="#QDMPy.io.fit.save_pixel_fit_sigmas">save_pixel_fit_sigmas()</a></code></li>
 <li><code><a title="QDMPy.io.fit.load_reference_experiment_fit_results" href="#QDMPy.io.fit.load_reference_experiment_fit_results">load_reference_experiment_fit_results()</a></code></li>
 </ul>
 <details class="source">
@@ -42,8 +45,11 @@ This module holds the tools for loading/saving fit results.
 Functions
 ---------
  - `QDMPy.io.fit.load_prev_fit_results`
+ - `QDMPy.io.fit.load_prev_fit_sigmas`
  - `QDMPy.io.fit.load_fit_param`
+ - `QDMPy.io.fit.load_fit_sigma`
  - `QDMPy.io.fit.save_pixel_fit_results`
+ - `QDMPy.io.fit.save_pixel_fit_sigmas`
  - `QDMPy.io.fit.load_reference_experiment_fit_results`
 
 &#34;&#34;&#34;
@@ -53,9 +59,17 @@ Functions
 __author__ = &#34;Sam Scholten&#34;
 __pdoc__ = {
     &#34;QDMPy.io.fit.load_prev_fit_results&#34;: True,
+    &#34;QDMPy.io.fit.load_prev_fit_sigmas&#34;: True,
     &#34;QDMPy.io.fit.load_fit_param&#34;: True,
+    &#34;QDMPy.io.fit.load_fit_sigma&#34;: True,
     &#34;QDMPy.io.fit.save_pixel_fit_results&#34;: True,
+    &#34;QDMPy.io.fit.save_pixel_fit_sigmas&#34;: True,
     &#34;QDMPy.io.fit.load_reference_experiment_fit_results&#34;: True,
+    &#34;QDMPy.io.fit._check_if_already_fit&#34;: True,
+    &#34;QDMPy.io.fit._prev_options_exist&#34;: True,
+    &#34;QDMPy.io.fit._options_compatible&#34;: True,
+    &#34;QDMPy.io.fit._prev_pixel_results_exist&#34;: True,
+    &#34;QDMPy.io.fit._get_prev_options&#34;: True,
 }
 
 # ============================================================================
@@ -67,8 +81,8 @@ from pathlib import Path
 
 # ============================================================================
 
-import QDMPy.io.raw
-import QDMPy.constants
+import QDMPy.io.fit
+import QDMPy.fit as Qfit
 
 # ============================================================================
 
@@ -76,17 +90,47 @@ import QDMPy.constants
 def load_prev_fit_results(options):
     &#34;&#34;&#34;Load (all) parameter fit results from previous processing.&#34;&#34;&#34;
 
-    prev_options = QDMPy.io.raw._get_prev_options(options)
+    prev_options = QDMPy.io.fit._get_prev_options(options)
 
     fit_param_res_dict = {}
 
+    from QDMPy.constants import AVAILABLE_FNS as FN_SELECTOR
+
     for fn_type, num in prev_options[&#34;fit_functions&#34;].items():
-        for param_name in QDMPy.constants.AVAILABLE_FNS[fn_type].param_defn:
+        for param_name in FN_SELECTOR[fn_type].param_defn:
             for n in range(num):
                 param_key = param_name + &#34;_&#34; + str(n)
                 fit_param_res_dict[param_key] = load_fit_param(options, param_key)
     fit_param_res_dict[&#34;residual_0&#34;] = load_fit_param(options, &#34;residual_0&#34;)
     return fit_param_res_dict
+
+
+# ============================================================================
+
+
+def load_prev_fit_sigmas(options):
+    &#34;&#34;&#34;Load (all) parameter fit results from previous processing.&#34;&#34;&#34;
+
+    prev_options = QDMPy.io.fit._get_prev_options(options)
+
+    sigmas = {}
+
+    from QDMPy.constants import AVAILABLE_FNS as FN_SELECTOR
+
+    for fn_type, num in prev_options[&#34;fit_functions&#34;].items():
+        for param_name in FN_SELECTOR[fn_type].param_defn:
+            for n in range(num):
+                key = param_name + &#34;_&#34; + str(n)
+                sigmas[key] = load_fit_sigma(options, key)
+    return sigmas
+
+
+# ============================================================================
+
+
+def load_fit_sigma(options, key):
+    &#34;&#34;&#34; Load a previous fit sigma result, of name &#39;param_key&#39; &#34;&#34;&#34;
+    return np.loadtxt(options[&#34;data_dir&#34;] / (key + &#34;_sigma.txt&#34;))
 
 
 # ============================================================================
@@ -100,6 +144,25 @@ def load_fit_param(options, param_key):
 # ============================================================================
 
 
+def save_pixel_fit_sigmas(options, sigmas):
+    &#34;&#34;&#34;
+    Saves pixel fit sigmas to disk.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    sigmas : OrderedDict
+        Dictionary, key: param_keys, val: image (2D) of param sigmas across FOV.
+    &#34;&#34;&#34;
+    if sigmas is not None:
+        for key, result in sigmas.items():
+            np.savetxt(options[&#34;data_dir&#34;] / f&#34;{key}_sigma.txt&#34;, result)
+
+
+# ============================================================================
+
+
 def save_pixel_fit_results(options, pixel_fit_params):
     &#34;&#34;&#34;
     Saves pixel fit results to disk.
@@ -108,8 +171,7 @@ def save_pixel_fit_results(options, pixel_fit_params):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
-    fit_result_dict : OrderedDict
+    pixel_fit_params : OrderedDict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
     &#34;&#34;&#34;
     if pixel_fit_params is not None:
@@ -121,8 +183,7 @@ def save_pixel_fit_results(options, pixel_fit_params):
 
 
 def load_reference_experiment_fit_results(options, ref_options=None, ref_options_dir=None):
-    &#34;&#34;&#34;
-    ref_options dict -&gt; pixel_fit_params dict.
+    &#34;&#34;&#34;ref_options dict -&gt; pixel_fit_params dict.
 
     Provide one of ref_options and ref_options_dir. If both are None, returns None (with a
     warning). If both are supplied, ref_options takes precedence.
@@ -130,34 +191,41 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
     Arguments
     ---------
     options : dict
-        Generic options dict holding all the user options (for the main experiment).
-
+        Generic options dict holding all the user options (for the main/signal experiment).
     ref_options : dict, default=None
         Generic options dict holding all the user options (for the reference experiment).
-
     ref_options_dir : str or path object, default=None
         Path to read reference options from, i.e. will read &#39;ref_options_dir / saved_options.json&#39;.
 
     Returns
     -------
     fit_result_dict : OrderedDict
-        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
-
+        Dictionary, key: param_keys, val: image (2D) of (fit) param values across FOV.
         If no reference experiment is given (i.e. ref_options and ref_options_dir are None) then
         returns None
     &#34;&#34;&#34;
+    if not ref_options:
+        ref_options = None
+    if not ref_options_dir:
+        ref_options_dir = None
     if ref_options is None and ref_options_dir is None:
         warnings.warn(
             &#34;No reference experiment options dict provided, continuing without reference.&#34;
         )
-        ref_name = &#34;no&#34;
-        options[&#34;sub_ref_dir&#34;] = options[&#34;output_dir&#34;].joinpath(f&#34;sub_{ref_name}_Bnv&#34;)
-        options[&#34;sub_ref_data_dir&#34;] = options[&#34;sub_ref_dir&#34;].joinpath(&#34;data&#34;)
-        if not os.path.isdir(options[&#34;sub_ref_dir&#34;]):
-            os.mkdir(options[&#34;sub_ref_dir&#34;])
-        if not os.path.isdir(options[&#34;sub_ref_data_dir&#34;]):
-            os.mkdir(options[&#34;sub_ref_data_dir&#34;])
-        return None
+        options[&#34;field_dir&#34;] = options[&#34;output_dir&#34;].joinpath(&#34;field&#34;)
+        options[&#34;field_sig_dir&#34;] = options[&#34;field_dir&#34;].joinpath(&#34;sig&#34;)
+        options[&#34;field_ref_dir&#34;] = options[&#34;field_dir&#34;].joinpath(&#34;ref_nothing&#34;)
+        options[&#34;field_sig_sub_ref_dir&#34;] = options[&#34;field_dir&#34;].joinpath(&#34;sig_sub_ref&#34;)
+
+        if not os.path.isdir(options[&#34;field_dir&#34;]):
+            os.mkdir(options[&#34;field_dir&#34;])
+        if not os.path.isdir(options[&#34;field_sig_dir&#34;]):
+            os.mkdir(options[&#34;field_sig_dir&#34;])
+        if not os.path.isdir(options[&#34;field_ref_dir&#34;]):
+            os.mkdir(options[&#34;field_ref_dir&#34;])
+        if not os.path.isdir(options[&#34;field_sig_sub_ref_dir&#34;]):
+            os.mkdir(options[&#34;field_sig_sub_ref_dir&#34;])
+        return None, None
 
     if ref_options_dir is not None:
         ref_options_path = os.path.join(ref_options_dir, &#34;saved_options.json&#34;)
@@ -165,24 +233,250 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
         ref_options_path = None
 
     ref_options = QDMPy.io.raw.load_options(
-        options_dict=ref_options, options_path=ref_options_path, check_for_prev_result=True
+        options_dict=ref_options,
+        options_path=ref_options_path,
+        check_for_prev_result=True,
+        loading_ref=True,
     )
 
     ref_name = Path(ref_options[&#34;filepath&#34;]).stem
-    # first make a sub ref output folder
-    options[&#34;sub_ref_dir&#34;] = options[&#34;output_dir&#34;].joinpath(f&#34;sub_{ref_name}_Bnv&#34;)
-    options[&#34;sub_ref_data_dir&#34;] = options[&#34;sub_ref_dir&#34;].joinpath(&#34;data&#34;)
-    if not os.path.isdir(options[&#34;sub_ref_dir&#34;]):
-        os.mkdir(options[&#34;sub_ref_dir&#34;])
-    if not os.path.isdir(options[&#34;sub_ref_data_dir&#34;]):
-        os.mkdir(options[&#34;sub_ref_data_dir&#34;])
+    options[&#34;field_dir&#34;] = options[&#34;output_dir&#34;].joinpath(&#34;field&#34;)
+    options[&#34;field_sig_dir&#34;] = options[&#34;field_dir&#34;].joinpath(&#34;sig&#34;)
+    options[&#34;field_ref_dir&#34;] = options[&#34;field_dir&#34;].joinpath(f&#34;ref_{ref_name}&#34;)
+    options[&#34;field_sig_sub_ref_dir&#34;] = options[&#34;field_dir&#34;].joinpath(&#34;sig_sub_ref&#34;)
+    if not os.path.isdir(options[&#34;field_dir&#34;]):
+        os.mkdir(options[&#34;field_dir&#34;])
+    if not os.path.isdir(options[&#34;field_sig_dir&#34;]):
+        os.mkdir(options[&#34;field_sig_dir&#34;])
+    if not os.path.isdir(options[&#34;field_ref_dir&#34;]):
+        os.mkdir(options[&#34;field_ref_dir&#34;])
+    if not os.path.isdir(options[&#34;field_sig_sub_ref_dir&#34;]):
+        os.mkdir(options[&#34;field_sig_sub_ref_dir&#34;])
 
     # ok now have ref_options dict, time to load params
     if ref_options[&#34;found_prev_result&#34;]:
         ref_fit_result_dict = load_prev_fit_results(ref_options)
-        return ref_fit_result_dict
+        ref_sigmas = load_prev_fit_sigmas(ref_options)
+        return ref_fit_result_dict, ref_sigmas
     else:
-        raise RuntimeError(&#34;Didn&#39;t find reference experiment fit results?&#34;)
+        warnings.warn(
+            &#34;Didn&#39;t find reference experiment fit results? Reason: &#34;
+            + ref_options[&#34;found_prev_result_reason&#34;]
+        )
+        return None, None
+
+
+# ============================================================================
+
+
+def _check_if_already_fit(options, loading_ref=False):
+    &#34;&#34;&#34;
+    Looks for previous fit result.
+
+    If previous fit result exists, checks for compatibility between option choices.
+
+    loading_ref (bool): skip checks for force_fit etc. and just see if prev pixel results exist.
+
+    Returns nothing.
+    &#34;&#34;&#34;
+    if not loading_ref:
+        if not options[&#34;force_fit&#34;]:
+            if not _prev_options_exist(options):  # i.e. look for saved options in output dir
+                options[&#34;found_prev_result_reason&#34;] = &#34;couldn&#39;t find previous options&#34;
+                options[&#34;found_prev_result&#34;] = False
+            elif not (res := _options_compatible(options, _get_prev_options(options)))[0]:
+                options[&#34;found_prev_result_reason&#34;] = &#34;option not compatible: &#34; + res[1]
+                options[&#34;found_prev_result&#34;] = False
+            elif not (res2 := _prev_pixel_results_exist(options))[0]:
+                options[&#34;found_prev_result_reason&#34;] = (
+                    &#34;couldn&#39;t find prev pixel results: &#34; + res2[1]
+                )
+                options[&#34;found_prev_result&#34;] = False
+            else:
+                options[&#34;found_prev_result_reason&#34;] = &#34;found prev result :)&#34;
+                options[&#34;found_prev_result&#34;] = True
+        else:
+            options[&#34;found_prev_result_reason&#34;] = &#34;option &#39;force_fit&#39; was True&#34;
+            options[&#34;found_prev_result&#34;] = False
+    elif not (res3 := _prev_pixel_results_exist(options))[0]:
+        options[&#34;found_prev_result_reason&#34;] = &#34;couldn&#39;t find prev pixel results: &#34; + res3[1]
+        options[&#34;found_prev_result&#34;] = False
+    else:
+        options[&#34;found_prev_result_reason&#34;] = &#34;found prev result :)&#34;
+        options[&#34;found_prev_result&#34;] = True
+
+
+# ============================================================================
+
+
+def _prev_options_exist(options):
+    &#34;&#34;&#34;
+    Checks if options file from previous result can be found in default location, returns Bool.
+    &#34;&#34;&#34;
+    prev_opt_path = os.path.normpath(options[&#34;output_dir&#34;] / &#34;saved_options.json&#34;)
+    return os.path.isfile(prev_opt_path)
+
+
+# ============================================================================
+
+
+def _options_compatible(options, prev_options):
+    &#34;&#34;&#34;
+    Checks if option choices are compatible with previously fit options
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    prev_options : dict
+        Generic options dict from previous fit result.
+
+    Returns
+    -------
+    _options_compatible : bool
+        Whether or not options are compatible.
+
+    reason : str
+        Reason for the above
+    &#34;&#34;&#34;
+
+    if not (
+        options[&#34;additional_bins&#34;] == prev_options[&#34;additional_bins&#34;]
+        or (options[&#34;additional_bins&#34;] in [0, 1] and prev_options[&#34;additional_bins&#34;] in [0, 1])
+    ):
+        return False, &#34;different binning&#34;
+    for option_name in [
+        &#34;normalisation&#34;,
+        &#34;fit_backend&#34;,
+        &#34;fit_functions&#34;,
+        &#34;ROI&#34;,
+        &#34;ignore_ref&#34;,
+        &#34;system_name&#34;,
+        &#34;remove_start_sweep&#34;,
+        &#34;remove_end_sweep&#34;,
+        &#34;use_ROI_avg_fit_res_for_all_pixels&#34;,
+    ]:
+        if options[option_name] != prev_options[option_name]:
+            return False, f&#34;different option: {option_name}&#34;
+    # check relevant roi params
+    if options[&#34;ROI&#34;] == &#34;Rectangle&#34; and (
+        options[&#34;ROI_start&#34;] != prev_options[&#34;ROI_start&#34;]
+        and options[&#34;ROI_end&#34;] != prev_options[&#34;ROI_end&#34;]
+    ):
+        return False, &#34;different ROI rectangle bounds&#34;
+
+    # check relevant param guesses/bounds
+
+    # check relevant fit params
+    if options[&#34;fit_backend&#34;] == &#34;scipyfit&#34;:
+        for fit_opt_name in [
+            &#34;scipyfit_method&#34;,
+            &#34;scipyfit_use_analytic_jac&#34;,
+            &#34;scipyfit_fit_jac_acc&#34;,
+            &#34;scipyfit_fit_gtol&#34;,
+            &#34;scipyfit_fit_xtol&#34;,
+            &#34;scipyfit_fit_ftol&#34;,
+            &#34;scipyfit_scale_x&#34;,
+            &#34;scipyfit_loss_fn&#34;,
+        ]:
+            if (
+                fit_opt_name not in options
+                or fit_opt_name not in prev_options
+                or options[fit_opt_name] != prev_options[fit_opt_name]
+            ):
+                return False, f&#34;scipyfit option different: {fit_opt_name}&#34;
+    elif options[&#34;fit_backend&#34;] == &#34;gpufit&#34;:
+        for fit_opt_name in [&#34;gpufit_tolerance&#34;, &#34;gpufit_max_iterations&#34;, &#34;gpufit_estimator_id&#34;]:
+            if options[fit_opt_name] != prev_options[fit_opt_name]:
+                return False, f&#34;gpufit option different: {fit_opt_name}&#34;
+
+    # ok now the trickiest one, check parameter guesses &amp; bounds
+    unique_params = set(Qfit.get_param_defn(Qfit.FitModel(options[&#34;fit_functions&#34;])))
+
+    for param_name in unique_params:
+        if options[param_name + &#34;_guess&#34;] != prev_options[param_name + &#34;_guess&#34;]:
+            return False, f&#34;param guess different: {param_name}&#34;
+
+        range_opt = param_name + &#34;_range&#34;
+        if range_opt in options and range_opt in prev_options:
+            if options[range_opt] != prev_options[range_opt]:
+                return False, f&#34;different range options: {param_name}&#34;
+            else:
+                continue  # this param all g, check others
+        # ok range takes precedence over bounds
+        if range_opt in options and range_opt not in prev_options:
+            return False, f&#34;different range/bound options: {param_name}&#34;
+        if range_opt not in options and range_opt in prev_options:
+            return False, f&#34;different range/bound options: {param_name}&#34;
+        # finally check bounds
+        if options[param_name + &#34;_bounds&#34;] != prev_options[param_name + &#34;_bounds&#34;]:
+            return False, f&#34;param range different: {param_name}&#34;
+
+    # if all that was ok, return True
+    return True, &#34;all g&#34;
+
+
+# ============================================================================
+
+
+def _prev_pixel_results_exist(options):
+    &#34;&#34;&#34;Check if the actual fit result files exists.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict from (either prev. or current, should be the equiv.) fit result.
+
+    Returns
+    -------
+    pixels_results_exist : bool
+        Whether or not previous pixel result files exist.
+
+    reason : str
+        Reason for the above
+    &#34;&#34;&#34;
+
+    # avoid cyclic imports
+    from QDMPy.constants import AVAILABLE_FNS as FN_SELECTOR
+
+    for fn_type, num in options[&#34;fit_functions&#34;].items():
+        for param_name in FN_SELECTOR[fn_type].param_defn:
+            for n in range(num):
+                param_key = param_name + &#34;_&#34; + str(n)
+                if not os.path.isfile(options[&#34;data_dir&#34;] / (param_key + &#34;.txt&#34;)):
+                    return False, f&#34;couldn&#39;t find previous param: {param_key}&#34;
+
+    if not os.path.isfile(options[&#34;data_dir&#34;] / &#34;residual_0.txt&#34;):
+        return False, &#34;couldn&#39;t find previous residual&#34;
+    return True, &#34;found all prev pixel results :)&#34;
+
+
+# ============================================================================
+
+
+def _prev_sigma_results_exist(prev_options):
+    &#34;&#34;&#34; as `QDMPy.io.raw._prev_pixel_results_exist` but for sigmas &#34;&#34;&#34;
+    # avoid cyclic imports
+    from QDMPy.constants import AVAILABLE_FNS as FN_SELECTOR
+
+    for fn_type, num in prev_options[&#34;fit_functions&#34;].items():
+        for param_name in FN_SELECTOR[fn_type].param_defn:
+            for n in range(num):
+                param_key = param_name + &#34;_&#34; + str(n)
+                if not os.path.isfile(prev_options[&#34;data_dir&#34;] / (param_key + &#34;_sigma.txt&#34;)):
+                    return False
+
+    return True
+
+
+# ============================================================================
+
+
+def _get_prev_options(options):
+    &#34;&#34;&#34;
+    Reads options file from previous fit result (.json), returns a dictionary.
+    &#34;&#34;&#34;
+    return QDMPy.io.json_to_dict(options[&#34;output_dir&#34;] / &#34;saved_options.json&#34;)
 
 
 # ============================================================================</code></pre>
@@ -195,6 +489,260 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
+<dt id="QDMPy.io.fit._check_if_already_fit"><code class="name flex">
+<span>def <span class="ident">_check_if_already_fit</span></span>(<span>options, loading_ref=False)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Looks for previous fit result.</p>
+<p>If previous fit result exists, checks for compatibility between option choices.</p>
+<p>loading_ref (bool): skip checks for force_fit etc. and just see if prev pixel results exist.</p>
+<p>Returns nothing.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _check_if_already_fit(options, loading_ref=False):
+    &#34;&#34;&#34;
+    Looks for previous fit result.
+
+    If previous fit result exists, checks for compatibility between option choices.
+
+    loading_ref (bool): skip checks for force_fit etc. and just see if prev pixel results exist.
+
+    Returns nothing.
+    &#34;&#34;&#34;
+    if not loading_ref:
+        if not options[&#34;force_fit&#34;]:
+            if not _prev_options_exist(options):  # i.e. look for saved options in output dir
+                options[&#34;found_prev_result_reason&#34;] = &#34;couldn&#39;t find previous options&#34;
+                options[&#34;found_prev_result&#34;] = False
+            elif not (res := _options_compatible(options, _get_prev_options(options)))[0]:
+                options[&#34;found_prev_result_reason&#34;] = &#34;option not compatible: &#34; + res[1]
+                options[&#34;found_prev_result&#34;] = False
+            elif not (res2 := _prev_pixel_results_exist(options))[0]:
+                options[&#34;found_prev_result_reason&#34;] = (
+                    &#34;couldn&#39;t find prev pixel results: &#34; + res2[1]
+                )
+                options[&#34;found_prev_result&#34;] = False
+            else:
+                options[&#34;found_prev_result_reason&#34;] = &#34;found prev result :)&#34;
+                options[&#34;found_prev_result&#34;] = True
+        else:
+            options[&#34;found_prev_result_reason&#34;] = &#34;option &#39;force_fit&#39; was True&#34;
+            options[&#34;found_prev_result&#34;] = False
+    elif not (res3 := _prev_pixel_results_exist(options))[0]:
+        options[&#34;found_prev_result_reason&#34;] = &#34;couldn&#39;t find prev pixel results: &#34; + res3[1]
+        options[&#34;found_prev_result&#34;] = False
+    else:
+        options[&#34;found_prev_result_reason&#34;] = &#34;found prev result :)&#34;
+        options[&#34;found_prev_result&#34;] = True</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.fit._get_prev_options"><code class="name flex">
+<span>def <span class="ident">_get_prev_options</span></span>(<span>options)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Reads options file from previous fit result (.json), returns a dictionary.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _get_prev_options(options):
+    &#34;&#34;&#34;
+    Reads options file from previous fit result (.json), returns a dictionary.
+    &#34;&#34;&#34;
+    return QDMPy.io.json_to_dict(options[&#34;output_dir&#34;] / &#34;saved_options.json&#34;)</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.fit._options_compatible"><code class="name flex">
+<span>def <span class="ident">_options_compatible</span></span>(<span>options, prev_options)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Checks if option choices are compatible with previously fit options</p>
+<h2 id="arguments">Arguments</h2>
+<dl>
+<dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Generic options dict holding all the user options.</dd>
+<dt><strong><code>prev_options</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Generic options dict from previous fit result.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>_options_compatible</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether or not options are compatible.</dd>
+<dt><strong><code>reason</code></strong> :&ensp;<code>str</code></dt>
+<dd>Reason for the above</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _options_compatible(options, prev_options):
+    &#34;&#34;&#34;
+    Checks if option choices are compatible with previously fit options
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    prev_options : dict
+        Generic options dict from previous fit result.
+
+    Returns
+    -------
+    _options_compatible : bool
+        Whether or not options are compatible.
+
+    reason : str
+        Reason for the above
+    &#34;&#34;&#34;
+
+    if not (
+        options[&#34;additional_bins&#34;] == prev_options[&#34;additional_bins&#34;]
+        or (options[&#34;additional_bins&#34;] in [0, 1] and prev_options[&#34;additional_bins&#34;] in [0, 1])
+    ):
+        return False, &#34;different binning&#34;
+    for option_name in [
+        &#34;normalisation&#34;,
+        &#34;fit_backend&#34;,
+        &#34;fit_functions&#34;,
+        &#34;ROI&#34;,
+        &#34;ignore_ref&#34;,
+        &#34;system_name&#34;,
+        &#34;remove_start_sweep&#34;,
+        &#34;remove_end_sweep&#34;,
+        &#34;use_ROI_avg_fit_res_for_all_pixels&#34;,
+    ]:
+        if options[option_name] != prev_options[option_name]:
+            return False, f&#34;different option: {option_name}&#34;
+    # check relevant roi params
+    if options[&#34;ROI&#34;] == &#34;Rectangle&#34; and (
+        options[&#34;ROI_start&#34;] != prev_options[&#34;ROI_start&#34;]
+        and options[&#34;ROI_end&#34;] != prev_options[&#34;ROI_end&#34;]
+    ):
+        return False, &#34;different ROI rectangle bounds&#34;
+
+    # check relevant param guesses/bounds
+
+    # check relevant fit params
+    if options[&#34;fit_backend&#34;] == &#34;scipyfit&#34;:
+        for fit_opt_name in [
+            &#34;scipyfit_method&#34;,
+            &#34;scipyfit_use_analytic_jac&#34;,
+            &#34;scipyfit_fit_jac_acc&#34;,
+            &#34;scipyfit_fit_gtol&#34;,
+            &#34;scipyfit_fit_xtol&#34;,
+            &#34;scipyfit_fit_ftol&#34;,
+            &#34;scipyfit_scale_x&#34;,
+            &#34;scipyfit_loss_fn&#34;,
+        ]:
+            if (
+                fit_opt_name not in options
+                or fit_opt_name not in prev_options
+                or options[fit_opt_name] != prev_options[fit_opt_name]
+            ):
+                return False, f&#34;scipyfit option different: {fit_opt_name}&#34;
+    elif options[&#34;fit_backend&#34;] == &#34;gpufit&#34;:
+        for fit_opt_name in [&#34;gpufit_tolerance&#34;, &#34;gpufit_max_iterations&#34;, &#34;gpufit_estimator_id&#34;]:
+            if options[fit_opt_name] != prev_options[fit_opt_name]:
+                return False, f&#34;gpufit option different: {fit_opt_name}&#34;
+
+    # ok now the trickiest one, check parameter guesses &amp; bounds
+    unique_params = set(Qfit.get_param_defn(Qfit.FitModel(options[&#34;fit_functions&#34;])))
+
+    for param_name in unique_params:
+        if options[param_name + &#34;_guess&#34;] != prev_options[param_name + &#34;_guess&#34;]:
+            return False, f&#34;param guess different: {param_name}&#34;
+
+        range_opt = param_name + &#34;_range&#34;
+        if range_opt in options and range_opt in prev_options:
+            if options[range_opt] != prev_options[range_opt]:
+                return False, f&#34;different range options: {param_name}&#34;
+            else:
+                continue  # this param all g, check others
+        # ok range takes precedence over bounds
+        if range_opt in options and range_opt not in prev_options:
+            return False, f&#34;different range/bound options: {param_name}&#34;
+        if range_opt not in options and range_opt in prev_options:
+            return False, f&#34;different range/bound options: {param_name}&#34;
+        # finally check bounds
+        if options[param_name + &#34;_bounds&#34;] != prev_options[param_name + &#34;_bounds&#34;]:
+            return False, f&#34;param range different: {param_name}&#34;
+
+    # if all that was ok, return True
+    return True, &#34;all g&#34;</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.fit._prev_options_exist"><code class="name flex">
+<span>def <span class="ident">_prev_options_exist</span></span>(<span>options)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Checks if options file from previous result can be found in default location, returns Bool.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _prev_options_exist(options):
+    &#34;&#34;&#34;
+    Checks if options file from previous result can be found in default location, returns Bool.
+    &#34;&#34;&#34;
+    prev_opt_path = os.path.normpath(options[&#34;output_dir&#34;] / &#34;saved_options.json&#34;)
+    return os.path.isfile(prev_opt_path)</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.fit._prev_pixel_results_exist"><code class="name flex">
+<span>def <span class="ident">_prev_pixel_results_exist</span></span>(<span>options)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Check if the actual fit result files exists.</p>
+<h2 id="arguments">Arguments</h2>
+<dl>
+<dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Generic options dict from (either prev. or current, should be the equiv.) fit result.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>pixels_results_exist</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Whether or not previous pixel result files exist.</dd>
+<dt><strong><code>reason</code></strong> :&ensp;<code>str</code></dt>
+<dd>Reason for the above</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _prev_pixel_results_exist(options):
+    &#34;&#34;&#34;Check if the actual fit result files exists.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict from (either prev. or current, should be the equiv.) fit result.
+
+    Returns
+    -------
+    pixels_results_exist : bool
+        Whether or not previous pixel result files exist.
+
+    reason : str
+        Reason for the above
+    &#34;&#34;&#34;
+
+    # avoid cyclic imports
+    from QDMPy.constants import AVAILABLE_FNS as FN_SELECTOR
+
+    for fn_type, num in options[&#34;fit_functions&#34;].items():
+        for param_name in FN_SELECTOR[fn_type].param_defn:
+            for n in range(num):
+                param_key = param_name + &#34;_&#34; + str(n)
+                if not os.path.isfile(options[&#34;data_dir&#34;] / (param_key + &#34;.txt&#34;)):
+                    return False, f&#34;couldn&#39;t find previous param: {param_key}&#34;
+
+    if not os.path.isfile(options[&#34;data_dir&#34;] / &#34;residual_0.txt&#34;):
+        return False, &#34;couldn&#39;t find previous residual&#34;
+    return True, &#34;found all prev pixel results :)&#34;</code></pre>
+</details>
+</dd>
 <dt id="QDMPy.io.fit.load_fit_param"><code class="name flex">
 <span>def <span class="ident">load_fit_param</span></span>(<span>options, param_key)</span>
 </code></dt>
@@ -209,6 +757,20 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
     return np.loadtxt(options[&#34;data_dir&#34;] / (param_key + &#34;.txt&#34;))</code></pre>
 </details>
 </dd>
+<dt id="QDMPy.io.fit.load_fit_sigma"><code class="name flex">
+<span>def <span class="ident">load_fit_sigma</span></span>(<span>options, key)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Load a previous fit sigma result, of name 'param_key'</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_fit_sigma(options, key):
+    &#34;&#34;&#34; Load a previous fit sigma result, of name &#39;param_key&#39; &#34;&#34;&#34;
+    return np.loadtxt(options[&#34;data_dir&#34;] / (key + &#34;_sigma.txt&#34;))</code></pre>
+</details>
+</dd>
 <dt id="QDMPy.io.fit.load_prev_fit_results"><code class="name flex">
 <span>def <span class="ident">load_prev_fit_results</span></span>(<span>options)</span>
 </code></dt>
@@ -221,17 +783,45 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
 <pre><code class="python">def load_prev_fit_results(options):
     &#34;&#34;&#34;Load (all) parameter fit results from previous processing.&#34;&#34;&#34;
 
-    prev_options = QDMPy.io.raw._get_prev_options(options)
+    prev_options = QDMPy.io.fit._get_prev_options(options)
 
     fit_param_res_dict = {}
 
+    from QDMPy.constants import AVAILABLE_FNS as FN_SELECTOR
+
     for fn_type, num in prev_options[&#34;fit_functions&#34;].items():
-        for param_name in QDMPy.constants.AVAILABLE_FNS[fn_type].param_defn:
+        for param_name in FN_SELECTOR[fn_type].param_defn:
             for n in range(num):
                 param_key = param_name + &#34;_&#34; + str(n)
                 fit_param_res_dict[param_key] = load_fit_param(options, param_key)
     fit_param_res_dict[&#34;residual_0&#34;] = load_fit_param(options, &#34;residual_0&#34;)
     return fit_param_res_dict</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.fit.load_prev_fit_sigmas"><code class="name flex">
+<span>def <span class="ident">load_prev_fit_sigmas</span></span>(<span>options)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Load (all) parameter fit results from previous processing.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def load_prev_fit_sigmas(options):
+    &#34;&#34;&#34;Load (all) parameter fit results from previous processing.&#34;&#34;&#34;
+
+    prev_options = QDMPy.io.fit._get_prev_options(options)
+
+    sigmas = {}
+
+    from QDMPy.constants import AVAILABLE_FNS as FN_SELECTOR
+
+    for fn_type, num in prev_options[&#34;fit_functions&#34;].items():
+        for param_name in FN_SELECTOR[fn_type].param_defn:
+            for n in range(num):
+                key = param_name + &#34;_&#34; + str(n)
+                sigmas[key] = load_fit_sigma(options, key)
+    return sigmas</code></pre>
 </details>
 </dd>
 <dt id="QDMPy.io.fit.load_reference_experiment_fit_results"><code class="name flex">
@@ -244,7 +834,7 @@ warning). If both are supplied, ref_options takes precedence.</p>
 <h2 id="arguments">Arguments</h2>
 <dl>
 <dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
-<dd>Generic options dict holding all the user options (for the main experiment).</dd>
+<dd>Generic options dict holding all the user options (for the main/signal experiment).</dd>
 <dt><strong><code>ref_options</code></strong> :&ensp;<code>dict</code>, default=<code>None</code></dt>
 <dd>Generic options dict holding all the user options (for the reference experiment).</dd>
 <dt><strong><code>ref_options_dir</code></strong> :&ensp;<code>str</code> or <code>path object</code>, default=<code>None</code></dt>
@@ -253,19 +843,16 @@ warning). If both are supplied, ref_options takes precedence.</p>
 <h2 id="returns">Returns</h2>
 <dl>
 <dt><strong><code>fit_result_dict</code></strong> :&ensp;<code>OrderedDict</code></dt>
-<dd>
-<p>Dictionary, key: param_keys, val: image (2D) of param values across FOV.</p>
-<p>If no reference experiment is given (i.e. ref_options and ref_options_dir are None) then
-returns None</p>
-</dd>
+<dd>Dictionary, key: param_keys, val: image (2D) of (fit) param values across FOV.
+If no reference experiment is given (i.e. ref_options and ref_options_dir are None) then
+returns None</dd>
 </dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def load_reference_experiment_fit_results(options, ref_options=None, ref_options_dir=None):
-    &#34;&#34;&#34;
-    ref_options dict -&gt; pixel_fit_params dict.
+    &#34;&#34;&#34;ref_options dict -&gt; pixel_fit_params dict.
 
     Provide one of ref_options and ref_options_dir. If both are None, returns None (with a
     warning). If both are supplied, ref_options takes precedence.
@@ -273,34 +860,41 @@ returns None</p>
     Arguments
     ---------
     options : dict
-        Generic options dict holding all the user options (for the main experiment).
-
+        Generic options dict holding all the user options (for the main/signal experiment).
     ref_options : dict, default=None
         Generic options dict holding all the user options (for the reference experiment).
-
     ref_options_dir : str or path object, default=None
         Path to read reference options from, i.e. will read &#39;ref_options_dir / saved_options.json&#39;.
 
     Returns
     -------
     fit_result_dict : OrderedDict
-        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
-
+        Dictionary, key: param_keys, val: image (2D) of (fit) param values across FOV.
         If no reference experiment is given (i.e. ref_options and ref_options_dir are None) then
         returns None
     &#34;&#34;&#34;
+    if not ref_options:
+        ref_options = None
+    if not ref_options_dir:
+        ref_options_dir = None
     if ref_options is None and ref_options_dir is None:
         warnings.warn(
             &#34;No reference experiment options dict provided, continuing without reference.&#34;
         )
-        ref_name = &#34;no&#34;
-        options[&#34;sub_ref_dir&#34;] = options[&#34;output_dir&#34;].joinpath(f&#34;sub_{ref_name}_Bnv&#34;)
-        options[&#34;sub_ref_data_dir&#34;] = options[&#34;sub_ref_dir&#34;].joinpath(&#34;data&#34;)
-        if not os.path.isdir(options[&#34;sub_ref_dir&#34;]):
-            os.mkdir(options[&#34;sub_ref_dir&#34;])
-        if not os.path.isdir(options[&#34;sub_ref_data_dir&#34;]):
-            os.mkdir(options[&#34;sub_ref_data_dir&#34;])
-        return None
+        options[&#34;field_dir&#34;] = options[&#34;output_dir&#34;].joinpath(&#34;field&#34;)
+        options[&#34;field_sig_dir&#34;] = options[&#34;field_dir&#34;].joinpath(&#34;sig&#34;)
+        options[&#34;field_ref_dir&#34;] = options[&#34;field_dir&#34;].joinpath(&#34;ref_nothing&#34;)
+        options[&#34;field_sig_sub_ref_dir&#34;] = options[&#34;field_dir&#34;].joinpath(&#34;sig_sub_ref&#34;)
+
+        if not os.path.isdir(options[&#34;field_dir&#34;]):
+            os.mkdir(options[&#34;field_dir&#34;])
+        if not os.path.isdir(options[&#34;field_sig_dir&#34;]):
+            os.mkdir(options[&#34;field_sig_dir&#34;])
+        if not os.path.isdir(options[&#34;field_ref_dir&#34;]):
+            os.mkdir(options[&#34;field_ref_dir&#34;])
+        if not os.path.isdir(options[&#34;field_sig_sub_ref_dir&#34;]):
+            os.mkdir(options[&#34;field_sig_sub_ref_dir&#34;])
+        return None, None
 
     if ref_options_dir is not None:
         ref_options_path = os.path.join(ref_options_dir, &#34;saved_options.json&#34;)
@@ -308,24 +902,37 @@ returns None</p>
         ref_options_path = None
 
     ref_options = QDMPy.io.raw.load_options(
-        options_dict=ref_options, options_path=ref_options_path, check_for_prev_result=True
+        options_dict=ref_options,
+        options_path=ref_options_path,
+        check_for_prev_result=True,
+        loading_ref=True,
     )
 
     ref_name = Path(ref_options[&#34;filepath&#34;]).stem
-    # first make a sub ref output folder
-    options[&#34;sub_ref_dir&#34;] = options[&#34;output_dir&#34;].joinpath(f&#34;sub_{ref_name}_Bnv&#34;)
-    options[&#34;sub_ref_data_dir&#34;] = options[&#34;sub_ref_dir&#34;].joinpath(&#34;data&#34;)
-    if not os.path.isdir(options[&#34;sub_ref_dir&#34;]):
-        os.mkdir(options[&#34;sub_ref_dir&#34;])
-    if not os.path.isdir(options[&#34;sub_ref_data_dir&#34;]):
-        os.mkdir(options[&#34;sub_ref_data_dir&#34;])
+    options[&#34;field_dir&#34;] = options[&#34;output_dir&#34;].joinpath(&#34;field&#34;)
+    options[&#34;field_sig_dir&#34;] = options[&#34;field_dir&#34;].joinpath(&#34;sig&#34;)
+    options[&#34;field_ref_dir&#34;] = options[&#34;field_dir&#34;].joinpath(f&#34;ref_{ref_name}&#34;)
+    options[&#34;field_sig_sub_ref_dir&#34;] = options[&#34;field_dir&#34;].joinpath(&#34;sig_sub_ref&#34;)
+    if not os.path.isdir(options[&#34;field_dir&#34;]):
+        os.mkdir(options[&#34;field_dir&#34;])
+    if not os.path.isdir(options[&#34;field_sig_dir&#34;]):
+        os.mkdir(options[&#34;field_sig_dir&#34;])
+    if not os.path.isdir(options[&#34;field_ref_dir&#34;]):
+        os.mkdir(options[&#34;field_ref_dir&#34;])
+    if not os.path.isdir(options[&#34;field_sig_sub_ref_dir&#34;]):
+        os.mkdir(options[&#34;field_sig_sub_ref_dir&#34;])
 
     # ok now have ref_options dict, time to load params
     if ref_options[&#34;found_prev_result&#34;]:
         ref_fit_result_dict = load_prev_fit_results(ref_options)
-        return ref_fit_result_dict
+        ref_sigmas = load_prev_fit_sigmas(ref_options)
+        return ref_fit_result_dict, ref_sigmas
     else:
-        raise RuntimeError(&#34;Didn&#39;t find reference experiment fit results?&#34;)</code></pre>
+        warnings.warn(
+            &#34;Didn&#39;t find reference experiment fit results? Reason: &#34;
+            + ref_options[&#34;found_prev_result_reason&#34;]
+        )
+        return None, None</code></pre>
 </details>
 </dd>
 <dt id="QDMPy.io.fit.save_pixel_fit_results"><code class="name flex">
@@ -337,7 +944,7 @@ returns None</p>
 <dl>
 <dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
 <dd>Generic options dict holding all the user options.</dd>
-<dt><strong><code>fit_result_dict</code></strong> :&ensp;<code>OrderedDict</code></dt>
+<dt><strong><code>pixel_fit_params</code></strong> :&ensp;<code>OrderedDict</code></dt>
 <dd>Dictionary, key: param_keys, val: image (2D) of param values across FOV.</dd>
 </dl></div>
 <details class="source">
@@ -352,13 +959,44 @@ returns None</p>
     ---------
     options : dict
         Generic options dict holding all the user options.
-
-    fit_result_dict : OrderedDict
+    pixel_fit_params : OrderedDict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
     &#34;&#34;&#34;
     if pixel_fit_params is not None:
         for param_key, result in pixel_fit_params.items():
             np.savetxt(options[&#34;data_dir&#34;] / f&#34;{param_key}.txt&#34;, result)</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.fit.save_pixel_fit_sigmas"><code class="name flex">
+<span>def <span class="ident">save_pixel_fit_sigmas</span></span>(<span>options, sigmas)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Saves pixel fit sigmas to disk.</p>
+<h2 id="arguments">Arguments</h2>
+<dl>
+<dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Generic options dict holding all the user options.</dd>
+<dt><strong><code>sigmas</code></strong> :&ensp;<code>OrderedDict</code></dt>
+<dd>Dictionary, key: param_keys, val: image (2D) of param sigmas across FOV.</dd>
+</dl></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def save_pixel_fit_sigmas(options, sigmas):
+    &#34;&#34;&#34;
+    Saves pixel fit sigmas to disk.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    sigmas : OrderedDict
+        Dictionary, key: param_keys, val: image (2D) of param sigmas across FOV.
+    &#34;&#34;&#34;
+    if sigmas is not None:
+        for key, result in sigmas.items():
+            np.savetxt(options[&#34;data_dir&#34;] / f&#34;{key}_sigma.txt&#34;, result)</code></pre>
 </details>
 </dd>
 </dl>
@@ -381,10 +1019,18 @@ returns None</p>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
+<li><code><a title="QDMPy.io.fit._check_if_already_fit" href="#QDMPy.io.fit._check_if_already_fit">_check_if_already_fit</a></code></li>
+<li><code><a title="QDMPy.io.fit._get_prev_options" href="#QDMPy.io.fit._get_prev_options">_get_prev_options</a></code></li>
+<li><code><a title="QDMPy.io.fit._options_compatible" href="#QDMPy.io.fit._options_compatible">_options_compatible</a></code></li>
+<li><code><a title="QDMPy.io.fit._prev_options_exist" href="#QDMPy.io.fit._prev_options_exist">_prev_options_exist</a></code></li>
+<li><code><a title="QDMPy.io.fit._prev_pixel_results_exist" href="#QDMPy.io.fit._prev_pixel_results_exist">_prev_pixel_results_exist</a></code></li>
 <li><code><a title="QDMPy.io.fit.load_fit_param" href="#QDMPy.io.fit.load_fit_param">load_fit_param</a></code></li>
+<li><code><a title="QDMPy.io.fit.load_fit_sigma" href="#QDMPy.io.fit.load_fit_sigma">load_fit_sigma</a></code></li>
 <li><code><a title="QDMPy.io.fit.load_prev_fit_results" href="#QDMPy.io.fit.load_prev_fit_results">load_prev_fit_results</a></code></li>
+<li><code><a title="QDMPy.io.fit.load_prev_fit_sigmas" href="#QDMPy.io.fit.load_prev_fit_sigmas">load_prev_fit_sigmas</a></code></li>
 <li><code><a title="QDMPy.io.fit.load_reference_experiment_fit_results" href="#QDMPy.io.fit.load_reference_experiment_fit_results">load_reference_experiment_fit_results</a></code></li>
 <li><code><a title="QDMPy.io.fit.save_pixel_fit_results" href="#QDMPy.io.fit.save_pixel_fit_results">save_pixel_fit_results</a></code></li>
+<li><code><a title="QDMPy.io.fit.save_pixel_fit_sigmas" href="#QDMPy.io.fit.save_pixel_fit_sigmas">save_pixel_fit_sigmas</a></code></li>
 </ul>
 </li>
 </ul>

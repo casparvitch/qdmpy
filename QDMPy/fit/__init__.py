@@ -8,7 +8,7 @@ as QDMPy.fit.model (FitModel class etc.)
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "QDMPy.fit._gpufit": False,
+    "QDMPy.fit._gpufit": False,  # by default don't document as pygpufit not always available.
     "QDMPy.fit._scipyfit": True,
     "QDMPy.fit._shared": True,
     "QDMPy.fit._funcs": True,

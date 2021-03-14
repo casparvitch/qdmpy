@@ -1,33 +1,23 @@
-# from setuptools import setup, find_packages
+# setuptools.setup(
+#     name="QDMPy",  # Replace with your own username
+#     version="0.1.0",
+#     author="Sam Scholten",
+#     author_email="samcaspar@gmail.com",
+#     description="Quantum Diamond MicroscoPy",
+#     long_description=long_description,
+#     long_description_content_type="text/markdown",
+#     url="https://gitlab.unimelb.edu.au/sscholten/QDMPy",
+#     classifiers=[
+#         "Programming Language :: Python :: 3",
+#         "License :: MIT License",
+#         # "Operating System :: OS Independent",
+#     ],
+# 	  license="MIT",
+#     package_dir={"": "src"},
+#     packages=setuptools.find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
+#     python_requires=">=3.8",
+# )
 
-# install_requires = [
-#     "tqdm",
-#     "numpy",
-#     "pathlib",
-#     "matplotlib",
-#     # "Pillow",
-#     # "PySimpleGUI",
-#     # "adjustText",
-#     # "snakeviz",
-# ]
-
-# with open("README.md", "r") as fh:
-#     long_description = fh.read()
-
-#     setup(
-#         name="QDMPy",
-#         version="0.0.1",
-#         description="Quantum Diamond MicroscoPy",
-#         long_description=long_description,
-#         long_description_content_type="text/markdown",
-#         # entry_points={"console_scripts": ["flti=flti.command_line:nmap_gui"]},
-#         url="https://github.com/casparvitch/QDMPy",
-#         author="casparvitch",
-#         author_email="samcaspar@gmail.com",
-#         license="MIT",
-#         packages=find_packages(exclude=["*.tests", "*.tests.*", "tests.*", "tests"]),
-#         install_requires=install_requires,
-#         zip_safe=False,
-#         include_package_data=True,
-#     )
-# NOTE requires python > 3.8
+# https://packaging.python.org/tutorials/packaging-projects/
+# https://packaging.python.org/guides/distributing-packages-using-setuptools/
+# https://packaging.python.org/guides/distributing-packages-using-setuptools/#package-data

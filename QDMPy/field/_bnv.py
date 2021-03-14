@@ -6,6 +6,7 @@ ODMR datasets (after they've been fit with the `QDMPy.fit.interface` tooling).
 Functions
 ---------
  - `QDMPy.field._bnv.get_bnvs_and_dshifts`
+ - `QDMPy.field._bnv.get_bnv_sd`
  - `QDMPy.field._bnv.check_exp_bnv_compatibility`
  - `QDMPy.field._bnv.bnv_refsub`
 """
@@ -15,6 +16,7 @@ Functions
 __author__ = "Sam Scholten"
 __pdoc__ = {
     "QDMPy.field._bnv.get_bnvs_and_dshifts": True,
+    "QDMPy.field._bnv.get_bnv_sd": True,
     "QDMPy.field._bnv.check_exp_bnv_compatibility": True,
     "QDMPy.field._bnv.bnv_refsub": True,
 }
@@ -47,7 +49,6 @@ def get_bnvs_and_dshifts(pixel_fit_params):
         List of np arrays (2D) giving B_NV for each NV family/orientation.
         If num_peaks is odd, the bnv is given as the shift of that peak,
         and the dshifts is left as np.nans.
-
     dshifts : list
         List of np arrays (2D) giving the D (~DFS) of each NV family/orientation.
         If num_peaks is odd, the bnv is given as the shift of that peak,
@@ -132,10 +133,8 @@ def check_exp_bnv_compatibility(sig_bnvs, ref_bnvs):
         List of np arrays (2D) giving B_NV for each NV family/orientation.
         If num_peaks is odd, the bnv is given as the shift of that peak,
         and the d_shift is left as np.nans.
-
     ref_bnvs : list
         Same as bnvs, but for reference measurement (or None if no reference used).
-
     """
     # no reference supplied, so of course they're compatible! sig_bnvs=[] if no pixel fitting run
     if not sig_bnvs or not ref_bnvs:
@@ -153,9 +152,26 @@ def check_exp_bnv_compatibility(sig_bnvs, ref_bnvs):
 
 
 def bnv_refsub(options, sig_bnvs, ref_bnvs):
-    """docstring here"""
+    """Calculate sig - ref bnv list.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options (for the main/signal experiment).
+    sig_bnvs : list
+        List of np arrays (2D) giving B_NV for each NV family/orientation in sig experiment.
+        If num_peaks is odd, the bnv is given as the shift of that peak,
+        and the dshifts is left as np.nans.
+    ref_bnvs : dict
+        Same as sig_bnvs but for ref experiment.
+
+    Returns
+    -------
+    sig_sub_ref_bnvs : list
+        sig - ref images
+    """
     if ref_bnvs:
         check_exp_bnv_compatibility(sig_bnvs, ref_bnvs)
         return [sig - ref for sig, ref in zip(sig_bnvs, ref_bnvs)]
     else:
-        return sig_bnvs
+        return sig_bnvs.copy()

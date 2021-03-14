@@ -34,8 +34,6 @@ Module variables
  - `QDMPy.constants.S_MAT_Z`
  - `QDMPy.constants.NV_AXES_100_110`
  - `QDMPy.constants.NV_AXES_100_100`
- - `QDMPy.constants.NV_AXES_111_110`
- - `QDMPy.constants.NV_AXES_111_100`
 """
 # ============================================================================
 
@@ -50,8 +48,6 @@ __pdoc__ = {
     "QDMPy.constants.S_MAT_Z": True,
     "QDMPy.constants.NV_AXES_100_110": True,
     "QDMPy.constants.NV_AXES_100_100": True,
-    "QDMPy.constants.NV_AXES_111_110": True,
-    "QDMPy.constants.NV_AXES_111_100": True,
 }
 
 # ============================================================================

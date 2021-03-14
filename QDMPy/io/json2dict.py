@@ -1,5 +1,4 @@
 # -*- coding: utf-8 -*-
-
 """
 json2dict; functions for loading json files to dicts and the inverse.
 

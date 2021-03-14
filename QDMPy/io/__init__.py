@@ -18,6 +18,13 @@ This (sub-) package exposes specific functions to the user:
     - `QDMPy.io.json2dict.json_to_dict`
     - `QDMPy.io.json2dict.dict_to_json`
 """
+__author__ = "Sam Scholten"
+__pdoc__ = {
+    "QDMPy.io.field": True,
+    "QDMPy.io.fit": True,
+    "QDMPy.io.json2dict": True,
+    "QDMPy.io.raw": True,
+}
 
 
 from QDMPy.io.raw import *

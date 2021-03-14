@@ -1,17 +1,19 @@
 # -*- coding: utf-8 -*-
 """
-This module holds ...
+This module holds functions for filtering images (2D numpy arrays).
 
 Functions
 ---------
- - `QDMPy.itools._filter.`
+ - `QDMPy.itools._filter.get_im_filtered`
+ - `QDMPy.itools._filter.get_im_filtered_gaussian`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "QDMPy.itools._filter.": True,
+    "QDMPy.itools._filter.get_im_filtered": True,
+    "QDMPy.itools._filter.get_im_filtered_gaussian": True,
 }
 
 # ============================================================================
@@ -23,6 +25,10 @@ import scipy.ndimage
 
 # hands off to other filters
 def get_im_filtered(image, filter_type, **kwargs):
+    """Wrapped over other filters defined in `QDMPy.itools._filter'.
+    Current filters defined:
+        - filter_type = gaussian, `QDMPy.itools._filter.get_im_filtered_gaussian`
+    """
     if type(image) != np.ma.core.MaskedArray:
         image = np.ma.masked_array(image)
     filter_fns = {
@@ -42,7 +48,14 @@ def get_im_filtered(image, filter_type, **kwargs):
 
 
 def get_im_filtered_gaussian(image, sigma):
-    return scipy.ndimage.gaussian_filter(image, sigma=sigma)
+    """Returns image filtered through scipy.ndimage.gaussian_filter with
+    parameter 'sigma'."""
+    # f_image = np.fft.fft2(image)
+    return scipy.ndimage.gaussian_filter(
+        image,
+        sigma=sigma,
+    )
+    # return np.fft.ifft2(result).real
 
 
 # ============================================================================

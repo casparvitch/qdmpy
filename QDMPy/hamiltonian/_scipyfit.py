@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*-
 """
-This module holds scipyfit specific options for hamiltonian fitting
+This module holds scipyfit specific options for hamiltonian fitting.
 
 Functions
 ---------
  - `QDMPy.hamiltonian._scipyfit.gen_scipyfit_init_guesses`
  - `QDMPy.hamiltonian._scipyfit.prep_scipyfit_options`
+ - `QDMPy.hamiltonian._scipyfit.limit_cpu`
+ - `QDMPy.hamiltonian._scipyfit.fit_hamiltonian_scipyfit`
+ - `QDMPy.hamiltonian._scipyfit.fit_hamiltonian_ROI_avg_scipyfit`
+ - `QDMPy.hamiltonian._scipyfit.to_squares_wrapper`
 """
 # ============================================================================
 
@@ -13,6 +17,10 @@ __author__ = "Sam Scholten"
 __pdoc__ = {
     "QDMPy.hamiltonian._scipyfit.gen_scipyfit_init_guesses": True,
     "QDMPy.hamiltonian._scipyfit.prep_scipyfit_options": True,
+    "QDMPy.hamiltonian._scipyfit.limit_cpu": True,
+    "QDMPy.hamiltonian._scipyfit.fit_hamiltonian_scipyfit": True,
+    "QDMPy.hamiltonian._scipyfit.fit_hamiltonian_ROI_avg_scipyfit": True,
+    "QDMPy.hamiltonian._scipyfit.to_squares_wrapper": True,
 }
 # ============================================================================
 
@@ -47,10 +55,8 @@ def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     init_guesses : dict
         Dict holding guesses for each parameter, e.g. key -> list of guesses for the ham.
-
     init_bounds : dict
         Dict holding guesses for each parameter, e.g. key -> list of bounds for the ham.
 
@@ -58,7 +64,6 @@ def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
     -------
     fit_param_ar : np array, shape: num_params
         The initial fit parameter guesses.
-
     fi_param_bound_ar : np array, shape: (num_params, 2)
         Fit parameter bounds.
     """
@@ -96,7 +101,6 @@ def prep_scipyfit_options(options, ham):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     fit_model : `QDMPy.hamiltonian._hamiltonians.Hamiltonian`
         Hamiltonian object.
 
@@ -168,11 +172,8 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     data : np array, 3D
         Normalised measurement array, shape: [idx, y, x]. E.g. bnvs or freqs
-
-
     fit_model : `QDMPy.hamiltonian._hamiltonians.Hamiltonian`
         Model we're fitting to.
 
@@ -181,6 +182,8 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
     ham_results : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
         Also has 'residual' as a key.
+    sigmas: dict
+        As ham_results, but containing parameters errors (standard deviations) across FOV.
     """
     systems.clean_options(options)
 
@@ -249,11 +252,8 @@ def fit_hamiltonian_ROI_avg_scipyfit(options, data, hamiltonian):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     data : np array, 3D
         Normalised measurement array, shape: [idx, y, x]. E.g. bnvs or freqs
-
-
     fit_model : `QDMPy.hamiltonian._hamiltonians.Hamiltonian`
         Model we're fitting to.
 
@@ -261,7 +261,6 @@ def fit_hamiltonian_ROI_avg_scipyfit(options, data, hamiltonian):
     -------
     best_params : array
         Array of best parameters from ROI average.
-
     fit_options : dict
         Options dictionary for this fit method, as will be passed to fitting function.
         E.g. scipy least_squares is handed various options as a dictionary.
@@ -297,21 +296,19 @@ def to_squares_wrapper(fun, p0, shaped_data, kwargs={}):
     ---------
     fun : function
         Function object acting as residual
-
     p0 : np array
         Initial guess: array of parameters
-
     shaped_data : list (3 elements)
         array returned by `QDMPy.hamiltonian._shared.pixel_generator`: [y, x, data[:, y, x]]
-
     kwargs : dict
         Other options (dict) passed to least_squares, i.e. fit_options
 
     Returns
     -------
     wrapped_squares : tuple
-        (y, x), least_squares(...).x
-        I.e. the position of the fit result, and then the fit result parameters array.
+        (y, x), least_squares(...).x, least_squares(...).jac
+        I.e. the position of the fit result, the fit result parameters array and the jacobian
+        at the solution.
     """
     # shaped_data: [y, x, pl]
     # output: (y, x), result_params

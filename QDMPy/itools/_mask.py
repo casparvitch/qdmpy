@@ -1,17 +1,17 @@
 # -*- coding: utf-8 -*-
 """
-This module holds ...
+This module holds tools for masking datasets with numpy.ma.
 
 Functions
 ---------
- - `QDMPy.itools._mask.`
+ - `QDMPy.itools._mask.mask_polygons`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "QDMPy.itools._mask.": True,
+    "QDMPy.itools._mask.mask_polygons": True,
 }
 
 # ============================================================================
@@ -26,6 +26,21 @@ import QDMPy.itools._polygon
 
 
 def mask_polygons(image, polygons=None):
+    """Mask image for the given polygon regions.
+
+    Arguments
+    ---------
+    image : 2D array-like
+        Image array to mask.
+    polygons : list, optional
+        List of `QDMPy.itools._polygon.Polygon` objects.
+        (the default is None, where image is returned with no mask)
+
+    Returns
+    -------
+    masked_im : np.ma.MaskedArray
+        image, now masked
+    """
     image = np.array(image)
     if polygons is None:
         return np.ma.masked_array(image, mask=np.zeros(image.shape))

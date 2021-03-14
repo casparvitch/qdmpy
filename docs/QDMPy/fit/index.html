@@ -24,7 +24,8 @@
 </header>
 <section id="section-intro">
 <p>Sub-package for fitting widefield NV microscopy (photoluminescence) data.</p>
-<p>This (sub-) package exposes all of the concents of <code><a title="QDMPy.fit.interface" href="interface.html">QDMPy.fit.interface</a></code>.</p>
+<p>This (sub-) package exposes all of the concents of <code><a title="QDMPy.fit.interface" href="interface.html">QDMPy.fit.interface</a></code>, as well
+as QDMPy.fit.model (FitModel class etc.)</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
@@ -33,27 +34,30 @@
 &#34;&#34;&#34;
 Sub-package for fitting widefield NV microscopy (photoluminescence) data.
 
-This (sub-) package exposes all of the concents of `QDMPy.fit.interface`.
+This (sub-) package exposes all of the concents of `QDMPy.fit.interface`, as well
+as QDMPy.fit.model (FitModel class etc.)
 &#34;&#34;&#34;
 
+__author__ = &#34;Sam Scholten&#34;
 __pdoc__ = {
-    &#34;QDMPy.fit._gpufit&#34;: False,
+    &#34;QDMPy.fit._gpufit&#34;: False,  # by default don&#39;t document as pygpufit not always available.
     &#34;QDMPy.fit._scipyfit&#34;: True,
     &#34;QDMPy.fit._shared&#34;: True,
-    &#34;QDMPy.fit._models&#34;: True,
+    &#34;QDMPy.fit._funcs&#34;: True,
+    &#34;QDMPy.fit.model&#34;: True,
     &#34;QDMPy.fit.interface&#34;: True,
 }
 
-
-from QDMPy.fit.interface import *</code></pre>
+from QDMPy.fit.interface import *
+from QDMPy.fit.model import *</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt><code class="name"><a title="QDMPy.fit._models" href="_models.html">QDMPy.fit._models</a></code></dt>
+<dt><code class="name"><a title="QDMPy.fit._funcs" href="_funcs.html">QDMPy.fit._funcs</a></code></dt>
 <dd>
-<div class="desc"><p>This module defines fit models used to fit QDM photoluminescence data.
+<div class="desc"><p>This module defines the fit functions used in the <code><a title="QDMPy.fit.model.FitModel" href="model.html#QDMPy.fit.model.FitModel">FitModel</a></code>.
 We grab/use this regardless of fitting on cpu (scipy) or gpu etc …</p></div>
 </dd>
 <dt><code class="name"><a title="QDMPy.fit._scipyfit" href="_scipyfit.html">QDMPy.fit._scipyfit</a></code></dt>
@@ -69,6 +73,11 @@ fitting backends, but are not a part of the user-facing interface …</p></div>
 <dd>
 <div class="desc"><p>This module holds the general interface tools for fitting data, independent of fit backend
 (e.g. scipy/gpufit etc.) …</p></div>
+</dd>
+<dt><code class="name"><a title="QDMPy.fit.model" href="model.html">QDMPy.fit.model</a></code></dt>
+<dd>
+<div class="desc"><p>This module defines fit models used to fit QDM photoluminescence data.
+We grab/use this regardless of fitting on cpu (scipy) or gpu etc …</p></div>
 </dd>
 </dl>
 </section>
@@ -92,10 +101,11 @@ fitting backends, but are not a part of the user-facing interface …</p></div>
 </li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
-<li><code><a title="QDMPy.fit._models" href="_models.html">QDMPy.fit._models</a></code></li>
+<li><code><a title="QDMPy.fit._funcs" href="_funcs.html">QDMPy.fit._funcs</a></code></li>
 <li><code><a title="QDMPy.fit._scipyfit" href="_scipyfit.html">QDMPy.fit._scipyfit</a></code></li>
 <li><code><a title="QDMPy.fit._shared" href="_shared.html">QDMPy.fit._shared</a></code></li>
 <li><code><a title="QDMPy.fit.interface" href="interface.html">QDMPy.fit.interface</a></code></li>
+<li><code><a title="QDMPy.fit.model" href="model.html">QDMPy.fit.model</a></code></li>
 </ul>
 </li>
 </ul>

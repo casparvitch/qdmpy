@@ -4,14 +4,41 @@ This module holds the tools for loading/saving field results.
 
 Functions
 ---------
+ - `QDMPy.io.field.save_field_calcs`
  - `QDMPy.io.field.save_bnvs_and_dshifts`
+ - `QDMPy.io.field.save_field_params`
+ - `QDMPy.io.field.save_field_sigmas`
+ - `QDMPy.io.field.load_prev_field_calcs`
+ - `QDMPy.io.field.load_prev_bnvs_and_dshifts`
+ - `QDMPy.io.field.load_prev_field_params`
+ - `QDMPy.io.field.load_field_param`
+ - `QDMPy.io.field.load_field_sigma`
+ - `QDMPy.io.field.load_arb_field_param`
+ - `QDMPy.io.field.load_arb_field_params`
+ - `QDMPy.io.field.check_for_prev_field_calc`
+ - `QDMPy.io.field._prev_pixel_field_calcs_exist`
+ - `QDMPy.io.field._field_options_compatible`
 
 """
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
+    "QDMPy.io.field.save_field_calcs": True,
     "QDMPy.io.field.save_bnvs_and_dshifts": True,
+    "QDMPy.io.field.save_field_params": True,
+    "QDMPy.io.field.save_field_sigmas": True,
+    "QDMPy.io.field.load_prev_field_calcs": True,
+    "QDMPy.io.field.load_prev_bnvs_and_dshifts": True,
+    "QDMPy.io.field.load_prev_field_params": True,
+    "QDMPy.io.field.load_prev_field_sigmas": True,
+    "QDMPy.io.field.load_field_param": True,
+    "QDMPy.io.field.load_field_sigma": True,
+    "QDMPy.io.field.load_arb_field_param": True,
+    "QDMPy.io.field.load_arb_field_params": True,
+    "QDMPy.io.field.check_for_prev_field_calc": True,
+    "QDMPy.io.field._prev_pixel_field_calcs_exist": True,
+    "QDMPy.io.field._field_options_compatible": True,
 }
 
 # ============================================================================
@@ -27,25 +54,53 @@ import QDMPy.hamiltonian
 # ============================================================================
 
 
-def save_field_calcs(options, bnv_tuple, dshift_tuple, params_tuple, sigmas_tuple):
+def save_field_calcs(options, bnv_ar, dshift_ar, params_ar, sigmas_ar):
+    """save field calculations to disk.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    bnv_ar : array-like
+        len-3 array of bnvs (each a list) (sig, ref, sig_sub_ref)
+    dshift_ar : array-like
+        len-2 array of dshifts (each a list) (sig, ref)
+    params_ar : array-like
+        len-3 array of param dicts (sig, ref, sig_sub_ref)
+    sigmas_ar : array-like
+        len-3 array of sigma dicts (sig, ref, sig_sub_ref)
+    """
     # save in correct places...
-    save_bnvs_and_dshifts(options, "sig", bnv_tuple[0], dshift_tuple[0])
-    save_bnvs_and_dshifts(options, "ref", bnv_tuple[1], dshift_tuple[1])
-    save_bnvs_and_dshifts(options, "sig_sub_ref", bnv_tuple[2], [])
+    save_bnvs_and_dshifts(options, "sig", bnv_ar[0], dshift_ar[0])
+    save_bnvs_and_dshifts(options, "ref", bnv_ar[1], dshift_ar[1])
+    save_bnvs_and_dshifts(options, "sig_sub_ref", bnv_ar[2], [])
 
-    save_field_params(options, "sig", params_tuple[0])
-    save_field_params(options, "ref", params_tuple[1])
-    save_field_params(options, "sig_sub_ref", params_tuple[2])
+    save_field_params(options, "sig", params_ar[0])
+    save_field_params(options, "ref", params_ar[1])
+    save_field_params(options, "sig_sub_ref", params_ar[2])
 
-    save_field_sigmas(options, "sig", sigmas_tuple[0])
-    save_field_sigmas(options, "ref", sigmas_tuple[1])
-    save_field_sigmas(options, "sig_sub_ref", sigmas_tuple[2])
+    save_field_sigmas(options, "sig", sigmas_ar[0])
+    save_field_sigmas(options, "ref", sigmas_ar[1])
+    save_field_sigmas(options, "sig_sub_ref", sigmas_ar[2])
 
 
 # ============================================================================
 
 
 def save_bnvs_and_dshifts(options, name, bnvs, dshifts):
+    """Save bnvs and dshifts to disk.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    name : str
+        Name ascribed to this sigma, i.e. sig/ref/sig_sub_ref. Can handle others less gratiously.
+    bnvs : list
+        list of bnv results (2D image)
+    dshifts : list
+        list of dshift results (2D image)
+    """
     if bnvs:
         for i, bnv in enumerate(bnvs):
             if bnv is not None:
@@ -75,10 +130,8 @@ def save_field_params(options, name, pixel_fit_params):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     name : str
-        TODO
-
+        Name ascribed to this param, i.e. sig/ref/sig_sub_ref. Can handle others less gratiously.
     pixel_fit_params : OrderedDict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
     """
@@ -103,14 +156,12 @@ def save_field_sigmas(options, name, sigmas):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     name : str
-        TODO
-
+        Name ascribed to this sigma, i.e. sig/ref/sig_sub_ref. Can handle others less gratiously.
     sigmas : OrderedDict
         Dictionary, key: param_keys, val: image (2D) of sigmas across FOV.
     """
-    if sigmas:
+    if sigmas is not None:
         for param_key, sigma in sigmas.items():
             if sigma is not None:
                 if name in ["sig", "ref", "sig_sub_ref"]:
@@ -124,6 +175,24 @@ def save_field_sigmas(options, name, sigmas):
 
 
 def load_prev_field_calcs(options):
+    """Load previous field calculation.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    bnv_ar : array-like
+        len-3 array of bnvs (each a list) (sig, ref, sig_sub_ref)
+    dshift_ar : array-like
+        len-2 array of dshifts (each a list) (sig, ref)
+    params_ar : array-like
+        len-3 array of param dicts (sig, ref, sig_sub_ref)
+    sigmas_ar : array-like
+        len-3 array of sigma dicts (sig, ref, sig_sub_ref)
+    """
     sig_bnvs, sig_dshifts = load_prev_bnvs_and_dshifts(options, "sig")
     ref_bnvs, ref_dshifts = load_prev_bnvs_and_dshifts(options, "ref")
     sig_sub_ref_bnvs, _ = load_prev_bnvs_and_dshifts(options, "sig_sub_ref")
@@ -148,6 +217,23 @@ def load_prev_field_calcs(options):
 
 
 def load_prev_bnvs_and_dshifts(options, name):
+    """Load previous bnv and dshift calculation
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    name : str
+        Name ascribed to results you want to load,
+        i.e. sig/ref/sig_sub_ref.
+
+    Returns
+    -------
+    bnvs : list
+        list of bnv results (2D image)
+    dshifts : list
+        list of dshift results (2D image)
+    """
     bnvs = []
     dshifts = []
     for i in range(4):
@@ -168,6 +254,21 @@ def load_prev_bnvs_and_dshifts(options, name):
 
 
 def load_prev_field_params(options, name):
+    """Load previous field result ascribed to 'name'.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    name : str
+        Name ascribed to results you want to load,
+        i.e. sig/ref/sig_sub_ref.
+
+    Returns
+    -------
+    field_params : dict
+        Dictionary, key: param_keys, val: image (2D) of field param values across FOV.
+    """
     prev_options = QDMPy.io.fit._get_prev_options(options)
 
     field_param_dict = {}
@@ -182,6 +283,21 @@ def load_prev_field_params(options, name):
 
 
 def load_prev_field_sigmas(options, name):
+    """Load previous field sigma result ascribed to 'name'.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    name : str
+        Name ascribed to results you want to load,
+        i.e. sig/ref/sig_sub_ref.
+
+    Returns
+    -------
+    sigma_params : dict
+        Dictionary, key: param_keys, val: image (2D) of field sigma values across FOV.
+    """
     prev_options = QDMPy.io.fit._get_prev_options(options)
 
     sigmas_dict = {}
@@ -278,6 +394,20 @@ def check_for_prev_field_calc(options):
 
 
 def _prev_pixel_field_calcs_exist(options):
+    """Can we find previous pixel field calculation?
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    do_exist : bool
+        True if prev pixel field calculations have been found, else False
+    reason : str
+        Reason for the above decision
+    """
     prev_options = QDMPy.io.fit._get_prev_options(options)
     if "field_params" not in prev_options or prev_options["field_params"] is None:
         return False, "no key 'field params' in prev_options"
@@ -297,6 +427,21 @@ def _prev_pixel_field_calcs_exist(options):
 
 
 def _field_options_compatible(options):
+    """We have found some previous pixel field calculation, but do its parameters
+    match what we want on this processing run?
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    do_match : bool
+        True if options are compatible, else false
+    reason : str
+        Reason for the above decision
+    """
     prev_options = QDMPy.io.fit._get_prev_options(options)
     if options["field_method_used"] != prev_options["field_method_used"]:
         return False, "method was different to that selected (or auto-selected) presently."

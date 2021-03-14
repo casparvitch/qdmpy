@@ -8,6 +8,7 @@ __pdoc__ = {
     "QDMPy.hamiltonian._scipyfit": True,
     "QDMPy.hamiltonian._hamiltonians": True,
     "QDMPy.hamiltonian.interface": True,
+    "QDMPy.hamiltonian._shared": True,
 }
 
 

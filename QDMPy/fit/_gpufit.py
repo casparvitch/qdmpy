@@ -89,7 +89,6 @@ def get_gpufit_modelID(options, fit_model):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     fit_model : `QDMPy.fit.model.FitModel`
         Must be one of (in this exact order/format):
         for odmr, LORENTZ8: {'linear': 1, 'lorentzian': 1<=n<=8}
@@ -140,7 +139,6 @@ def prep_gpufit_backend(options, fit_model):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     fit_model : `QDMPy.fit.model.FitModel`
         Must be one of (in this exact order/format):
         for odmr, LORENTZ8: {'linear': 1, 'lorentzian': 1<=n<=8}
@@ -173,11 +171,9 @@ def gen_gpufit_init_guesses(options, init_guesses, init_bounds):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     init_guesses : dict
         Dict holding guesses for each parameter, e.g. key -> list of guesses for each independent
         version of that fn_type.
-
     init_bounds : dict
         Dict holding guesses for each parameter, e.g. key -> list of bounds for each independent
         version of that fn_type.
@@ -185,7 +181,7 @@ def gen_gpufit_init_guesses(options, init_guesses, init_bounds):
     Returns
     -------
     fit_param_ar : np array, shape: num_params
-
+        The initial fit parameter guesses.
     fi_param_bound_ar : np array, shape: 2 * num_params
         Format: [parameter 1 lower bound, parameter 1 upper bound, parameter 2 lower bounds, ...]
     """
@@ -238,16 +234,12 @@ def fit_single_pixel_gpufit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     pixel_pl_ar : np array, 1D
         Normalised PL as function of sweep_list for a single pixel.
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-
     fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
-
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
         `QDMPy.fit._shared.ROIAvgFitResult` object, to pull fit_options from.
 
@@ -256,7 +248,8 @@ def fit_single_pixel_gpufit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg
     pixel_parameters : np array, 1D
         Best fit parameters, as determined by gpufit
     """
-    # NOTE need to do the fit at least twice (gpufit requirements) so we do it twice here.
+    # note need to do the fit at least twice (gpufit requirements) so we do it twice here.
+    # (and disregard one of em)
 
     # this is just constructing the initial parameter guesses and bounds in the right format
     init_guess_params, init_bounds = gen_gpufit_init_guesses(
@@ -306,22 +299,20 @@ def fit_ROI_avg_gpufit(options, sig_norm, sweep_list, fit_model):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     sig_norm : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x].
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-
     fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
 
     Returns
     -------
-    `QDMPy.fit._shared.ROIAvgFitResult` object containing the fit result (see class specifics)
+    result : `QDMPy.fit._shared.ROIAvgFitResult`
+        object containing the fit result (see class specifics)
     """
 
-    # NOTE need to do the fit at least twice (gpufit requirements) so we do it twice here.
+    # note need to do the fit at least twice (gpufit requirements) so we do it twice here.
 
     # fit *all* pl data (i.e. summing over FOV)
     # collapse to just pl_ar (as function of sweep, 1D)
@@ -386,23 +377,17 @@ def fit_AOIs_gpufit(
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     sig_norm : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x].
-
     single_pixel_pl : np array, 1D
         Normalised measurement array, for chosen single pixel check.
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq).
-
     fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
-
     AOIs : list
         List of AOI specifications - each a length-2 iterable that can be used to directly index
         into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].
-
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
         `QDMPy.fit._shared.ROIAvgFitResult` object, to pull `QDMPy.fit._shared.ROIAvgFitResult.fit_options`
         from.
@@ -412,7 +397,7 @@ def fit_AOIs_gpufit(
     fit_result_collection : `QDMPy.fit._shared.FitResultCollection`
         `QDMPy.fit._shared.FitResultCollection` object
     """
-    # NOTE need to do the fit at least twice (gpufit requirements) so we do it twice per AOI here.
+    # note need to do the fit at least twice (gpufit requirements) so we do it twice per AOI here.
 
     # this is just constructing the initial parameter guesses and bounds in the right format
     init_guess_params, init_bounds = gen_gpufit_init_guesses(
@@ -475,16 +460,12 @@ def fit_pixels_gpufit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     sig_norm : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x].
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-
     fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
-
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
         `QDMPy.fit._shared..ROIAvgFitResult` object, to pull fit_options from.
 
@@ -576,7 +557,6 @@ def gpufit_data_shape(sig_norm):
     -------
     sig_norm_reshaped : np array
         np.float32, shape: (num_pixels, len(sweep_list)). Shaped as gpufit wants it!
-
     pixel_posns : list
         List of pixel positions for each rown of sig_norm_reshaped i.e. [(x1, y1), (x2, y2)]
     """
@@ -601,11 +581,9 @@ def gpufit_reshape_result(pixel_param_results, pixel_posns, jacs):
     ---------
     pixel_param_results : np array, 2D
         parameter results as returned from gpufit. Shape: (num fits, num parameters)
-
     pixel_posns : list
         List of pixel positions (x,y) as returned by `QDMPy.fit.gpufit._gpufit_data_shape`.
         I.e. the position of pixel positions associated with rows of pixel_param_results.
-
     jacs : np array, 2D
         Same as pixel_param_results but containing jacobian at solution
 

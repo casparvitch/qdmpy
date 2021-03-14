@@ -79,8 +79,8 @@ def fsolve(
     Return the roots of the (non-linear) equations defined by
     ``func(x) = 0`` given a starting estimate.
 
-    Parameters
-    ----------
+    Arguments
+    ---------
     func : callable ``f(x, *args)``
         A function that takes at least one (possibly vector) argument,
         and returns a value of the same length.
@@ -337,8 +337,8 @@ def leastsq(
         x = arg min(sum(func(y)**2,axis=0))
                  y
 
-    Parameters
-    ----------
+    Arguments
+    ---------
     func : callable
         Should take at least one (possibly length N vector) argument and
         returns M floating point numbers. It must not return NaNs or
@@ -625,8 +625,8 @@ def curve_fit(
 
     Assumes ``ydata = f(xdata, *params) + eps``.
 
-    Parameters
-    ----------
+    Arguments
+    ---------
     f : callable
         The model function, f(x, ...). It must take the independent
         variable as the first argument and the parameters to fit as
@@ -985,8 +985,8 @@ def fixed_point(func, x0, args=(), xtol=1e-8, maxiter=500, method="del2"):
     Given a function of one or more variables and a starting point, find a
     fixed point of the function: i.e., where ``func(x0) == x0``.
 
-    Parameters
-    ----------
+    Arguments
+    ---------
     func : function
         Function to evaluate.
     x0 : array_like

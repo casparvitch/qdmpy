@@ -1,8 +1,25 @@
 # -*- coding: utf-8 -*-
 """
 This module holds the Polygon class: a class to compute if a point
-lies inside/outside/on-side of a polygon.
+lies inside/outside/on-side of a polygon. Also defined is a function
+(polygon_gui) that can be called to select a polygon region on an image.
 
+Polygon-GUI
+-----------
+Function to select polygons on an image. Ensure you have the required
+gui backends for matplotlib. Best ran seperately/not within jupyter.
+E.g. open python REPL (python at cmd), 'import QDMPy.itools', then
+run QDMPy.itools.polygon_gui() & follow the prompts.
+
+An optional array (i.e. the image used to define regions) can be passed
+to polygon_gui.
+
+The output json path can then be specified in the usual way (there's an
+option called 'polygon_nodes_path') to utilize these regions in the main
+processing code.
+
+Polygon
+-------
 This is a Python 3 implementation of the Sloan's improved version of the
 Nordbeck and Rystedt algorithm, published in the paper:
 
@@ -20,16 +37,23 @@ Sam Scholten copied from:
 http://code.activestate.com/recipes/578381-a-point-in-polygon-program-sw-sloan-algorithm/
 -> swapped x & y args order (etc.) for image use.
 
+Classes
+-------
+ - `QDMPy.itools._polygon.Polygon`
+
 Functions
 ---------
- - `QDMPy.itools._polygon.`
+ - `QDMPy.itools._polygon.polygon_gui`
+ - `QDMPy.itools._polygon._tri_2area_det`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "QDMPy.itools._polygon.": True,
+    "QDMPy.itools._polygon.polygon_gui": True,
+    "QDMPy.itools._polygon.Polygon": True,
+    "QDMPy.itools._polygon._tri_2area_det": True,
 }
 
 # ============================================================================
@@ -333,6 +357,21 @@ class Polygon:
 
 
 def polygon_gui(image=None):
+    """Load gui to select polygon regions. Follow the prompts.
+
+    Arguments
+    ---------
+    image : 2D array-like, optional
+        image to use for select polygons on.
+        (the default is None, forces user to specify path in gui)
+
+    Returns
+    -------
+    polygon_lst : list
+        list of polygons (each defined by a list of nodes [y, x])
+
+    Also saves polygon_lst into a json at a given path (in the gui).
+    """
     sg.change_look_and_feel("Material1")
     sg.SetOptions(margins=(10, 10), text_justification="r")
 
@@ -801,8 +840,8 @@ class _SelectorWidget(AxesWidget):
 class ToolHandles(object):
     """Control handles for canvas tools.
 
-    Parameters
-    ----------
+    Arguments
+    ---------
     ax : :class:`matplotlib.axes.Axes`
         Matplotlib axes where tool handles are displayed.
     x, y : 1D arrays
@@ -881,8 +920,8 @@ class PolygonSelector(_SelectorWidget):
     For the selector to remain responsive you must keep a reference to
     it.
 
-    Parameters
-    ----------
+    Arguments
+    ---------
     ax : :class:`~matplotlib.axes.Axes`
         The parent axes for the widget.
     onselect : function

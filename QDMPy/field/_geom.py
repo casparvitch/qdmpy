@@ -8,6 +8,7 @@ Functions
  - `QDMPy.field._geom.get_unvs`
  - `QDMPy.field._geom.get_B_bias`
  - `QDMPy.field._geom.get_unv_frames`
+ - `QDMPy.field._geom.add_bfield_reconstructed`
 """
 
 # ============================================================================
@@ -17,6 +18,7 @@ __pdoc__ = {
     "QDMPy.field._geom.get_unvs": True,
     "QDMPy.field._geom.get_B_bias": True,
     "QDMPy.field._geom.get_unv_frames": True,
+    "QDMPy.field._geom.add_bfield_reconstructed": True,
 }
 
 # ============================================================================
@@ -153,8 +155,8 @@ def get_unv_frames(options):
 
 
 def add_bfield_reconstructed(fit_params):
-    r"""
-    Bxyz measured -> Bxyz_recon via fourier methods.
+    r"""Bxyz measured -> Bxyz_recon via fourier methods.
+    TODO change args & actually write
 
     Arguments
     ---------
@@ -221,3 +223,4 @@ def add_bfield_reconstructed(fit_params):
     # extract them
 
     # at end, add recon back into fit_params
+    raise NotImplementedError()

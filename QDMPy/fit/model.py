@@ -86,7 +86,6 @@ class FitModel:
         ---------
         param_ar : np array, 1D
             Array of parameters fed into each fitfunc (these are what are fit by sc)
-
         sweep_vec : np array, 1D or number
             Affine parameter where the fit model is evaluated
 
@@ -140,6 +139,16 @@ def get_param_defn(fit_model):
     """
     Returns list of parameters in fit_model, note there will be duplicates, and they do
     not have numbers e.g. 'pos_0'. Use `QDMPy.fit.model.get_param_odict` for that purpose.
+
+    Arguments
+    ---------
+    fit_model : `QDMPy.fit.model.FitModel`
+        FitModel used to fit to data.
+
+    Returns
+    -------
+    param_defn_ar : list
+        List of parameter names (param_defn) in fit model.
     """
     param_defn_ar = []
     for fn in fit_model.fn_chain:
@@ -154,6 +163,16 @@ def get_param_defn(fit_model):
 def get_param_odict(fit_model):
     """
     get ordered dict of key: param_key (param_name), val: param_unit for all parameters in fit_model
+
+    Arguments
+    ---------
+    fit_model : `QDMPy.fit.model.FitModel`
+        FitModel used to fit to data.
+
+    Returns
+    -------
+    param_dict : dict
+        Dictionary containing key: params, values: units.
     """
     param_dict = OrderedDict()
     for fn in fit_model.fn_chain:
@@ -172,8 +191,21 @@ def get_param_odict(fit_model):
 
 
 def get_param_unit(fit_model, param_name, param_number):
-    """
-    Get unit for a given param_key (given by param_name + "_" + param_number)
+    """Get unit for a given param_key (given by param_name + "_" + param_number)
+
+    Arguments
+    ---------
+    fit_model : `QDMPy.fit.model.FitModel`
+        FitModel used to fit to data.
+    param_name : str
+        Name of parameter, e.g. 'pos'
+    param_number : float or int
+        Which parameter to use, e.g. 0 for 'pos_0'
+
+    Returns
+    -------
+    unit : str
+        Unit for that parameter, e.g. "constant" -> "Amplitude (a.u.)""
     """
     if param_name == "residual":
         return "Error: sum( || residual(sweep_params) || ) over affine param (a.u.)"

@@ -60,7 +60,6 @@ def prep_scipyfit_options(options, fit_model):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     fit_model : `QDMPy.fit.model.FitModel`
         Fit model object.
 
@@ -119,11 +118,9 @@ def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     init_guesses : dict
         Dict holding guesses for each parameter, e.g. key -> list of guesses for each independent
         version of that fn_type.
-
     init_bounds : dict
         Dict holding guesses for each parameter, e.g. key -> list of bounds for each independent
         version of that fn_type.
@@ -132,8 +129,7 @@ def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
     -------
     fit_param_ar : np array, shape: num_params
         The initial fit parameter guesses.
-
-    fi_param_bound_ar : np array, shape: (num_params, 2)
+    fit_param_bound_ar : np array, shape: (num_params, 2)
         Fit parameter bounds.
     """
     param_lst = []
@@ -171,13 +167,10 @@ def fit_ROI_avg_scipyfit(options, sig_norm, sweep_list, fit_model):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     sig_norm : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x].
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-
     fit_model : `QDMPy.fit.model.FitModel`
         The fit model object.
 
@@ -227,16 +220,12 @@ def fit_single_pixel_scipyfit(options, pixel_pl_ar, sweep_list, fit_model, roi_a
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     pixel_pl_ar : np array, 1D
         Normalised PL as function of sweep_list for a single pixel.
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-
     fit_model : `QDMPy.fit.model.FitModel`
         The fit model.
-
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
         `QDMPy.fit._shared.ROIAvgFitResult` object, to pull fit_options from.
 
@@ -277,23 +266,17 @@ def fit_AOIs_scipyfit(
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     sig_norm : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x].
-
     single_pixel_pl : np array, 1D
         Normalised measurement array, for chosen single pixel check.
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq).
-
     fit_model : `QDMPy.fit.model.FitModel`
         The model we're fitting to.
-
     AOIs : list
         List of AOI specifications - each a length-2 iterable that can be used to directly index
         into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].
-
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
         `QDMPy.fit._shared.ROIAvgFitResult` object, to pull `QDMPy.fit._shared.ROIAvgFitResult.fit_options`
         from.
@@ -366,16 +349,12 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, kwargs={}):
     ---------
     fun : function
         Function object acting as residual (fit model minus pl value)
-
     p0 : np array
         Initial guess: array of parameters
-
     sweep_vec : np array
         Array (or I guess single value, anything iterable) of affine parameter (tau/freq)
-
     shaped_data : list (3 elements)
         array returned by `QDMPy.fit._shared.pixel_generator`: [y, x, sig_norm[:, y, x]]
-
     kwargs : dict
         Other options (dict) passed to least_squares, i.e. fit_options
 
@@ -402,16 +381,12 @@ def fit_pixels_scipyfit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_re
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     sig_norm : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x].
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-
     fit_model : `QDMPy.fit.model.FitModel`
         The model we're fitting to.
-
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
         `QDMPy.fit._shared.ROIAvgFitResult` object, to pull fit_options from.
 

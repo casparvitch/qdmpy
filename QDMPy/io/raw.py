@@ -79,18 +79,12 @@ def load_options(
 
     Optional Arguments
     -------------------
-    options_dict : dict
+    options_dict : dict, default: None
         Directly pass in a dictionary of options.
-        Default: None
-
-    path : string
+    path : string, default: None
         Path to fit options .json file. Can be absolute, or from QDMPy.
-        Default: None
-
-    check_for_prev_result : bool
+    check_for_prev_result : bool, default: false
         Check to see if there's a previous fit result for these options.
-        Default: False
-
     loading_ref : bool
         Reloading reference fit result, so ensure we check for previous fit result.
         Passed on to _check_if_already_fit.
@@ -216,7 +210,6 @@ def load_image_and_sweep(options):
     image : np array, 3D
         Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
         not been rebinned. Unwanted sweep values not removed.
-
     sweep_list : list
         List of sweep parameter values
     """
@@ -240,11 +233,9 @@ def reshape_dataset(options, image, sweep_list):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     image : np array, 3D
         Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
         not been rebinned. Unwanted sweep values not removed.
-
     sweep_list : list
         List of sweep parameter values
 
@@ -253,29 +244,23 @@ def reshape_dataset(options, image, sweep_list):
     PL_image : np array, 2D.
         Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
         cut down to ROI.
-
     PL_image_ROI : np array, 2D
         Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
         cut down to ROI.
-
     sig : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
         Cut down to ROI.
         Format: [sweep_vals, y, x]
-
     ref : np array, 3D
         Reference component of raw data, reshaped and rebinned. Unwanted sweeps removed.
         Cut down to ROI.
         Format: [sweep_vals, y, x]
-
     sig_norm : np array, 3D
         Signal normalised by reference (via subtraction or normalisation, chosen in options),
         reshaped and rebinned. Unwanted sweeps removed. Cut down to ROI.
         Format: [sweep_vals, y, x]
-
     single_pixel_pl : np array, 1D
         Normalised measurement array, for chosen single pixel check.
-
     sweep_list : list
         List of sweep parameter values (with removed unwanted sweeps at start/end)
     """
@@ -384,10 +369,8 @@ def _interpolate_option_str(interp_str, options):
     ---------
     interp_str : str
         String (possibly containing option names between braces) to be interpolated.
-
     options : dict
         Generic options dict holding all the user options.
-
     Returns
     -------
     interp_str : str
@@ -455,7 +438,6 @@ def _rebin_image(options, image):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     image : np array, 3D
         Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
         not been rebinned.
@@ -465,15 +447,12 @@ def _rebin_image(options, image):
     image_rebinned : np array, 3D
         Format: [sweep values, y, x]. Same as image, but now rebinned (x size and y size
         have changed). Not cut down to ROI.
-
     sig : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
         Format: [sweep_vals, y, x]. Not cut down to ROI.
-
     ref : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
         Not cut down to ROI. Format: [sweep_vals, y, x].
-
     sig_norm : np array, 3D
         Signal normalised by reference (via subtraction or normalisation, chosen in options),
         reshaped and rebinned.  Unwanted sweeps not removed yet.
@@ -537,22 +516,17 @@ def _remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_nor
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     image_rebinned : np array, 3D
         Format: [sweep values, y, x]. Same as image, but rebinned (x size and y size
         have changed).
-
     sweep_list : list
         List of sweep parameter values
-
     sig : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
         Format: [sweep_vals, y, x]
-
     ref : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps not removed yet.
         Format: [sweep_vals, y, x]
-
     sig_norm : np array, 3D
         Signal normalised by reference (via subtraction or normalisation, chosen in options),
         reshaped and rebinned.  Unwanted sweeps not removed yet.
@@ -563,19 +537,15 @@ def _remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_nor
     PL_image : np array, 2D
         Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
         cut down to ROI
-
     PL_image_ROI : np array, 2D
         Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped and rebinned as
         well as cut down to ROI.
-
     sig : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
         Format: [sweep_vals, y, x]
-
     ref : np array, 3D
         Reference component of raw data, reshaped and rebinned. Unwanted sweeps removed.
         Format: [sweep_vals, y, x]
-
     sig_norm : np array, 3D
         Signal normalised by reference (via subtraction or normalisation, chosen in options),
         reshaped and rebinned. Unwanted sweeps removed.
@@ -620,10 +590,8 @@ def _define_ROI(options, full_size_h, full_size_w):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     full_size_w : int
         Width of image (after rebin, before ROI cut).
-
     full_size_h : int
         Height of image (after rebin, before ROI cut).
 
@@ -742,22 +710,16 @@ def _check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_w
     ---------
     name : str
         The name of the rectangle we're checking (e.g. "ROI", "AOI").
-
     start_x : int
         x coordinate (relative to origin) of rectangle's top left corner.
-
     start_y : int
         y coordinate (relative to origin) of rectangle's top left corner.
-
     end_x : int
         x coordinate (relative to origin) of rectangle's bottom right corner.
-
     end_y : int
         y coordinate (relative to origin) of rectangle's bottom right corner.
-
     full_size_w : int
         Full width of image (or image region, e.g. ROI).
-
     full_size_h : int
         Full height of image (or image region, e.g. ROI).
 
@@ -765,7 +727,6 @@ def _check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_w
     -------
     start_coords : tuple
         'fixed' start coords: (start_x, start_y)
-
     end_coords : tuple
         'fixed' end coords: (end_x, end_y)
     """

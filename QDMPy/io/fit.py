@@ -89,6 +89,7 @@ def load_prev_fit_sigmas(options):
 
 
 def load_fit_sigma(options, key):
+    """ Load a previous fit sigma result, of name 'param_key' """
     return np.loadtxt(options["data_dir"] / (key + "_sigma.txt"))
 
 
@@ -104,6 +105,16 @@ def load_fit_param(options, param_key):
 
 
 def save_pixel_fit_sigmas(options, sigmas):
+    """
+    Saves pixel fit sigmas to disk.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    sigmas : OrderedDict
+        Dictionary, key: param_keys, val: image (2D) of param sigmas across FOV.
+    """
     if sigmas is not None:
         for key, result in sigmas.items():
             np.savetxt(options["data_dir"] / f"{key}_sigma.txt", result)
@@ -120,7 +131,6 @@ def save_pixel_fit_results(options, pixel_fit_params):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     pixel_fit_params : OrderedDict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
     """
@@ -133,8 +143,7 @@ def save_pixel_fit_results(options, pixel_fit_params):
 
 
 def load_reference_experiment_fit_results(options, ref_options=None, ref_options_dir=None):
-    """
-    ref_options dict -> pixel_fit_params dict.
+    """ref_options dict -> pixel_fit_params dict.
 
     Provide one of ref_options and ref_options_dir. If both are None, returns None (with a
     warning). If both are supplied, ref_options takes precedence.
@@ -143,18 +152,15 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
     ---------
     options : dict
         Generic options dict holding all the user options (for the main/signal experiment).
-
     ref_options : dict, default=None
         Generic options dict holding all the user options (for the reference experiment).
-
     ref_options_dir : str or path object, default=None
         Path to read reference options from, i.e. will read 'ref_options_dir / saved_options.json'.
 
     Returns
     -------
     fit_result_dict : OrderedDict
-        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
-
+        Dictionary, key: param_keys, val: image (2D) of (fit) param values across FOV.
         If no reference experiment is given (i.e. ref_options and ref_options_dir are None) then
         returns None
     """
@@ -282,7 +288,6 @@ def _options_compatible(options, prev_options):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     prev_options : dict
         Generic options dict from previous fit result.
 
@@ -290,6 +295,9 @@ def _options_compatible(options, prev_options):
     -------
     _options_compatible : bool
         Whether or not options are compatible.
+
+    reason : str
+        Reason for the above
     """
 
     if not (
@@ -372,8 +380,7 @@ def _options_compatible(options, prev_options):
 
 
 def _prev_pixel_results_exist(options):
-    """
-    Check if the actual fit result files exists.
+    """Check if the actual fit result files exists.
 
     Arguments
     ---------
@@ -384,6 +391,9 @@ def _prev_pixel_results_exist(options):
     -------
     pixels_results_exist : bool
         Whether or not previous pixel result files exist.
+
+    reason : str
+        Reason for the above
     """
 
     # avoid cyclic imports

@@ -82,13 +82,14 @@ __pdoc__ = {
 
 # ============================================================================
 
-
 import numpy as np
+import copy
+from scipy.linalg import svd
 
 # ============================================================================
 
-import QDMPy.fit._models as fit_models
-import QDMPy.io.json2dict
+import QDMPy.fit.model as Qmodel
+import QDMPy.io as Qio
 import QDMPy.constants
 
 # ============================================================================
@@ -103,13 +104,10 @@ class FitResultCollection:
         ---------
         fit_backend : str
             Name of the fit backend (e.g. scipy, gpufit, etc.) used.
-
         roi_avg_fit_result
             `QDMPy.fit._shared.ROIAvgFitResult` object.
-
         single_pixel_result
             Best (optimal) fit/model parameters for single pixel check.
-
         AOI_fit_results_lst : list of lists
             List of (list of) best (optimal) parameters, for each AOI region (avg).
         &#34;&#34;&#34;
@@ -134,23 +132,21 @@ class ROIAvgFitResult:
         sweep_list,
         best_params,
         init_param_guess,
+        init_param_bounds,
     ):
+        # TODO documentation
         &#34;&#34;&#34;
         Arguments
         ---------
         fit_backend : string
             Name of the fit backend (e.g. scipy, gpufit, etc.)
-
         fit_options : dict
             Options dictionary for this fit method, as will be passed to fitting function.
             E.g. scipy least_squares is handed various options as a dictionary.
-
         pl_roi : np array, 1D
             PL data summed over FOV, as fn of sweep_vec.
-
         sweep_list : np array, 1D
             Affine parameter i.e. tau or frequency.
-
         best_params : np array, 1D
             Solution fit parameters array.
         &#34;&#34;&#34;
@@ -174,6 +170,7 @@ class ROIAvgFitResult:
 
         self.best_params = best_params
         self.init_param_guess = init_param_guess
+        self.init_param_bounds = init_param_bounds
 
     def savejson(self, filename, dir):
         &#34;&#34;&#34; Save all attributes as a json file in dir/filename, via `QDMPy.io.json2dict.dict_to_json` &#34;&#34;&#34;
@@ -184,8 +181,9 @@ class ROIAvgFitResult:
             &#34;sweep_list&#34;: self.sweep_list,
             &#34;best_params&#34;: self.best_params,
             &#34;init_param_guess&#34;: self.init_param_guess,
+            &#34;init_param_bounds&#34;: self.init_param_bounds,
         }
-        QDMPy.io.json2dict.dict_to_json(output_dict, filename, dir)
+        Qio.dict_to_json(output_dict, filename, dir)
 
 
 # ============================================================================
@@ -204,7 +202,6 @@ def shuffle_pixels(data_3d):
     -------
     shuffled_in_yx : np array, 3D
         data_3d shuffled in 2nd, 3rd axis.
-
     unshuffler : (y_unshuf, x_unshuf)
         Both np array. Can be used to unshuffle shuffled_in_yx, i.e. through `QDMPy.fit._shared.unshuffle_pixels`.
     &#34;&#34;&#34;
@@ -234,7 +231,6 @@ def unshuffle_pixels(data_2d, unshuffler):
     ---------
     data_2d : np array, 2D
         i.e. &#39;image&#39; of a single fit parameter, all shuffled up!
-
     unshuffler : (y_unshuf, x_unshuf)
         Two arrays returned by `QDMPy.fit._shared.shuffle_pixels that allow unshuffling of data_2d.
 
@@ -262,7 +258,6 @@ def unshuffle_fit_results(fit_result_dict, unshuffler):
         Dictionary, key: param_names, val: image (2D) of param values across FOV. Each image
         requires reshuffling (which this function achieves).
         Also has &#39;residual&#39; as a key.
-
     unshuffler : (y_unshuf, x_unshuf)
         Two arrays returned by `QDMPy.fit._shared.shuffle_pixels` that allow unshuffling of data_2d.
 
@@ -284,7 +279,7 @@ def pixel_generator(our_array):
     Simple generator to shape data as expected by to_squares_wrapper in scipy concurrent method.
 
     Also allows us to track *where* (i.e. which pixel location) each result corresponds to.
-    See also: `QDMPy.fit._scipyfit.to_squares_wrapper`, `QDMPy.fit._gpufit.gpufit_reshape_result`.
+    See also: `QDMPy.fit._scipyfit.to_squares_wrapper`, and corresponding gpufit method.
 
     Arguments
     ---------
@@ -323,7 +318,6 @@ def gen_init_guesses(options):
     init_guesses : dict
         Dict holding guesses for each parameter, e.g. key -&gt; list of guesses for each independent
         version of that fn_type.
-
     init_bounds : dict
         Dict holding guesses for each parameter, e.g. key -&gt; list of bounds for each independent
         version of that fn_type.
@@ -336,7 +330,7 @@ def gen_init_guesses(options):
         for param_key in fit_func.param_defn:
             guess = options[param_key + &#34;_guess&#34;]
             if param_key + &#34;_range&#34; in options:
-                bounds = bounds_from_range(options, param_key)
+                bounds = bounds_from_range(options, param_key, guess)
             elif param_key + &#34;_bounds&#34; in options:
                 # assumes bounds are passed in with correct formatatting
                 bounds = options[param_key + &#34;_bounds&#34;]
@@ -355,9 +349,24 @@ def gen_init_guesses(options):
 # ============================================================================
 
 
-def bounds_from_range(options, param_key):
-    &#34;&#34;&#34;Generate parameter bounds (list, len 2) when given a range option.&#34;&#34;&#34;
-    guess = options[param_key + &#34;_guess&#34;]
+def bounds_from_range(options, param_key, guess):
+    &#34;&#34;&#34;
+    Generate parameter bounds (list, len 2) when given a range option.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    param_key : str
+        paramater key, e.g. &#34;pos&#34;.
+    guess : float/int or array
+        guess for param, or list of guesses for a given parameter.
+
+    Returns
+    -------
+    bounds : list
+        bounds for each parameter. Dimension depends on dimension of param guess.
+    &#34;&#34;&#34;
     rang = options[param_key + &#34;_range&#34;]
     if type(guess) is list and len(guess) &gt; 1:
 
@@ -403,17 +412,14 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
 
     Arguments
     ---------
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         Model we&#39;re fitting to.
-
-    fit_results : list of [(y, x), result] objects
-        (see `QDMPy.fit._scipyfit.to_squares_wrapper`, or `QDMPy.fit._gpufit.gpufit_reshape_result`)
+    fit_results : list of [(y, x), result, jac] objects
+        (see `QDMPy.fit._scipyfit.to_squares_wrapper`, or corresponding gpufit method)
         A list of each pixel&#39;s parameter array, as well as position in image denoted by (y, x).
-
     pixel_data : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x]. i.e. sig_norm.
         May or may not already be shuffled (i.e. matches fit_results).
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq).
 
@@ -422,24 +428,41 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
     fit_image_results : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
         Also has &#39;residual&#39; as a key.
+    sigmas : dict
+        Dictionary, key: param_keys, val: image (2D) of param uncertainties across FOV.
     &#34;&#34;&#34;
 
-    roi_shape = np.shape(pixel_data)
+    roi_shape = np.shape(pixel_data)[1:]
 
     # initialise dictionary with key: val = param_name: param_units
-    fit_image_results = fit_models.get_param_odict(fit_model)
+    fit_image_results = Qmodel.get_param_odict(fit_model)
+    sigmas = copy.copy(fit_image_results)
 
     # override with correct size empty arrays using np.zeros
     for key in fit_image_results.keys():
         fit_image_results[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+        sigmas[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
     fit_image_results[&#34;residual_0&#34;] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
     # Fill the arrays element-wise from the results function, which returns a
     # 1D array of flattened best-fit parameters.
 
-    for (y, x), result in fit_results:
+    for (y, x), result, jac in fit_results:
         filled_params = {}  # keep track of index, i.e. pos_0, for this pixel
+
+        resid = fit_model.residuals_scipyfit(result, sweep_list, pixel_data[:, y, x])
+        fit_image_results[&#34;residual_0&#34;][y, x] = np.sum(
+            np.abs(resid, dtype=np.float64), dtype=np.float64
+        )
+        # uncertainty (covariance matrix), copied from scipy.optimize.curve_fit
+        _, s, VT = svd(jac, full_matrices=False)
+        threshold = np.finfo(float).eps * max(jac.shape) * s[0]
+        s = s[s &gt; threshold]
+        VT = VT[: s.size]
+        pcov = np.dot(VT.T / s ** 2, VT)
+        perr = np.sqrt(np.diag(pcov))  # array of standard deviations
+
         for fn in fit_model.fn_chain:
             for param_num, param_name in enumerate(fn.param_defn):
 
@@ -452,13 +475,9 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
                     filled_params[param_name] += 1
 
                 fit_image_results[key][y, x] = result[fn.this_fn_param_indices[param_num]]
+                sigmas[key][y, x] = perr[fn.this_fn_param_indices[param_num]]
 
-        resid = fit_model.residuals_scipyfit(result, sweep_list, pixel_data[:, y, x])
-        fit_image_results[&#34;residual_0&#34;][y, x] = np.sum(
-            np.abs(resid, dtype=np.float64), dtype=np.float64
-        )
-
-    return fit_image_results</code></pre>
+    return fit_image_results, sigmas</code></pre>
 </details>
 </section>
 <section>
@@ -469,17 +488,46 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
 <dt id="QDMPy.fit._shared.bounds_from_range"><code class="name flex">
-<span>def <span class="ident">bounds_from_range</span></span>(<span>options, param_key)</span>
+<span>def <span class="ident">bounds_from_range</span></span>(<span>options, param_key, guess)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Generate parameter bounds (list, len 2) when given a range option.</p></div>
+<div class="desc"><p>Generate parameter bounds (list, len 2) when given a range option.</p>
+<h2 id="arguments">Arguments</h2>
+<dl>
+<dt><strong><code>options</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Generic options dict holding all the user options.</dd>
+<dt><strong><code>param_key</code></strong> :&ensp;<code>str</code></dt>
+<dd>paramater key, e.g. "pos".</dd>
+<dt><strong><code>guess</code></strong> :&ensp;<code>float/int</code> or <code>array</code></dt>
+<dd>guess for param, or list of guesses for a given parameter.</dd>
+</dl>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><strong><code>bounds</code></strong> :&ensp;<code>list</code></dt>
+<dd>bounds for each parameter. Dimension depends on dimension of param guess.</dd>
+</dl></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def bounds_from_range(options, param_key):
-    &#34;&#34;&#34;Generate parameter bounds (list, len 2) when given a range option.&#34;&#34;&#34;
-    guess = options[param_key + &#34;_guess&#34;]
+<pre><code class="python">def bounds_from_range(options, param_key, guess):
+    &#34;&#34;&#34;
+    Generate parameter bounds (list, len 2) when given a range option.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    param_key : str
+        paramater key, e.g. &#34;pos&#34;.
+    guess : float/int or array
+        guess for param, or list of guesses for a given parameter.
+
+    Returns
+    -------
+    bounds : list
+        bounds for each parameter. Dimension depends on dimension of param guess.
+    &#34;&#34;&#34;
     rang = options[param_key + &#34;_range&#34;]
     if type(guess) is list and len(guess) &gt; 1:
 
@@ -556,7 +604,6 @@ version of that fn_type.</dd>
     init_guesses : dict
         Dict holding guesses for each parameter, e.g. key -&gt; list of guesses for each independent
         version of that fn_type.
-
     init_bounds : dict
         Dict holding guesses for each parameter, e.g. key -&gt; list of bounds for each independent
         version of that fn_type.
@@ -569,7 +616,7 @@ version of that fn_type.</dd>
         for param_key in fit_func.param_defn:
             guess = options[param_key + &#34;_guess&#34;]
             if param_key + &#34;_range&#34; in options:
-                bounds = bounds_from_range(options, param_key)
+                bounds = bounds_from_range(options, param_key, guess)
             elif param_key + &#34;_bounds&#34; in options:
                 # assumes bounds are passed in with correct formatatting
                 bounds = options[param_key + &#34;_bounds&#34;]
@@ -593,10 +640,10 @@ version of that fn_type.</dd>
 <p>Each array is 2D, representing the values for each parameter (specified by the dict key).</p>
 <h2 id="arguments">Arguments</h2>
 <dl>
-<dt><strong><code>fit_model</code></strong> :&ensp;<code><a title="QDMPy.fit._models.FitModel" href="_models.html#QDMPy.fit._models.FitModel">FitModel</a></code></dt>
+<dt><strong><code>fit_model</code></strong> :&ensp;<code><a title="QDMPy.fit.model.FitModel" href="model.html#QDMPy.fit.model.FitModel">FitModel</a></code></dt>
 <dd>Model we're fitting to.</dd>
-<dt><strong><code>fit_results</code></strong> :&ensp;<code>list</code> of <code>[(y, x), result] objects</code></dt>
-<dd>(see <code><a title="QDMPy.fit._scipyfit.to_squares_wrapper" href="_scipyfit.html#QDMPy.fit._scipyfit.to_squares_wrapper">to_squares_wrapper()</a></code>, or <code>QDMPy.fit._gpufit.gpufit_reshape_result</code>)
+<dt><strong><code>fit_results</code></strong> :&ensp;<code>list</code> of <code>[(y, x), result, jac] objects</code></dt>
+<dd>(see <code><a title="QDMPy.fit._scipyfit.to_squares_wrapper" href="_scipyfit.html#QDMPy.fit._scipyfit.to_squares_wrapper">to_squares_wrapper()</a></code>, or corresponding gpufit method)
 A list of each pixel's parameter array, as well as position in image denoted by (y, x).</dd>
 <dt><strong><code>pixel_data</code></strong> :&ensp;<code>np array, 3D</code></dt>
 <dd>Normalised measurement array, shape: [sweep_list, y, x]. i.e. sig_norm.
@@ -609,6 +656,8 @@ May or may not already be shuffled (i.e. matches fit_results).</dd>
 <dt><strong><code>fit_image_results</code></strong> :&ensp;<code>dict</code></dt>
 <dd>Dictionary, key: param_keys, val: image (2D) of param values across FOV.
 Also has 'residual' as a key.</dd>
+<dt><strong><code>sigmas</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Dictionary, key: param_keys, val: image (2D) of param uncertainties across FOV.</dd>
 </dl></div>
 <details class="source">
 <summary>
@@ -623,17 +672,14 @@ Also has 'residual' as a key.</dd>
 
     Arguments
     ---------
-    fit_model : `QDMPy.fit._models.FitModel`
+    fit_model : `QDMPy.fit.model.FitModel`
         Model we&#39;re fitting to.
-
-    fit_results : list of [(y, x), result] objects
-        (see `QDMPy.fit._scipyfit.to_squares_wrapper`, or `QDMPy.fit._gpufit.gpufit_reshape_result`)
+    fit_results : list of [(y, x), result, jac] objects
+        (see `QDMPy.fit._scipyfit.to_squares_wrapper`, or corresponding gpufit method)
         A list of each pixel&#39;s parameter array, as well as position in image denoted by (y, x).
-
     pixel_data : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x]. i.e. sig_norm.
         May or may not already be shuffled (i.e. matches fit_results).
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq).
 
@@ -642,24 +688,41 @@ Also has 'residual' as a key.</dd>
     fit_image_results : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
         Also has &#39;residual&#39; as a key.
+    sigmas : dict
+        Dictionary, key: param_keys, val: image (2D) of param uncertainties across FOV.
     &#34;&#34;&#34;
 
-    roi_shape = np.shape(pixel_data)
+    roi_shape = np.shape(pixel_data)[1:]
 
     # initialise dictionary with key: val = param_name: param_units
-    fit_image_results = fit_models.get_param_odict(fit_model)
+    fit_image_results = Qmodel.get_param_odict(fit_model)
+    sigmas = copy.copy(fit_image_results)
 
     # override with correct size empty arrays using np.zeros
     for key in fit_image_results.keys():
         fit_image_results[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+        sigmas[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
     fit_image_results[&#34;residual_0&#34;] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
     # Fill the arrays element-wise from the results function, which returns a
     # 1D array of flattened best-fit parameters.
 
-    for (y, x), result in fit_results:
+    for (y, x), result, jac in fit_results:
         filled_params = {}  # keep track of index, i.e. pos_0, for this pixel
+
+        resid = fit_model.residuals_scipyfit(result, sweep_list, pixel_data[:, y, x])
+        fit_image_results[&#34;residual_0&#34;][y, x] = np.sum(
+            np.abs(resid, dtype=np.float64), dtype=np.float64
+        )
+        # uncertainty (covariance matrix), copied from scipy.optimize.curve_fit
+        _, s, VT = svd(jac, full_matrices=False)
+        threshold = np.finfo(float).eps * max(jac.shape) * s[0]
+        s = s[s &gt; threshold]
+        VT = VT[: s.size]
+        pcov = np.dot(VT.T / s ** 2, VT)
+        perr = np.sqrt(np.diag(pcov))  # array of standard deviations
+
         for fn in fit_model.fn_chain:
             for param_num, param_name in enumerate(fn.param_defn):
 
@@ -672,13 +735,9 @@ Also has 'residual' as a key.</dd>
                     filled_params[param_name] += 1
 
                 fit_image_results[key][y, x] = result[fn.this_fn_param_indices[param_num]]
+                sigmas[key][y, x] = perr[fn.this_fn_param_indices[param_num]]
 
-        resid = fit_model.residuals_scipyfit(result, sweep_list, pixel_data[:, y, x])
-        fit_image_results[&#34;residual_0&#34;][y, x] = np.sum(
-            np.abs(resid, dtype=np.float64), dtype=np.float64
-        )
-
-    return fit_image_results</code></pre>
+    return fit_image_results, sigmas</code></pre>
 </details>
 </dd>
 <dt id="QDMPy.fit._shared.pixel_generator"><code class="name flex">
@@ -687,7 +746,7 @@ Also has 'residual' as a key.</dd>
 <dd>
 <div class="desc"><p>Simple generator to shape data as expected by to_squares_wrapper in scipy concurrent method.</p>
 <p>Also allows us to track <em>where</em> (i.e. which pixel location) each result corresponds to.
-See also: <code><a title="QDMPy.fit._scipyfit.to_squares_wrapper" href="_scipyfit.html#QDMPy.fit._scipyfit.to_squares_wrapper">to_squares_wrapper()</a></code>, <code>QDMPy.fit._gpufit.gpufit_reshape_result</code>.</p>
+See also: <code><a title="QDMPy.fit._scipyfit.to_squares_wrapper" href="_scipyfit.html#QDMPy.fit._scipyfit.to_squares_wrapper">to_squares_wrapper()</a></code>, and corresponding gpufit method.</p>
 <h2 id="arguments">Arguments</h2>
 <dl>
 <dt><strong><code>our_array</code></strong> :&ensp;<code>np array, 3D</code></dt>
@@ -707,7 +766,7 @@ See also: <code><a title="QDMPy.fit._scipyfit.to_squares_wrapper" href="_scipyfi
     Simple generator to shape data as expected by to_squares_wrapper in scipy concurrent method.
 
     Also allows us to track *where* (i.e. which pixel location) each result corresponds to.
-    See also: `QDMPy.fit._scipyfit.to_squares_wrapper`, `QDMPy.fit._gpufit.gpufit_reshape_result`.
+    See also: `QDMPy.fit._scipyfit.to_squares_wrapper`, and corresponding gpufit method.
 
     Arguments
     ---------
@@ -759,7 +818,6 @@ See also: <code><a title="QDMPy.fit._scipyfit.to_squares_wrapper" href="_scipyfi
     -------
     shuffled_in_yx : np array, 3D
         data_3d shuffled in 2nd, 3rd axis.
-
     unshuffler : (y_unshuf, x_unshuf)
         Both np array. Can be used to unshuffle shuffled_in_yx, i.e. through `QDMPy.fit._shared.unshuffle_pixels`.
     &#34;&#34;&#34;
@@ -811,7 +869,6 @@ Also has 'residual' as a key.</dd>
         Dictionary, key: param_names, val: image (2D) of param values across FOV. Each image
         requires reshuffling (which this function achieves).
         Also has &#39;residual&#39; as a key.
-
     unshuffler : (y_unshuf, x_unshuf)
         Two arrays returned by `QDMPy.fit._shared.shuffle_pixels` that allow unshuffling of data_2d.
 
@@ -854,7 +911,6 @@ Also has 'residual' as a key.</dd>
     ---------
     data_2d : np array, 2D
         i.e. &#39;image&#39; of a single fit parameter, all shuffled up!
-
     unshuffler : (y_unshuf, x_unshuf)
         Two arrays returned by `QDMPy.fit._shared.shuffle_pixels that allow unshuffling of data_2d.
 
@@ -904,13 +960,10 @@ Also has 'residual' as a key.</dd>
         ---------
         fit_backend : str
             Name of the fit backend (e.g. scipy, gpufit, etc.) used.
-
         roi_avg_fit_result
             `QDMPy.fit._shared.ROIAvgFitResult` object.
-
         single_pixel_result
             Best (optimal) fit/model parameters for single pixel check.
-
         AOI_fit_results_lst : list of lists
             List of (list of) best (optimal) parameters, for each AOI region (avg).
         &#34;&#34;&#34;
@@ -922,7 +975,7 @@ Also has 'residual' as a key.</dd>
 </dd>
 <dt id="QDMPy.fit._shared.ROIAvgFitResult"><code class="flex name class">
 <span>class <span class="ident">ROIAvgFitResult</span></span>
-<span>(</span><span>fit_backend, fit_options, fit_model, pl_roi, sweep_list, best_params, init_param_guess)</span>
+<span>(</span><span>fit_backend, fit_options, fit_model, pl_roi, sweep_list, best_params, init_param_guess, init_param_bounds)</span>
 </code></dt>
 <dd>
 <div class="desc"><p>Object to hold ROI average fit result, and a place to define result names.</p>
@@ -956,23 +1009,21 @@ E.g. scipy least_squares is handed various options as a dictionary.</dd>
         sweep_list,
         best_params,
         init_param_guess,
+        init_param_bounds,
     ):
+        # TODO documentation
         &#34;&#34;&#34;
         Arguments
         ---------
         fit_backend : string
             Name of the fit backend (e.g. scipy, gpufit, etc.)
-
         fit_options : dict
             Options dictionary for this fit method, as will be passed to fitting function.
             E.g. scipy least_squares is handed various options as a dictionary.
-
         pl_roi : np array, 1D
             PL data summed over FOV, as fn of sweep_vec.
-
         sweep_list : np array, 1D
             Affine parameter i.e. tau or frequency.
-
         best_params : np array, 1D
             Solution fit parameters array.
         &#34;&#34;&#34;
@@ -996,6 +1047,7 @@ E.g. scipy least_squares is handed various options as a dictionary.</dd>
 
         self.best_params = best_params
         self.init_param_guess = init_param_guess
+        self.init_param_bounds = init_param_bounds
 
     def savejson(self, filename, dir):
         &#34;&#34;&#34; Save all attributes as a json file in dir/filename, via `QDMPy.io.json2dict.dict_to_json` &#34;&#34;&#34;
@@ -1006,8 +1058,9 @@ E.g. scipy least_squares is handed various options as a dictionary.</dd>
             &#34;sweep_list&#34;: self.sweep_list,
             &#34;best_params&#34;: self.best_params,
             &#34;init_param_guess&#34;: self.init_param_guess,
+            &#34;init_param_bounds&#34;: self.init_param_bounds,
         }
-        QDMPy.io.json2dict.dict_to_json(output_dict, filename, dir)</code></pre>
+        Qio.dict_to_json(output_dict, filename, dir)</code></pre>
 </details>
 <h3>Instance variables</h3>
 <dl>
@@ -1043,8 +1096,9 @@ E.g. scipy least_squares is handed various options as a dictionary.</p></div>
         &#34;sweep_list&#34;: self.sweep_list,
         &#34;best_params&#34;: self.best_params,
         &#34;init_param_guess&#34;: self.init_param_guess,
+        &#34;init_param_bounds&#34;: self.init_param_bounds,
     }
-    QDMPy.io.json2dict.dict_to_json(output_dict, filename, dir)</code></pre>
+    Qio.dict_to_json(output_dict, filename, dir)</code></pre>
 </details>
 </dd>
 </dl>

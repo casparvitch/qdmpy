@@ -26,55 +26,54 @@
 <p>json2dict; functions for loading json files to dicts and the inverse.</p>
 <h2 id="functions">Functions</h2>
 <ul>
-<li><code><a title="QDMPy.io.json2dict.failfloat" href="#QDMPy.io.json2dict.failfloat">failfloat()</a></code></li>
-<li><code><a title="QDMPy.io.json2dict.defaultdict_from_d" href="#QDMPy.io.json2dict.defaultdict_from_d">defaultdict_from_d()</a></code></li>
 <li><code><a title="QDMPy.io.json2dict.json_to_dict" href="#QDMPy.io.json2dict.json_to_dict">json_to_dict()</a></code></li>
 <li><code><a title="QDMPy.io.json2dict.dict_to_json" href="#QDMPy.io.json2dict.dict_to_json">dict_to_json()</a></code></li>
 <li><code><a title="QDMPy.io.json2dict.dict_to_json_str" href="#QDMPy.io.json2dict.dict_to_json_str">dict_to_json_str()</a></code></li>
-<li><code><a title="QDMPy.io.json2dict.prettyjson" href="#QDMPy.io.json2dict.prettyjson">prettyjson()</a></code></li>
-<li><code><a title="QDMPy.io.json2dict.getsubitems" href="#QDMPy.io.json2dict.getsubitems">getsubitems()</a></code></li>
-<li><code><a title="QDMPy.io.json2dict.basictype2str" href="#QDMPy.io.json2dict.basictype2str">basictype2str()</a></code></li>
-<li><code><a title="QDMPy.io.json2dict.indentitems" href="#QDMPy.io.json2dict.indentitems">indentitems()</a></code></li>
-<li><code><a title="QDMPy.io.json2dict.json_remove_comments" href="#QDMPy.io.json2dict.json_remove_comments">json_remove_comments()</a></code></li>
+<li><code><a title="QDMPy.io.json2dict._prettyjson" href="#QDMPy.io.json2dict._prettyjson">_prettyjson()</a></code></li>
+<li><code><a title="QDMPy.io.json2dict._getsubitems" href="#QDMPy.io.json2dict._getsubitems">_getsubitems()</a></code></li>
+<li><code><a title="QDMPy.io.json2dict._basictype2str" href="#QDMPy.io.json2dict._basictype2str">_basictype2str()</a></code></li>
+<li><code><a title="QDMPy.io.json2dict._indentitems" href="#QDMPy.io.json2dict._indentitems">_indentitems()</a></code></li>
+<li><code><a title="QDMPy.io.json2dict._json_remove_comments" href="#QDMPy.io.json2dict._json_remove_comments">_json_remove_comments()</a></code></li>
+<li><code><a title="QDMPy.io.json2dict._failfloat" href="#QDMPy.io.json2dict._failfloat">_failfloat()</a></code></li>
+<li><code><a title="QDMPy.io.json2dict._defaultdict_from_d" href="#QDMPy.io.json2dict._defaultdict_from_d">_defaultdict_from_d()</a></code></li>
 </ul>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python"># -*- coding: utf-8 -*-
-
 &#34;&#34;&#34;
 json2dict; functions for loading json files to dicts and the inverse.
 
 Functions
 ---------
- - `QDMPy.io.json2dict.failfloat`
- - `QDMPy.io.json2dict.defaultdict_from_d`
  - `QDMPy.io.json2dict.json_to_dict`
  - `QDMPy.io.json2dict.dict_to_json`
  - `QDMPy.io.json2dict.dict_to_json_str`
- - `QDMPy.io.json2dict.prettyjson`
- - `QDMPy.io.json2dict.getsubitems`
- - `QDMPy.io.json2dict.basictype2str`
- - `QDMPy.io.json2dict.indentitems`
- - `QDMPy.io.json2dict.json_remove_comments`
+ - `QDMPy.io.json2dict._prettyjson`
+ - `QDMPy.io.json2dict._getsubitems`
+ - `QDMPy.io.json2dict._basictype2str`
+ - `QDMPy.io.json2dict._indentitems`
+ - `QDMPy.io.json2dict._json_remove_comments`
+ - `QDMPy.io.json2dict._failfloat`
+ - `QDMPy.io.json2dict._defaultdict_from_d`
 &#34;&#34;&#34;
 
 # ============================================================================
 
 
 __author__ = &#34;Sam Scholten&#34;
-__author__ = {
-    &#34;QDMPy.io.json2dict.failfloat&#34;: True,
-    &#34;QDMPy.io.json2dict.defaultdict_from_d&#34;: True,
+__pdoc__ = {
     &#34;QDMPy.io.json2dict.json_to_dict&#34;: True,
     &#34;QDMPy.io.json2dict.dict_to_json&#34;: True,
     &#34;QDMPy.io.json2dict.dict_to_json_str&#34;: True,
-    &#34;QDMPy.io.json2dict.prettyjson&#34;: True,
-    &#34;QDMPy.io.json2dict.getsubitems&#34;: True,
-    &#34;QDMPy.io.json2dict.basictype2str&#34;: True,
-    &#34;QDMPy.io.json2dict.indentitems&#34;: True,
-    &#34;QDMPy.io.json2dict.json_remove_comments&#34;: True,
+    &#34;QDMPy.io.json2dict._prettyjson&#34;: True,
+    &#34;QDMPy.io.json2dict._getsubitems&#34;: True,
+    &#34;QDMPy.io.json2dict._basictype2str&#34;: True,
+    &#34;QDMPy.io.json2dict._indentitems&#34;: True,
+    &#34;QDMPy.io.json2dict._json_remove_comments&#34;: True,
+    &#34;QDMPy.io.json2dict._failfloat&#34;: True,
+    &#34;QDMPy.io.json2dict._defaultdict_from_d&#34;: True,
 }
 
 # ============================================================================
@@ -89,29 +88,6 @@ import numpy as np
 # ============================================================================
 
 
-def failfloat(a):
-    &#34;&#34;&#34;Used in particular for reading the metadata to convert all numbers into
-    floats and leave strings as strings.
-    &#34;&#34;&#34;
-    try:
-        return float(a)
-    except ValueError:
-        return a
-
-
-# ============================================================================
-
-
-def defaultdict_from_d(d):
-    &#34;converts d to a defaultdict, with default value of None for all keys&#34;
-    dd = defaultdict(lambda: None)
-    dd.update(d)
-    return dd
-
-
-# ============================================================================
-
-
 def json_to_dict(filepath, hook=&#34;od&#34;):
     &#34;&#34;&#34; read the json file at filepath into a dict &#34;&#34;&#34;
     _, pattern = os.path.splitext(filepath)
@@ -122,11 +98,11 @@ def json_to_dict(filepath, hook=&#34;od&#34;):
         if hook == &#34;od&#34;:
             oph = OrderedDict
         elif hook == &#34;dd&#34;:
-            oph = defaultdict_from_d
+            oph = _defaultdict_from_d
         else:
             raise RuntimeError(&#34;bad choice for dict hook&#34;)
 
-        jstring = json_remove_comments(fp.read())
+        jstring = _json_remove_comments(fp.read())
         dct = json.loads(jstring, object_pairs_hook=oph)
         return dct.copy()
 
@@ -156,18 +132,21 @@ def dict_to_json(dictionary, filename, path_to_dir=None):
         filepath = os.path.join(path_to_dir, filename)
 
     with open(filepath, &#34;w&#34;) as fp:
-        fp.write(prettyjson(dictionary))
+        fp.write(_prettyjson(dictionary))
 
 
 # ============================================================================
 
 
 def dict_to_json_str(obj, indent=4, maxlinelength=80):
-    &#34;&#34;&#34;Copy of `QDMPy.io.json2dict.prettyjson`&#34;&#34;&#34;
-    return prettyjson(obj, indent, maxlinelength)
+    &#34;&#34;&#34;Copy of `QDMPy.io.json2dict._prettyjson`&#34;&#34;&#34;
+    return _prettyjson(obj, indent, maxlinelength)
 
 
-def prettyjson(obj, indent=4, maxlinelength=80):
+# ============================================================================
+
+
+def _prettyjson(obj, indent=4, maxlinelength=80):
     &#34;&#34;&#34;
     Renders JSON content with indentation and line splits/concatenations to
     fit maxlinelength. Only dicts, lists and basic types are supported.
@@ -176,15 +155,15 @@ def prettyjson(obj, indent=4, maxlinelength=80):
     &lt;Pass the dict as obj and get back a string&gt;
     &#34;&#34;&#34;
 
-    items, _ = getsubitems(obj, itemkey=&#34;&#34;, islast=True, maxlinelength=maxlinelength)
-    res = indentitems(items, indent, indentcurrent=0)
+    items, _ = _getsubitems(obj, itemkey=&#34;&#34;, islast=True, maxlinelength=maxlinelength)
+    res = _indentitems(items, indent, indentcurrent=0)
     return res
 
 
 # ============================================================================
 
 
-def getsubitems(obj, itemkey, islast, maxlinelength):
+def _getsubitems(obj, itemkey, islast, maxlinelength):
     items = []
     # assume we can concatenate inner content unless a child node returns an
     # expanded list
@@ -215,15 +194,15 @@ def getsubitems(obj, itemkey, islast, maxlinelength):
         # Get list of inner tokens as list
         count = 0
         subitems = []
-        itemkey = &#34;&#34;
+        itemkey = &#34;&#34;  # not used
         for k in keys:
             count += 1
             islast_ = count == len(obj)
             itemkey_ = &#34;&#34;
             if isdict:
-                itemkey_ = basictype2str(k)
+                itemkey_ = _basictype2str(k)
             # inner = (items, indent)
-            inner, can_concat_ = getsubitems(obj[k], itemkey_, islast_, maxlinelength)
+            inner, can_concat_ = _getsubitems(obj[k], itemkey_, islast_, maxlinelength)
             # inner can be a string or a list
             subitems.extend(inner)
             # if a child couldn&#39;t concat, then we are not able either
@@ -264,7 +243,7 @@ def getsubitems(obj, itemkey, islast, maxlinelength):
         strobj = itemkey
         if strobj != &#34;&#34;:
             strobj += &#34;: &#34;
-        strobj += basictype2str(obj)
+        strobj += _basictype2str(obj)
         if not islast:
             strobj += &#34;,&#34;
         items.append(strobj)
@@ -275,14 +254,16 @@ def getsubitems(obj, itemkey, islast, maxlinelength):
 # ============================================================================
 
 
-def basictype2str(obj):
+def _basictype2str(obj):
     &#34;&#34;&#34;This is a filter on objects that get sent to the json. Some types
     can&#39;t be stored literally in json files, so we can adjust for that here.
     &#34;&#34;&#34;
-    if isinstance(obj, str):
-        strobj = &#39;&#34;&#39; + str(obj) + &#39;&#34;&#39;
-    elif isinstance(obj, type(None)):
+    if str(obj) == &#34;None&#34;:
         strobj = &#34;null&#34;
+    elif isinstance(obj, type(None)):
+        strobj = &#34;null&#34;  # seems to fail sometimes?
+    elif isinstance(obj, str):
+        strobj = &#39;&#34;&#39; + str(obj) + &#39;&#34;&#39;
     elif isinstance(obj, bool):
         strobj = {True: &#34;true&#34;, False: &#34;false&#34;}[obj]
     else:
@@ -293,14 +274,14 @@ def basictype2str(obj):
 # ============================================================================
 
 
-def indentitems(items, indent, indentcurrent):
+def _indentitems(items, indent, indentcurrent):
     &#34;&#34;&#34;Recursively traverses the list of json lines, adds indentation based
     on the current depth&#34;&#34;&#34;
     res = &#34;&#34;
     indentstr = &#34; &#34; * indentcurrent
     for item in items:
         if isinstance(item, list):
-            res += indentitems(item, indent, indentcurrent + indent)
+            res += _indentitems(item, indent, indentcurrent + indent)
         else:
             res += indentstr + item + &#34;\n&#34;
     return res
@@ -309,7 +290,287 @@ def indentitems(items, indent, indentcurrent):
 # ============================================================================
 
 
-def json_remove_comments(string, strip_space=True):
+def _json_remove_comments(string, strip_space=True):
+    tokenizer = re.compile(&#39;&#34;|(/\*)|(\*/)|(//)|\n|\r&#39;)
+    end_slashes_re = re.compile(r&#34;(\\)*$&#34;)
+
+    in_string = False
+    in_multi = False
+    in_single = False
+
+    new_str = []
+    index = 0
+
+    for match in re.finditer(tokenizer, string):
+
+        if not (in_multi or in_single):
+            tmp = string[index : match.start()]
+            if not in_string and strip_space:
+                # replace white space as defined in standard
+                tmp = re.sub(&#34;[ \t\n\r]+&#34;, &#34;&#34;, tmp)
+            new_str.append(tmp)
+        elif not strip_space:
+            # Replace comments with white space so that the JSON parser reports
+            # the correct column numbers on parsing errors.
+            new_str.append(&#34; &#34; * (match.start() - index))
+
+        index = match.end()
+        val = match.group()
+
+        if val == &#39;&#34;&#39; and not (in_multi or in_single):
+            escaped = end_slashes_re.search(string, 0, match.start())
+
+            # start of string or unescaped quote character to end string
+            if not in_string or (escaped is None or len(escaped.group()) % 2 == 0):  # noqa
+                in_string = not in_string
+            index -= 1  # include &#34; character in next catch
+        elif not (in_string or in_multi or in_single):
+            if val == &#34;/*&#34;:
+                in_multi = True
+            elif val == &#34;//&#34;:
+                in_single = True
+        elif val == &#34;*/&#34; and in_multi and not (in_string or in_single):
+            in_multi = False
+            if not strip_space:
+                new_str.append(&#34; &#34; * len(val))
+        elif val in &#34;\r\n&#34; and not (in_multi or in_string) and in_single:
+            in_single = False
+        elif not ((in_multi or in_single) or (val in &#34; \r\n\t&#34; and strip_space)):  # noqa
+            new_str.append(val)
+
+        if not strip_space:
+            if val in &#34;\r\n&#34;:
+                new_str.append(val)
+            elif in_multi or in_single:
+                new_str.append(&#34; &#34; * len(val))
+
+    new_str.append(string[index:])
+    return &#34;&#34;.join(new_str)
+
+
+# ============================================================================
+
+
+def _failfloat(a):
+    &#34;&#34;&#34;Used in particular for reading the metadata to convert all numbers into
+    floats and leave strings as strings.
+    &#34;&#34;&#34;
+    try:
+        return float(a)
+    except ValueError:
+        return a
+
+
+# ============================================================================
+
+
+def _defaultdict_from_d(d):
+    &#34;&#34;&#34;converts d to a defaultdict, with default value of None for all keys&#34;&#34;&#34;
+    dd = defaultdict(lambda: None)
+    dd.update(d)
+    return dd</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-functions">Functions</h2>
+<dl>
+<dt id="QDMPy.io.json2dict._basictype2str"><code class="name flex">
+<span>def <span class="ident">_basictype2str</span></span>(<span>obj)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>This is a filter on objects that get sent to the json. Some types
+can't be stored literally in json files, so we can adjust for that here.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _basictype2str(obj):
+    &#34;&#34;&#34;This is a filter on objects that get sent to the json. Some types
+    can&#39;t be stored literally in json files, so we can adjust for that here.
+    &#34;&#34;&#34;
+    if str(obj) == &#34;None&#34;:
+        strobj = &#34;null&#34;
+    elif isinstance(obj, type(None)):
+        strobj = &#34;null&#34;  # seems to fail sometimes?
+    elif isinstance(obj, str):
+        strobj = &#39;&#34;&#39; + str(obj) + &#39;&#34;&#39;
+    elif isinstance(obj, bool):
+        strobj = {True: &#34;true&#34;, False: &#34;false&#34;}[obj]
+    else:
+        strobj = str(obj)
+    return strobj</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.json2dict._defaultdict_from_d"><code class="name flex">
+<span>def <span class="ident">_defaultdict_from_d</span></span>(<span>d)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>converts d to a defaultdict, with default value of None for all keys</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _defaultdict_from_d(d):
+    &#34;&#34;&#34;converts d to a defaultdict, with default value of None for all keys&#34;&#34;&#34;
+    dd = defaultdict(lambda: None)
+    dd.update(d)
+    return dd</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.json2dict._failfloat"><code class="name flex">
+<span>def <span class="ident">_failfloat</span></span>(<span>a)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Used in particular for reading the metadata to convert all numbers into
+floats and leave strings as strings.</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _failfloat(a):
+    &#34;&#34;&#34;Used in particular for reading the metadata to convert all numbers into
+    floats and leave strings as strings.
+    &#34;&#34;&#34;
+    try:
+        return float(a)
+    except ValueError:
+        return a</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.json2dict._getsubitems"><code class="name flex">
+<span>def <span class="ident">_getsubitems</span></span>(<span>obj, itemkey, islast, maxlinelength)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _getsubitems(obj, itemkey, islast, maxlinelength):
+    items = []
+    # assume we can concatenate inner content unless a child node returns an
+    # expanded list
+    can_concat = True
+
+    if isinstance(obj, np.ndarray):
+        obj = obj.tolist()
+
+    isdict = isinstance(obj, dict)
+    islist = isinstance(obj, list)
+    istuple = isinstance(obj, tuple)
+
+    # building json content as a list of strings or child lists
+    if isdict or islist or istuple:
+        if isdict:
+            opening, closing, keys = (&#34;{&#34;, &#34;}&#34;, iter(obj.keys()))
+        elif islist:
+            opening, closing, keys = (&#34;[&#34;, &#34;]&#34;, range(0, len(obj)))
+        elif istuple:
+            # tuples are converted into json arrays
+            opening, closing, keys = (&#34;[&#34;, &#34;]&#34;, range(0, len(obj)))
+
+        if itemkey != &#34;&#34;:
+            opening = itemkey + &#34;: &#34; + opening
+        if not islast:
+            closing += &#34;,&#34;
+
+        # Get list of inner tokens as list
+        count = 0
+        subitems = []
+        itemkey = &#34;&#34;  # not used
+        for k in keys:
+            count += 1
+            islast_ = count == len(obj)
+            itemkey_ = &#34;&#34;
+            if isdict:
+                itemkey_ = _basictype2str(k)
+            # inner = (items, indent)
+            inner, can_concat_ = _getsubitems(obj[k], itemkey_, islast_, maxlinelength)
+            # inner can be a string or a list
+            subitems.extend(inner)
+            # if a child couldn&#39;t concat, then we are not able either
+            can_concat = can_concat and can_concat_
+
+        # atttempt to concat subitems if all fit within maxlinelength
+        if can_concat:
+            totallength = 0
+            for item in subitems:
+                totallength += len(item)
+            totallength += len(subitems) - 1  # spaces between items
+            if totallength &lt;= maxlinelength:
+                str = &#34;&#34;
+                # add space between items, comma is already there
+                for item in subitems:
+                    str += item + &#34; &#34;
+                str = str.strip()
+                # wrap concatenated content in a new list
+                subitems = [str]
+            else:
+                can_concat = False
+
+        # attempt to concat outer brackets + inner items
+        if can_concat:
+            if len(opening) + totallength + len(closing) &lt;= maxlinelength:
+                items.append(opening + subitems[0] + closing)
+            else:
+                can_concat = False
+
+        if not can_concat:
+            items.append(opening)  # opening brackets
+            # Append children to parent list as a nested list
+            items.append(subitems)
+            items.append(closing)  # closing brackets
+
+    else:
+        # basic types
+        strobj = itemkey
+        if strobj != &#34;&#34;:
+            strobj += &#34;: &#34;
+        strobj += _basictype2str(obj)
+        if not islast:
+            strobj += &#34;,&#34;
+        items.append(strobj)
+
+    return items, can_concat</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.json2dict._indentitems"><code class="name flex">
+<span>def <span class="ident">_indentitems</span></span>(<span>items, indent, indentcurrent)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Recursively traverses the list of json lines, adds indentation based
+on the current depth</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _indentitems(items, indent, indentcurrent):
+    &#34;&#34;&#34;Recursively traverses the list of json lines, adds indentation based
+    on the current depth&#34;&#34;&#34;
+    res = &#34;&#34;
+    indentstr = &#34; &#34; * indentcurrent
+    for item in items:
+        if isinstance(item, list):
+            res += _indentitems(item, indent, indentcurrent + indent)
+        else:
+            res += indentstr + item + &#34;\n&#34;
+    return res</code></pre>
+</details>
+</dd>
+<dt id="QDMPy.io.json2dict._json_remove_comments"><code class="name flex">
+<span>def <span class="ident">_json_remove_comments</span></span>(<span>string, strip_space=True)</span>
+</code></dt>
+<dd>
+<div class="desc"></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def _json_remove_comments(string, strip_space=True):
     tokenizer = re.compile(&#39;&#34;|(/\*)|(\*/)|(//)|\n|\r&#39;)
     end_slashes_re = re.compile(r&#34;(\\)*$&#34;)
 
@@ -366,53 +627,31 @@ def json_remove_comments(string, strip_space=True):
     new_str.append(string[index:])
     return &#34;&#34;.join(new_str)</code></pre>
 </details>
-</section>
-<section>
-</section>
-<section>
-</section>
-<section>
-<h2 class="section-title" id="header-functions">Functions</h2>
-<dl>
-<dt id="QDMPy.io.json2dict.basictype2str"><code class="name flex">
-<span>def <span class="ident">basictype2str</span></span>(<span>obj)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>This is a filter on objects that get sent to the json. Some types
-can't be stored literally in json files, so we can adjust for that here.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def basictype2str(obj):
-    &#34;&#34;&#34;This is a filter on objects that get sent to the json. Some types
-    can&#39;t be stored literally in json files, so we can adjust for that here.
-    &#34;&#34;&#34;
-    if isinstance(obj, str):
-        strobj = &#39;&#34;&#39; + str(obj) + &#39;&#34;&#39;
-    elif isinstance(obj, type(None)):
-        strobj = &#34;null&#34;
-    elif isinstance(obj, bool):
-        strobj = {True: &#34;true&#34;, False: &#34;false&#34;}[obj]
-    else:
-        strobj = str(obj)
-    return strobj</code></pre>
-</details>
 </dd>
-<dt id="QDMPy.io.json2dict.defaultdict_from_d"><code class="name flex">
-<span>def <span class="ident">defaultdict_from_d</span></span>(<span>d)</span>
+<dt id="QDMPy.io.json2dict._prettyjson"><code class="name flex">
+<span>def <span class="ident">_prettyjson</span></span>(<span>obj, indent=4, maxlinelength=80)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>converts d to a defaultdict, with default value of None for all keys</p></div>
+<div class="desc"><p>Renders JSON content with indentation and line splits/concatenations to
+fit maxlinelength. Only dicts, lists and basic types are supported.
+Now supports np.ndarrays.</p>
+<p><Pass the dict as obj and get back a string></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python">def defaultdict_from_d(d):
-    &#34;converts d to a defaultdict, with default value of None for all keys&#34;
-    dd = defaultdict(lambda: None)
-    dd.update(d)
-    return dd</code></pre>
+<pre><code class="python">def _prettyjson(obj, indent=4, maxlinelength=80):
+    &#34;&#34;&#34;
+    Renders JSON content with indentation and line splits/concatenations to
+    fit maxlinelength. Only dicts, lists and basic types are supported.
+    Now supports np.ndarrays.
+
+    &lt;Pass the dict as obj and get back a string&gt;
+    &#34;&#34;&#34;
+
+    items, _ = _getsubitems(obj, itemkey=&#34;&#34;, islast=True, maxlinelength=maxlinelength)
+    res = _indentitems(items, indent, indentcurrent=0)
+    return res</code></pre>
 </details>
 </dd>
 <dt id="QDMPy.io.json2dict.dict_to_json"><code class="name flex">
@@ -446,228 +685,21 @@ can't be stored literally in json files, so we can adjust for that here.</p></di
         filepath = os.path.join(path_to_dir, filename)
 
     with open(filepath, &#34;w&#34;) as fp:
-        fp.write(prettyjson(dictionary))</code></pre>
+        fp.write(_prettyjson(dictionary))</code></pre>
 </details>
 </dd>
 <dt id="QDMPy.io.json2dict.dict_to_json_str"><code class="name flex">
 <span>def <span class="ident">dict_to_json_str</span></span>(<span>obj, indent=4, maxlinelength=80)</span>
 </code></dt>
 <dd>
-<div class="desc"><p>Copy of <code><a title="QDMPy.io.json2dict.prettyjson" href="#QDMPy.io.json2dict.prettyjson">prettyjson()</a></code></p></div>
+<div class="desc"><p>Copy of <code><a title="QDMPy.io.json2dict._prettyjson" href="#QDMPy.io.json2dict._prettyjson">_prettyjson()</a></code></p></div>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">def dict_to_json_str(obj, indent=4, maxlinelength=80):
-    &#34;&#34;&#34;Copy of `QDMPy.io.json2dict.prettyjson`&#34;&#34;&#34;
-    return prettyjson(obj, indent, maxlinelength)</code></pre>
-</details>
-</dd>
-<dt id="QDMPy.io.json2dict.failfloat"><code class="name flex">
-<span>def <span class="ident">failfloat</span></span>(<span>a)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Used in particular for reading the metadata to convert all numbers into
-floats and leave strings as strings.</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def failfloat(a):
-    &#34;&#34;&#34;Used in particular for reading the metadata to convert all numbers into
-    floats and leave strings as strings.
-    &#34;&#34;&#34;
-    try:
-        return float(a)
-    except ValueError:
-        return a</code></pre>
-</details>
-</dd>
-<dt id="QDMPy.io.json2dict.getsubitems"><code class="name flex">
-<span>def <span class="ident">getsubitems</span></span>(<span>obj, itemkey, islast, maxlinelength)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def getsubitems(obj, itemkey, islast, maxlinelength):
-    items = []
-    # assume we can concatenate inner content unless a child node returns an
-    # expanded list
-    can_concat = True
-
-    if isinstance(obj, np.ndarray):
-        obj = obj.tolist()
-
-    isdict = isinstance(obj, dict)
-    islist = isinstance(obj, list)
-    istuple = isinstance(obj, tuple)
-
-    # building json content as a list of strings or child lists
-    if isdict or islist or istuple:
-        if isdict:
-            opening, closing, keys = (&#34;{&#34;, &#34;}&#34;, iter(obj.keys()))
-        elif islist:
-            opening, closing, keys = (&#34;[&#34;, &#34;]&#34;, range(0, len(obj)))
-        elif istuple:
-            # tuples are converted into json arrays
-            opening, closing, keys = (&#34;[&#34;, &#34;]&#34;, range(0, len(obj)))
-
-        if itemkey != &#34;&#34;:
-            opening = itemkey + &#34;: &#34; + opening
-        if not islast:
-            closing += &#34;,&#34;
-
-        # Get list of inner tokens as list
-        count = 0
-        subitems = []
-        itemkey = &#34;&#34;
-        for k in keys:
-            count += 1
-            islast_ = count == len(obj)
-            itemkey_ = &#34;&#34;
-            if isdict:
-                itemkey_ = basictype2str(k)
-            # inner = (items, indent)
-            inner, can_concat_ = getsubitems(obj[k], itemkey_, islast_, maxlinelength)
-            # inner can be a string or a list
-            subitems.extend(inner)
-            # if a child couldn&#39;t concat, then we are not able either
-            can_concat = can_concat and can_concat_
-
-        # atttempt to concat subitems if all fit within maxlinelength
-        if can_concat:
-            totallength = 0
-            for item in subitems:
-                totallength += len(item)
-            totallength += len(subitems) - 1  # spaces between items
-            if totallength &lt;= maxlinelength:
-                str = &#34;&#34;
-                # add space between items, comma is already there
-                for item in subitems:
-                    str += item + &#34; &#34;
-                str = str.strip()
-                # wrap concatenated content in a new list
-                subitems = [str]
-            else:
-                can_concat = False
-
-        # attempt to concat outer brackets + inner items
-        if can_concat:
-            if len(opening) + totallength + len(closing) &lt;= maxlinelength:
-                items.append(opening + subitems[0] + closing)
-            else:
-                can_concat = False
-
-        if not can_concat:
-            items.append(opening)  # opening brackets
-            # Append children to parent list as a nested list
-            items.append(subitems)
-            items.append(closing)  # closing brackets
-
-    else:
-        # basic types
-        strobj = itemkey
-        if strobj != &#34;&#34;:
-            strobj += &#34;: &#34;
-        strobj += basictype2str(obj)
-        if not islast:
-            strobj += &#34;,&#34;
-        items.append(strobj)
-
-    return items, can_concat</code></pre>
-</details>
-</dd>
-<dt id="QDMPy.io.json2dict.indentitems"><code class="name flex">
-<span>def <span class="ident">indentitems</span></span>(<span>items, indent, indentcurrent)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Recursively traverses the list of json lines, adds indentation based
-on the current depth</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def indentitems(items, indent, indentcurrent):
-    &#34;&#34;&#34;Recursively traverses the list of json lines, adds indentation based
-    on the current depth&#34;&#34;&#34;
-    res = &#34;&#34;
-    indentstr = &#34; &#34; * indentcurrent
-    for item in items:
-        if isinstance(item, list):
-            res += indentitems(item, indent, indentcurrent + indent)
-        else:
-            res += indentstr + item + &#34;\n&#34;
-    return res</code></pre>
-</details>
-</dd>
-<dt id="QDMPy.io.json2dict.json_remove_comments"><code class="name flex">
-<span>def <span class="ident">json_remove_comments</span></span>(<span>string, strip_space=True)</span>
-</code></dt>
-<dd>
-<div class="desc"></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def json_remove_comments(string, strip_space=True):
-    tokenizer = re.compile(&#39;&#34;|(/\*)|(\*/)|(//)|\n|\r&#39;)
-    end_slashes_re = re.compile(r&#34;(\\)*$&#34;)
-
-    in_string = False
-    in_multi = False
-    in_single = False
-
-    new_str = []
-    index = 0
-
-    for match in re.finditer(tokenizer, string):
-
-        if not (in_multi or in_single):
-            tmp = string[index : match.start()]
-            if not in_string and strip_space:
-                # replace white space as defined in standard
-                tmp = re.sub(&#34;[ \t\n\r]+&#34;, &#34;&#34;, tmp)
-            new_str.append(tmp)
-        elif not strip_space:
-            # Replace comments with white space so that the JSON parser reports
-            # the correct column numbers on parsing errors.
-            new_str.append(&#34; &#34; * (match.start() - index))
-
-        index = match.end()
-        val = match.group()
-
-        if val == &#39;&#34;&#39; and not (in_multi or in_single):
-            escaped = end_slashes_re.search(string, 0, match.start())
-
-            # start of string or unescaped quote character to end string
-            if not in_string or (escaped is None or len(escaped.group()) % 2 == 0):  # noqa
-                in_string = not in_string
-            index -= 1  # include &#34; character in next catch
-        elif not (in_string or in_multi or in_single):
-            if val == &#34;/*&#34;:
-                in_multi = True
-            elif val == &#34;//&#34;:
-                in_single = True
-        elif val == &#34;*/&#34; and in_multi and not (in_string or in_single):
-            in_multi = False
-            if not strip_space:
-                new_str.append(&#34; &#34; * len(val))
-        elif val in &#34;\r\n&#34; and not (in_multi or in_string) and in_single:
-            in_single = False
-        elif not ((in_multi or in_single) or (val in &#34; \r\n\t&#34; and strip_space)):  # noqa
-            new_str.append(val)
-
-        if not strip_space:
-            if val in &#34;\r\n&#34;:
-                new_str.append(val)
-            elif in_multi or in_single:
-                new_str.append(&#34; &#34; * len(val))
-
-    new_str.append(string[index:])
-    return &#34;&#34;.join(new_str)</code></pre>
+    &#34;&#34;&#34;Copy of `QDMPy.io.json2dict._prettyjson`&#34;&#34;&#34;
+    return _prettyjson(obj, indent, maxlinelength)</code></pre>
 </details>
 </dd>
 <dt id="QDMPy.io.json2dict.json_to_dict"><code class="name flex">
@@ -689,39 +721,13 @@ on the current depth</p></div>
         if hook == &#34;od&#34;:
             oph = OrderedDict
         elif hook == &#34;dd&#34;:
-            oph = defaultdict_from_d
+            oph = _defaultdict_from_d
         else:
             raise RuntimeError(&#34;bad choice for dict hook&#34;)
 
-        jstring = json_remove_comments(fp.read())
+        jstring = _json_remove_comments(fp.read())
         dct = json.loads(jstring, object_pairs_hook=oph)
         return dct.copy()</code></pre>
-</details>
-</dd>
-<dt id="QDMPy.io.json2dict.prettyjson"><code class="name flex">
-<span>def <span class="ident">prettyjson</span></span>(<span>obj, indent=4, maxlinelength=80)</span>
-</code></dt>
-<dd>
-<div class="desc"><p>Renders JSON content with indentation and line splits/concatenations to
-fit maxlinelength. Only dicts, lists and basic types are supported.
-Now supports np.ndarrays.</p>
-<p><Pass the dict as obj and get back a string></p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">def prettyjson(obj, indent=4, maxlinelength=80):
-    &#34;&#34;&#34;
-    Renders JSON content with indentation and line splits/concatenations to
-    fit maxlinelength. Only dicts, lists and basic types are supported.
-    Now supports np.ndarrays.
-
-    &lt;Pass the dict as obj and get back a string&gt;
-    &#34;&#34;&#34;
-
-    items, _ = getsubitems(obj, itemkey=&#34;&#34;, islast=True, maxlinelength=maxlinelength)
-    res = indentitems(items, indent, indentcurrent=0)
-    return res</code></pre>
 </details>
 </dd>
 </dl>
@@ -744,16 +750,16 @@ Now supports np.ndarrays.</p>
 </li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="QDMPy.io.json2dict.basictype2str" href="#QDMPy.io.json2dict.basictype2str">basictype2str</a></code></li>
-<li><code><a title="QDMPy.io.json2dict.defaultdict_from_d" href="#QDMPy.io.json2dict.defaultdict_from_d">defaultdict_from_d</a></code></li>
+<li><code><a title="QDMPy.io.json2dict._basictype2str" href="#QDMPy.io.json2dict._basictype2str">_basictype2str</a></code></li>
+<li><code><a title="QDMPy.io.json2dict._defaultdict_from_d" href="#QDMPy.io.json2dict._defaultdict_from_d">_defaultdict_from_d</a></code></li>
+<li><code><a title="QDMPy.io.json2dict._failfloat" href="#QDMPy.io.json2dict._failfloat">_failfloat</a></code></li>
+<li><code><a title="QDMPy.io.json2dict._getsubitems" href="#QDMPy.io.json2dict._getsubitems">_getsubitems</a></code></li>
+<li><code><a title="QDMPy.io.json2dict._indentitems" href="#QDMPy.io.json2dict._indentitems">_indentitems</a></code></li>
+<li><code><a title="QDMPy.io.json2dict._json_remove_comments" href="#QDMPy.io.json2dict._json_remove_comments">_json_remove_comments</a></code></li>
+<li><code><a title="QDMPy.io.json2dict._prettyjson" href="#QDMPy.io.json2dict._prettyjson">_prettyjson</a></code></li>
 <li><code><a title="QDMPy.io.json2dict.dict_to_json" href="#QDMPy.io.json2dict.dict_to_json">dict_to_json</a></code></li>
 <li><code><a title="QDMPy.io.json2dict.dict_to_json_str" href="#QDMPy.io.json2dict.dict_to_json_str">dict_to_json_str</a></code></li>
-<li><code><a title="QDMPy.io.json2dict.failfloat" href="#QDMPy.io.json2dict.failfloat">failfloat</a></code></li>
-<li><code><a title="QDMPy.io.json2dict.getsubitems" href="#QDMPy.io.json2dict.getsubitems">getsubitems</a></code></li>
-<li><code><a title="QDMPy.io.json2dict.indentitems" href="#QDMPy.io.json2dict.indentitems">indentitems</a></code></li>
-<li><code><a title="QDMPy.io.json2dict.json_remove_comments" href="#QDMPy.io.json2dict.json_remove_comments">json_remove_comments</a></code></li>
 <li><code><a title="QDMPy.io.json2dict.json_to_dict" href="#QDMPy.io.json2dict.json_to_dict">json_to_dict</a></code></li>
-<li><code><a title="QDMPy.io.json2dict.prettyjson" href="#QDMPy.io.json2dict.prettyjson">prettyjson</a></code></li>
 </ul>
 </li>
 </ul>

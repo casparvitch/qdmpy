@@ -13,7 +13,7 @@ Functions
  - `QDMPy.fit.interface.fit_AOIs`
  - `QDMPy.fit.interface.fit_pixels`
  - `QDMPy.fit.interface._prep_fit_backends`
- - `QDMPy.fit.interface.get_pixel_fit_results`
+ - `QDMPy.fit.interface.get_PL_fit_result`
 """
 
 # ============================================================================
@@ -25,7 +25,7 @@ __pdoc__ = {
     "QDMPy.fit.interface.fit_AOIs": True,
     "QDMPy.fit.interface.fit_pixels": True,
     "QDMPy.fit.interface._prep_fit_backends": True,
-    "QDMPy.fit.interface.get_pixel_fit_results": True,
+    "QDMPy.fit.interface.get_PL_fit_result": True,
 }
 
 # ============================================================================
@@ -41,7 +41,18 @@ import QDMPy.io as Qio
 
 
 def define_fit_model(options):
-    """Define (and return) fit_model object, from options dictionary."""
+    """Define (and return) fit_model object, from options dictionary.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    fit_model : `QDMPy.fit.model.FitModel`
+        FitModel used to fit to data.
+    """
 
     fit_functions = options["fit_functions"]
 
@@ -71,9 +82,8 @@ def _prep_fit_backends(options, fit_model):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     fit_model : `QDMPy.fit.model.FitModel`
-        Model we're fitting to.
+        FitModel used to fit to data.
     """
     # ensure backend we want to use for pixel fittings is in comparison!
     if options["fit_backend"] not in options["fit_backend_comparison"]:
@@ -115,13 +125,10 @@ def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     sig_norm : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x].
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-
     fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
 
@@ -164,19 +171,14 @@ def fit_AOIs(options, sig_norm, single_pixel_pl, sweep_list, fit_model, backend_
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     sig_norm : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x].
-
     single_pixel_pl : np array, 1D
         Normalised measurement array, for chosen single pixel check.
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq).
-
     fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
-
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
         `QDMPy.fit._shared.ROIAvgFitResult` object, to pull `QDMPy.fit._shared.ROIAvgFitResult.fit_options`
         from.
@@ -233,16 +235,12 @@ def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     sig_norm : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x].
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-
     fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
-
     roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
         `QDMPy.fit._shared.ROIAvgFitResult` object, to pull fit_options from.
 
@@ -251,7 +249,6 @@ def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
     fit_image_results : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
         Also has 'residual' as a key.
-
     sigmas : dict
         As above, but standard deviation for each param
     """
@@ -272,8 +269,36 @@ def fit_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
 # ============================================================================
 
 
-def get_pixel_fit_results(options, sig_norm, sweep_list, fit_model, wanted_roi_result):
-    """ TODO documentation """
+def get_PL_fit_result(options, sig_norm, sweep_list, fit_model, wanted_roi_result):
+    """Fit all pixels in image with chosen fit backend (or loads previous fit result)
+
+    Wrapper for `QDMPy.fit.interface.fit_pixels` with some options logic.
+
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    sig_norm : np array, 3D
+        Normalised measurement array, shape: [sweep_list, y, x].
+    sweep_list : np array, 1D
+        Affine parameter list (e.g. tau or freq)
+    fit_model : `QDMPy.fit.model.FitModel`
+        Model we're fitting to.
+    roi_avg_fit_result : `QDMPy.fit._shared.ROIAvgFitResult`
+        `QDMPy.fit._shared.ROIAvgFitResult` object, to pull fit_options from.
+
+    Returns
+    -------
+    fit_image_results : dict
+        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
+        Also has 'residual' as a key.
+        (or None if not fitting pixels, this stops plotting, e.g. via
+        `QDMPy.plot.fit.plot_param_images` from erroring)
+    sigmas : dict
+        As above, but standard deviation for each param
+        (or None if not fitting pixels)
+    """
 
     if options["found_prev_result"]:
         pixel_fit_params = Qio.load_prev_fit_results(options)

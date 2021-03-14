@@ -15,8 +15,14 @@ This (sub-) package exposes specific functions to the user:
     - `QDMPy.plot.fit.plot_AOI_spectra_fit`
     - `QDMPy.plot.fit.plot_param_image`
     - `QDMPy.plot.fit.plot_param_images`
-- `QDMPy.plot.field`, currently all contents... TODO list nicely...?
+- `QDMPy.plot.field`, currently all contents
 """
+__author__ = "Sam Scholten"
+__pdoc__ = {
+    "QDMPy.plot.common": True,
+    "QDMPy.plot.field": True,
+    "QDMPy.plot.fit": True,
+}
 
 from QDMPy.plot.common import *
 

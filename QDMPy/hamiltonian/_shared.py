@@ -7,13 +7,24 @@ Functions
 ---------
  - `QDMPy.hamiltonian._shared.gen_init_guesses`
  - `QDMPy.hamiltonian._shared.bounds_from_range`
+ - `QDMPy.hamiltonian._shared.pixel_generator`
+ - `QDMPy.hamiltonian._shared.shuffle_pixels`
+ - `QDMPy.hamiltonian._shared.unshuffle_pixels`
+ - `QDMPy.hamiltonian._shared.unshuffle_fit_results`
+ - `QDMPy.hamiltonian._shared.get_pixel_fitting_results`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "QDMPy.hamiltonian._shared.": True,
+    "QDMPy.hamiltonian._shared.gen_init_guesses": True,
+    "QDMPy.hamiltonian._shared.bounds_from_range": True,
+    "QDMPy.hamiltonian._shared.pixel_generator": True,
+    "QDMPy.hamiltonian._shared.shuffle_pixels": True,
+    "QDMPy.hamiltonian._shared.unshuffle_pixels": True,
+    "QDMPy.hamiltonian._shared.unshuffle_fit_results": True,
+    "QDMPy.hamiltonian._shared.get_pixel_fitting_results": True,
 }
 
 # ============================================================================
@@ -47,7 +58,6 @@ def gen_init_guesses(options):
     init_guesses : dict
         Dict holding guesses for each parameter, e.g. key -> list of guesses for each independent
         version of that fn_type.
-
     init_bounds : dict
         Dict holding guesses for each parameter, e.g. key -> list of bounds for each independent
         version of that fn_type.
@@ -55,7 +65,8 @@ def gen_init_guesses(options):
     init_guesses = {}
     init_bounds = {}
     if options["auto_read_B"]:
-        import QDMPy.field as Qfield # avoid circular import
+        import QDMPy.field as Qfield  # avoid circular import
+
         bias_x, bias_y, bias_z = Qfield.get_B_bias(options)
         override_guesses = {"Bx": bias_x, "By": bias_y, "Bz": bias_z}
 
@@ -166,7 +177,6 @@ def shuffle_pixels(data_3d):
     -------
     shuffled_in_yx : np array, 3D
         data_3d shuffled in 2nd, 3rd axis.
-
     unshuffler : (y_unshuf, x_unshuf)
         Both np array. Can be used to unshuffle shuffled_in_yx, i.e. through
         `QDMPy.hamiltonian._shared.unshuffle_pixels`.
@@ -197,7 +207,6 @@ def unshuffle_pixels(data_2d, unshuffler):
     ---------
     data_2d : np array, 2D
         i.e. 'image' of a single fit parameter, all shuffled up!
-
     unshuffler : (y_unshuf, x_unshuf)
         Two arrays returned by `QDMPy.hamiltonian._shared.shuffle_pixels`
         that allow unshuffling of data_2d.
@@ -227,7 +236,6 @@ def unshuffle_fit_results(fit_result_dict, unshuffler):
         Dictionary, key: param_names, val: image (2D) of param values across FOV. Each image
         requires reshuffling (which this function achieves).
         Also has 'residual' as a key.
-
     unshuffler : (y_unshuf, x_unshuf)
         Two arrays returned by `QDMPy.hamiltonian._shared.shuffle_pixels` that allow
         unshuffling of data_2d.
@@ -256,11 +264,9 @@ def get_pixel_fitting_results(hamiltonian, fit_results, pixel_data):
     ---------
     fit_model : `QDMPy.hamiltonian._hamiltonians.Hamiltonian`
         Model we're fitting to.
-
     fit_results : list of [(y, x), result, jac] objects
         (see `QDMPy.hamiltonian._scipyfit.to_squares_wrapper`)
         A list of each pixel's parameter array, as well as position in image denoted by (y, x).
-
     pixel_data : np array, 3D
         Normalised measurement array, shape: [idx, y, x]. i.e. bnvs.
         May or may not already be shuffled (i.e. matches fit_results).
@@ -270,6 +276,8 @@ def get_pixel_fitting_results(hamiltonian, fit_results, pixel_data):
     fit_image_results : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
         Also has 'residual' as a key.
+    sigmas: dict
+        As fit_image_results, but containing parameters errors (standard deviations) across FOV.
     """
 
     roi_shape = np.shape(pixel_data)[1:]
@@ -283,13 +291,13 @@ def get_pixel_fitting_results(hamiltonian, fit_results, pixel_data):
         fit_image_results[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
         sigmas[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
-    fit_image_results["residual_ham"] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+    fit_image_results["residual_field"] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
     # Fill the arrays element-wise from the results function, which returns a
     # 1D array of flattened best-fit parameters.
     for (y, x), result, jac in fit_results:
         resid = hamiltonian.residuals_scipyfit(result, pixel_data[:, y, x])
-        fit_image_results["residual_ham"][y, x] = np.sum(
+        fit_image_results["residual_field"][y, x] = np.sum(
             np.abs(resid, dtype=np.float64), dtype=np.float64
         )
         # uncertainty (covariance matrix), copied from scipy.optimize.curve_fit

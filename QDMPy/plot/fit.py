@@ -65,7 +65,6 @@ def plot_ROI_PL_image(options, PL_image):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     PL_image : np array, 2D
         Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned but
         not cut down to ROI.
@@ -106,7 +105,6 @@ def plot_AOI_PL_images(options, PL_image_ROI):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     PL_image_ROI : np array, 2D
         Summed counts across sweep_value (affine) axis (i.e. 0th axis). Reshaped, rebinned and
         cut down to ROI.
@@ -145,7 +143,6 @@ def plot_ROI_avg_fits(options, backend_ROI_results_lst):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     backend_ROI_results_lst : list of tuples
         Format: (fit_backend, `QDMPy.fit._shared.ROIAvgFitResult` objects), for each fit_backend
 
@@ -302,12 +299,10 @@ def plot_AOI_spectra(options, sig, ref, sweep_list):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     sig : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
         Cut down to ROI.
         Format: [sweep_vals, y, x]
-
     ref : np array, 3D
         Reference component of raw data, reshaped and rebinned. Unwanted sweeps removed.
         Cut down to ROI.
@@ -461,23 +456,19 @@ def plot_AOI_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_ls
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     sig : np array, 3D
         Signal component of raw data, reshaped and rebinned. Unwanted sweeps removed.
         Cut down to ROI.
         Format: [sweep_vals, y, x]
-
     ref : np array, 3D
         Reference component of raw data, reshaped and rebinned. Unwanted sweeps removed.
         Cut down to ROI.
         Format: [sweep_vals, y, x]
     sweep_list : list
         List of sweep parameter values (with removed unwanted sweeps at start/end)
-
     fit_result_collection_lst : list
         List of `QDMPy.fit._shared.FitResultCollection` objects (one for each fit_backend)
         holding ROI, AOI fit results
-
     fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
 
@@ -700,23 +691,18 @@ def plot_param_image(
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
-
     pixel_fit_params : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
-
     param_name : str
         Name of parameter you want to plot, e.g. 'fwhm'. Can also be 'residual'.
-
 
     Optional arguments
     ------------------
     param_number : int
         Which version of the parameter you want. I.e. there might be 8 independent parameters
         in the fit model called 'pos', each labeled 'pos_0', 'pos_1' etc. Default: 0.
-
     errorplot : bool
         Default: false. Denotes that errors dict has been passed in (e.g. sigmas), so
         ylabel & save names are changed accordingly. Can't be True if param_name='residual'.
@@ -785,16 +771,12 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name, errorplo
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
-
     pixel_fit_params : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
-
     param_name : str
         Name of parameter you want to plot, e.g. 'fwhm'. Can also be 'residual'.
-
     errorplot : bool
         Default: false. Denotes that errors dict has been passed in (e.g. sigmas), so
         ylabel & save names are changed accordingly. Can't be True if param_name='residual'.
@@ -943,22 +925,16 @@ def plot_params_flattened(
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     fit_model : `QDMPy.fit.model.FitModel`
         Model we're fitting to.
-
     pixel_fit_params : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
-
     roi_avg_fit_result
         `QDMPy.fit._shared.ROIAvgFitResult` object.
-
     param_name : str
         Name of parameter you want to plot, e.g. 'fwhm'. Can also be 'residual'.
-
     plot_bounds : bool
         Defaults to True, add fit bounds/constraints to plot. (Does nothing for residual plots)
-
     plot_sigmas : bool
         Defaults to True, add error bars (sigma) to plot. (Does nothing for residual plots)
 
@@ -1013,7 +989,9 @@ def plot_params_flattened(
             for param_num, param_root in enumerate(fn_obj.param_defn):
                 if param_root == param_name:
                     param_guesses.append(
-                        roi_avg_fit_result.init_param_guess[fn_obj.this_fn_param_indices[param_num]]
+                        roi_avg_fit_result.init_param_guess[
+                            fn_obj.this_fn_param_indices[param_num]
+                        ]
                     )
                     param_roi_fits.append(
                         roi_avg_fit_result.best_params[fn_obj.this_fn_param_indices[param_num]]
@@ -1186,13 +1164,10 @@ def _add_patch_rect(ax, rect_corner_x, rect_corner_y, size_x, size_y, label=None
     Arguments
     ---------
     ax : matplotlib Axis object
-
     rect_corner_x : int
         Location of top left corner of area you want to annotate, x component.
-
     rect_corner_y : int
         Location of top left corner of area you want to annotate, y component.
-
     size_x : int
         Size of area along x (horizontal axis) you want to annotate.
     size_y : int
@@ -1202,10 +1177,8 @@ def _add_patch_rect(ax, rect_corner_x, rect_corner_y, size_x, size_y, label=None
     ------------------
     label : str
         Text to label annotated square with. Color is defined by edgecolor. Default: None.
-
     edgecolor : str
         Color of label and edge of annotation. Default: "b".
-
     """
     rect = patches.Rectangle(
         (rect_corner_x, rect_corner_y),

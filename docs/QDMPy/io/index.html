@@ -38,12 +38,14 @@
 <li><code><a title="QDMPy.io.fit.load_fit_param" href="fit.html#QDMPy.io.fit.load_fit_param">load_fit_param()</a></code></li>
 </ul>
 </li>
-<li><code><a title="QDMPy.io.bfield" href="bfield.html">QDMPy.io.bfield</a></code>:<ul>
-<li><code><a title="QDMPy.io.bfield.save_bnvs_and_dshifts" href="bfield.html#QDMPy.io.bfield.save_bnvs_and_dshifts">save_bnvs_and_dshifts()</a></code></li>
+<li><code><a title="QDMPy.io.field" href="field.html">QDMPy.io.field</a></code>:<ul>
+<li><code><a title="QDMPy.io.field.save_bnvs_and_dshifts" href="field.html#QDMPy.io.field.save_bnvs_and_dshifts">save_bnvs_and_dshifts()</a></code></li>
 </ul>
 </li>
 <li><code><a title="QDMPy.io.json2dict" href="json2dict.html">QDMPy.io.json2dict</a></code>:<ul>
 <li><code><a title="QDMPy.io.json2dict.dict_to_json_str" href="json2dict.html#QDMPy.io.json2dict.dict_to_json_str">dict_to_json_str()</a></code></li>
+<li><code><a title="QDMPy.io.json2dict.json_to_dict" href="json2dict.html#QDMPy.io.json2dict.json_to_dict">json_to_dict()</a></code></li>
+<li><code><a title="QDMPy.io.json2dict.dict_to_json" href="json2dict.html#QDMPy.io.json2dict.dict_to_json">dict_to_json()</a></code></li>
 </ul>
 </li>
 </ul>
@@ -64,25 +66,34 @@ This (sub-) package exposes specific functions to the user:
 - `QDMPy.io.fit`:
     - `QDMPy.io.fit.load_prev_fit_results`
     - `QDMPy.io.fit.load_fit_param`
-- `QDMPy.io.bfield`:
-    - `QDMPy.io.bfield.save_bnvs_and_dshifts`
+- `QDMPy.io.field`:
+    - `QDMPy.io.field.save_bnvs_and_dshifts`
 - `QDMPy.io.json2dict`:
     - `QDMPy.io.json2dict.dict_to_json_str`
+    - `QDMPy.io.json2dict.json_to_dict`
+    - `QDMPy.io.json2dict.dict_to_json`
 &#34;&#34;&#34;
+__author__ = &#34;Sam Scholten&#34;
+__pdoc__ = {
+    &#34;QDMPy.io.field&#34;: True,
+    &#34;QDMPy.io.fit&#34;: True,
+    &#34;QDMPy.io.json2dict&#34;: True,
+    &#34;QDMPy.io.raw&#34;: True,
+}
 
 
 from QDMPy.io.raw import *
 from QDMPy.io.fit import *
-from QDMPy.io.bfield import *
-from QDMPy.io.json2dict import dict_to_json_str</code></pre>
+from QDMPy.io.field import *
+from QDMPy.io.json2dict import dict_to_json_str, json_to_dict, dict_to_json</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt><code class="name"><a title="QDMPy.io.bfield" href="bfield.html">QDMPy.io.bfield</a></code></dt>
+<dt><code class="name"><a title="QDMPy.io.field" href="field.html">QDMPy.io.field</a></code></dt>
 <dd>
-<div class="desc"><p>This module holds the tools for loading/saving Bfield results …</p></div>
+<div class="desc"><p>This module holds the tools for loading/saving field results …</p></div>
 </dd>
 <dt><code class="name"><a title="QDMPy.io.fit" href="fit.html">QDMPy.io.fit</a></code></dt>
 <dd>
@@ -120,7 +131,7 @@ from QDMPy.io.json2dict import dict_to_json_str</code></pre>
 </li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
-<li><code><a title="QDMPy.io.bfield" href="bfield.html">QDMPy.io.bfield</a></code></li>
+<li><code><a title="QDMPy.io.field" href="field.html">QDMPy.io.field</a></code></li>
 <li><code><a title="QDMPy.io.fit" href="fit.html">QDMPy.io.fit</a></code></li>
 <li><code><a title="QDMPy.io.json2dict" href="json2dict.html">QDMPy.io.json2dict</a></code></li>
 <li><code><a title="QDMPy.io.raw" href="raw.html">QDMPy.io.raw</a></code></li>

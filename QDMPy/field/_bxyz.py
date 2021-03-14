@@ -1,19 +1,20 @@
 # -*- coding: utf-8 -*-
 """
-This module holds tools for ...
+This module holds tools for calculating the vector magnetic field via
+different methods.
 
 Functions
 ---------
- - `QDMPy.field._bxyz.bxyz_from_single_bnv`
- - `QDMPy.field._bxyz.bxyz_from_unv_inversion`
+ - `QDMPy.field._bxyz.from_single_bnv`
+ - `QDMPy.field._bxyz.from_unv_inversion`
  - `QDMPy.field._bxyz.from_hamiltonian_fitting`
 """
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "QDMPy.field._bxyz.bxyz_from_single_bnv": True,
-    "QDMPy.field._bxyz.bxyz_from_unv_inversion": True,
+    "QDMPy.field._bxyz.from_single_bnv": True,
+    "QDMPy.field._bxyz.from_unv_inversion": True,
     "QDMPy.field._bxyz.from_hamiltonian_fitting": True,
 }
 # ============================================================================
@@ -97,12 +98,11 @@ def from_unv_inversion(options, bnvs):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     bnvs : list
         List of np arrays (2D) giving B_NV for each NV family/orientation.
         If num_peaks is odd, the bnv is given as the shift of that peak,
         and the dshifts is left as np.nans.
-        if [], return None
+        if [], returns None
 
     Returns
     -------
@@ -169,7 +169,6 @@ def from_hamiltonian_fitting(options, fit_params):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     fit_params : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
         (fit results from PL fitting).
@@ -181,9 +180,8 @@ def from_hamiltonian_fitting(options, fit_params):
     ham_results : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
         Also has 'residual_field' as a key.
-
     sigmas : dict
-        ? TODO
+        as ham_results but each val contains te sigmas (errors) for that param.
     """
     if fit_params is None:
         return None, None

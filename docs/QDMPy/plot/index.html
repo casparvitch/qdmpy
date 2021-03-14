@@ -32,17 +32,17 @@
 <li><code><a title="QDMPy.plot.common.plot_image_on_ax" href="common.html#QDMPy.plot.common.plot_image_on_ax">plot_image_on_ax()</a></code></li>
 </ul>
 </li>
-<li><code><a title="QDMPy.plot.fits" href="fits.html">QDMPy.plot.fits</a></code>:<ul>
-<li><code><a title="QDMPy.plot.fits.plot_ROI_PL_image" href="fits.html#QDMPy.plot.fits.plot_ROI_PL_image">plot_ROI_PL_image()</a></code></li>
-<li><code><a title="QDMPy.plot.fits.plot_AOI_PL_images" href="fits.html#QDMPy.plot.fits.plot_AOI_PL_images">plot_AOI_PL_images()</a></code></li>
-<li><code><a title="QDMPy.plot.fits.plot_ROI_avg_fits" href="fits.html#QDMPy.plot.fits.plot_ROI_avg_fits">plot_ROI_avg_fits()</a></code></li>
-<li><code><a title="QDMPy.plot.fits.plot_AOI_spectra" href="fits.html#QDMPy.plot.fits.plot_AOI_spectra">plot_AOI_spectra()</a></code></li>
-<li><code><a title="QDMPy.plot.fits.plot_AOI_spectra_fit" href="fits.html#QDMPy.plot.fits.plot_AOI_spectra_fit">plot_AOI_spectra_fit()</a></code></li>
-<li><code><a title="QDMPy.plot.fits.plot_param_image" href="fits.html#QDMPy.plot.fits.plot_param_image">plot_param_image()</a></code></li>
-<li><code><a title="QDMPy.plot.fits.plot_param_images" href="fits.html#QDMPy.plot.fits.plot_param_images">plot_param_images()</a></code></li>
+<li><code><a title="QDMPy.plot.fit" href="fit.html">QDMPy.plot.fit</a></code>:<ul>
+<li><code><a title="QDMPy.plot.fit.plot_ROI_PL_image" href="fit.html#QDMPy.plot.fit.plot_ROI_PL_image">plot_ROI_PL_image()</a></code></li>
+<li><code><a title="QDMPy.plot.fit.plot_AOI_PL_images" href="fit.html#QDMPy.plot.fit.plot_AOI_PL_images">plot_AOI_PL_images()</a></code></li>
+<li><code><a title="QDMPy.plot.fit.plot_ROI_avg_fits" href="fit.html#QDMPy.plot.fit.plot_ROI_avg_fits">plot_ROI_avg_fits()</a></code></li>
+<li><code><a title="QDMPy.plot.fit.plot_AOI_spectra" href="fit.html#QDMPy.plot.fit.plot_AOI_spectra">plot_AOI_spectra()</a></code></li>
+<li><code><a title="QDMPy.plot.fit.plot_AOI_spectra_fit" href="fit.html#QDMPy.plot.fit.plot_AOI_spectra_fit">plot_AOI_spectra_fit()</a></code></li>
+<li><code><a title="QDMPy.plot.fit.plot_param_image" href="fit.html#QDMPy.plot.fit.plot_param_image">plot_param_image()</a></code></li>
+<li><code><a title="QDMPy.plot.fit.plot_param_images" href="fit.html#QDMPy.plot.fit.plot_param_images">plot_param_images()</a></code></li>
 </ul>
 </li>
-<li><code><a title="QDMPy.plot.bfield" href="bfield.html">QDMPy.plot.bfield</a></code>, currently all contents&hellip; FIXME</li>
+<li><code><a title="QDMPy.plot.field" href="field.html">QDMPy.plot.field</a></code>, currently all contents</li>
 </ul>
 <details class="source">
 <summary>
@@ -57,36 +57,42 @@ This (sub-) package exposes specific functions to the user:
     - `QDMPy.plot.common.set_mpl_rcparams`
     - `QDMPy.plot.common.plot_image`
     - `QDMPy.plot.common.plot_image_on_ax`
-- `QDMPy.plot.fits`:
-    - `QDMPy.plot.fits.plot_ROI_PL_image`
-    - `QDMPy.plot.fits.plot_AOI_PL_images`
-    - `QDMPy.plot.fits.plot_ROI_avg_fits`
-    - `QDMPy.plot.fits.plot_AOI_spectra`
-    - `QDMPy.plot.fits.plot_AOI_spectra_fit`
-    - `QDMPy.plot.fits.plot_param_image`
-    - `QDMPy.plot.fits.plot_param_images`
-- `QDMPy.plot.bfield`, currently all contents... FIXME
+- `QDMPy.plot.fit`:
+    - `QDMPy.plot.fit.plot_ROI_PL_image`
+    - `QDMPy.plot.fit.plot_AOI_PL_images`
+    - `QDMPy.plot.fit.plot_ROI_avg_fits`
+    - `QDMPy.plot.fit.plot_AOI_spectra`
+    - `QDMPy.plot.fit.plot_AOI_spectra_fit`
+    - `QDMPy.plot.fit.plot_param_image`
+    - `QDMPy.plot.fit.plot_param_images`
+- `QDMPy.plot.field`, currently all contents
 &#34;&#34;&#34;
+__author__ = &#34;Sam Scholten&#34;
+__pdoc__ = {
+    &#34;QDMPy.plot.common&#34;: True,
+    &#34;QDMPy.plot.field&#34;: True,
+    &#34;QDMPy.plot.fit&#34;: True,
+}
 
 from QDMPy.plot.common import *
 
-from QDMPy.plot.fits import *
+from QDMPy.plot.fit import *
 
-from QDMPy.plot.bfield import *</code></pre>
+from QDMPy.plot.field import *</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt><code class="name"><a title="QDMPy.plot.bfield" href="bfield.html">QDMPy.plot.bfield</a></code></dt>
-<dd>
-<div class="desc"><p>This module holds functions for plotting Bfields …</p></div>
-</dd>
 <dt><code class="name"><a title="QDMPy.plot.common" href="common.html">QDMPy.plot.common</a></code></dt>
 <dd>
 <div class="desc"><p>This module holds tools for loading raw data etc. and reshaping to a usable format …</p></div>
 </dd>
-<dt><code class="name"><a title="QDMPy.plot.fits" href="fits.html">QDMPy.plot.fits</a></code></dt>
+<dt><code class="name"><a title="QDMPy.plot.field" href="field.html">QDMPy.plot.field</a></code></dt>
+<dd>
+<div class="desc"><p>This module holds functions for plotting fields …</p></div>
+</dd>
+<dt><code class="name"><a title="QDMPy.plot.fit" href="fit.html">QDMPy.plot.fit</a></code></dt>
 <dd>
 <div class="desc"><p>This module holds functions for plotting initial processing images and fit results …</p></div>
 </dd>
@@ -114,9 +120,9 @@ from QDMPy.plot.bfield import *</code></pre>
 </li>
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
-<li><code><a title="QDMPy.plot.bfield" href="bfield.html">QDMPy.plot.bfield</a></code></li>
 <li><code><a title="QDMPy.plot.common" href="common.html">QDMPy.plot.common</a></code></li>
-<li><code><a title="QDMPy.plot.fits" href="fits.html">QDMPy.plot.fits</a></code></li>
+<li><code><a title="QDMPy.plot.field" href="field.html">QDMPy.plot.field</a></code></li>
+<li><code><a title="QDMPy.plot.fit" href="fit.html">QDMPy.plot.fit</a></code></li>
 </ul>
 </li>
 </ul>

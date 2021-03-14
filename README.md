@@ -1,29 +1,100 @@
 Quantum Diamond MicroscoPy
 ==========================
 
-<!-- MarkdownTOC -->
-
+- [Introduction](#introduction)
+- [Usage](#usage)
+            - [Flow diagram](#flow-diagram)
 - [Installation](#installation)
-    - [Jupyterlab installation](#jupyterlab-installation)
-    - [Saving widget state](#saving-widget-state)
-    - [Exporting notebook to pdf](#exporting-notebook-to-pdf)
-    - [Version Control](#version-control)
-        - [Installation](#installation-1)
-    - [Environment Management \(conda/pipenv\)](#environment-management-condapipenv)
-    - [Gpufit](#gpufit)
-    - [Linux](#linux)
+        - [Installing with pip on new system](#installing-with-pip-on-new-system)
+        - [Re-building wheel file](#re-building-wheel-file)
+        - [Jupyterlab installation](#jupyterlab-installation)
+        - [Saving widget state](#saving-widget-state)
+        - [Exporting notebook to pdf](#exporting-notebook-to-pdf)
+        - [Version control](#version-control)
+            - [VC installation](#vc-installation)
+        - [Environment management \(conda/pipenv\)](#environment-management-condapipenv)
+        - [Gpufit](#gpufit)
+        - [Linux](#linux)
 - [Github/Gitlab details for GPUFit](#githubgitlab-details-for-gpufit)
 - [Gpufit install](#gpufit-install)
-    - [Methodology:](#methodology)
-    - [Where to find these details:](#where-to-find-these-details)
-    - [Installation Procedure](#installation-procedure)
-    - [Building from source](#building-from-source)
-- [Documentation](#documentation)
+        - [Methodology:](#methodology)
+        - [Where to find these details:](#where-to-find-these-details)
+        - [Installation Procedure](#installation-procedure)
+        - [Building from source](#building-from-source)
+- [Documentation conventions](#documentation-conventions)
 
-<!-- /MarkdownTOC -->
 
+# Introduction
+
+If you're installing for the first time scroll down to 'Installing with pip on new system'.
+
+
+# Usage
+
+Best used in a jupyter notebook to avoid producing a million graphs. In future a command-line suitable hook will be defined.
+
+Usage is best understood through the example notebooks.
+
+#### Flow diagram
+
+View in text editor if scrambled.
+
+---------------------------------------------------------------------------------------------------
+|                                                                                                 |
+|    plotting                  processing           ┌──────────────┐                              |
+|    xxxxxxxx                  xxxxxxxxxx           │              │                              |
+|                                                   │ options.json │                              |
+|     saving                                        │     or       │       ┌─────────────────┐    |
+|     xxxxxx                                        │ options = {  │       │ ref_options     │    |
+|                                                   │     ...      │       │                 │    |
+|                                                   │ }            │       │ ref_options_dir │    |
+|                           ┌──────────────┐        └──────┬───────┘       └───────┬─────────┘    |
+|                           │              │               │                       │              |
+|                           │ Raw PL data  │           load_options                │              |
+| set_mpl_rcparams          │    on disk   │               │                       │              |
+|                           │              │           ┌───┴─────┐                 │              |
+|                           └─────┬────────┘           │         │            ┌────┴───────┐      |
+|                                 │                    │ Options ├───────┐    │Ref Options │      |
+|                           load_image_and_sweep ──────┤ dict    │       │    │Dict        │      |
+|                           reshape_dataset            │         │       │    └────┬───────┘      |
+|                                 │                    └───┬─────┘       │         │              |
+| plot_ROI_PL_image          ┌────┴───────┐                │             │         │              |
+| plot_AOI_PL_images         │ sig_norm   │                │             │         │              |
+| plot_AOI_spectra           │ sweep_list │          define_fit_model    │         │              |
+|                            └────┬───────┘                │             │         │              |
+| save_PL_data                    │                    ┌───┴──────┐      │         │              |
+|                           get_PL_fit_result ─────────┤fit_model │      │         │              |
+|                                 │                    └──────────┘      │         │              |
+| fit_ROI_avg                     │                                      ├──load_reference_exp.   |
+| plot_ROI_avg_fits        ┌──────┴───────────┐                          │      fit_results       |
+| fit_AOIs                 │ pixel_fit_params │                          │         │              |
+| plot_AOI_spectra_fit     │                  ├────────────┬─────────────┘         │              |
+| plot_param_images        │   ref_sigmas     │            │                 ┌─────┴─────────┐    |
+| plot_params_flattened    └──────┬───────────┘            │                 │ ref_fit_params│    |
+|                                 │                        │                 │ ref_sigmas    │    |
+|                                 │                        │                 └─────┬─────────┘    |
+|                           odmr_field_retrieval───┐       x                       │              |
+|                                 │                └───────────────────────────────┘              |
+| save_field_calcs           ┌────┴─────────┐              x                                      |
+| plot_bnvs_and_dshifts      │ bnvs         │              │                                      |
+| plot_bfield                │ dshifts      │              │                                      |
+| plot_dshift_fit            │ field_params │              │                                      |
+| plot_field_param_flattened │ sigma_params │              │                                      |
+|                            └──────────────┘          save_options                               |
+|                                                                                                 |
+---------------------------------------------------------------------------------------------------
 
 # Installation
+
+
+### Installing with pip on new system
+
+You're installing for the first time etc. and want to be able to run 'import QDMPy'. Follow these instructions.
+
+
+### Re-building wheel file
+
+These instructions should be followed if the source code is changed.
 
 ### Jupyterlab installation
 
@@ -42,7 +113,7 @@ In jupyterlab > settings > advanced settings editor > jupyter widgets > saveStat
 - need to change to %matplotlib inline?
 	- check Github issues (e.g. [#16](https://github.com/matplotlib/ipympl/issues/16), [#150](https://github.com/matplotlib/ipympl/issues/150) and [#176](https://github.com/matplotlib/ipympl/pull/176))
 
-### Version Control
+### Version control
 
 The project is housed on [Gitlab](https://gitlab.unimelb.edu.au/sscholten/QDMPy), you will need to be given access by an owner and sign in with uni credentials. To communicate with the Gitlab server you will need to setup an ssh key (on each device connected, there will need to be one on each lab computer as well). My installation instructions below are taken from the Gitlab Docs [here](https://docs.gitlab.com/ee/ssh/).
 
@@ -51,7 +122,7 @@ You can also use Gitlab in-browser, i.e. not using the git commands at all. This
 Tip: It's a lot easier to read diffs/merges using the side-by-side visual. Somewhere in your diff tool/online it will have this options, give it a shot.
 
 
-#### Installation
+#### VC installation
 
 
 If you're on windows you will need to download a Git/OpenSSH client (Unix systems have it pre-installed). The simplest way to do this for integration with PyCharm is just to use [Git for Windows](https://gitforwindows.org/), even if you have WSL/Cygwin. Just do it, it isn't that big a package.
@@ -93,10 +164,11 @@ ssh -T git@git.unimelb.edu.au
 If it's the first time you connect to Gitlab via SSH, you will be asked to verify it's authenticity (respond yes). You may also need to provide your password. If it responds with *Welcome to Gitlab, @username!* then you're all setup.
 
 
-### Environment Management (conda/pipenv)
+### Environment management (conda/pipenv)
 
 
-TODO
+TODO -> conda best for windows, so probably go with that. With new install practises (i.e. from wheel file) this won't be necessary as they should be bundled. Note: if installing from wheel file then user cannot change the source files? This is kind of the point of installing properly. What would user want to change? Perhaps constants etc. but then we would want them to build
+the wheel again.
 
 
 ### Gpufit
@@ -238,9 +310,9 @@ Untested in our lab, follow: [https://gpufit.readthedocs.io/en/latest/installati
 - Haven't tested building on linux, but it's probably easier :)
 
 
-# Documentation
+# Documentation conventions
 
-Follow docstring pattern in files, e.g.:
+Follow (numpy) docstring pattern in files, e.g.:
 
 - Docstrings for module variables:
 ```python
@@ -285,13 +357,10 @@ def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
     ---------
     options : dict
         Generic options dict holding all the user options.
-
     sig_norm : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x].
-
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-
     fit_model : `QDMPy.fit.model.FitModel` object.
 
     Returns
@@ -304,3 +373,304 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
 - navigate to the root directory, e.g. ~/src/QDMPy_proj/QDMPy_git/ (which should contain the directory QDMPy)
 - cmd: `pdoc --output-dir docs --html --config latex_math=True --force QDMPy`
 - the period at the end of the command above is required!
+
+
+
+# Options reference
+
+
+### General parameters
+
+- base_dir
+    - Not required, if not "" it is prepended to filepath.
+- filepath
+    - Required, specify path to raw (PL) data.
+- custom_output_dir_prefix
+    - See below.
+- custom_outpur_dir_suffix
+    - See below.
+- custom_output_dir
+    - Any option key can be interpolated (to options[key]) with braces (like python f-strings) e.g. "ODMR_{fit_backend}" -> "ODMR_gpufit" if the fit backend was gpufit
+    - Custom_output_dir must be an absolute path (E.g. from root/C:). Will override the path determined internally.
+- ignore_ref
+    - If true the reference (often no-MW) measurement is ignored
+- additional_bins
+    - Additional binning on dataset (local averaging). 0 does nothing (or 1). Must be multiple of 2 otherwise.
+- old_binning_convention
+    - Legacy option.
+- system_name
+    - Name of system used (see QDMPy.systems)
+- other_measurement_suffixes
+    - List of suffix strings e.g. "\_T.txt" to look for, to plot non-NV measurements. E.g. for \_T.txt you might have stored T(t) during the experiment. They will be plot nicely for you. 
+- remove_start_sweep
+    - Removes data poitns from the start and end of each pixel's sweep data (e.g. freqs).
+- remove_end_sweep
+    - As above but for end of sweep
+- normalisation
+    - Style of the reference normalisation used. div = division and sub = subtraction
+
+#### Microscope settings
+
+- microscope_setup
+    - Default options for the microscope. A dict containing 'sensor_pixel_size', 'default_objective_mag', 'default_objective_reference_focal_length' and 'default_camera_tube_lens'. Used to calculate pixel size.
+- pixel_size
+    - Provide pixel size manually.
+- objective_mag
+    - pixel_size = sensor_pixel_size * (focal length objective / focal length camera tube lens) where tube lens is the lens that focuses onto the camera, and: focal length objective = objective reference focal length / objective mag. Leave objective_mag and the below as None to use defaults (above). Otherwise these can be varied (e.g. commonly changing objective mag) and the code will handle it nicely.
+- objective_reference_focal_length
+- camera_tube_lens
+
+#### Polygon settings
+
+- polygon_nodes_path
+    - Path to a polygon json file (containing nodes from a previous definition)
+- mask_polygons_bground
+    - Boolean, mask polygons for background calculation?
+- annotate_polygons
+    - Boolean, annotate polygons on all image plots?
+
+#### region of interest (ROI) params
+
+- ROI
+    - For taking a region of interest and ignoring the rest of the FOV. Currently can be 'Full' or 'Rectangle'.
+- ROI_start
+    - Start of ROI (top left corner) if ROI: Rectangle.
+- ROI_end
+    - Bottom right corner of ROI rectangle.
+- single_pixel_check
+    - Pixel location used to check single pixel spectra + single pixel fit. 
+- AOI_n_start
+    - For some natural number 'n' (e.g. AOI_2_start) define a rectangular region to check (locally average) spectra and fit. Defines top left of region.
+- AOI_n_end
+    - Defines bottom right of region.
+
+### Photoluminescence fitting parameters
+
+- fit_backend
+    - Backend used for pixel fitting. Currently can be 'scipyfit' or 'gpufit' (if pygpufit installed).
+- fit_backend_comparison
+    - Which backends to use in initial single pixel/ROI/AOI fit checks.
+- force_fit
+    - Overrides automatic reloading of previous fit results.
+- fit_pixels
+    - False ignores the pixel fitting altogether, even if a previous fit result was found.
+- scramble_pixels
+    - Fit pixels in a random order to give a more accurate ETA (at no loss to fit speed).
+- use_ROI_avg_fit_res_for_all_pixels
+    - If 'false', uses init guesses below on each pixel, 'true' uses best fit to ROI average as initial guess.
+- fit_functions
+    - Dictionary. This one is important & required. The functions that make up your (PL) fit model. Each function type can be used multiple times. E.g. {"linear": 1, "lorentzian": 8} would give 8 lorentzian peaks with a linear (y= mx + c) background slope.
+- param_guess
+    - For some fit model parameter called 'param', this is the provided guess. Can be an array if you want different guesses for each of the 'n' functions in fit_functions (e.g. pos_0, pos_1, ... pos_7 for 8 lorentzians).
+- param_range
+    - Provide a range (+- guess) to bound fits for fit model parameter 'param'. 
+- param_bounds
+    - Manually provide bounds on fits for fit model parameter 'param'.
+
+#### scipyfit options
+
+- scipyfit_method
+    - Method for scipy least squares fitting. Choose from: 'lm' (fast but doesn't use bounds), 
+    'trf' (uses bounds and most reliable fit method but can be slow: default) and 'dogbox' (uses bounds and faster than trf).
+- scipyfit_sub_threads
+    - Number of threads to *not* use for fitting (e.g. throttle).
+- scipyfit_show_progressbar
+    - Display progressbar during fitting.
+- scipyfit_use_analytic_jac
+    - Use an analytically determined Jacobian, this should be faster but hasn't been implemented for every function. Default: True.
+- scipyfit_verbose_fitting
+    - Verbose fitting 0 = silent, 1 = term report, 2 display iterations.
+- scipyfit_fit_jac_acc
+    - If use_analytic_jac is false, what accuracy to numerically determine jacobian. The scheme ‘3-point’ is more accurate, but requires twice as many operations as '2-point' (default). The scheme 'cs' uses complex steps, and while potentially the most accurate, it is applicable only when the func correctly handles complex inputs and can be analytically continued to the complex plane.
+- scipyfit_fit_gtol
+    - Tolerance settings, the exact condition depends on method used - see scipy documentation. Defaults here: 1e-12. Tolerance for termination by the change of the independent variables. 
+- scipyfit_fit_xtol
+    - Tolerance for termination by the norm of the gradient.
+- scipyfit_fit_ftol
+    - Tolerance for termination by the change of the cost function.
+- scipyfit_scale_x
+    - Rescales the x by the units of the Jacobian (doesn't seem to make a difference)?
+- scipyfit_loss_fn
+    - Determines the loss function. This in non trivial check the scipy documentation. Default: linear. Options: linear, soft_l1, huber, cauchy, arctan.
+
+#### gpufit options
+
+- gpufit_tolerance
+    - Setting a lower value for the tolerance results in more precise values for the fit parameters, but requires more fit iterations to reach convergence. A typical value for the tolerance settings is between 1.0E-3 and 1.0E-6. We use 1e-12 in scipy, so I'm using it here as the default too.
+- gpufit_max_iterations
+    - Max number of iterations. The maximum number of fit iterations permitted. If the fit has not converged after this number of iterations, the fit returns with a status value indicating that the maximum number of iterations was reached. Default: 25.
+- gpufit_estimator_id
+    - See https://gpufit.readthedocs.io/en/latest/fit_estimator_functions.html. Default: least squares estimator. Use MLE (maximum likelihood esitmator) for data subject to Poisson statistics -> noise in the data is assumed to be _purely_ Poissonian. (Options: LSE, MLE).
+
+### Field retrieval parameters
+
+- calc_field_pixels
+    - Co you want to calculate field result for each pixel? (will auto reload prev result).
+- force_field_calc
+    - Force field calculate (don't reload prev. calculation).
+- field_method
+    -  Method to get bfield from pixel ODMR data
+    - options:
+        - "auto_dc": auto select from number of peaks (+ freqs_to_use) -> uses ham for 8 peaks, invert_unvs for 6 peaks, prop_single_bnv for 2
+        - "hamiltonian_fitting": fit full hamiltonian
+        - "prop_single_bnv": use fourier method to propagate bnv -> bxyz
+        - "invert_unvs": take 3 unvs and (effective) approx_bxyz hamiltonian, but use simple inversion of unv matrix rather than fitting to hamiltonian
+- hamiltonian
+    - Type of hamiltonian to fit, if that bfield method is used. Or always fit if not 'bxyz' or 'approx_bxyz' assuming non-B parameters. Current options are in fact only 'bxyz' and 'approx_bxyz'.
+- freqs_to_use
+    - Which frequencies (e.g. lorentzian posns) to use for field retrieval. Must be len-8 iterable of values that evaluate as True/False (>=1 must be True).
+- single_bnv_choice
+    - If option 'prop_single_bnv' given for 'field_method' but number of frequencies fit is 2 or 3, this option resolves ambiguity in which bnv to utilize. This option is used like so: single_bnv = bnvs[single_bnv_choice + 1].Note that `freqs_to_use` must still be set (to use 2 freqs only).
+- diamond_ori
+    - Diamond crystal orientation -> see QDMPy.constants. Default: HPHT orientation. Format: `<top face orientation>_<edge face orientation>`.
+- auto_read_bias
+    - Read magnetic field from options (i.e. if applied with vector electromagnet). --> system dependent option (i.e. Unimelb reads from metadata).
+- auto_read_B
+    - Guess mag field (Bx, By, Bz) from bias field parameters (bias_mag etc.).
+- use_unvs
+    - To specify unvs directly (below with "unvs" option) instead of guessing from bias_mag etc.
+- unvs
+    - Unit vectors of NV orientations, must be shape = (4,3). Equiv. to each NV frame's z axis. E.g. might look like `[[0.57735, 0.57735, 0.57735],
+                           [-0.57735, 0.57735, 0.57735],
+                           [0.57735, -0.57735, 0.57735],
+                           [-0.57735, -0.57735, 0.57735]]`
+- bias_mag
+    - Field of bias field, used to automatically determine uNVs.
+- bias_theta
+    - In degrees.
+- bias_phi
+    - In degrees.
+- bfield_bground_method
+    - Method for bfield background subtraction (or null to avoid)
+    - Descriptions
+        - fix_zero: constant offset, set zero to chosen value (key 'zero' in bfield_bground_params)
+        - three_point: plane background, calculated from three points (key 'points')
+        - mean: constant offset of mean of image
+        - poly: key 'order' polynomial fit to image
+        - gaussian: gaussian fit to image
+        - interpolate: image gaussian filtered (key 'sigma'), with data interpolated over
+           polygons (key 'interp_method')
+        - gaussian_filter: image gaussian filtered (key 'sigma')
+- bfield_bground_params
+    - Parameters for chosen bground method, required params are:
+        - fix_zero: 'zero', a number
+        - three_point: 'points' a length three iterable of [x, y] positions in image
+        - mean: none
+        - poly: key 'order', a natural number
+        - gaussian: none
+        - interpolate: key 'interp_method' (interpolation method in scipy griddata: nearest, linear,  cubic) and key 'sigma'
+        - gaussian_filter: this one also requires sigma.
+- bnv_bground_method
+    - As above but for bnvs. This background subtraction is not carried on to analysis (just plotting & saving).
+- bnv_bground_params
+    - As above but for bnvs.
+- field_param_guess
+    - Same guess, range and bounds as above for PL fitting, but here for hamiltonian fitting. 
+- field_param_range
+- field_param_bounds
+
+### Plotting parameters
+
+- save_plots
+- show_scalebar
+- annotate_image_regions
+    - Used for ROI/AOI PL plots only.
+- save_fig_type
+    - E.g. "png", "pdf", "svg" (svg slow!).
+- colormaps
+    - Choose colormap used for each type of image, a dict with possible keys:
+        - param_images, residual_images, sigma_images, PL_images, bnv_images, dshift_images, bfield_images.
+- colormap_range_dicts
+    - Choose range of values mapped across to the colormap limits, for each 'type' of image if you want to override, you must copy the full dict (not just the ones you want to change).
+        - Available options:
+            type:
+                    min_max                         : map between min and max of image
+                    deviation_from_mean             : maps between (1 - dev) * mean and (1 + dev) * mean.
+        deflt       min_max_symmetric_about_mean    : map symmetrically about mean, capturing all values
+                    min_max_symmetric_about_zero    : map symmetrically about zero, capturing all values
+                    percentile                      : maps the range between percentiles of the data
+                    percentile_symmetric_about_zero : as above but symmetric about zero, caps. all vals
+                    strict_range                    : maps colors between the values given
+
+        values : float or array
+            Different for each type:
+                    min_max                         : not used
+                    deviation_from_mean             : ('dev' above) float between 0 and 1
+            deflt   min_max_symmetric_about_mean    : not used
+                    min_max_symmetric_about_zero    : not used
+                    percentile                      : list len 2 of (pref.) ints or floats in [0, 100]
+                    percentile_symmetric_about_zero : list len 2 of (pref.) ints or floats in [0, 100]
+                    strict_range                    : list len 2 of ints/floats
+
+            - auto_sym_zero : bool
+                - Optional boolean. If True, automatically detects if image has negative and positive values and makes colormap symmetric about zero. Only has an effect if the given c_range_type is "min_max" or "percentile". Defaults to True (i.e. if not specified)
+
+        - All implemented in `QDMPy.plot.common._get_colormap_range`
+- mpl_rcparams
+    - Extra parameters (as dict) sent to matplotlib to define plotting stylesheet 
+- polygon_patch_params
+    - Parameters for annotating polygon patches onto images (passed to matplotlib.patches.Polygon)
+- AOI_colors
+    - Colors to identify with each AOI region (list of strings).
+- fit_backend_colors
+    - Colors to identify with each fit backend (dict of dicts).
+
+
+### Set internally
+
+- cleaned
+    - Was the options dict (after being read from .json) checked/cleaned?
+- system
+    - Pointer to system object.
+- used_ref
+    - Flag that we used a reference
+- metadata
+    - Any metadata read in.
+- threads
+    - For multiprocessing: # threads to use.
+- rebinned_image_shape
+    - Size of image (size_x, size_y) after rebinning, before being cut down to ROI.
+- reloaded_prev_fit
+    - Did we automatically reload a previous fit result?
+- found_prev_result
+    - Did we find a previous fit result (that matches current options)?
+- found_prev_result_reason
+    - Reasoning for above (str).
+- output_dir
+    - Directory to save results (directly in this dir: images).
+- data_dir
+    - Directory within output to save 'data' e.g. .txt files (output_dir/data_dir).
+- fit_param_defn
+    - For the record, the parameters (and units) used in this fit model.
+- total_bin
+    - Total (i.e. net) binning used.
+- original_bin
+    - E.g. camera binning (or labview binning).
+- ModelID
+    - modelID sent to gpufit (only used if gpufit selected as backend).
+- CUDA_version_runtime
+    - CUDA information, stored for the record.
+- CUDA_version_driver
+    - CUDA information, stored for the record.
+- fit_time_(s)
+    - Time to fit (PL) image.
+- ham_fit_time_(s)
+    - As above but for any hamiltonian fitting.
+- field_dir
+    - Field result directories
+- field_sig_dir
+- field_ref_dir
+- field_method_used
+    - Method used for bfield retrieval (hamiltonian_fitting etc.).
+- field_params
+    - Name of field params used in field retrieval model.
+- found_prev_field_calc
+    - Found previous field calculation result that matches current options.
+- found_prev_field_calc_reason
+    - Reasoning for above
+- polygon_nodes
+    - List of list of nodes, a list for each polygon.
+- polygons
+    - List of polygon objects
+
+
