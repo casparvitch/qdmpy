@@ -1,12 +1,12 @@
 # setuptools.setup(
-#     name="QDMPy",  # Replace with your own username
+#     name="qdmpy",  # Replace with your own username
 #     version="0.1.0",
 #     author="Sam Scholten",
 #     author_email="samcaspar@gmail.com",
 #     description="Quantum Diamond MicroscoPy",
 #     long_description=long_description,
 #     long_description_content_type="text/markdown",
-#     url="https://gitlab.unimelb.edu.au/sscholten/QDMPy",
+#     url="https://gitlab.unimelb.edu.au/sscholten/qdmpy",
 #     classifiers=[
 #         "Programming Language :: Python :: 3",
 #         "License :: MIT License",

@@ -559,7 +559,7 @@
         }
     },
     // choose range of values mapped across to the colormap limits, for each 'type' of image
-    // see options in QDMPy.plot._get_colormap_range
+    // see options in qdmpy.plot._get_colormap_range
     "colormap_range_dicts": {
         "option_default": {
             "param_images": {

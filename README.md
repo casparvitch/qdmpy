@@ -89,7 +89,7 @@ View in text editor if scrambled.
 
 ### Installing with pip on new system
 
-You're installing for the first time etc. and want to be able to run 'import QDMPy'. Follow these instructions.
+You're installing for the first time etc. and want to be able to run 'import qdmpy'. Follow these instructions.
 
 
 ### Re-building wheel file
@@ -115,7 +115,7 @@ In jupyterlab > settings > advanced settings editor > jupyter widgets > saveStat
 
 ### Version control
 
-The project is housed on [Gitlab](https://gitlab.unimelb.edu.au/sscholten/QDMPy), you will need to be given access by an owner and sign in with uni credentials. To communicate with the Gitlab server you will need to setup an ssh key (on each device connected, there will need to be one on each lab computer as well). My installation instructions below are taken from the Gitlab Docs [here](https://docs.gitlab.com/ee/ssh/).
+The project is housed on [Gitlab](https://gitlab.unimelb.edu.au/sscholten/qdmpy), you will need to be given access by an owner and sign in with uni credentials. To communicate with the Gitlab server you will need to setup an ssh key (on each device connected, there will need to be one on each lab computer as well). My installation instructions below are taken from the Gitlab Docs [here](https://docs.gitlab.com/ee/ssh/).
 
 You can also use Gitlab in-browser, i.e. not using the git commands at all. This is not recommended but can be great in a pinch.
 
@@ -181,7 +181,7 @@ However this does not include the model functions we require (e.g. lorentzians, 
 	- This way we can keep a group-wide collection of usable model functions
 	- store in gitlab?
 	- [multiple remotes, github](https://forum.sublimetext.com/t/working-with-multiple-remotes/53489/3)
-- [ ] Keep in separate repo to QDMPy
+- [ ] Keep in separate repo to qdmpy
 
 
 - see instruction below
@@ -339,11 +339,11 @@ This module defines...
 
 Classes
 -------
- - `QDMPy.<this sub-package name>.<this module name (filename)>.ClassNameOne`
+ - `qdmpy.<this sub-package name>.<this module name (filename)>.ClassNameOne`
 
 Functions
 ---------
- - `QDMPy.<this sub-package name>.<this module name (filename)>.Function1`
+ - `qdmpy.<this sub-package name>.<this module name (filename)>.Function1`
 """
 ```
 
@@ -361,17 +361,17 @@ def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
         Normalised measurement array, shape: [sweep_list, y, x].
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-    fit_model : `QDMPy.fit.model.FitModel` object.
+    fit_model : `qdmpy.fit.model.FitModel` object.
 
     Returns
     -------
-    `QDMPy.fit._shared.ROIAvgFitResult` object containing the fit result (see class specifics)
+    `qdmpy.fit._shared.ROIAvgFitResult` object containing the fit result (see class specifics)
     """
 ```
 
 To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc/#pdoc) tool:
-- navigate to the root directory, e.g. ~/src/QDMPy_proj/QDMPy_git/ (which should contain the directory QDMPy)
-- cmd: `pdoc --output-dir docs --html --config latex_math=True --force QDMPy`
+- navigate to the root directory, e.g. ~/src/qdmpy_proj/qdmpy_git/ (which should contain the directory qdmpy)
+- cmd: `pdoc --output-dir docs --html --config latex_math=True --force qdmpy`
 - the period at the end of the command above is required!
 
 
@@ -399,7 +399,7 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
 - old_binning_convention
     - Legacy option.
 - system_name
-    - Name of system used (see QDMPy.systems)
+    - Name of system used (see qdmpy.systems)
 - other_measurement_suffixes
     - List of suffix strings e.g. "\_T.txt" to look for, to plot non-NV measurements. E.g. for \_T.txt you might have stored T(t) during the experiment. They will be plot nicely for you. 
 - remove_start_sweep
@@ -522,7 +522,7 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
 - single_bnv_choice
     - If option 'prop_single_bnv' given for 'field_method' but number of frequencies fit is 2 or 3, this option resolves ambiguity in which bnv to utilize. This option is used like so: single_bnv = bnvs[single_bnv_choice + 1].Note that `freqs_to_use` must still be set (to use 2 freqs only).
 - diamond_ori
-    - Diamond crystal orientation -> see QDMPy.constants. Default: HPHT orientation. Format: `<top face orientation>_<edge face orientation>`.
+    - Diamond crystal orientation -> see qdmpy.constants. Default: HPHT orientation. Format: `<top face orientation>_<edge face orientation>`.
 - auto_read_bias
     - Read magnetic field from options (i.e. if applied with vector electromagnet). --> system dependent option (i.e. Unimelb reads from metadata).
 - auto_read_B
@@ -605,7 +605,7 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
             - auto_sym_zero : bool
                 - Optional boolean. If True, automatically detects if image has negative and positive values and makes colormap symmetric about zero. Only has an effect if the given c_range_type is "min_max" or "percentile". Defaults to True (i.e. if not specified)
 
-        - All implemented in `QDMPy.plot.common._get_colormap_range`
+        - All implemented in `qdmpy.plot.common._get_colormap_range`
 - mpl_rcparams
     - Extra parameters (as dict) sent to matplotlib to define plotting stylesheet 
 - polygon_patch_params

@@ -502,7 +502,7 @@
         "option_default": 1
     },
 
-    // Diamond crystal orientation -> see QDMPy.constants. Default: HPHT orientation
+    // Diamond crystal orientation -> see qdmpy.constants. Default: HPHT orientation
     // format: <top face orientation>_<edge face orientation>
     "diamond_ori": {
         "option_default": "<100>_<100>",
@@ -845,7 +845,7 @@
     //    given c_range_type is "min_max" or "percentile".
     //    Defaults to True (i.e. if not specified)
     //
-    // implemented in QDMPy.plot.common._get_colormap_range
+    // implemented in qdmpy.plot.common._get_colormap_range
     "colormap_range_dicts": {
         "option_default": {
             "param_images": {

@@ -1,5 +1,5 @@
 function [Save_Path,PL,freq_mat,C_mat,df_mat,BNV_mat,BNV_mat_diff,I,current_on,...
-    freq_mat_ref,C_mat_ref,df_mat_ref,BNV_mat_ref] = Bxyz_reconstruction_load_data_from_QDMPy(Path, Path_ref, reconstruction_method,Include_in_fit,Full_ROI,ROI,subtract_reference,Rebinning,freq_actually_measured)
+    freq_mat_ref,C_mat_ref,df_mat_ref,BNV_mat_ref] = Bxyz_reconstruction_load_data_from_qdmpy(Path, Path_ref, reconstruction_method,Include_in_fit,Full_ROI,ROI,subtract_reference,Rebinning,freq_actually_measured)
 
 Binning = str2double(Path(strfind(Path,'bin_')+4:end)); % Defines the binning from the file name for the pixel size
 bibin = Binning*Rebinning;

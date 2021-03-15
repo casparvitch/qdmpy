@@ -15,7 +15,7 @@ Path = 'C:\\ExperimentalData\2021\2021-02\2021-02-12_D432_SiPV-20\\ODMR - Pulsed
 Path_ref = '';
 %Path = 'C:\\ExperimentalData\2020\2020-10\2020-10-27_SiPV-18_newPS\\ODMR - Pulsed without IR_56_processed_bin_8';
 
-processor = 2;                      % =2 if processed with QDMPy, =1 if processed with python, =0 if processed with matlab
+processor = 2;                      % =2 if processed with qdmpy, =1 if processed with python, =0 if processed with matlab
 subtract_reference = 0;             % =1 to substract reference, otherwise only the signal image is analysed and plotted
 subtract_B_subplane = 1;            % Subtract off the b plane from Bxyz for all further analysis, Sam added 2020/06/27
 Rebinning = 1;                      % Additional binning when reconstructing Bxyz
@@ -109,7 +109,7 @@ if processor == 1
     freq_mat_ref,C_mat_ref,df_mat_ref,BNV_mat_ref] = Bxyz_reconstruction_load_data_from_python(Path, Path_ref, reconstruction_method,Include_in_fit,Full_ROI,ROI_square,subtract_reference,Rebinning,freq_actually_measured);
 elseif processor == 2
     [Save_Path,PL,freq_mat,C_mat,df_mat,BNV_mat,BNV_mat_diff,I,current_on,...
-    freq_mat_ref,C_mat_ref,df_mat_ref,BNV_mat_ref] = Bxyz_reconstruction_load_data_from_QDMPy(Path, Path_ref, reconstruction_method,Include_in_fit,Full_ROI,ROI_square,subtract_reference,Rebinning,freq_actually_measured);
+    freq_mat_ref,C_mat_ref,df_mat_ref,BNV_mat_ref] = Bxyz_reconstruction_load_data_from_qdmpy(Path, Path_ref, reconstruction_method,Include_in_fit,Full_ROI,ROI_square,subtract_reference,Rebinning,freq_actually_measured);
 else
      [Save_Path,PL,freq_mat,C_mat,df_mat,BNV_mat,BNV_mat_diff,I,current_on,...
     freq_mat_ref,C_mat_ref,df_mat_ref,BNV_mat_ref] = Bxyz_reconstruction_load_data(Path, Path_ref, reconstruction_method,Include_in_fit,Full_ROI,ROI_square,subtract_reference,Rebinning);
