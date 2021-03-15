@@ -8,8 +8,8 @@ Polygon-GUI
 -----------
 Function to select polygons on an image. Ensure you have the required
 gui backends for matplotlib. Best ran seperately/not within jupyter.
-E.g. open python REPL (python at cmd), 'import qdmpy.itools', then
-run qdmpy.itools.polygon_gui() & follow the prompts.
+E.g. open python REPL (python at cmd), 'import qdmpy.itool', then
+run qdmpy.itool.polygon_gui() & follow the prompts.
 
 An optional array (i.e. the image used to define regions) can be passed
 to polygon_gui.
@@ -39,21 +39,21 @@ http://code.activestate.com/recipes/578381-a-point-in-polygon-program-sw-sloan-a
 
 Classes
 -------
- - `qdmpy.itools._polygon.Polygon`
+ - `qdmpy.itool._polygon.Polygon`
 
 Functions
 ---------
- - `qdmpy.itools._polygon.polygon_gui`
- - `qdmpy.itools._polygon._tri_2area_det`
+ - `qdmpy.itool._polygon.polygon_gui`
+ - `qdmpy.itool._polygon._tri_2area_det`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.itools._polygon.polygon_gui": True,
-    "qdmpy.itools._polygon.Polygon": True,
-    "qdmpy.itools._polygon._tri_2area_det": True,
+    "qdmpy.itool._polygon.polygon_gui": True,
+    "qdmpy.itool._polygon.Polygon": True,
+    "qdmpy.itool._polygon._tri_2area_det": True,
 }
 
 # ============================================================================

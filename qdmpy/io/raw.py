@@ -59,8 +59,8 @@ import re
 
 import qdmpy.io.json2dict
 import qdmpy.io.fit
-import qdmpy.systems as systems
-import qdmpy.itools as Qitools
+import qdmpy.system as systems
+import qdmpy.itool as Qitool
 
 # ============================================================================
 
@@ -186,7 +186,7 @@ def load_polygons(options):
             for polygon in qdmpy.io.json2dict.json_to_dict(options["polygon_nodes_path"])["nodes"]
         ]
         options["polygons"] = [
-            Qitools.Polygon(nodes[:, 0], nodes[:, 1]) for nodes in options["polygon_nodes"]
+            Qitool.Polygon(nodes[:, 0], nodes[:, 1]) for nodes in options["polygon_nodes"]
         ]
     else:
         options["polygon_nodes"] = None

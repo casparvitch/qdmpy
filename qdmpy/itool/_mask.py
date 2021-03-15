@@ -4,14 +4,14 @@ This module holds tools for masking datasets with numpy.ma.
 
 Functions
 ---------
- - `qdmpy.itools._mask.mask_polygons`
+ - `qdmpy.itool._mask.mask_polygons`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.itools._mask.mask_polygons": True,
+    "qdmpy.itool._mask.mask_polygons": True,
 }
 
 # ============================================================================
@@ -20,7 +20,7 @@ import numpy as np
 
 # ============================================================================
 
-import qdmpy.itools._polygon
+import qdmpy.itool._polygon
 
 # ============================================================================
 
@@ -33,7 +33,7 @@ def mask_polygons(image, polygons=None):
     image : 2D array-like
         Image array to mask.
     polygons : list, optional
-        List of `qdmpy.itools._polygon.Polygon` objects.
+        List of `qdmpy.itool._polygon.Polygon` objects.
         (the default is None, where image is returned with no mask)
 
     Returns
@@ -47,7 +47,7 @@ def mask_polygons(image, polygons=None):
     if len(image.shape) != 2:
         raise ValueError("image is not a 2D array")
 
-    if type(polygons) != list or type(polygons[0]) != qdmpy.itools._polygon.Polygon:
+    if type(polygons) != list or type(polygons[0]) != qdmpy.itool._polygon.Polygon:
         raise TypeError("polygons were not None, a list or a list of Polygon objects")
 
     ylen, xlen = image.shape

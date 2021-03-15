@@ -5,11 +5,11 @@ This module defines global constants of the qdmpy package.
 Of particular interest to the user are the SYSTEMS and AVAILABLE_FNS dictionaries.
 
 You can customise/extend the qdmpy package by defining a subclass of the
-`qdmpy.systems.System` object for the specifics of your experimental setup.
+`qdmpy.system.systems.System` object for the specifics of your experimental setup.
 To communicate this addition to qdmpy, add it to the SYSTEMS dictionary
 (e.g. import qdmpy.constants; qdmpy.constants.SYSTEMS["System_Name"] = MySystem).
-Where we have defined MySystem: class MySystem(qdmpy.systems.System): ... etc.
-Follow the templates in `qdmpy.systems` to construct your object.
+Where we have defined MySystem: class MySystem(qdmpy.system.systems.System): ... etc.
+Follow the templates in `qdmpy.system.systems` to construct your object.
 
 The AVAILABLE_FNS dictionary defines the available `qdmpy.fit.model.FitModel`s.
 These fit models are used in all fit backends (scipyfit and gpufit at the time of
@@ -56,14 +56,14 @@ import numpy as np
 
 # ============================================================================
 
-import qdmpy.systems
+import qdmpy.system
 import qdmpy.fit._funcs
 import qdmpy.hamiltonian._hamiltonians
 
 # ============================================================================
 
 
-SYSTEMS = {"Zyla": qdmpy.systems.Zyla, "Liams_Widefield": qdmpy.systems.LiamsWidefield}
+SYSTEMS = {"Zyla": qdmpy.system.Zyla, "Liams_Widefield": qdmpy.system.LiamsWidefield}
 """
 Dictionary that defines systems available for use.
 
@@ -105,7 +105,7 @@ classes can not be used in combination.
 
 
 def choose_system(name):
-    """Returns `qdmpy.systems.System` object called 'name'"""
+    """Returns `qdmpy.system.systems.System` object called 'name'"""
     return SYSTEMS[name]()
 
 

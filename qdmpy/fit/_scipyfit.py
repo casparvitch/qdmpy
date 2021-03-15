@@ -44,7 +44,7 @@ from datetime import timedelta
 
 # ============================================================================
 
-import qdmpy.systems as systems
+import qdmpy.system as systems
 import qdmpy.constants
 import qdmpy.fit._shared as fit_shared
 

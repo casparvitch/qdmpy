@@ -33,7 +33,7 @@ import qdmpy.field._bnv as Qbnv
 import qdmpy.field._bxyz as Qbxyz
 import qdmpy.field._geom as Qgeom
 import qdmpy.io as Qio
-import qdmpy.itools as Qitools
+import qdmpy.itool as Qitool
 
 # ============================================================================
 
@@ -301,7 +301,7 @@ def sub_bground_Bxyz(options, field_params, field_sigmas, method, **method_setti
             - params required in method_settings:
                 - "sigma": sigma passed to gaussian filter (see scipy.ndimage.gaussian_filter)
 
-    See `qdmpy.itools.interface.get_background` for implementation etc.
+    See `qdmpy.itool.interface.get_background` for implementation etc.
 
     Arguments
     ---------
@@ -338,13 +338,13 @@ def sub_bground_Bxyz(options, field_params, field_sigmas, method, **method_setti
         polygons = options["polygons"]
     else:
         polygons = None
-    x_bground = Qitools.get_background(
+    x_bground = Qitool.get_background(
         field_params["Bx"], method, polygons=polygons, **method_settings
     )
-    y_bground = Qitools.get_background(
+    y_bground = Qitool.get_background(
         field_params["By"], method, polygons=polygons, **method_settings
     )
-    z_bground = Qitools.get_background(
+    z_bground = Qitool.get_background(
         field_params["Bz"], method, polygons=polygons, **method_settings
     )
 
@@ -413,7 +413,7 @@ def sub_bground_bnvs(options, bnvs, method, **method_settings):
     for bnv in bnvs:
         if not bnvs:
             continue
-        bground = Qitools.get_background(bnv, method, polygons=polygons, **method_settings)
+        bground = Qitool.get_background(bnv, method, polygons=polygons, **method_settings)
         output_bnvs.append(bnv - bground)
 
     return output_bnvs

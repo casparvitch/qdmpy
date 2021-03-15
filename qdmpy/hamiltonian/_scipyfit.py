@@ -39,7 +39,7 @@ from datetime import timedelta
 # ============================================================================
 
 import qdmpy.hamiltonian._shared as ham_shared
-import qdmpy.systems as systems
+import qdmpy.system as systems
 
 # ============================================================================
 

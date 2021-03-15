@@ -4,14 +4,14 @@ This module holds ...
 
 Functions
 ---------
- - `qdmpy.itools.interface.`
+ - `qdmpy.itool.interface.`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.itools.interface.": True,
+    "qdmpy.itool.interface.": True,
 }
 
 # ============================================================================
@@ -20,9 +20,9 @@ import numpy as np
 
 # ============================================================================
 
-import qdmpy.itools._bground
-import qdmpy.itools._mask
-import qdmpy.itools._polygon
+import qdmpy.itool._bground
+import qdmpy.itool._mask
+import qdmpy.itool._polygon
 
 # ============================================================================
 
@@ -78,7 +78,7 @@ def get_background(image, method, polygons=None, **method_params_dict):
         Key-value pairs passed onto each background backend. Required params
         given above.
     polygons : list, optional
-        list of `qdmpy.itools._polygon.Polygon` objects.
+        list of `qdmpy.itool._polygon.Polygon` objects.
         (the default is None, in which case the polygon feature is not used)
 
     Returns
@@ -99,13 +99,13 @@ def get_background(image, method, polygons=None, **method_params_dict):
         "gaussian_filter": ["sigma"],
     }
     method_fns = {
-        "fix_zero": qdmpy.itools._bground.zero_background,
-        "three_point": qdmpy.itools._bground.three_point_background,
-        "mean": qdmpy.itools._bground.mean_background,
-        "poly": qdmpy.itools._bground.poly_background,
-        "gaussian": qdmpy.itools._bground.gaussian_background,
-        "interpolate": qdmpy.itools._bground.interpolated_background,
-        "gaussian_filter": qdmpy.itools._bground.filtered_background,
+        "fix_zero": qdmpy.itool._bground.zero_background,
+        "three_point": qdmpy.itool._bground.three_point_background,
+        "mean": qdmpy.itool._bground.mean_background,
+        "poly": qdmpy.itool._bground.poly_background,
+        "gaussian": qdmpy.itool._bground.gaussian_background,
+        "interpolate": qdmpy.itool._bground.interpolated_background,
+        "gaussian_filter": qdmpy.itool._bground.filtered_background,
     }
     image = np.array(image)
     if len(image.shape) != 2:
@@ -125,7 +125,7 @@ def get_background(image, method, polygons=None, **method_params_dict):
 
     if method != "interpolate":
         # can't mask it for interpolate as we need that info!
-        image = qdmpy.itools._mask.mask_polygons(image, polygons)
+        image = qdmpy.itool._mask.mask_polygons(image, polygons)
 
     if method == "gaussian_filter":
         method_params_dict["filter_type"] = "gaussian"
@@ -140,13 +140,13 @@ def get_background(image, method, polygons=None, **method_params_dict):
 
 
 def get_im_filtered(*args, **kwargs):
-    """transparent wrapper for `qdmpy.itools._filter.get_im_filtered`"""
-    return qdmpy.itools._filter.get_im_filtered(*args, **kwargs)
+    """transparent wrapper for `qdmpy.itool._filter.get_im_filtered`"""
+    return qdmpy.itool._filter.get_im_filtered(*args, **kwargs)
 
 
 # ============================================================================
 
 
 def polygon_gui(image=None):
-    """transparent wrapper for `qdmpy.itools._polygon.polygon_gui(image)`"""
-    return qdmpy.itools._polygon.polygon_gui(image)
+    """transparent wrapper for `qdmpy.itool._polygon.polygon_gui(image)`"""
+    return qdmpy.itool._polygon.polygon_gui(image)

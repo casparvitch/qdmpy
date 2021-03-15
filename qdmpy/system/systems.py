@@ -14,22 +14,22 @@ in the SYSTEMS defined in `qdmpy.constants`.
 
 Classes
 -------
- - `qdmpy.systems.System`
- - `qdmpy.systems.UniMelb`
- - `qdmpy.systems.Zyla`
- - `qdmpy.systems.OptionsError`
+ - `qdmpy.system.systems.System`
+ - `qdmpy.system.systems.UniMelb`
+ - `qdmpy.system.systems.Zyla`
+ - `qdmpy.system.systems.OptionsError`
 
 
 Functions
 ---------
- - `qdmpy.systems.check_option`
- - `qdmpy.systems.check_options`
- - `qdmpy.systems.clean_options`
+ - `qdmpy.system.systems.check_option`
+ - `qdmpy.system.systems.check_options`
+ - `qdmpy.system.systems.clean_options`
 
 
 Module variables
 ----------------
- - `qdmpy.systems._ROOT_PATH`
+ - `qdmpy.system.systems._CONFIG_PATH`
 
 """
 
@@ -38,14 +38,14 @@ Module variables
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.systems.System": True,
-    "qdmpy.systems.UniMelb": True,
-    "qdmpy.systems.Zyla": True,
-    "qdmpy.systems.OptionsError": True,
-    "qdmpy.systems.check_option": True,
-    "qdmpy.systems.check_options": True,
-    "qdmpy.systems.clean_options": True,
-    "qdmpy.systems._ROOT_PATH": True,
+    "qdmpy.system.systems.System": True,
+    "qdmpy.system.systems.UniMelb": True,
+    "qdmpy.system.systems.Zyla": True,
+    "qdmpy.system.systems.OptionsError": True,
+    "qdmpy.system.systems.check_option": True,
+    "qdmpy.system.systems.check_options": True,
+    "qdmpy.system.systems.clean_options": True,
+    "qdmpy.system.systems._CONFIG_PATH": True,
 }
 
 # ============================================================================
@@ -65,10 +65,10 @@ import qdmpy.io as Qio
 
 # ============================================================================
 
-_ROOT_PATH = pathlib.Path(__file__).parent.parent.absolute()
+_CONFIG_PATH = pathlib.Path(__file__).parent.absolute()
 """
-Path to the root of the package. E.g. the parent of the qdmpy directory.
-Allows access to the options directory (e.g. to read config json files)
+Path to the system directory (e.g. /qdmpy/system)
+Allows access to config json files.
 """
 
 # ============================================================================
@@ -407,7 +407,7 @@ class Zyla(UniMelb):
     """
 
     name = "Zyla"
-    config_path = _ROOT_PATH / "options/zyla_config.json"
+    config_path = _CONFIG_PATH / "zyla_config.json"
 
 
 class LiamsWidefield(UniMelb):
@@ -416,7 +416,7 @@ class LiamsWidefield(UniMelb):
     """
 
     name = "Liam's Widefield"
-    config_path = _ROOT_PATH / "options/liam_widefield_config.json"
+    config_path = _CONFIG_PATH / "liam_widefield_config.json"
 
 
 # ============================================================================

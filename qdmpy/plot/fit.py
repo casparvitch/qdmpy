@@ -48,7 +48,7 @@ from pathlib import Path
 
 # ============================================================================
 
-import qdmpy.systems
+import qdmpy.system
 import qdmpy.constants
 import qdmpy.io as Qio
 import qdmpy.fit as Qfit
@@ -1226,7 +1226,7 @@ def _annotate_ROI_image(options, ax):
             edgecolor="r",
         )
     else:
-        raise qdmpy.systems.OptionsError(
+        raise qdmpy.system.OptionsError(
             "ROI", options["ROI"], options["system"], custom_msg="Unknown ROI encountered."
         )
 

@@ -4,18 +4,18 @@ This module holds functions to get the background of an image.
 
 Functions
 ---------
- - `qdmpy.itools._bground.zero_background`
- - `qdmpy.itools._bground.equation_plane`
- - `qdmpy.itools._bground.three_point_background`
- - `qdmpy.itools._bground.mean_background`
- - `qdmpy.itools._bground.residual_poly`
- - `qdmpy.itools._bground.poly_background`
- - `qdmpy.itools._bground.gaussian`
- - `qdmpy.itools._bground.moments`
- - `qdmpy.itools._bground.residual_gaussian`
- - `qdmpy.itools._bground.gaussian_background`
- - `qdmpy.itools._bground.interpolated_background`
- - `qdmpy.itools._bground.filtered_background`
+ - `qdmpy.itool._bground.zero_background`
+ - `qdmpy.itool._bground.equation_plane`
+ - `qdmpy.itool._bground.three_point_background`
+ - `qdmpy.itool._bground.mean_background`
+ - `qdmpy.itool._bground.residual_poly`
+ - `qdmpy.itool._bground.poly_background`
+ - `qdmpy.itool._bground.gaussian`
+ - `qdmpy.itool._bground.moments`
+ - `qdmpy.itool._bground.residual_gaussian`
+ - `qdmpy.itool._bground.gaussian_background`
+ - `qdmpy.itool._bground.interpolated_background`
+ - `qdmpy.itool._bground.filtered_background`
 
 """
 
@@ -23,18 +23,18 @@ Functions
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.itools._bground.zero_background": True,
-    "qdmpy.itools._bground.equation_plane": True,
-    "qdmpy.itools._bground.three_point_background": True,
-    "qdmpy.itools._bground.mean_background": True,
-    "qdmpy.itools._bground.residual_poly": True,
-    "qdmpy.itools._bground.poly_background": True,
-    "qdmpy.itools._bground.gaussian": True,
-    "qdmpy.itools._bground.moments": True,
-    "qdmpy.itools._bground.residual_gaussian": True,
-    "qdmpy.itools._bground.gaussian_background": True,
-    "qdmpy.itools._bground.interpolated_background": True,
-    "qdmpy.itools._bground.filtered_background": True,
+    "qdmpy.itool._bground.zero_background": True,
+    "qdmpy.itool._bground.equation_plane": True,
+    "qdmpy.itool._bground.three_point_background": True,
+    "qdmpy.itool._bground.mean_background": True,
+    "qdmpy.itool._bground.residual_poly": True,
+    "qdmpy.itool._bground.poly_background": True,
+    "qdmpy.itool._bground.gaussian": True,
+    "qdmpy.itool._bground.moments": True,
+    "qdmpy.itool._bground.residual_gaussian": True,
+    "qdmpy.itool._bground.gaussian_background": True,
+    "qdmpy.itool._bground.interpolated_background": True,
+    "qdmpy.itool._bground.filtered_background": True,
 }
 
 # ============================================================================
@@ -47,7 +47,7 @@ import warnings
 
 # ============================================================================
 
-import qdmpy.itools._filter
+import qdmpy.itool._filter
 
 # ============================================================================
 
@@ -214,7 +214,7 @@ def interpolated_background(image, interp_method, polygons, sigma):
 
     method available: nearest, linear, cubic.
     """
-    if type(polygons) != list or type(polygons[0]) != qdmpy.itools._polygon.Polygon:
+    if type(polygons) != list or type(polygons[0]) != qdmpy.itool._polygon.Polygon:
         raise TypeError("polygons were not None, a list or a list of Polygon objects")
 
     ylen, xlen = image.shape
@@ -240,7 +240,7 @@ def interpolated_background(image, interp_method, polygons, sigma):
 
     bg_interp = griddata(pts, vals, (grid_y, grid_x), method=interp_method)
 
-    return qdmpy.itools._filter.get_im_filtered(bg_interp, "gaussian", sigma=sigma)
+    return qdmpy.itool._filter.get_im_filtered(bg_interp, "gaussian", sigma=sigma)
 
 
 # ============================================================================
@@ -248,8 +248,8 @@ def interpolated_background(image, interp_method, polygons, sigma):
 
 def filtered_background(image, filter_type, **kwargs):
     """Background defined by a filter_type-filtering of the image.
-    Passed to `qdmpy.itools._filter.get_im_filtered`."""
-    return qdmpy.itools._filter.get_im_filtered(image, filter_type, **kwargs)
+    Passed to `qdmpy.itool._filter.get_im_filtered`."""
+    return qdmpy.itool._filter.get_im_filtered(image, filter_type, **kwargs)
 
 
 # ============================================================================

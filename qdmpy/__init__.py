@@ -23,7 +23,7 @@ Structure of sub-modules:
      field module.
 - `qdmpy.io`
     - input/output module. Here you can find functions for saving/loading data to/from disk.
-- `qdmpy.itools`
+- `qdmpy.itool`
     - 'Image tools' module. This module contains miscellaneous tools for working with images,
      such as background removal, filtering, masking and polygon annotations.
 - `qdmpy.plot`
@@ -35,8 +35,8 @@ Structure of sub-modules:
 - `qdmpy.constants`
     - This file contains useful global constants, all defined in one place for easy editing.
      E.g. the spin-1 operator matrices are defined here.
-- `qdmpy.systems`
-    - This file contains the tooling for defining institution specific settings for example
+- `qdmpy.system`
+    - This modules contains the tooling for defining institution specific settings for example
      for loading raw datafiles etc. These settings can be implemented down to the specific
      experimental 'system' to define pixel sizes etc.
 """

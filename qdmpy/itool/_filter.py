@@ -4,16 +4,16 @@ This module holds functions for filtering images (2D numpy arrays).
 
 Functions
 ---------
- - `qdmpy.itools._filter.get_im_filtered`
- - `qdmpy.itools._filter.get_im_filtered_gaussian`
+ - `qdmpy.itool._filter.get_im_filtered`
+ - `qdmpy.itool._filter.get_im_filtered_gaussian`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.itools._filter.get_im_filtered": True,
-    "qdmpy.itools._filter.get_im_filtered_gaussian": True,
+    "qdmpy.itool._filter.get_im_filtered": True,
+    "qdmpy.itool._filter.get_im_filtered_gaussian": True,
 }
 
 # ============================================================================
@@ -25,9 +25,9 @@ import scipy.ndimage
 
 # hands off to other filters
 def get_im_filtered(image, filter_type, **kwargs):
-    """Wrapped over other filters defined in `qdmpy.itools._filter'.
+    """Wrapped over other filters defined in `qdmpy.itool._filter'.
     Current filters defined:
-        - filter_type = gaussian, `qdmpy.itools._filter.get_im_filtered_gaussian`
+        - filter_type = gaussian, `qdmpy.itool._filter.get_im_filtered_gaussian`
     """
     if type(image) != np.ma.core.MaskedArray:
         image = np.ma.masked_array(image)

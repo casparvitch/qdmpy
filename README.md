@@ -399,7 +399,7 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
 - old_binning_convention
     - Legacy option.
 - system_name
-    - Name of system used (see qdmpy.systems)
+    - Name of system used (see qdmpy.system)
 - other_measurement_suffixes
     - List of suffix strings e.g. "\_T.txt" to look for, to plot non-NV measurements. E.g. for \_T.txt you might have stored T(t) during the experiment. They will be plot nicely for you. 
 - remove_start_sweep
