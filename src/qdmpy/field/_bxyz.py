@@ -27,7 +27,7 @@ import numpy.linalg as LA
 import qdmpy.field._geom as Qgeom
 import qdmpy.field._bnv as Qbnv
 import qdmpy.hamiltonian as Qham
-
+import qdmpy.fourier
 
 # ============================================================================
 
@@ -66,18 +66,28 @@ def from_single_bnv(options, bnvs):
     if sum(chosen_freqs) != 2:
         raise ValueError("Only 2 freqs should be chosen for the 'prop_single_bnv' method.")
 
-    if len(bnvs) == 1:  # just use the first one
+    unvs = Qgeom.get_unvs(options)
+    if len(bnvs) == 1:  # just use the first one (i.e. the only one...)
         single_bnv = bnvs[0]
+        single_unv = bnvs[0]
     elif len(bnvs) == 4:  # just use the chosen freq
-        single_bnv = bnvs[np.argwhere(np.array(chosen_freqs[:4]) == 1)[0][0]]
+        idx = np.argwhere(np.array(chosen_freqs[:4]) == 1)[0][0]
+        single_bnv = bnvs[idx]
+        unv = unvs[idx]
     else:  # need to use 'single_bnv_choice' option to resolve amiguity.
         single_bnv = bnvs[options["single_bnv_choice"] + 1]
+        unv = bnvs[options["single_bnv_choice"] + 1]
 
     # (get unv data from chosen freqs, method in _geom)
-    # (then follow methodology in DB code -> import a `fourier` module, separeate to source.)
+    # (then follow methodology in DB code -> import a `fourier` module)
 
-    # don't forget to set some sort of residual
-    raise NotImplementedError()
+    bxyzs = qdmpy.fourier.prop_single_bnv(options, single_bnv, unv)
+    return {
+        "Bx": bxyzs[:, :, 0],
+        "By": bxyzs[:, :, 1],
+        "Bz": bxyzs[:, :, 2],
+        "residual_field": np.zeros((bxyzs[:, :, 2]).shape),  # no residual as there's no fit
+    }
 
 
 # ============================================================================
