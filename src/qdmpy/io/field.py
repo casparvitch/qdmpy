@@ -320,9 +320,9 @@ def load_field_param(options, name, param):
     #  if it exists. This way we can do a new background subtraction on the same field result.
     for s in trial_suffixes:
         if name in ["sig", "ref", "sig_sub_ref"]:
-            path = options[f"field_{name}_dir"] / f"{name}_{param}" + s
+            path = options[f"field_{name}_dir"] / (f"{name}_{param}" + s)
         else:
-            path = options["field_dir"] / f"{name}_{param}" + s
+            path = options["field_dir"] / (f"{name}_{param}" + s)
         if os.path.isfile(path):
             break
 
@@ -343,9 +343,9 @@ def load_field_sigma(options, name, sigma):
     #  if it exists. This way we can do a new background subtraction on the same field result.
     for s in trial_suffixes:
         if name in ["sig", "ref", "sig_sub_ref"]:
-            path = options[f"field_{name}_dir"] / f"{name}_{sigma}_sigma" + s
+            path = options[f"field_{name}_dir"] / (f"{name}_{sigma}_sigma" + s)
         else:
-            path = options["field_dir"] / f"{name}_{sigma}_sigma" + s
+            path = options["field_dir"] / (f"{name}_{sigma}_sigma" + s)
         if os.path.isfile(path):
             break
 

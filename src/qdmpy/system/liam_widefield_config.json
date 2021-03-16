@@ -858,7 +858,7 @@
             },
             "sigma_images": {
                 "type": "percentile",
-                "valyes": [1, 99]
+                "values": [1, 99]
             },
             "PL_images": {
                 "type": "min_max"

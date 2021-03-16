@@ -39,6 +39,7 @@ Usage is best understood through the example notebooks.
 
 View in text editor if scrambled.
 
+```
 ---------------------------------------------------------------------------------------------------
 |                                                                                                 |
 |    plotting                  processing           ┌──────────────┐                              |
@@ -83,6 +84,7 @@ View in text editor if scrambled.
 |                            └──────────────┘          save_options                               |
 |                                                                                                 |
 ---------------------------------------------------------------------------------------------------
+```
 
 # Installation
 
