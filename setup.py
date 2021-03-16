@@ -7,9 +7,11 @@ required = [
     "scipy",
     "numba",
     "psutil",
-    "matplotlib_scalebar",
+    "matplotlib-scalebar",
     "tqdm",
     "simplejson",
+    "pandas",
+    "rebin",
 ]
 
 here = pathlib.Path(__file__).parent.resolve()

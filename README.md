@@ -94,10 +94,6 @@ You're installing for the first time etc. and want to be able to run 'import qdm
 Download source from gitlab, and go to the root directory (containing 'src', 'docs' etc.). Run `python3 setup.py bdist_wheel` if there's no wheel file (probably contained within 'dist' directory, a '.whl' file). Once you have the wheel file (note I haven't tested on different platforms...) run `pip3 install <PATH_TO_WHEEL_FILE>.whl`. Note on windows those commands should probably be python and pip, not python3 and pip3.
 
 
-### Re-building wheel file
-
-These instructions should be followed if the source code is changed.
-
 ### Jupyterlab installation
 
 https://nodejs.org/en/

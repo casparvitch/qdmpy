@@ -1,8 +1,8 @@
 {
-    // ===========================================================================================
-    // ============================ General Parameters ===========================================
-    // ===========================================================================================
-    // base_dir not required, if not "" it is prepended to filepath
+	// ===========================================================================================
+	// ============================ General Parameters ===========================================
+	// ===========================================================================================
+	// base_dir not required, if not "" it is prepended to filepath
     "base_dir": {}, 
     "filepath": {}, // specify path to raw data. (required)
 
@@ -49,11 +49,12 @@
 
     // Name of system used (see systems.py).
     "system_name": {
-        "option_default": "Zyla",
+        "option_default": "Cryo",
         "option_choices":
             [
                 "Zyla",
-                "Liams_Widefield"
+                "Liams_Widefield",
+                "Cryo_Widefield"
             ]
     },
 
@@ -80,11 +81,11 @@
 
     // =======================================
     // === microscope settings ===
-    // Default options for this microscope -> set pixel size manually instead
+    // Default options for the Zyla microscope
     "microscope_setup": {
         "option_default": null
     },
-        // {
+        // "option_default": {
         //     "sensor_pixel_size": 6.5e-6,
         //     "default_objective_mag": 4,
         //     "default_objective_reference_focal_length":  200e-3,
@@ -94,7 +95,7 @@
     // === override default microscope settings ===
     // provide pixel size manually {can be used instead of microscope_setup in system config}
     "pixel_size": {
-        "option_default": 222e-9
+        "option_default": 59.6e-9
     },
     // pixel_size = sensor_pixel_size * (focal length objective / focal length camera tube lens)
     // where tube lens is the lens that focuses onto the camera, and:
@@ -131,16 +132,16 @@
             false
         ]
     },
-    // ===========================================================================================
+	// ===========================================================================================
     // ======================== Region Of Interest (ROI) params ==================================
-    // ===========================================================================================
+	// ===========================================================================================
     // For taking a region of interest and ignoring the rest of the data set
     "ROI": {
-        "option_default": "Full",
-        "option_choices":
-            [
-                "Full",
-                "Rectangle"         ]
+    	"option_default": "Full",
+    	"option_choices":
+    		[
+    			"Full",
+    			"Rectangle"    		]
     },
     // Start of ROI region (indices, [start_x, start_y]) i.e. top left corner
     "ROI_start": {
@@ -154,16 +155,16 @@
     // ========== Regions for spectra comparision, before full pixel fitting ==========
     // single pixel location that is used
     "single_pixel_check": {
-        "option_default": [1, 1]
+    	"option_default": [1, 1]
     },
     // AOI: area of interest
     // start indices (top left corner) of area 1, [start_x, start_y]
     "AOI_1_start": {
-        "option_default": [1, 1]
+    	"option_default": [1, 1]
     },
     // end indices [end_x, end_y] of the square region of area 1
     "AOI_1_end": {
-        "option_default": [2, 2]
+    	"option_default": [2, 2]
     },
     // etc. for as many as you like: need to be copied/extended below if you want more AOIs
     "AOI_2_start": {
@@ -203,39 +204,39 @@
     },
     // overrides automatic reloading of previous fit results
     "force_fit": {
-        "option_default": false,
-        "option_choices":
-            [
-                true,
-                false
-            ]
+    	"option_default": false,
+    	"option_choices":
+    		[
+    			true,
+    			false
+    		]
     }, 
      // fits all of the required pixels, false ignores the pixel fitting
     "fit_pixels": {
-        "option_default": true,
-        "option_choices":
-            [
-                true,
-                false
-            ]
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false
+    		]
     },
     // fit pixels in a random order to give more accurate ETA
     "scramble_pixels": {
-        "option_default": true,
-        "option_choices":
-            [
-                true,
-                false
-            ]
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false
+    		]
     },
     // if 'false', uses init guesses below on each pixel, 'true' uses best fit to ROI average
     "use_ROI_avg_fit_res_for_all_pixels": {
-        "option_default": true,
-        "option_choices":
-            [
-                true,
-                false
-            ]
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false
+    		]
     },
     // user must set this one: the functions that make up your fit model (required)
     "fit_functions": {},
@@ -248,28 +249,28 @@
 
     // Position guess for lorentzian (in MHz)
     "pos_guess": {
-        "option_default": null
+    	"option_default": null
     },
     "pos_range": {
-        "option_default": 25
+    	"option_default": 25
     },
 
     // Amplitude of peak (trough)
     "amp_guess": {
-        "option_default": -0.0015
+    	"option_default": -0.0015
     },
 
     "amp_bounds": {
-        "option_default": [-0.0100, -0.0003]
+    	"option_default": [-0.0100, -0.0003]
     },
 
     // Full width half maximum of the peaks
     "fwhm_guess": {
-        "option_default": 9
+    	"option_default": 9
     },
 
     "fwhm_bounds": {
-        "option_default": [3, 40]
+    	"option_default": [3, 40]
     },
 
     // As above but for Gaussian
@@ -296,17 +297,17 @@
 
     // linear function (background)
     "c_guess": {
-        "option_default": 1
+    	"option_default": 1
     },
     "c_bounds": {
-        "option_default": [0.95,1.05]
+    	"option_default": [0.95,1.05]
     },
 
     "m_guess": {
-        "option_default": 0
+    	"option_default": 0
     },
     "m_bounds": {
-        "option_default": [-1e-4, 1e-4]
+    	"option_default": [-1e-4, 1e-4]
     },
 
     // constant background
@@ -352,17 +353,17 @@
     },
 
     "amp_h15_hyp_1_guess": {
-        "option_default": -0.015
+    	"option_default": -0.015
     },
     "amp_h15_hyp_2_guess": {
         "option_default": -0.015
     },
 
     "amp_h15_hyp_1_bounds": {
-        "option_default": [-0.1, -0.001]
+    	"option_default": [-0.1, -0.001]
     },
     "amp_h15_hyp_2_bounds": {
-        "option_default": [-0.1, -0.001]
+    	"option_default": [-0.1, -0.001]
     },
 
     "amp_h14_hyp_1_guess": {
@@ -768,16 +769,16 @@
             "MLE"
         ]
     },
-    // ===========================================================================================
+	// ===========================================================================================
     // =============================== Plotting Parameters =======================================
-    // ===========================================================================================
+	// ===========================================================================================
     "save_plots": {
-        "option_default": true,
-        "option_choices":
-            [
-                true,
-                false
-            ]
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false
+    		]
     },
     "show_scalebar": {
         "option_default": true,
@@ -789,21 +790,21 @@
     },
     // for ROI/AOI PL plots only
     "annotate_image_regions": {
-        "option_default": true,
-        "option_choices":
-            [
-                true,
-                false
-            ]
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false
+    		]
     },
     "save_fig_type":  {
-        "option_default": "png",
-        "option_choices":
-            [
-                "png",
-                "svg",
-                "pdf"
-            ]
+    	"option_default": "png",
+    	"option_choices":
+    		[
+    			"png",
+    			"svg",
+    			"pdf"
+    		]
     },
     // choose colormap used for each 'type' of image
     "colormaps": {

@@ -91,7 +91,7 @@
     },
 
     // === override default microscope settings ===
-    // provide pixel size manually
+    // provide pixel size manually {can be used instead of microscope_setup in system config}
     "pixel_size": {
         "option_default": null
     },
@@ -856,7 +856,8 @@
                 "type": "min_max"
             },
             "sigma_images": {
-                "type": "min_max"
+                "type": "percentile",
+                "valyes": [1, 99]
             },
             "PL_images": {
                 "type": "min_max"

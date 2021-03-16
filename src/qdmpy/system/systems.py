@@ -17,6 +17,8 @@ Classes
  - `qdmpy.system.systems.System`
  - `qdmpy.system.systems.UniMelb`
  - `qdmpy.system.systems.Zyla`
+ - `qdmpy.system.systems.LiamsWidefield`
+ - `qdmpy.system.systems.CryoWidefield`
  - `qdmpy.system.systems.OptionsError`
 
 
@@ -41,6 +43,8 @@ __pdoc__ = {
     "qdmpy.system.systems.System": True,
     "qdmpy.system.systems.UniMelb": True,
     "qdmpy.system.systems.Zyla": True,
+    "qdmpy.system.systems.LiamsWidefield": True,
+    "qdmpy.system.systems.CryoWidefield": True,
     "qdmpy.system.systems.OptionsError": True,
     "qdmpy.system.systems.check_option": True,
     "qdmpy.system.systems.check_options": True,
@@ -204,11 +208,21 @@ class UniMelb(System):
         default_keys = ["default_" + key for key in override_keys]
         default_keys.insert(0, "sensor_pixel_size")
         settings_dict = self.options_dict["microscope_setup"]["option_default"]
-        settings = [settings_dict[key] for key in default_keys]
+
+        def key_finder(key):
+            if key in settings_dict:
+                return settings_dict[key]
+            else:
+                return None  # avoid keyerrors
+
+        settings = [key_finder(key) for key in default_keys]
 
         for i, s in enumerate(override_keys):
             if options[s] is not None:
                 settings[i + 1] = options[s]  # +1 to skip sensor pixel size (set)
+
+        if None in settings:
+            raise ValueError("Insufficient microscope setup settings provided.")
 
         sensor_pixel_size, mag, f_ref, f_tube = settings
 
@@ -417,6 +431,15 @@ class LiamsWidefield(UniMelb):
 
     name = "Liam's Widefield"
     config_path = _CONFIG_PATH / "liam_widefield_config.json"
+
+
+class CryoWidefield(UniMelb):
+    """
+    Specific system details for Cryogenic (Attocube) widefield QDM.
+    """
+
+    name = "Cryo Widefield"
+    config_path = _CONFIG_PATH / "cryo_widefield_config.json"
 
 
 # ============================================================================

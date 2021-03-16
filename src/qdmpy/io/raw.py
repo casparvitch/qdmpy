@@ -54,6 +54,7 @@ import pathlib
 from collections import OrderedDict  # insertion order is guaranteed for py3.7+, but to be safe!
 import collections.abc
 import re
+from rebin import rebin
 
 # ============================================================================
 
@@ -467,22 +468,25 @@ def _rebin_image(options, image):
         if options["additional_bins"] != 1 and options["additional_bins"] % 2:
             raise RuntimeError("The binning parameter needs to be a multiple of 2.")
 
-        data_pts = image.shape[0]
-        height = image.shape[1]
-        width = image.shape[2]
-        image_rebinned = (
-            np.reshape(
-                image,
-                [
-                    data_pts,
-                    int(height / options["additional_bins"]),
-                    options["additional_bins"],
-                    int(width / options["additional_bins"]),
-                    options["additional_bins"],
-                ],
-            )
-            .sum(2)
-            .sum(3)
+        # data_pts = image.shape[0]
+        # height = image.shape[1]
+        # width = image.shape[2]
+        # image_rebinned = (
+        #     np.reshape(
+        #         image,
+        #         [
+        #             data_pts,
+        #             int(height / options["additional_bins"]),
+        #             options["additional_bins"],
+        #             int(width / options["additional_bins"]),
+        #             options["additional_bins"],
+        #         ],
+        #     )
+        #     .sum(2)
+        #     .sum(3)
+        # ) # old version... moving to rebin package
+        image_rebinned = rebin(
+            image, factor=(1, options["additional_bins"], options["additional_bins"]), func=np.mean
         )
 
     # define sig and ref differently if we're using a ref

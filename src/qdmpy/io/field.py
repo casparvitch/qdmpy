@@ -383,12 +383,14 @@ def check_for_prev_field_calc(options):
 
     # first find prev_options
     if not options["force_field_calc"]:
-        if not qdmpy.io.fit._options_compatible(options, qdmpy.io.fit._get_prev_options(options)):
-            options["found_prev_field_calc"] = False
-            options["found_prev_field_calc_reason"] = "incompatible fit options"
-        elif not qdmpy.io.fit._prev_options_exist(options):
+        if not qdmpy.io.fit._prev_options_exist(options):
             options["found_prev_field_calc"] = False
             options["found_prev_field_calc_reason"] = "couldn't find previous options"
+        elif not qdmpy.io.fit._options_compatible(
+            options, qdmpy.io.fit._get_prev_options(options)
+        ):
+            options["found_prev_field_calc"] = False
+            options["found_prev_field_calc_reason"] = "incompatible fit options"
         elif not (res := _field_options_compatible(options))[0]:
             options["found_prev_field_calc"] = False
             options["found_prev_field_calc_reason"] = "option not compatible: " + res[1]

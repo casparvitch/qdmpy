@@ -63,7 +63,11 @@ import qdmpy.hamiltonian._hamiltonians
 # ============================================================================
 
 
-SYSTEMS = {"Zyla": qdmpy.system.Zyla, "Liams_Widefield": qdmpy.system.LiamsWidefield}
+SYSTEMS = {
+    "Zyla": qdmpy.system.Zyla,
+    "Liams_Widefield": qdmpy.system.LiamsWidefield,
+    "Cryo_Widefield": qdmpy.system.CryoWidefield,
+}
 """
 Dictionary that defines systems available for use.
 

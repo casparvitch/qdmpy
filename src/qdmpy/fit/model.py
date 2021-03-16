@@ -126,7 +126,7 @@ class FitModel:
     def jacobian_defined(self):
         """Check if analytic jacobian is defined for this fit model."""
         for i, fn in enumerate(self.fn_chain):
-            dummy_params = np.array([0 for i in range(len(fn.param_defn))])
+            dummy_params = np.array([1 for i in range(len(fn.param_defn))])
             if fn.grad_fn(np.array([0]), *dummy_params) is None:
                 return False
         return True

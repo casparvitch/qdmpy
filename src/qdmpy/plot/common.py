@@ -59,7 +59,10 @@ def set_mpl_rcparams(options):
     for optn, val in options["mpl_rcparams"].items():
         if type(val) == list:
             val = tuple(val)
-        mpl.rcParams[optn] = val
+        try:
+            mpl.rcParams[optn] = val
+        except KeyError:
+            warnings.warn(f"mpl rcparams key '{optn}' not recognised as a valid rc parameter.")
 
 
 # ===========================================================================
