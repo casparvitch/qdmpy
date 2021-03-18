@@ -10,6 +10,7 @@ Functions
  - `qdmpy.field.interface.sub_bground_bnvs`
  - `qdmpy.field.interface.field_sigma_add`
  - `qdmpy.field.interface.get_B_bias`
+ - `qdmpy.field.interface.add_bfield_reconstructed`
 """
 # ============================================================================
 
@@ -21,6 +22,7 @@ __pdoc__ = {
     "qdmpy.field.interface.sub_bground_bnvs": True,
     "qdmpy.field.interface.field_sigma_add": True,
     "qdmpy.field.interface.get_B_bias": True,
+    "qdmpy.field.interface.add_bfield_reconstructed": True,
 }
 # ============================================================================
 
@@ -32,8 +34,10 @@ import numpy as np
 import qdmpy.field._bnv as Qbnv
 import qdmpy.field._bxyz as Qbxyz
 import qdmpy.field._geom as Qgeom
+
 import qdmpy.io as Qio
 import qdmpy.itool as Qitool
+import qdmpy.fourier
 
 # ============================================================================
 
@@ -140,9 +144,6 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
         warnings.warn("Using previous field calculation.")
 
         bnv_lst, dshift_lst, params_lst, sigmas_lst = Qio.load_prev_field_calcs(options)
-        # Qgeom.add_bfield_reconstructed(params_lst[0])
-        # Qgeom.add_bfield_reconstructed(params_lst[1])
-        # Qgeom.add_bfield_reconstructed(params_lst[2])
 
         if options["bfield_bground_method"]:
             params_lst[2], sigmas_lst[2] = sub_bground_Bxyz(
@@ -152,6 +153,18 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
                 method=options["bfield_bground_method"],
                 **options["bfield_bground_params"],
             )
+
+        if options["bnv_bground_method"]:
+            bnv_lst[2] = sub_bground_bnvs(
+                options,
+                bnv_lst[2],
+                method=options["bnv_bground_method"],
+                **options["bnv_bground_params"],
+            )
+
+        add_bfield_reconstructed(options, params_lst[0])
+        add_bfield_reconstructed(options, params_lst[1])
+        add_bfield_reconstructed(options, params_lst[2])
 
         if params_lst[0] is not None:
             options["field_params"] = tuple(params_lst[0].keys())
@@ -189,10 +202,6 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
             ref_params, ref_sigmas = Qbxyz.from_hamiltonian_fitting(options, ref_fit_params)
 
         sub_ref_params = field_refsub(options, sig_params, ref_params)
-        # for checking self-consistency (e.g. calc Bx from Bz via fourier methods) TODO
-        # Qgeom.add_bfield_reconstructed(sig_params)
-        # Qgeom.add_bfield_reconstructed(ref_params)
-        # Qgeom.add_bfield_reconstruczted(sub_ref_params)
 
         # both params and sigmas need a sub_ref method
         bnv_lst = [sig_bnvs, ref_bnvs, Qbnv.bnv_refsub(options, sig_bnvs, ref_bnvs)]
@@ -208,6 +217,19 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
                 method=options["bfield_bground_method"],
                 **options["bfield_bground_params"],
             )
+
+        if options["bnv_bground_method"]:
+            bnv_lst[2] = sub_bground_bnvs(
+                options,
+                bnv_lst[2],
+                method=options["bnv_bground_method"],
+                **options["bnv_bground_params"],
+            )
+
+        # for checking self-consistency (e.g. calc Bx from Bz via fourier methods)
+        add_bfield_reconstructed(options, sig_params)
+        add_bfield_reconstructed(options, ref_params)
+        add_bfield_reconstructed(options, sub_ref_params)
 
         if sig_params is not None:
             options["field_params"] = tuple(sig_params.keys())
@@ -386,7 +408,44 @@ def sub_bground_Bxyz(options, field_params, field_sigmas, method, **method_setti
 def sub_bground_bnvs(options, bnvs, method, **method_settings):
     """Subtract a background from the bnvs.
 
-    Methods available for background calculation: TODO
+    Methods available:
+        - "fix_zero"
+            - Fix background to be a constant offset (z value)
+            - params required in method_params_dict:
+                "zero" an int/float, defining the constant offset of the background
+        - "three_point"
+            - Calculate plane background with linear algebra from three [x,y] lateral positions
+              given
+            - params required in method_params_dict:
+                - "points" a len-3 iterable containing [x, y] points
+        - "mean"
+            - background calculated from mean of image
+            - no params required
+        - "poly"
+            - background calculated from polynomial fit to image.
+            - params required in method_params_dict:
+                - "order": an int, the 'order' polynomial to fit. (e.g. 1 = plane).
+        - "gaussian"
+            - background calculated from gaussian fit to image.
+            - no params required
+        - "interpolate"
+            - Background defined by the dataset smoothed via a sigma-gaussian filtering,
+                and method-interpolation over masked (polygon) regions.
+            - params required in method_params_dict:
+                - "interp_method": nearest, linear, cubic.
+                - "sigma": sigma passed to gaussian filter (see scipy.ndimage.gaussian_filter)
+                    which is utilized on the background before interpolating
+        - "gaussian_filter"
+            - background calculated from image filtered with a gaussian filter.
+            - params required in method_params_dict:
+                - "sigma": sigma passed to gaussian filter (see scipy.ndimage.gaussian_filter)
+
+    polygon utilization:
+        - if method is not interpolate, the image is masked where the polygons are
+          and the background is calculated without these regions
+        - if the method is interpolate, these regions are interpolated over (and the rest
+          of the image, gaussian smoothed, is 'background').
+
 
     Arguments
     ---------
@@ -411,8 +470,6 @@ def sub_bground_bnvs(options, bnvs, method, **method_settings):
         polygons = None
     output_bnvs = []
     for bnv in bnvs:
-        if not bnvs:
-            continue
         bground = Qitool.get_background(bnv, method, polygons=polygons, **method_settings)
         output_bnvs.append(bnv - bground)
 
@@ -467,3 +524,104 @@ def get_B_bias(options):
         (bx, by, bz) for the bias field, in Gauss.
     """
     return Qgeom.get_B_bias(options)
+
+
+# ============================================================================
+
+
+def add_bfield_reconstructed(options, field_params):
+    r"""Bxyz measured -> Bxyz_recon via fourier methods. Adds Bx_recon etc. to field_params.
+
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options (for the main/signal experiment).
+    field_params : dict
+        Dictionary, key: param_keys, val: image (2D) of (field) param values across FOV.
+
+    Returns
+    -------
+    nothing (operates in place on field_params)
+
+    For a proper explanation of methodology, see [CURR_RECON]_.
+
+    $$  \nabla \times {\bf B} = 0 $$
+
+    to get Bx_recon and By_recon from Bz (in a source-free region), and
+
+    $$ \nabla \cdot {\bf B} = 0 $$
+
+    to get Bz_recon from Bx and By
+
+    Start with e.g.:
+
+    $$ \frac{\partial B_x^{\rm recon}}{\partial z} = \frac{\partial B_z}{\partial x} $$
+
+    with the definitions
+
+    $$ \hat{B}:=  \hat{\mathcal{F}}_{xy} \big\{ B \big\} $$
+
+    and
+
+    $$ k = \sqrt{k_x^2 + k_y^2} $$
+
+    we have:
+
+    $$ \frac{\partial }{\partial z} \hat{B}_x^{\rm recon}(x,y,z=z_{\rm NV}) = i k_x \hat{B}_z(x,y, z=z_{\rm NV}) $$.
+
+    Now using upward continuation [CURR_RECON]_ to evaluate the z partial:
+
+    $$ -k \hat{B}_x^{\rm recon}(x,y,z=z_{\rm NV}) = i k_x \hat{B}_z(k_x, k_y, z_{\rm NV}) $$
+
+    such that for
+
+    $$ k \neq 0 $$
+
+    we have (analogously for y)
+
+    $$ (\hat{B}_x^{\rm recon}(x,y,z=z_{\rm NV}), \hat{B}_y^{\rm recon}(x,y,z=z_{\rm NV})) = \frac{-i}{k} (k_x, k_y) \hat{B}_z(x,y,,z=z_{\rm NV}) $$
+
+
+    Utilising the zero-divergence property of the magnetic field, it can also be shown:
+
+    $$ \hat{B}_z^{\rm recon}(x,y,z=z_{\rm NV}) = \frac{i}{k} \left( k_x \hat{B}_x(x,y,z=z_{\rm NV}) + k_y \hat{B}_y(x,y,z=z_{\rm NV}) \right) $$
+
+
+    References
+    ----------
+    .. [CURR_RECON] E. A. Lima and B. P. Weiss, Obtaining Vector Magnetic Field Maps from
+                    Single-Component Measurements of Geological Samples, Journal of Geophysical
+                    Research: Solid Earth 114, (2009).
+    """
+    # first check if Bx, By, Bz in fit_params
+    # extract them
+    if field_params is None:
+        return None
+
+    components = ["x", "y", "z"]
+
+    for p in ["B" + comp for comp in components]:
+        if p not in field_params:
+            warnings.warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
+            return None
+        elif field_params[p] is None:
+            return None
+
+    bx, by, bz = [field_params["B" + comp] for comp in components]
+
+    bx_recon, by_recon, bz_recon = qdmpy.fourier.get_reconstructed_bfield(
+        [bx, by, bz],
+        options["fourier_pad_mode"],
+        options["fourier_pad_factor"],
+        options["system"].get_raw_pixel_size(options) * options["total_bin"],
+        options["fourier_k_vector_epsilon"],
+        options["fourier_do_hanning_filter"],
+        options["fourier_hanning_low_cutoff"],
+        options["fourier_hanning_high_cutoff"],
+    )
+    field_params["Bx_recon"] = bx_recon
+    field_params["By_recon"] = by_recon
+    field_params["Bz_recon"] = bz_recon
+
+    return None

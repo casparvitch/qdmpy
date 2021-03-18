@@ -563,7 +563,6 @@
 
     // ========== Bfield background subtraction parameters ===========
     // Method for bfield background subtraction (or null to avoid)
-    // TODO: how do they handle polygons? what documentation to put here?
     // Descriptions
     // ------------
     //  - fix_zero: constant offset, set zero to chosen value (key 'zero' in bfield_bground_params)
@@ -767,6 +766,50 @@
             "MLE"
         ]
     },
+    // ===========================================================================================
+    // ===============================  Fourier Parameters =======================================
+    // ===========================================================================================
+    // padding mode, see np.pad
+    "fourier_pad_mode": {
+        "option_default": "mean",
+        "option_choices": [
+            "constant",
+            "edge",
+            "linear_ramp",
+            "maximum",
+            "mean",
+            "median",
+            "minimum",
+            "reflect",
+            "symmetric",
+            "wrap",
+            "empty"
+        ]
+    },
+    // factor of image dimensions to pad by (on each side, e.g. 2 pad -> 2 either side of imgage)
+    "fourier_pad_factor": {
+        "option_default": 2
+    },
+    // add an epsilon value to the k-vectors to avoid some issues with 1/0. False/null/0 to not use
+    "fourier_k_vector_epsilon": {
+        "option_default": 1e-6
+    },
+    // use hanning filter in fourier space (for all transformations)
+    "fourier_do_hanning_filter": {
+        "option_default": true,
+        "option_choices": [
+            true, 
+            false
+        ]
+    },
+    // cutoff freqs (for bandpass hanning) -> give as a distance (k = 2pi/cutoff). 1e-6/1e-3
+    "fourier_hanning_high_cutoff": {
+        "option_default": null
+    },
+    "fourier_hanning_low_cutoff": {
+        "option_default": null
+    },
+
 	// ===========================================================================================
     // =============================== Plotting Parameters =======================================
 	// ===========================================================================================

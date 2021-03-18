@@ -10,6 +10,7 @@ Functions
  - `qdmpy.plot.field.plot_field_residual`
  - `qdmpy.plot.field.plot_field_param`
  - `qdmpy.plot.field.plot_field_param_flattened`
+ - `qdmpy.plot.field.plot_bfield_consistency`
 """
 
 # ============================================================================
@@ -22,6 +23,7 @@ __pdoc__ = {
     "qdmpy.plot.fields.plot_field_residual": True,
     "qdmpy.plot.fields.plot_field_param": True,
     "qdmpy.plot.fields.plot_field_param_flattened": True,
+    "qdmpy.plot.fields.plot_bfield_consistency": True,
 }
 
 # ============================================================================
@@ -524,10 +526,75 @@ def plot_efield(options, name, field_params):
 # ============================================================================
 
 
-def plot_bfield_consistency(options, field_params):
-    # check Bxyz, Bxyz_recon
-    # TODO!!! + include documentation as you do it.
-    raise NotImplementedError()
+def plot_bfield_consistency(options, name, field_params):
+    """plot bfield vs bfield_recon
+
+    Parameters
+    ----------
+    options : dict
+        Generic options dict holding all the user options.
+    name : str
+        Name of these results (e.g. sig, ref, sig sub ref etc.) for titles and filenames.
+    field_params : dict
+        Dictionary, key: param_keys, val: image (2D) of (field) param values across FOV.
+
+    Returns
+    -------
+    fig : matplotlib Figure object
+    """
+
+    if field_params is None:
+        return None
+
+    components = ["x", "y", "z"]
+
+    for p in ["B" + comp for comp in components]:
+        if p not in field_params:
+            warnings.warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
+            return None
+        elif field_params[p] is None:
+            return None
+    for p in ["B" + comp + "_recon" for comp in components]:
+        if p not in field_params:
+            warnings.warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
+            return None
+        elif field_params[p] is None:
+            return None
+
+    bfields = [field_params["B" + comp] for comp in components]
+    bfield_recons = [field_params["B" + comp + "_recon"] for comp in components]
+
+    figsize = mpl.rcParams["figure.figsize"].copy()
+    width = 3
+    height = 2  # number of rows
+    figsize[0] *= width  # number of columns
+    figsize[1] *= height
+
+    fig, ax = plt.subplots(height, width, figsize=figsize, constrained_layout=True)
+
+    c_map = options["colormaps"]["bfield_images"]
+
+    bfield_ranges = []  # store bfield map cmap ranges to use for recon as well
+    for i, bcomponent in enumerate(bfields):
+        c_range = plot_common._get_colormap_range(
+            options["colormap_range_dicts"]["bfield_images"], bcomponent
+        )
+        bfield_ranges.append(c_range)
+        title = "B" + components[i]
+        plot_common.plot_image_on_ax(
+            fig, ax[0, i], options, bcomponent, title, c_map, c_range, "B (G)"
+        )
+
+    for i, bcomp_recon in enumerate(bfield_recons):
+        title = "B" + components[i] + "_recon"
+        plot_common.plot_image_on_ax(
+            fig, ax[1, i], options, bcomp_recon, title, c_map, bfield_ranges[i], "B (G)"
+        )
+
+    if options["save_plots"]:
+        fig.savefig(options["field_dir"] / (f"Bfield_{name}_recon." + options["save_fig_type"]))
+
+    return fig
 
 
 # ============================================================================

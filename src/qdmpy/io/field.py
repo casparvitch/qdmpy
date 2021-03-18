@@ -11,6 +11,8 @@ Functions
  - `qdmpy.io.field.load_prev_field_calcs`
  - `qdmpy.io.field.load_prev_bnvs_and_dshifts`
  - `qdmpy.io.field.load_prev_field_params`
+ - `qdmpy.io.field.load_prev_bnvs_and_dshifts`
+ - `qdmpy.io.field.load_prev_field_sigmas`
  - `qdmpy.io.field.load_field_param`
  - `qdmpy.io.field.load_field_sigma`
  - `qdmpy.io.field.load_arb_field_param`
@@ -269,11 +271,20 @@ def load_prev_field_params(options, name):
     field_params : dict
         Dictionary, key: param_keys, val: image (2D) of field param values across FOV.
     """
+
     prev_options = qdmpy.io.fit._get_prev_options(options)
+
+    load_params = prev_options["field_params"]
+    remove_these_params = [
+        "Bx_recon",
+        "By_recon",
+        "Bz_recon",
+    ]
+    load_params = filter(lambda x: x not in remove_these_params, load_params)
 
     field_param_dict = {}
 
-    for param in prev_options["field_params"]:
+    for param in load_params:
         field_param_dict[param] = load_field_param(options, name, param)
 
     return field_param_dict
@@ -300,9 +311,17 @@ def load_prev_field_sigmas(options, name):
     """
     prev_options = qdmpy.io.fit._get_prev_options(options)
 
+    load_params = prev_options["field_params"]
+    remove_these_params = [
+        "Bx_recon",
+        "By_recon",
+        "Bz_recon",
+    ]
+    load_params = filter(lambda x: x not in remove_these_params, load_params)
+
     sigmas_dict = {}
 
-    for param in prev_options["field_params"]:
+    for param in load_params:
         if param == "residual_field":
             continue
         sigmas_dict[param] = load_field_sigma(options, name, param)

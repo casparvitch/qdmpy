@@ -34,12 +34,13 @@ import qdmpy.fourier
 
 def from_single_bnv(options, bnvs):
     """
-    TODO
     Use fourier propagation to take a single bnv to vector field (Bx, By, Bz).
     Heavily influenced by propagation artifacts.
 
     Arguments
     ---------
+    options : dict
+        Generic options dict holding all the user options.
     bnvs : list
         List of np arrays (2D) giving B_NV for each NV family/orientation.
         If num_peaks is odd, the bnv is given as the shift of that peak,
@@ -56,20 +57,21 @@ def from_single_bnv(options, bnvs):
         return None
 
     chosen_freqs = options["freqs_to_use"]
-    if not all(list(reversed(chosen_freqs[4:])) == chosen_freqs[:4]):
+    if len(bnvs) > 1 and not list(reversed(chosen_freqs[4:])) == chosen_freqs[:4]:
         raise ValueError(
             """
-            'field_method' method was 'prop_single_bnv' but option 'freqs_to_use' was not
-            symmetric. Change method to 'auto_dc' or 'hamiltonian_fitting'.
+            'field_method' method was 'prop_single_bnv' with more than one bnv,
+            but option 'freqs_to_use' was not symmetric. 
+            Change method to 'auto_dc' or 'hamiltonian_fitting'.
             """
         )
-    if sum(chosen_freqs) != 2:
+    if len(bnvs) > 1 and sum(chosen_freqs) != 2:
         raise ValueError("Only 2 freqs should be chosen for the 'prop_single_bnv' method.")
 
     unvs = Qgeom.get_unvs(options)
     if len(bnvs) == 1:  # just use the first one (i.e. the only one...)
         single_bnv = bnvs[0]
-        single_unv = bnvs[0]
+        unv = unvs[0]
     elif len(bnvs) == 4:  # just use the chosen freq
         idx = np.argwhere(np.array(chosen_freqs[:4]) == 1)[0][0]
         single_bnv = bnvs[idx]
@@ -81,12 +83,22 @@ def from_single_bnv(options, bnvs):
     # (get unv data from chosen freqs, method in _geom)
     # (then follow methodology in DB code -> import a `fourier` module)
 
-    bxyzs = qdmpy.fourier.prop_single_bnv(options, single_bnv, unv)
+    bxyzs = qdmpy.fourier.prop_single_bnv(
+        single_bnv,
+        unv,
+        options["fourier_pad_mode"],
+        options["fourier_pad_factor"],
+        options["system"].get_raw_pixel_size(options) * options["total_bin"],
+        options["fourier_k_vector_epsilon"],
+        options["fourier_do_hanning_filter"],
+        options["fourier_hanning_high_cutoff"],
+        options["fourier_hanning_low_cutoff"],
+    )
     return {
-        "Bx": bxyzs[:, :, 0],
-        "By": bxyzs[:, :, 1],
-        "Bz": bxyzs[:, :, 2],
-        "residual_field": np.zeros((bxyzs[:, :, 2]).shape),  # no residual as there's no fit
+        "Bx": bxyzs[0],
+        "By": bxyzs[1],
+        "Bz": bxyzs[2],
+        "residual_field": np.zeros((bxyzs[2]).shape),  # no residual as there's no fit
     }
 
 

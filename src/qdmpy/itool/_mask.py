@@ -53,11 +53,10 @@ def mask_polygons(image, polygons=None):
     ylen, xlen = image.shape
     masked_area = np.full(image.shape, True)  # all masked to start with
 
-    # coordinate grid for all coordinates TODO check the 'ij' indexing here... (I think xy...)
     grid_y, grid_x = np.meshgrid(range(ylen), range(xlen), indexing="ij")
 
     for p in polygons:
-        in_or_out = p.is_inside(grid_y, grid_x)  # NOTE ensure polygon has same indexing convention
+        in_or_out = p.is_inside(grid_y, grid_x)
         # mask all vals that are not background
         m = np.ma.masked_greater_equal(in_or_out, 0).mask
         masked_area = np.logical_and(masked_area, ~m)
