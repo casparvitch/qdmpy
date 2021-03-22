@@ -337,10 +337,7 @@ def plot_field_param(
     )
 
     if options["save_plots"]:
-        fig.savefig(
-            options["field_dir"]
-            / (f"residual_field_{name}_{param_name}." + options["save_fig_type"])
-        )
+        fig.savefig(options["field_dir"] / (f"{param_name}_{name}." + options["save_fig_type"]))
 
 
 # ============================================================================

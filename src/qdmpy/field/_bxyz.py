@@ -61,7 +61,7 @@ def from_single_bnv(options, bnvs):
         raise ValueError(
             """
             'field_method' method was 'prop_single_bnv' with more than one bnv,
-            but option 'freqs_to_use' was not symmetric. 
+            but option 'freqs_to_use' was not symmetric.
             Change method to 'auto_dc' or 'hamiltonian_fitting'.
             """
         )

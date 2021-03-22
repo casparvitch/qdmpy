@@ -29,6 +29,7 @@ Module variables
  - `qdmpy.constants.SYSTEMS`
  - `qdmpy.constants.AVAILABLE_FNS`
  - `qdmpy.constants.GAMMA`
+ - `qdmpy.constants.MU_0`
  - `qdmpy.constants.S_MAT_X`
  - `qdmpy.constants.S_MAT_Y`
  - `qdmpy.constants.S_MAT_Z`
@@ -43,6 +44,7 @@ __pdoc__ = {
     "qdmpy.constants.AVAILABLE_FNS": True,
     "qdmpy.constants.choose_system": True,
     "qdmpy.constants.GAMMA": True,
+    "qdmpy.constants.MU_0": True,
     "qdmpy.constants.S_MAT_X": True,
     "qdmpy.constants.S_MAT_Y": True,
     "qdmpy.constants.S_MAT_Z": True,
@@ -134,6 +136,11 @@ for details of the g-factor anisotropy.
 | \( g_e \approx 2.0023 \)                                         |  [Doherty2013](https://doi.org/10.1016/j.physrep.2013.02.001) |
 | \( \Rightarrow  \gamma_{\rm NV} \approx 2.80 {\rm MHz/G} \)      |                                                               |
 
+"""
+
+MU_0 = np.pi * 1e-7
+"""
+Vacuum permeability
 """
 
 # NOTE for other NV orientations, pass in unvs -> not possible to determine in full

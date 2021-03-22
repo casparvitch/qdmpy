@@ -2,3 +2,5 @@
 """
 TODO module for inverting fields to calculate their source (field...)
 """
+
+from source.interface import *

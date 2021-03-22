@@ -895,7 +895,7 @@
         "option_default": {
             "param_images": {
                 "type": "percentile",
-                "values": [5, 95]
+                "values": [1, 99]
             },
             "residual_images": {
                 "type": "min_max"
@@ -909,11 +909,11 @@
             },
             "bnv_images": {
                 "type": "percentile",
-                "values": [5, 95]
+                "values": [1, 99]
             },
             "dshift_images": {
                 "type": "percentile",
-                "values": [5, 95]
+                "values": [1, 99]
             },
             "bfield_images": {
                 "type": "min_max"

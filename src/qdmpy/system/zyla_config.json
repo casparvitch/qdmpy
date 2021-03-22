@@ -810,6 +810,55 @@
         "option_default": null
     },
 
+    // ===========================================================================================
+    // ============================= Source Recon Parameters ====================================
+    // ===========================================================================================
+    // type of source to reconstruct to
+    "source_type": {
+        "option_default": "current_density",
+        "option_choices": [
+            "current_density",
+            "out_of_plane_magnetisation",
+            "in_plane_magnetisation"
+        ]
+    },
+
+    // average distance NV layer <-> sample, or null to not use
+    "standoff": {
+        "option_default": null
+    },
+
+
+    // Reconstruction method for B -> J
+    // see e.g. Broadway 2020 http://dx.doi.org/10.1103/PhysRevApplied.14.024076
+    "current_recon_method": {
+        "option_default": "from_bxy",
+        "option_choices": [
+            "from_bxy",
+            "from_bz",
+            "from_bnv"
+        ]
+    },
+
+    // If using from_bnv, set the index in bnvs (and unvs) to use for current recon. If null, uses 0
+    // (i.e. outermost peaks).
+    "current_recon_unv_index": {
+        "option_default": null,
+        "option_choices": [
+            0,
+            1,
+            2,
+            3
+        ]
+    },
+
+    // Region to use for zero-point normalisation. I.e. mean of this region is subtracted from
+    // Jx and Jy. (Or null to not normalise). 
+    // Format: [[x_top_left, y_top_left], [x_bot_right, y_bot_right], where y is from top to bottom.
+    "current_zero_point_normalisation_region": {
+        "option_default": null,
+    },
+
 	// ===========================================================================================
     // =============================== Plotting Parameters =======================================
 	// ===========================================================================================
@@ -856,7 +905,11 @@
             "PL_images": "Greys_r",
             "bnv_images": "RdBu_r",
             "dshift_images": "PRGn",
-            "bfield_images": "bwr"
+            "bfield_images": "bwr",
+            "source_images": "viridis",
+            "current_vector_images": "PRGn",
+            "current_norm_images": "turbo",
+            "magnetisation_images": "PuOr"
         }
     },
     // =========== Colormap Ranges ===========
@@ -893,7 +946,7 @@
         "option_default": {
             "param_images": {
                 "type": "percentile",
-                "values": [5, 95]
+                "values": [1, 99]
             },
             "residual_images": {
                 "type": "min_max"
@@ -907,14 +960,29 @@
             },
             "bnv_images": {
                 "type": "percentile",
-                "values": [5, 95]
+                "values": [1, 99]
             },
             "dshift_images": {
                 "type": "percentile",
-                "values": [5, 95]
+                "values": [1, 99]
             },
             "bfield_images": {
                 "type": "min_max"
+            },
+            "source_images": {
+                "type": "min_max"
+            },
+            "current_vector_images": {
+                "type": "strict_range",
+                "values": [0, 50]
+            },
+            "current_norm_images": {
+                "type": "strict_range",
+                "values": [0, 50]
+            },
+            "magnetisation_images": {
+                "type": "percentile",
+                "values": [1, 99]
             }
         }
     },
@@ -981,6 +1049,14 @@
             }
         }
     },
+    // fit options for streamplot (passed as **options["streamplot_options"])
+    "streamplot_options" : {
+        "option_default": {
+            "density": 2.5,
+            "linewidth": 0.5,
+            "arrowsize": 0.5
+        }
+    },
     // ===========================================================================================
     // Things set internally, allow to be anything
 
@@ -1025,6 +1101,7 @@
     "field_dir": {},
     "field_sig_dir": {},
     "field_ref_dir": {},
+    "field_sig_sub_ref_dir": {},
     "field_method_used" : {},
     // name of field params used in field retrieval model
     "field_params" : {},
@@ -1035,5 +1112,10 @@
     // list of list of nodes, a list for each polygon
     "polygon_nodes": {},
     // list of polygon objects
-    "polygons": {}
+    "polygons": {},
+    // source result dictionaries
+    "source_dir": {},
+    "source_sig_dir": {},
+    "source_ref_dir": {},
+    "source"
 }

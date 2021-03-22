@@ -10,6 +10,7 @@ Functions
  - `qdmpy.field.interface.sub_bground_bnvs`
  - `qdmpy.field.interface.field_sigma_add`
  - `qdmpy.field.interface.get_B_bias`
+ - `qdmpy.field.interface.get_unvs`
  - `qdmpy.field.interface.add_bfield_reconstructed`
 """
 # ============================================================================
@@ -22,6 +23,7 @@ __pdoc__ = {
     "qdmpy.field.interface.sub_bground_bnvs": True,
     "qdmpy.field.interface.field_sigma_add": True,
     "qdmpy.field.interface.get_B_bias": True,
+    "qdmpy.field.interface.get_unvs": True,
     "qdmpy.field.interface.add_bfield_reconstructed": True,
 }
 # ============================================================================
@@ -524,6 +526,26 @@ def get_B_bias(options):
         (bx, by, bz) for the bias field, in Gauss.
     """
     return Qgeom.get_B_bias(options)
+
+
+# ============================================================================
+
+
+def get_unvs(options):
+    """
+    Returns orientation (relative to lab frame) of NVs. Shape: (4,3) regardless of sample.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    unvs : np array
+        Shape: (4,3). Equivalent to uNV_Z for each NV.
+    """
+    return Qgeom.get_unvs(options)
 
 
 # ============================================================================

@@ -16,12 +16,14 @@ This (sub-) package exposes specific functions to the user:
     - `qdmpy.plot.fit.plot_param_image`
     - `qdmpy.plot.fit.plot_param_images`
 - `qdmpy.plot.field`, currently all contents
+- `qdmpy.plot.source`, currently all contents
 """
 __author__ = "Sam Scholten"
 __pdoc__ = {
     "qdmpy.plot.common": True,
     "qdmpy.plot.field": True,
     "qdmpy.plot.fit": True,
+    "qdmpy.plot.source": True,
 }
 
 from qdmpy.plot.common import *
@@ -29,3 +31,5 @@ from qdmpy.plot.common import *
 from qdmpy.plot.fit import *
 
 from qdmpy.plot.field import *
+
+from qdmpy.plot.source import *
