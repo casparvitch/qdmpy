@@ -20,7 +20,7 @@ from pathlib import Path
 
 
 def prep_output_directories(options):
-    options["source_dir"] = options["output_dir"].joinpath("field")
+    options["source_dir"] = options["output_dir"].joinpath("source")
     if not os.path.isdir(options["source_dir"]):
         os.mkdir(options["source_dir"])
 

@@ -10,26 +10,17 @@ Functions
 # ============================================================================
 
 __author__ = "Sam Scholten"
-__pdoc__ = {
-    "qdmpy.plot.fields.plot_bnvs_and_dshifts": True,
-    "qdmpy.plot.fields.plot_bfield": True,
-    "qdmpy.plot.fields.plot_dshift_fit": True,
-    "qdmpy.plot.fields.plot_field_residual": True,
-    "qdmpy.plot.fields.plot_field_param": True,
-    "qdmpy.plot.fields.plot_field_param_flattened": True,
-    "qdmpy.plot.fields.plot_bfield_consistency": True,
-}
+__pdoc__ = {"qdmpy.plot.source.": True}
 
 # ============================================================================
 
 import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
+import matplotlib.patches
 from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
-import warnings
-
 from matplotlib_scalebar.scalebar import ScaleBar
-from matplotlib_scalebar.scalebar import SI_LENGTH
+import warnings
 
 # ============================================================================
 
@@ -123,16 +114,18 @@ def plot_current(options, source_params):
     fig, ax = plt.subplots(height, width, figsize=figsize, constrained_layout=True)
 
     for i, comp in enumerate(components.keys()):
-        key = components[comp]
-        jmap = source_params[comp]
+        ckey = components[comp]
+        jmap = source_params["J" + comp]
 
-        c_range = plot_common._get_colormap_range(options["colormap_range_dicts"][key], jmap)
-        c_map = options["colormaps"][key]
+        c_range = plot_common._get_colormap_range(options["colormap_range_dicts"][ckey], jmap)
+        c_map = options["colormaps"][ckey]
 
-        plot_common.plot_image_on_ax(fig, ax[i], options, jmap, comp, c_map, c_range, "J (A/m)")
+        plot_common.plot_image_on_ax(
+            fig, ax[i], options, jmap, "J" + comp, c_map, c_range, "J (A/m)"
+        )
 
     if options["save_plots"]:
-        fig.savefig(options["source_dir"] / (f"{comp}." + options["save_fig_type"]))
+        fig.savefig(options["source_dir"] / (f"J{comp}." + options["save_fig_type"]))
 
     return fig
 
@@ -157,7 +150,7 @@ def plot_stream(options, source_params, PL_image_ROI=None):
             cmap="Greys_r",
             vmin=np.nanmin(PL_image_ROI),
             vmax=np.nanmax(PL_image_ROI),
-            alpha=0.0,
+            alpha=options["streamplot_PL_alpha"],
         )
 
     shp = source_params["Jx"].shape
@@ -172,14 +165,28 @@ def plot_stream(options, source_params, PL_image_ROI=None):
         **options["streamplot_options"],
     )
 
-    ax.set_title(title)
+    divider = make_axes_locatable(ax)
+    aspect = 20
+    pad_fraction = 1
+    width = axes_size.AxesY(ax, aspect=1.0 / aspect)
+    pad = axes_size.Fraction(pad_fraction, width)
+    cax = divider.append_axes("right", size=width, pad=pad)
+
+    cbar = fig.colorbar(strm.lines, cax=cax)
+
+    tick_locator = matplotlib.ticker.MaxNLocator(nbins=5)
+    cbar.locator = tick_locator
+    cbar.update_ticks()
+    cbar.ax.get_yaxis().labelpad = 10
+    cbar.ax.linewidth = 0.5
+    cbar.ax.tick_params(direction="in", labelsize=10, size=2)
+
     ax.get_xaxis().set_ticks([])
     ax.get_yaxis().set_ticks([])
+    cbar.ax.set_ylabel("J (A/m)", rotation=270)
+    cbar.outline.set_linewidth(0.5)
 
-    cbar = _add_colorbar(im, fig, ax)
-    cbar.ax.set_ylabel("|J| (A/m)", rotation=270)
-
-   if options["show_scalebar"]:
+    if options["show_scalebar"]:
         pixel_size = options["system"].get_raw_pixel_size(options) * options["total_bin"]
         scalebar = ScaleBar(pixel_size)
         ax.add_artist(scalebar)
@@ -193,6 +200,6 @@ def plot_stream(options, source_params, PL_image_ROI=None):
     ax.set_facecolor("w")
 
     if options["save_plots"]:
-        fig.savefig(options["field_dir"] / ("Jstream." + options["save_fig_type"]))
+        fig.savefig(options["source_dir"] / ("Jstream." + options["save_fig_type"]))
 
     return fig

@@ -856,7 +856,7 @@
     // Jx and Jy. (Or null to not normalise). 
     // Format: [[x_top_left, y_top_left], [x_bot_right, y_bot_right], where y is from top to bottom.
     "current_zero_point_normalisation_region": {
-        "option_default": null,
+        "option_default": null
     },
 
 	// ===========================================================================================
@@ -907,7 +907,7 @@
             "dshift_images": "PRGn",
             "bfield_images": "bwr",
             "source_images": "viridis",
-            "current_vector_images": "PRGn",
+            "current_vector_images": "BrBG",
             "current_norm_images": "turbo",
             "magnetisation_images": "PuOr"
         }
@@ -973,8 +973,8 @@
                 "type": "min_max"
             },
             "current_vector_images": {
-                "type": "strict_range",
-                "values": [0, 50]
+                "type": "percentile",
+                "values": [1, 99]
             },
             "current_norm_images": {
                 "type": "strict_range",
@@ -1049,13 +1049,18 @@
             }
         }
     },
-    // fit options for streamplot (passed as **options["streamplot_options"])
+    // fit options for streamplot (passed as **options["streamplot_options"] to mpl streamplot)
     "streamplot_options" : {
         "option_default": {
-            "density": 2.5,
-            "linewidth": 0.5,
-            "arrowsize": 0.5
+            "density": 3,
+            "linewidth": 1.0,
+            "arrowsize": 0.75
         }
+    },
+    // alpha (i.e. transparency between 0 (invisible) and 1 (fully opaque)) of PL image behind
+    // streamplot
+    "streamplot_PL_alpha": {
+        "option_default": 1.0
     },
     // ===========================================================================================
     // Things set internally, allow to be anything
@@ -1113,9 +1118,6 @@
     "polygon_nodes": {},
     // list of polygon objects
     "polygons": {},
-    // source result dictionaries
-    "source_dir": {},
-    "source_sig_dir": {},
-    "source_ref_dir": {},
-    "source"
+    // source result directory
+    "source_dir": {}
 }

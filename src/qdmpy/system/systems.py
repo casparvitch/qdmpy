@@ -230,6 +230,10 @@ class UniMelb(System):
 
         cam_pixel_size = sensor_pixel_size * (f_obj / f_tube)
 
+        # save into options so it can be read from disk (by user) when saved
+        options["calculated_raw_pixel_size"] = cam_pixel_size
+        options["calculated_binned_pixel_size"] = cam_pixel_size * options["total_bin"]
+
         return cam_pixel_size
 
     def read_image(self, filepath, options):

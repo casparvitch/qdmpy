@@ -70,7 +70,6 @@ def define_k_vectors(shape, pixel_size, k_vector_epsilon):
 
     # Include a small factor in the k vectors to remove division by zero issues (min_k)
     # Make a meshgrid to pass back
-    # NOTE careful here do you need 'ij' indexing ??
     if k_vector_epsilon:
         ky, kx = np.meshgrid(ky_vec + k_vector_epsilon, kx_vec - k_vector_epsilon, indexing="ij")
     else:

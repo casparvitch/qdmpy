@@ -193,8 +193,8 @@ def get_j_from_bxy(
     jy = numpy_fft.ifft2(numpy_fft.ifftshift(fft_jy)).real
 
     # only return non-padded region
-    jx_reg = qdmpy.fourier._shared.unpad_image(fft_jx, padder)
-    jy_reg = qdmpy.fourier._shared.unpad_image(fft_jy, padder)
+    jx_reg = qdmpy.fourier._shared.unpad_image(jx, padder)
+    jy_reg = qdmpy.fourier._shared.unpad_image(jy, padder)
     return jx_reg, jy_reg
 
 
@@ -237,8 +237,8 @@ def get_j_from_bz(
     jy = numpy_fft.ifft2(numpy_fft.ifftshift(fft_jy)).real
 
     # only return non-padded region
-    jx_reg = qdmpy.fourier._shared.unpad_image(fft_jx, padder)
-    jy_reg = qdmpy.fourier._shared.unpad_image(fft_jy, padder)
+    jx_reg = qdmpy.fourier._shared.unpad_image(jx, padder)
+    jy_reg = qdmpy.fourier._shared.unpad_image(jy, padder)
     return jx_reg, jy_reg
 
 
@@ -281,8 +281,8 @@ def get_j_from_bnv(
     jy = numpy_fft.ifft2(numpy_fft.ifftshift(fft_jy)).real
 
     # only return non-padded region
-    jx_reg = qdmpy.fourier._shared.unpad_image(fft_jx, padder)
-    jy_reg = qdmpy.fourier._shared.unpad_image(fft_jy, padder)
+    jx_reg = qdmpy.fourier._shared.unpad_image(jxt, padder)
+    jy_reg = qdmpy.fourier._shared.unpad_image(jy, padder)
     return jx_reg, jy_reg
 
 
@@ -302,8 +302,59 @@ def define_current_transform(u_proj, kx, ky, k, standoff=None):
 
     alpha = 2 * exp_factor / MU_0
 
-    # NOTE sign on ky terms was negative on pwpy? due to -ky ine define transform?
     b_to_jx = (alpha * ky) / (-u_proj[1] * ky - u_proj[0] * kx + 1j * u_proj[2] * k)
     b_to_jy = (alpha * kx) / (u_proj[0] * kx + u_proj[1] * ky - 1j * u_proj[2] * k)
 
     return b_to_jx, b_to_jy
+
+
+# ============================================================================
+
+
+def get_m_from_bxy(
+    bfield,
+    pad_mode,
+    pad_factor,
+    pixel_size,
+    k_vector_epsilon,
+    do_hanning_filter,
+    hanning_low_cutoff,
+    hanning_high_cutoff,
+    standoff,
+    in_plane_mag,
+):
+    # copy and convert Gauss -> Tesla
+    bx = copy(bfield[0]) * 1e-4
+    by = copy(bfield[1]) * 1e-4
+    # first pad each comp
+    bx_pad, padder = qdmpy.fourier._shared.pad_image(bx, pad_mode, pad_factor)
+    by_pad, _ = qdmpy.fourier._shared.pad_image(by, pad_mode, pad_factor)
+
+    fft_bx = numpy_fft.fftshift(numpy_fft.fft2(bx_pad))
+    fft_by = numpy_fft.fftshift(numpy_fft.fft2(by_pad))
+    fft_bx = qdmpy.fourier._shared.set_naninf_to_zero(fft_bx)
+    fft_by = qdmpy.fourier._shared.set_naninf_to_zero(fft_by)
+
+    ky, kx, k = qdmpy.fourier._shared.define_k_vectors(fft_bx.shape, pixel_size, k_vector_epsilon)
+
+    # define transform
+    _, bx_to_jy = define_current_transform([1, 0, 0], kx, ky, k, standoff)
+    by_to_jx, _ = define_current_transform([0, 1, 0], kx, ky, k, standoff)
+
+    hanning_filt = qdmpy.fourier._shared.hanning_filter_kspace(
+        k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff
+    )
+    bx_to_jy = qdmpy.fourier._shared.set_naninf_to_zero(hanning_filt * bx_to_jy)
+    by_to_jx = qdmpy.fourier._shared.set_naninf_to_zero(hanning_filt * by_to_jx)
+
+    fft_jx = by_to_jx * fft_by
+    fft_jy = bx_to_jy * fft_bx
+
+    # fourier transform back into real space
+    jx = numpy_fft.ifft2(numpy_fft.ifftshift(fft_jx)).real
+    jy = numpy_fft.ifft2(numpy_fft.ifftshift(fft_jy)).real
+
+    # only return non-padded region
+    jx_reg = qdmpy.fourier._shared.unpad_image(jx, padder)
+    jy_reg = qdmpy.fourier._shared.unpad_image(jy, padder)
+    return jx_reg, jy_reg
