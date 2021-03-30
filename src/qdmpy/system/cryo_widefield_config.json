@@ -81,7 +81,7 @@
 
     // =======================================
     // === microscope settings ===
-    // Default options for the Zyla microscope
+    // Default options for this microscope
     "microscope_setup": {
         "option_default": null
     },
@@ -93,7 +93,8 @@
         // }
 
     // === override default microscope settings ===
-    // provide pixel size manually {can be used instead of microscope_setup in system config}
+    // provide raw, unbinned pixel size manually 
+    // {can be used instead of microscope_setup in system config}
     "pixel_size": {
         "option_default": 59.6e-9
     },
@@ -503,20 +504,21 @@
     "single_bnv_choice": {
         "option_default": 1
     },
-
     // Diamond crystal orientation -> see qdmpy.constants. Default: HPHT orientation
     // format: <top face orientation>_<edge face orientation>
+    // OR <111>, which only defines one unv (a convenience for single-bnv measurements)
     "diamond_ori": {
         "option_default": "<100>_<100>",
         "option_choices": [
             "<100>_<100>",
-            "<100>_<110>"
+            "<100>_<110>",
+            "<111>"
         ]
     },
     // Read magnetic field from options (i.e. if applied with vector electromagnet)
     // --> system dependent option (i.e. Unimelb reads from metadata)
     "auto_read_bias": {
-        "option_default": false,
+        "option_default": true,
         "option_choices": 
             [
                 true,
@@ -561,61 +563,6 @@
     // in degrees
     "bias_phi": {
         "option_default": 15
-    },
-
-    // ========== Bfield background subtraction parameters ===========
-    // Method for bfield background subtraction (or null to avoid)
-    // Descriptions
-    // ------------
-    //  - fix_zero: constant offset, set zero to chosen value (key 'zero' in bfield_bground_params)
-    //  - three_point: plane background, calculated from three points (key 'points')
-    //  - mean: constant offset of mean of image
-    //  - poly: key 'order' polynomial fit to image
-    //  - gaussian: gaussian fit to image
-    //  - interpolate: image gaussian filtered (key 'sigma'), with data interpolated over
-    //     polygons (key 'interp_method')
-    //  - gaussian_filter: image gaussian filtered (key 'sigma')
-    "bfield_bground_method": {
-        "option_default": null,
-        "option_choices": [
-            "fix_zero",
-            "three_point",
-            "mean",
-            "poly",
-            "gaussian",
-            "interpolate",
-            "gaussian_filter"
-        ]
-    },
-    // parameters for chosen bground method
-    // required:
-    //  - fix_zero: 'zero', a number
-    //  - three_point: 'points' a length three iterable of [x, y] positions in image
-    //  - mean: none
-    //  - poly: key 'order', a natural number
-    //  - gaussian: none
-    //  - interpolate: key 'interp_method' (interpolation method in scipy griddata: nearest, linear, cubic)
-    //     and key 'sigma'
-    //  - gaussian_filter: requires sigma.
-    "bfield_bground_params": {
-        "option_default": {}
-    },
-
-    // same for bnvs
-    "bnv_bground_method":{
-        "option_default": null,
-        "option_choices": [
-            "fix_zero",
-            "three_point",
-            "mean",
-            "poly",
-            "gaussian",
-            "interpolate",
-            "gaussian_filter"
-        ]
-    },
-    "bnv_bground_params": {
-        "option_default": {}
     },
 
     // ========== Bfield Fit Parameters ===========
@@ -768,7 +715,6 @@
             "MLE"
         ]
     },
-
     // ===========================================================================================
     // ===============================  Fourier Parameters =======================================
     // ===========================================================================================
@@ -789,10 +735,11 @@
             "empty"
         ]
     },
-    // factor of image dimensions to pad by (on each side, e.g. 2 pad -> 2 either side of imgage)
+    // factor of image dimensions to pad by (on each side, e.g. 2 pad -> 2 either side of image)
     "fourier_pad_factor": {
         "option_default": 2
     },
+
     // add an epsilon value to the k-vectors to avoid some issues with 1/0. False/null/0 to not use
     "fourier_k_vector_epsilon": {
         "option_default": 1e-6
@@ -805,13 +752,147 @@
             false
         ]
     },
-    // sets cutoff distance (for bandpass hanning) -> give as a distance (k = 2pi/cutoff). 1e-6/1e-3
-    "fourier_hanning_high_cutoff": {
-        "option_default": 0.3e-6
+    // cutoff freqs (for bandpass) -> give as a distance (k = 2pi/cutoff). 1e-6/1e-3
+    "fourier_high_cutoff": {
+        "option_default": null
     },
-    "fourier_hanning_low_cutoff": {
-        "option_default": 500e-6
+    "fourier_low_cutoff": {
+        "option_default": null
     },
+
+    // ===========================================================================================
+    // ============================= Source Recon Parameters ====================================
+    // ===========================================================================================
+    // Type of source field to reconstruct, e.g. "current" or "magnetisation".
+    "source_type": {
+        "option_default": "magnetisation",
+        "option_choices": [
+            "current_density",
+            "magnetisation"
+        ]
+    },
+
+    // average distance NV layer <-> sample, or null to not use
+    "standoff": {
+        "option_default": null
+    },
+    // thickness in metres of NV layer. Not used if standoff is null.
+    "nv_layer_thickness": {
+        "option_default": null
+    },
+
+    // Reconstruction method for B -> J or B -> M
+    // see e.g. Broadway 2020 http://dx.doi.org/10.1103/PhysRevApplied.14.024076
+    // bz better for magnetisation
+    // choices: from_bxy, from_bz, from_bnv
+    // must be an array of method you would like to run (even if only 1 choice)
+    "recon_methods": {
+        "option_default": ["from_bxy", "from_bz", "from_bnv"]
+    },
+
+    // If using from_bnv, set the index in bnvs (and unvs) to use for current recon. If null, uses 0
+    // (i.e. outermost peaks).
+    "recon_unv_index": {
+        "option_default": null,
+        "option_choices": [
+            0,
+            1,
+            2,
+            3
+        ]
+    },
+
+    // Region to use for zero-point normalisation. I.e. mean of this region is subtracted from
+    // Jx and Jy (or M etc.). (or null to not normalise). 
+    // Format: [[x_top_left, y_top_left], [x_bot_right, y_bot_right], where y is from top to bottom.
+    // TODO add different normalisation for in-plane magnetisation? See process-widefield-py
+    "zero_point_normalisation_region": {
+        "option_default": null
+    },
+
+    // magnetisation direction (intrinsic). Either zero (for z-magnetisation) or an angle
+    // in degress, from (+) x-axis towards (+) y-axis.
+    // untested. 
+    "magnetisation_angle": {
+        "option_default": 0
+    },
+
+    // ========================================================
+    // ========== Background subtraction parameters ===========
+    // ========================================================
+    // Method for background subtraction (or null to avoid)
+    // Descriptions
+    // ------------
+    //  - fix_zero: constant offset, set zero to chosen value (key 'zero' in bfield_bground_params)
+    //  - three_point: plane background, calculated from three points (key 'points')
+    //  - mean: constant offset of mean of image
+    //  - poly: key 'order' polynomial fit to image
+    //  - gaussian: gaussian fit to image
+    //  - interpolate: image gaussian filtered (key 'sigma'), with data interpolated over
+    //     polygons (key 'interp_method')
+    //  - gaussian_filter: image gaussian filtered (key 'sigma')
+
+    // for magnetic fields (bfields)
+    "bfield_bground_method": {
+        "option_default": null,
+        "option_choices": [
+            "fix_zero",
+            "three_point",
+            "mean",
+            "poly",
+            "gaussian",
+            "interpolate",
+            "gaussian_filter"
+        ]
+    },
+    // parameters for chosen bground method
+    // required:
+    //  - fix_zero: 'zero', a number
+    //  - three_point: 'points' a length three iterable of [x, y] positions in image
+    //  - mean: none
+    //  - poly: key 'order', a natural number
+    //  - gaussian: none
+    //  - interpolate: key 'interp_method' (interpolation method in scipy griddata: nearest, linear, cubic)
+    //     and key 'sigma'
+    //  - gaussian_filter: requires sigma.
+    "bfield_bground_params": {
+        "option_default": {}
+    },
+
+    // same for bnvs
+    "bnv_bground_method":{
+        "option_default": null,
+        "option_choices": [
+            "fix_zero",
+            "three_point",
+            "mean",
+            "poly",
+            "gaussian",
+            "interpolate",
+            "gaussian_filter"
+        ]
+    },
+    "bnv_bground_params": {
+        "option_default": {}
+    },
+
+    // and for current/magnetisation
+    "source_bground_method": {
+        "option_default": null,
+        "option_choices": [
+            "fix_zero",
+            "three_point",
+            "mean",
+            "poly",
+            "gaussian",
+            "interpolate",
+            "gaussian_filter"
+        ]
+    },
+    "source_bground_params": {
+        "option_default": {}
+    },
+
 	// ===========================================================================================
     // =============================== Plotting Parameters =======================================
 	// ===========================================================================================
@@ -849,6 +930,16 @@
     			"pdf"
     		]
     },
+    // some figs are huge as svgs (currently just jstream) so this allows them to be set differently
+    "large_fig_save_type": {
+        "option_default": "png",
+        "option_choices":
+            [
+                "png",
+                "svg",
+                "pdf"
+            ]
+    },
     // choose colormap used for each 'type' of image
     "colormaps": {
         "option_default": {
@@ -858,7 +949,11 @@
             "PL_images": "Greys_r",
             "bnv_images": "RdBu_r",
             "dshift_images": "PRGn",
-            "bfield_images": "bwr"
+            "bfield_images": "bwr",
+            "source_images": "viridis",
+            "current_vector_images": "BrBG",
+            "current_norm_images": "turbo",
+            "magnetisation_images": "PuOr"
         }
     },
     // =========== Colormap Ranges ===========
@@ -917,6 +1012,21 @@
             },
             "bfield_images": {
                 "type": "min_max"
+            },
+            "source_images": {
+                "type": "min_max"
+            },
+            "current_vector_images": {
+                "type": "percentile",
+                "values": [1, 99]
+            },
+            "current_norm_images": {
+                "type": "strict_range",
+                "values": [0, 50]
+            },
+            "magnetisation_images": {
+                "type": "percentile",
+                "values": [1, 99]
             }
         }
     },
@@ -983,8 +1093,24 @@
             }
         }
     },
+    // fit options for streamplot (passed as **options["streamplot_options"] to mpl streamplot)
+    "streamplot_options" : {
+        "option_default": {
+            "density": 3,
+            "linewidth": 1.0,
+            "arrowsize": 0.75
+        }
+    },
+    // alpha (i.e. transparency between 0 (invisible) and 1 (fully opaque)) of PL image behind
+    // streamplot
+    "streamplot_PL_alpha": {
+        "option_default": 1.0
+    },
     // ===========================================================================================
-    // Things set internally, allow to be anything
+    // ===========================================================================================
+    // Things set internally, allow to be anything (user shouldn't set in options though!!!)
+    // ===========================================================================================
+    // ===========================================================================================
 
     // was the options dict (after being read from .json) checked/cleaned?
     "cleaned": {},

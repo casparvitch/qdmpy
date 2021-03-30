@@ -545,6 +545,47 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
     - In degrees.
 - bias_phi
     - In degrees.
+- field_param_guess
+    - Same guess, range and bounds as above for PL fitting, but here for hamiltonian fitting. 
+- field_param_range
+- field_param_bounds
+
+
+### Fourier parameters
+
+- fourier_pad_mode
+    - Padding mode, see np.pad. Defaults to mean
+- fourier_pad_factor
+    - Factor of image dimensions to pad by (on each side, e.g. 2 pad -> 2 either side of image)
+- fourier_k_vector_epsilon
+    - Add an epsilon value to the k-vectors to avoid some issues with 1/0. False/null/0 to not use.
+- fourier_do_hanning_filter
+    - Use hanning filter in fourier space (for all transformations).
+- fourier_high_cutoff
+    - Cutoff freqs (for bandpass) -> give as a distance/wavelength (k = 2pi/cutoff). Should be smaller number than low_cutoff
+- fourier_low_cutoff
+    - Cutoff freqs (for bandpass) -> give as a distance/wavelength (k = 2pi/cutoff). Should be larger number than high_cutoff
+
+### Source recon parameters
+
+- source_type
+    - Type of source field to reconstruct, e.g. "current" or "magnetisation".
+- standoff
+    - Average distance NV layer <-> sample, or null/None to not use.
+- nv_layer_thickness
+    - Thickness of the NV layer, or null to not use. Disregarded if standoff is null.
+- recon_methods
+    - Reconstruction methods for B -> J or B -> M,  see e.g. Broadway 2020 http://dx.doi.org/10.1103/PhysRevApplied.14.024076. Must be an array of method you would like to run (even if only 1 choice). Choices: from_bxy, from_bz, from_bnv
+- recon_unv_index
+    - If using from_bnv, set the index in bnvs (and unvs) to use for current recon. If null, uses 0 (i.e. outermost peaks).
+- zero_point_normalisation_region
+    - Region to use for zero-point normalisation. I.e. mean of this region is subtracted from Jx and Jy (or M etc.). (or null/none to not normalise). 
+    - Format: [[x_top_left, y_top_left], [x_bot_right, y_bot_right], where y is from top to bottom.
+- magnetisation_angle
+    - magnetisation direction (intrinsic). Either zero (for z-magnetisation) or an angle in degress, from (+) x-axis towards (+) y-axis. untested.
+
+### Background subtraction parameters
+
 - bfield_bground_method
     - Method for bfield background subtraction (or null to avoid)
     - Descriptions
@@ -569,10 +610,8 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
     - As above but for bnvs. This background subtraction is not carried on to analysis (just plotting & saving).
 - bnv_bground_params
     - As above but for bnvs.
-- field_param_guess
-    - Same guess, range and bounds as above for PL fitting, but here for hamiltonian fitting. 
-- field_param_range
-- field_param_bounds
+- source_bground_method
+- source_bground_params
 
 ### Plotting parameters
 
@@ -582,6 +621,8 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
     - Used for ROI/AOI PL plots only.
 - save_fig_type
     - E.g. "png", "pdf", "svg" (svg slow!).
+- large_fig_save_type
+    - Jstream is huge & slow as an svg, allows large figs like this to have different type.
 - colormaps
     - Choose colormap used for each type of image, a dict with possible keys:
         - param_images, residual_images, sigma_images, PL_images, bnv_images, dshift_images, bfield_images.
@@ -619,6 +660,10 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
     - Colors to identify with each AOI region (list of strings).
 - fit_backend_colors
     - Colors to identify with each fit backend (dict of dicts).
+- streamplot_options
+    - fit options for streamplot
+- streamplot_PL_alpha
+    - alpha (i.e. transparency between 0 (invisible) and 1 (fully opaque)) of PL image behind behing streamplot
 
 
 ### Set internally

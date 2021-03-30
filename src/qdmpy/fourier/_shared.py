@@ -1,15 +1,25 @@
 # -*- coding: utf-8 -*-
 """
-This module holds ...
+This module holds shared tooling for fourier functions/methods.
 
 Functions
 ---------
- - `qdmpy.fourier._shared.`
+ - `qdmpy.fourier._shared.unpad_image`
+ - `qdmpy.fourier._shared.pad_image`
+ - `qdmpy.fourier._shared.define_k_vectors`
+ - `qdmpy.fourier._shared.set_naninf_to_zero`
+ - `qdmpy.fourier._shared.hanning_filter_kspace`
 """
 # ============================================================================
 
 __author__ = "Sam Scholten"
-__pdoc__ = {"qdmpy.fourier._shared.": True}
+__pdoc__ = {
+    "qdmpy.fourier._shared.unpad_image": True,
+    "qdmpy.fourier._shared.pad_image": True,
+    "qdmpy.fourier._shared.define_k_vectors": True,
+    "qdmpy.fourier._shared.set_naninf_to_zero": True,
+    "qdmpy.fourier._shared.hanning_filter_kspace": True,
+}
 
 # ============================================================================
 
@@ -23,6 +33,8 @@ from pyfftw.interfaces import numpy_fft
 
 
 def unpad_image(x, padder):
+    """undo a padding defined by `QDMPy.fourier._shared.pad_image` (it returns
+    the padder list)"""
     slices = []
     for c in padder:
         e = None if c[1] == 0 else -c[1]
@@ -61,6 +73,23 @@ def pad_image(image, pad_mode, pad_factor):
 
 
 def define_k_vectors(shape, pixel_size, k_vector_epsilon):
+    """Get scaled k vectors (as meshgrid) for fft.
+
+    Arguments
+    ----------
+    shape : list
+        Shape of fft array to get k vectors for.
+    pixel_size : float
+        Pixel size, e.g. options["system"].get_raw_pixel_size(options) * options["total_bin"].
+    k_vector_epsilon : float
+        Add an epsilon value to the k-vectors to avoid some issues with 1/0.
+
+    Returns
+    -------
+    ky, kx, k : np array
+        Wavenumber meshgrids, k = sqrt( kx^2 + ky^2 )
+    """
+
     # scaling for the k vectors so they are in the right units
     scaling = np.float64(2 * np.pi / pixel_size)
 
@@ -92,22 +121,41 @@ def set_naninf_to_zero(array):
 # ============================================================================
 
 
-def hanning_filter_kspace(k, do_filt, hanning_low_cutoff, hanning_high_cutoff):
+def hanning_filter_kspace(k, do_filt, hanning_low_cutoff, hanning_high_cutoff, standoff):
     """Computes a hanning image filter with both low and high pass filters.
 
-    Returns:
-        img_filter (2d array, float): bandpass filter to remove artifacts in the FFT process.
+    Arguments
+    ---------
+    k : np array
+        Wavenumber meshgrids, k = sqrt( kx^2 + ky^2 )
+    do_filt : bool
+        Do a hanning filter?
+    hanning_high_cutoff : float
+        Set highpass cutoff k values. Give as a distance/wavelength, e.g. k_high will be set
+        via k_high = 2pi/high_cutoff. Should be _smaller_ number than low_cutoff.
+    hanning_low_cutoff : float
+        Set lowpass cutoff k values. Give as a distance/wavelength, e.g. k_low will be set
+        via k_low = 2pi/low_cutoff. Should be _larger_ number than high_cutoff.
+    standoff : float
+        Distance NV layer <-> Sample.
+
+    Returns
+    -------
+    img_filter : (2d array, float)
+        bandpass filter to remove artifacts in the FFT process.
     """
     # Define Hanning filter to prevent noise amplification at frequencies higher than the
     # spatial resolution
 
-    if do_filt:
+    if do_filt and standoff:
         hy = np.hanning(k.shape[0])
         hx = np.hanning(k.shape[1])
         img_filt = np.sqrt(np.outer(hy, hx))
-        # apply freq cutoffs
+        # apply cutoffs
         if hanning_high_cutoff is not None:
             k_cut_high = (2 * np.pi) / hanning_high_cutoff
+        else:
+            k_cut_high = (2 * np.pi) / standoff
             img_filt[k > k_cut_high] = 0
         if hanning_low_cutoff is not None:
             k_cut_low = (2 * np.pi) / hanning_low_cutoff

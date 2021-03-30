@@ -4,15 +4,22 @@ This module holds the tools for loading/saving source results.
 
 Functions
 ---------
- - `qdmpy.io.source.`
+ - `qdmpy.io.source.prep_output_directories`
+ - `qdmpy.io.source.save_source_params`
 """
 
 # ============================================================================
 
+__author__ = "Sam Scholten"
+__pdoc__ = {
+    "qdmpy.io.source.prep_output_directories": True,
+    "qdmpy.io.source.save_source_params": True,
+}
+
+# ============================================================================
+
 import numpy as np
-import warnings
 import os
-from pathlib import Path
 
 # ============================================================================
 

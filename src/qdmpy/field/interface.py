@@ -612,9 +612,10 @@ def add_bfield_reconstructed(options, field_params):
 
     References
     ----------
-    .. [CURR_RECON] E. A. Lima and B. P. Weiss, Obtaining Vector Magnetic Field Maps from
-                    Single-Component Measurements of Geological Samples, Journal of Geophysical
-                    Research: Solid Earth 114, (2009).
+    .. [CURR_RECON] E. A. Lima and B. P. Weiss,
+                    Obtaining Vector Magnetic Field Maps from Single-Component Measurements of
+                    Geological Samples, Journal of Geophysical Research: Solid Earth 114, (2009).
+                    https://doi.org/10.1029/2008JB006006
     """
     # first check if Bx, By, Bz in fit_params
     # extract them
@@ -638,9 +639,6 @@ def add_bfield_reconstructed(options, field_params):
         options["fourier_pad_factor"],
         options["system"].get_raw_pixel_size(options) * options["total_bin"],
         options["fourier_k_vector_epsilon"],
-        options["fourier_do_hanning_filter"],
-        options["fourier_hanning_low_cutoff"],
-        options["fourier_hanning_high_cutoff"],
     )
     field_params["Bx_recon"] = bx_recon
     field_params["By_recon"] = by_recon

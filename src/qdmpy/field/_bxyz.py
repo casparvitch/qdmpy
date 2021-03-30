@@ -90,9 +90,6 @@ def from_single_bnv(options, bnvs):
         options["fourier_pad_factor"],
         options["system"].get_raw_pixel_size(options) * options["total_bin"],
         options["fourier_k_vector_epsilon"],
-        options["fourier_do_hanning_filter"],
-        options["fourier_hanning_high_cutoff"],
-        options["fourier_hanning_low_cutoff"],
     )
     return {
         "Bx": bxyzs[0],

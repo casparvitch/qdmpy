@@ -805,11 +805,11 @@
             false
         ]
     },
-    // cutoff freqs (for bandpass hanning) -> give as a distance (k = 2pi/cutoff). 1e-6/1e-3
-    "fourier_hanning_high_cutoff": {
+    // cutoff freqs (for bandpass) -> give as a distance (k = 2pi/cutoff). 1e-6/1e-3
+    "fourier_high_cutoff": {
         "option_default": null
     },
-    "fourier_hanning_low_cutoff": {
+    "fourier_low_cutoff": {
         "option_default": null
     },
 

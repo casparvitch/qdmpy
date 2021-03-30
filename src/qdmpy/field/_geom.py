@@ -52,7 +52,11 @@ def get_unvs(options):
     unvs = np.zeros((4, 3))  # z unit vectors of unv frame (in lab frame)
 
     # Get the NV orientations
-    from qdmpy.constants import NV_AXES_100_110, NV_AXES_100_100  # avoid cyclic dependencies
+    from qdmpy.constants import (
+        NV_AXES_100_110,
+        NV_AXES_100_100,
+        NV_AXES_111,
+    )  # avoid cyclic dependencies
 
     if options["use_unvs"]:
         unvs = np.array(options["unvs"])
@@ -63,6 +67,8 @@ def get_unvs(options):
             nv_axes = NV_AXES_100_100
         elif options["diamond_ori"] == "<100>_<110>":
             nv_axes = NV_AXES_100_110
+        elif options["diamond_ori"] == "<111>":
+            nv_axes = NV_AXES_111
         else:
             raise RuntimeError("diamond_ori not recognised.")
 

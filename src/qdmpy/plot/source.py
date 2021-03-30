@@ -4,13 +4,21 @@ This module holds functions for plotting source (fields).
 
 Functions
 ---------
- - `qdmpy.plot.source.`
+ - `qdmpy.plot.source.plot_source_param`
+ - `qdmpy.plot.source.plot_current`
+ - `qdmpy.plot.source.plot_stream`
+ - `qdmpy.plot.source.plot_magnetisation`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
-__pdoc__ = {"qdmpy.plot.source.": True}
+__pdoc__ = {
+    "qdmpy.plot.source.plot_source_param": True,
+    "qdmpy.plot.source.plot_current": True,
+    "qdmpy.plot.source.plot_stream": True,
+    "qdmpy.plot.source.plot_magnetisation": True,
+}
 
 # ============================================================================
 
@@ -31,8 +39,7 @@ import qdmpy.plot.common as plot_common
 
 def plot_source_param(
     options,
-    name,  # i.e. "sig"/"ref" etc.
-    param_name,  # "Jx" etc.
+    param_name,  # "Jx_full_from_bnv" etc.
     source_params,
     c_map=None,
     c_map_type="source_images",
@@ -79,53 +86,112 @@ def plot_source_param(
         )
         c_map = options["colormaps"][c_map_type]
 
-    title = f"{name}"
+    title = f"{param_name}"
 
     plot_common.plot_image_on_ax(
         fig, ax, options, source_params[param_name], title, c_map, c_range, cbar_label
     )
 
     if options["save_plots"]:
-        fig.savefig(options["source_dir"] / (f"{param_name}_{name}." + options["save_fig_type"]))
+        fig.savefig(options["source_dir"] / (f"{param_name}." + options["save_fig_type"]))
 
 
 # ============================================================================
 
 
-def plot_current(options, source_params):
-    """ plots jx, jy, jnorm """
+def plot_current(options, source_params, plot_bgrounds=True):
+    """Plots current (Jx, Jy, Jnorm). Optionally plot background subtracted.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    source_params : dict
+        Dictionary, key: param_keys, val: image (2D) of (source field) param values across FOV.
+    plot_bgrounds : {bool}, default: True
+        Plot background images
+
+    Returns
+    -------
+    fig : matplotlib Figure object
+    """
+    if source_params is None:
+        return None
+
+    plot_bgrounds = plot_bgrounds and options["source_bground_method"]
+
+    figsize = mpl.rcParams["figure.figsize"].copy()
+    c_map = options["colormaps"]["magnetisation_images"]
+    width = 3
+    height = len(options["recon_methods"])  # number of rows
+    height *= 3 if plot_bgrounds else 1
+    figsize[0] *= width  # number of columns
+    figsize[1] *= height
+    fig, axs = plt.subplots(height, width, figsize=figsize, constrained_layout=True)
+
     components = {
         "x": "current_vector_images",
         "y": "current_vector_images",
         "norm": "current_norm_images",
     }
-    for p in ["J" + comp for comp in components]:
-        if p not in source_params:
-            warnings.warn(f"bfield param '{p} missing from source_params, skipping current plot.")
-            return None
-        elif source_params[p] is None:
-            return None
 
-    figsize = mpl.rcParams["figure.figsize"].copy()
-    width = 3
-    height = 1  # number of rows
-    figsize[0] *= width  # number of columns
+    if plot_bgrounds:
+        for m_idx, method in enumerate(options["recon_methods"]):
+            for row, suffix in enumerate(["_full", "_bground", ""]):
+                for col, comp in enumerate(components.keys()):
+                    ax = (
+                        axs[row, col]
+                        if len(options["recon_methods"]) == 1
+                        else axs[3 * m_idx + row, col]
+                    )
 
-    fig, ax = plt.subplots(height, width, figsize=figsize, constrained_layout=True)
+                    ckey = components[comp]
+                    name = "J" + comp + suffix + "_" + method
 
-    for i, comp in enumerate(components.keys()):
-        ckey = components[comp]
-        jmap = source_params["J" + comp]
+                    if name not in source_params:
+                        warnings.warn(f"source param {name} missing from source_params.")
+                        continue
+                    elif source_params[name] is None:
+                        warnings.warn(f"source_param[{name}] was None?")
+                        continue
 
-        c_range = plot_common._get_colormap_range(options["colormap_range_dicts"][ckey], jmap)
-        c_map = options["colormaps"][ckey]
+                    jmap = source_params[name]
 
-        plot_common.plot_image_on_ax(
-            fig, ax[i], options, jmap, "J" + comp, c_map, c_range, "J (A/m)"
-        )
+                    c_range = plot_common._get_colormap_range(
+                        options["colormap_range_dicts"][ckey], jmap
+                    )
+                    c_map = options["colormaps"][ckey]
+                    plot_common.plot_image_on_ax(
+                        fig, ax, options, jmap, name, c_map, c_range, "J (A/m)"
+                    )
+    else:
+        for m_idx, method in enumerate(options["recon_methods"]):
+            for i, comp in enumerate(components.keys()):
+                ax = axs[i] if len(options["recon_methods"]) == 1 else axs[m_idx, i]
+
+                ckey = components[comp]
+                name = "J" + comp + "_" + method
+
+                if name not in source_params:
+                    warnings.warn(f"source param {name} missing from source_params.")
+                    continue
+                elif source_params[name] is None:
+                    warnings.warn(f"source_param[{name}] was None?")
+                    continue
+
+                jmap = source_params[name]
+
+                c_range = plot_common._get_colormap_range(
+                    options["colormap_range_dicts"][ckey], jmap
+                )
+                c_map = options["colormaps"][ckey]
+
+                plot_common.plot_image_on_ax(
+                    fig, ax, options, jmap, name, c_map, c_range, "J (A/m)"
+                )
 
     if options["save_plots"]:
-        fig.savefig(options["source_dir"] / (f"J{comp}." + options["save_fig_type"]))
+        fig.savefig(options["source_dir"] / ("J." + options["save_fig_type"]))
 
     return fig
 
@@ -134,72 +200,197 @@ def plot_current(options, source_params):
 
 
 def plot_stream(options, source_params, PL_image_ROI=None):
+    """Plot current density as a streamplot.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    source_params : dict
+        Dictionary, key: param_keys, val: image (2D) of (source field) param values across FOV.
+    PL_image_ROI : numpy array or None, default: None
+        If not None, must be PL image of ROI, to plot behind streams
+
+    Returns
+    -------
+    fig : matplotlib Figure object
+    """
+    if source_params is None:
+        return None
+
     components = ["x", "y", "norm"]
-    for p in ["J" + comp for comp in components]:
-        if p not in source_params:
-            warnings.warn(f"bfield param '{p} missing from source_params, skipping stream plot.")
-            return None
-        elif source_params[p] is None:
-            return None
 
-    fig, ax = plt.subplots(constrained_layout=True)
+    width = len(options["recon_methods"])
+    height = 1
+    figsize = mpl.rcParams["figure.figsize"].copy()
+    figsize[0] *= width
+    fig, axs = plt.subplots(height, width, figsize=figsize, constrained_layout=True)
 
-    if PL_image_ROI is not None:
-        im = ax.imshow(
-            PL_image_ROI,
-            cmap="Greys_r",
-            vmin=np.nanmin(PL_image_ROI),
-            vmax=np.nanmax(PL_image_ROI),
-            alpha=options["streamplot_PL_alpha"],
-        )
+    for m_idx, method in enumerate(options["recon_methods"]):
 
-    shp = source_params["Jx"].shape
+        flag = False
+        for p in ["J" + comp + "_" + method for comp in components]:
+            if p not in source_params:
+                warnings.warn(
+                    f"bfield param '{p}'' missing from source_params, skipping stream plot."
+                )
+                flag = True
+                break
+            elif source_params[p] is None:
+                flake = True
+                break
+        if flag:
+            continue
 
-    strm = ax.streamplot(
-        np.arange(shp[1]),
-        np.arange(shp[0]),
-        source_params["Jx"],
-        -source_params["Jy"],
-        color=source_params["Jnorm"],
-        cmap=options["colormaps"]["current_norm_images"],
-        **options["streamplot_options"],
-    )
+        ax = axs if width == 1 else axs[m_idx]
 
-    divider = make_axes_locatable(ax)
-    aspect = 20
-    pad_fraction = 1
-    width = axes_size.AxesY(ax, aspect=1.0 / aspect)
-    pad = axes_size.Fraction(pad_fraction, width)
-    cax = divider.append_axes("right", size=width, pad=pad)
-
-    cbar = fig.colorbar(strm.lines, cax=cax)
-
-    tick_locator = matplotlib.ticker.MaxNLocator(nbins=5)
-    cbar.locator = tick_locator
-    cbar.update_ticks()
-    cbar.ax.get_yaxis().labelpad = 10
-    cbar.ax.linewidth = 0.5
-    cbar.ax.tick_params(direction="in", labelsize=10, size=2)
-
-    ax.get_xaxis().set_ticks([])
-    ax.get_yaxis().set_ticks([])
-    cbar.ax.set_ylabel("J (A/m)", rotation=270)
-    cbar.outline.set_linewidth(0.5)
-
-    if options["show_scalebar"]:
-        pixel_size = options["system"].get_raw_pixel_size(options) * options["total_bin"]
-        scalebar = ScaleBar(pixel_size)
-        ax.add_artist(scalebar)
-
-    if options["polygon_nodes"] and options["annotate_polygons"]:
-        for p in options["polygon_nodes"]:
-            ax.add_patch(
-                matplotlib.patches.Polygon(np.array(p), **options["polygon_patch_params"])
+        if PL_image_ROI is not None:
+            im = ax.imshow(
+                PL_image_ROI,
+                cmap="Greys_r",
+                vmin=np.nanmin(PL_image_ROI),
+                vmax=np.nanmax(PL_image_ROI),
+                alpha=options["streamplot_PL_alpha"],
             )
 
-    ax.set_facecolor("w")
+        shp = source_params["Jx_" + method].shape
+
+        strm = ax.streamplot(
+            np.arange(shp[1]),
+            np.arange(shp[0]),
+            source_params["Jx_" + method],
+            -source_params["Jy_" + method],
+            color=source_params["Jnorm_" + method],
+            cmap=options["colormaps"]["current_norm_images"],
+            **options["streamplot_options"],
+        )
+
+        divider = make_axes_locatable(ax)
+        aspect = 20
+        pad_fraction = 1
+        width = axes_size.AxesY(ax, aspect=1.0 / aspect)
+        pad = axes_size.Fraction(pad_fraction, width)
+        cax = divider.append_axes("right", size=width, pad=pad)
+
+        cbar = fig.colorbar(strm.lines, cax=cax)
+
+        tick_locator = matplotlib.ticker.MaxNLocator(nbins=5)
+        cbar.locator = tick_locator
+        cbar.update_ticks()
+        cbar.ax.get_yaxis().labelpad = 10
+        cbar.ax.linewidth = 0.5
+        cbar.ax.tick_params(direction="in", labelsize=10, size=2)
+
+        ax.get_xaxis().set_ticks([])
+        ax.get_yaxis().set_ticks([])
+        cbar.ax.set_ylabel("Jnorm (A/m)", rotation=270)
+        cbar.outline.set_linewidth(0.5)
+
+        ax.set_title("J " + method.replace("_", " "))
+
+        if options["show_scalebar"]:
+            pixel_size = options["system"].get_raw_pixel_size(options) * options["total_bin"]
+            scalebar = ScaleBar(pixel_size)
+            ax.add_artist(scalebar)
+
+        if options["polygon_nodes"] and options["annotate_polygons"]:
+            for p in options["polygon_nodes"]:
+                ax.add_patch(
+                    matplotlib.patches.Polygon(np.array(p), **options["polygon_patch_params"])
+                )
+
+            ax.set_facecolor("w")
 
     if options["save_plots"]:
-        fig.savefig(options["source_dir"] / ("Jstream." + options["save_fig_type"]))
+        fig.savefig(options["source_dir"] / ("Jstream." + options["large_fig_save_type"]))
+
+    return fig
+
+
+# ============================================================================
+
+
+def plot_magnetisation(options, source_params, plot_bgrounds=True):
+    """Plots magnetisation. Optionally plot background subtracted.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    source_params : dict
+        Dictionary, key: param_keys, val: image (2D) of (source field) param values across FOV.
+    plot_bgrounds : {bool}, default: True
+        Plot background images
+
+    Returns
+    -------
+    fig : matplotlib Figure object
+    """
+    if source_params is None:
+        return None
+
+    plot_bgrounds = plot_bgrounds and options["source_bground_method"]
+
+    mag_angle = options["magnetisation_angle"]
+    if not mag_angle:
+        root_name = "Mz"
+    else:
+        root_name = "Mpsi"
+
+    figsize = mpl.rcParams["figure.figsize"].copy()
+    c_map = options["colormaps"]["magnetisation_images"]
+    width = 3 if plot_bgrounds else 1
+    height = len(options["recon_methods"])  # number of rows
+    figsize[0] *= width  # number of columns
+    figsize[1] *= height
+    fig, axs = plt.subplots(height, width, figsize=figsize, constrained_layout=True)
+
+    # step through recon methods, without bground
+    if not plot_bgrounds:
+        for m_idx, method in enumerate(options["recon_methods"]):
+            ax = axs if width * height == 1 else axs[m_idx]
+            name = root_name + "_" + method
+
+            if name not in source_params:
+                warnings.warn(f"source param {name} missing from source_params.")
+                continue
+            elif source_params[name] is None:
+                warnings.warn(f"source_param[{name}] was None?")
+                continue
+
+            data = source_params[name]
+            c_range = plot_common._get_colormap_range(
+                options["colormap_range_dicts"]["magnetisation_images"], data
+            )
+            plot_common.plot_image_on_ax(
+                fig, ax, options, data, name, c_map, c_range, root_name + " (mu_B/nm^2)"
+            )
+    # step through recon methods with background
+    else:
+        for m_idx, method in enumerate(options["recon_methods"]):
+
+            comps = ["_full", "_bground", ""]
+            for i, comp in enumerate(comps):
+                ax = axs[i] if len(options["recon_methods"]) == 1 else axs[m_idx, i]
+
+                name = root_name + "_" + method + comp
+
+                if name not in source_params:
+                    warnings.warn(f"source param {name} missing from source_params.")
+                    continue
+                elif source_params[name] is None:
+                    warnings.warn(f"source_param[{name}] was None?")
+                    continue
+
+                data = source_params[name]
+                c_range = plot_common._get_colormap_range(
+                    options["colormap_range_dicts"]["magnetisation_images"], data
+                )
+                plot_common.plot_image_on_ax(
+                    fig, ax, options, data, name, c_map, c_range, root_name + " (mu_B/nm^2)"
+                )
+
+    if options["save_plots"]:
+        fig.savefig(options["source_dir"] / (root_name + "." + options["save_fig_type"]))
 
     return fig

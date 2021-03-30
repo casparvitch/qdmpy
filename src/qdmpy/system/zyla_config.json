@@ -91,7 +91,8 @@
     },
 
     // === override default microscope settings ===
-    // provide pixel size manually {can be used instead of microscope_setup in system config}
+    // provide raw, unbinned pixel size manually 
+    // {can be used instead of microscope_setup in system config}
     "pixel_size": {
         "option_default": null
     },
@@ -504,11 +505,13 @@
 
     // Diamond crystal orientation -> see qdmpy.constants. Default: HPHT orientation
     // format: <top face orientation>_<edge face orientation>
+    // OR <111>, which only defines one unv (a convenience for single-bnv measurements)
     "diamond_ori": {
         "option_default": "<100>_<100>",
         "option_choices": [
             "<100>_<100>",
-            "<100>_<110>"
+            "<100>_<110>",
+            "<111>"
         ]
     },
     // Read magnetic field from options (i.e. if applied with vector electromagnet)
@@ -559,61 +562,6 @@
     // in degrees
     "bias_phi": {
         "option_default": 15
-    },
-
-    // ========== Bfield background subtraction parameters ===========
-    // Method for bfield background subtraction (or null to avoid)
-    // Descriptions
-    // ------------
-    //  - fix_zero: constant offset, set zero to chosen value (key 'zero' in bfield_bground_params)
-    //  - three_point: plane background, calculated from three points (key 'points')
-    //  - mean: constant offset of mean of image
-    //  - poly: key 'order' polynomial fit to image
-    //  - gaussian: gaussian fit to image
-    //  - interpolate: image gaussian filtered (key 'sigma'), with data interpolated over
-    //     polygons (key 'interp_method')
-    //  - gaussian_filter: image gaussian filtered (key 'sigma')
-    "bfield_bground_method": {
-        "option_default": null,
-        "option_choices": [
-            "fix_zero",
-            "three_point",
-            "mean",
-            "poly",
-            "gaussian",
-            "interpolate",
-            "gaussian_filter"
-        ]
-    },
-    // parameters for chosen bground method
-    // required:
-    //  - fix_zero: 'zero', a number
-    //  - three_point: 'points' a length three iterable of [x, y] positions in image
-    //  - mean: none
-    //  - poly: key 'order', a natural number
-    //  - gaussian: none
-    //  - interpolate: key 'interp_method' (interpolation method in scipy griddata: nearest, linear, cubic)
-    //     and key 'sigma'
-    //  - gaussian_filter: requires sigma.
-    "bfield_bground_params": {
-        "option_default": {}
-    },
-
-    // same for bnvs
-    "bnv_bground_method":{
-        "option_default": null,
-        "option_choices": [
-            "fix_zero",
-            "three_point",
-            "mean",
-            "poly",
-            "gaussian",
-            "interpolate",
-            "gaussian_filter"
-        ]
-    },
-    "bnv_bground_params": {
-        "option_default": {}
     },
 
     // ========== Bfield Fit Parameters ===========
@@ -802,11 +750,15 @@
             false
         ]
     },
-    // cutoff freqs (for bandpass hanning) -> give as a distance (k = 2pi/cutoff). 1e-6/1e-3
-    "fourier_hanning_high_cutoff": {
+    // cutoff freqs (for bandpass) -> give as a distance (k = 2pi/cutoff).
+    // e.g. give the diffraction limit for your optical system.
+    // if null, high_cutoff is set by standoff (if there is standoff)
+    // low_cutoff is not auto-set.
+    // if standoff is 0/None/False, no filter is used
+    "fourier_high_cutoff": {
         "option_default": null
     },
-    "fourier_hanning_low_cutoff": {
+    "fourier_low_cutoff": {
         "option_default": null
     },
 
@@ -818,8 +770,7 @@
         "option_default": "current_density",
         "option_choices": [
             "current_density",
-            "out_of_plane_magnetisation",
-            "in_plane_magnetisation"
+            "magnetisation"
         ]
     },
 
@@ -827,22 +778,23 @@
     "standoff": {
         "option_default": null
     },
+    // thickness in metres of NV layer. Not used if standoff is null.
+    "nv_layer_thickness": {
+        "option_default": null
+    },
 
-
-    // Reconstruction method for B -> J
+    // Reconstruction method for B -> J or B -> M
     // see e.g. Broadway 2020 http://dx.doi.org/10.1103/PhysRevApplied.14.024076
-    "current_recon_method": {
-        "option_default": "from_bxy",
-        "option_choices": [
-            "from_bxy",
-            "from_bz",
-            "from_bnv"
-        ]
+    // bz better for magnetisation
+    // choices: from_bxy, from_bz, from_bnv
+    // must be an array of method you would like to run (even if only 1 choice)
+    "recon_methods": {
+        "option_default": ["from_bxy", "from_bz", "from_bnv"]
     },
 
     // If using from_bnv, set the index in bnvs (and unvs) to use for current recon. If null, uses 0
     // (i.e. outermost peaks).
-    "current_recon_unv_index": {
+    "recon_unv_index": {
         "option_default": null,
         "option_choices": [
             0,
@@ -853,10 +805,94 @@
     },
 
     // Region to use for zero-point normalisation. I.e. mean of this region is subtracted from
-    // Jx and Jy. (Or null to not normalise). 
+    // Jx and Jy (or M etc.). (Or null to not normalise). 
     // Format: [[x_top_left, y_top_left], [x_bot_right, y_bot_right], where y is from top to bottom.
-    "current_zero_point_normalisation_region": {
+    // TODO add different normalisation for in-plane magnetisation? See process-widefield-py
+    "zero_point_normalisation_region": {
         "option_default": null
+    },
+
+    // magnetisation direction (intrinsic). Either zero (for z-magnetisation) or an angle
+    // in degress, from (+) x-axis towards (+) y-axis.
+    // untested. 
+    "magnetisation_angle": {
+        "option_default": 0
+    },
+
+    // ========================================================
+    // ========== Background subtraction parameters ===========
+    // ========================================================
+    // Method for background subtraction (or null to avoid)
+    // Descriptions
+    // ------------
+    //  - fix_zero: constant offset, set zero to chosen value (key 'zero' in bfield_bground_params)
+    //  - three_point: plane background, calculated from three points (key 'points')
+    //  - mean: constant offset of mean of image
+    //  - poly: key 'order' polynomial fit to image
+    //  - gaussian: gaussian fit to image
+    //  - interpolate: image gaussian filtered (key 'sigma'), with data interpolated over
+    //     polygons (key 'interp_method')
+    //  - gaussian_filter: image gaussian filtered (key 'sigma')
+
+    // for magnetic fields (bfields)
+    "bfield_bground_method": {
+        "option_default": null,
+        "option_choices": [
+            "fix_zero",
+            "three_point",
+            "mean",
+            "poly",
+            "gaussian",
+            "interpolate",
+            "gaussian_filter"
+        ]
+    },
+    // parameters for chosen bground method
+    // required:
+    //  - fix_zero: 'zero', a number
+    //  - three_point: 'points' a length three iterable of [x, y] positions in image
+    //  - mean: none
+    //  - poly: key 'order', a natural number
+    //  - gaussian: none
+    //  - interpolate: key 'interp_method' (interpolation method in scipy griddata: nearest, linear, cubic)
+    //     and key 'sigma'
+    //  - gaussian_filter: requires sigma.
+    "bfield_bground_params": {
+        "option_default": {}
+    },
+
+    // same for bnvs
+    "bnv_bground_method":{
+        "option_default": null,
+        "option_choices": [
+            "fix_zero",
+            "three_point",
+            "mean",
+            "poly",
+            "gaussian",
+            "interpolate",
+            "gaussian_filter"
+        ]
+    },
+    "bnv_bground_params": {
+        "option_default": {}
+    },
+
+    // and for current/magnetisation
+    "source_bground_method": {
+        "option_default": null,
+        "option_choices": [
+            "fix_zero",
+            "three_point",
+            "mean",
+            "poly",
+            "gaussian",
+            "interpolate",
+            "gaussian_filter"
+        ]
+    },
+    "source_bground_params": {
+        "option_default": {}
     },
 
 	// ===========================================================================================
@@ -895,6 +931,16 @@
     			"svg",
     			"pdf"
     		]
+    },
+    // some figs are huge as svgs (currently just jstream) so this allows them to be set differently
+    "large_fig_save_type": {
+        "option_default": "png",
+        "option_choices":
+            [
+                "png",
+                "svg",
+                "pdf"
+            ]
     },
     // choose colormap used for each 'type' of image
     "colormaps": {

@@ -30,6 +30,7 @@ Module variables
  - `qdmpy.constants.AVAILABLE_FNS`
  - `qdmpy.constants.GAMMA`
  - `qdmpy.constants.MU_0`
+ - `qdmpy.constants.MAG_UNIT_CONV`
  - `qdmpy.constants.S_MAT_X`
  - `qdmpy.constants.S_MAT_Y`
  - `qdmpy.constants.S_MAT_Z`
@@ -45,6 +46,7 @@ __pdoc__ = {
     "qdmpy.constants.choose_system": True,
     "qdmpy.constants.GAMMA": True,
     "qdmpy.constants.MU_0": True,
+    "qdmpy.constants.MAG_UNIT_CONV": True,
     "qdmpy.constants.S_MAT_X": True,
     "qdmpy.constants.S_MAT_Y": True,
     "qdmpy.constants.S_MAT_Z": True,
@@ -143,6 +145,23 @@ MU_0 = np.pi * 1e-7
 Vacuum permeability
 """
 
+MAG_UNIT_CONV = 1e-18 / 9.274010e-24
+"""
+Convert unit for magnetisation to something more helpful.
+
+SI unit measured: Amps: A
+
+More useful: Bohr magnetons per nanometre squared: mu_B nm^-2
+
+mu_B -> 9.274 010 e-24 A m^+2 or J/T
+m^2 -> 1e+18 nm^2
+
+Measure x amps = x A
+ def  mu_B = 9.2_        in units of A m^2
+ => x A =  x (1 / 9.2_)  in units of mu_B/m^2
+ => x A = (1e-18/9.2_)   in units of mu_B/nm^2
+"""
+
 # NOTE for other NV orientations, pass in unvs -> not possible to determine in full
 #   generality the orientations for <111> etc.
 
@@ -193,4 +212,22 @@ CVD Diamonds are usually <100>, <110>. HPHT usually <100>, <100>.
 ![](https://i.imgur.com/cpErjAH.png)
 
 Purple plane: top face of diamond, orange plane: edge faces.
+"""
+
+NV_AXES_111 = [
+    {"nv_number": 1, "ori": [0, 0, 1]},
+    {"nv_number": 2, "ori": [np.nan, np.nan, np.nan]},
+    {"nv_number": 3, "ori": [np.nan, np.nan, np.nan]},
+    {"nv_number": 4, "ori": [np.nan, np.nan, np.nan]},
+]
+"""
+<111> top face oriented.
+
+NV orientations (unit vectors) relative to lab frame.
+
+Only the first nv can be oriented in general. This constant
+is defined as a convenience for single-bnv <111> measurements.
+
+<111> diamonds have an NV family oriented in z, i.e. perpindicular
+to the diamond surface.
 """
