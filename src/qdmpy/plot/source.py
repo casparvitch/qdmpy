@@ -237,7 +237,7 @@ def plot_stream(options, source_params, PL_image_ROI=None):
                 flag = True
                 break
             elif source_params[p] is None:
-                flake = True
+                flag = True
                 break
         if flag:
             continue

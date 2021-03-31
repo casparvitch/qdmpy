@@ -5,7 +5,7 @@ Interface to fourier module.
 Functions
 ---------
  - `qdmpy.fourier.interface.prop_single_bnv`
- - `qdmpy.fourier.interface.get_reconstruxted_bfield`
+ - `qdmpy.fourier.interface.get_reconstructed_bfield`
  - `qdmpy.fourier.interface.get_j_from_bxy`
  - `qdmpy.fourier.interface.get_j_from_bz`
  - `qdmpy.fourier.interface.get_j_from_bnv`

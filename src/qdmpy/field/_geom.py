@@ -8,7 +8,6 @@ Functions
  - `qdmpy.field._geom.get_unvs`
  - `qdmpy.field._geom.get_B_bias`
  - `qdmpy.field._geom.get_unv_frames`
- - `qdmpy.field._geom.add_bfield_reconstructed`
 """
 
 # ============================================================================
@@ -18,7 +17,6 @@ __pdoc__ = {
     "qdmpy.field._geom.get_unvs": True,
     "qdmpy.field._geom.get_B_bias": True,
     "qdmpy.field._geom.get_unv_frames": True,
-    "qdmpy.field._geom.add_bfield_reconstructed": True,
 }
 
 # ============================================================================
