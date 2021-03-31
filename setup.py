@@ -12,6 +12,7 @@ required = [
     "simplejson",
     "pandas",
     "rebin",
+    "pyfftw",
 ]
 
 here = pathlib.Path(__file__).parent.resolve()
