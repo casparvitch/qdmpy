@@ -255,12 +255,19 @@ def plot_stream(options, source_params, PL_image_ROI=None):
 
         shp = source_params["Jx_" + method].shape
 
+        jnorms = source_params["Jnorm_" + method]
+        c_range = plot_common._get_colormap_range(
+            options["colormap_range_dicts"]["current_norm_images"], jnorms
+        )
+
+        c = np.clip(jnorms, a_min=c_range[0], a_max=c_range[1])
+
         strm = ax.streamplot(
             np.arange(shp[1]),
             np.arange(shp[0]),
             source_params["Jx_" + method],
             -source_params["Jy_" + method],
-            color=source_params["Jnorm_" + method],
+            color=c,
             cmap=options["colormaps"]["current_norm_images"],
             **options["streamplot_options"],
         )
