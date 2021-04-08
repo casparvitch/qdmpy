@@ -1155,8 +1155,6 @@ def plot_other_measurements(options, skip_first=0):
                 options["output_dir"] / (f"other-meas-{Path(s).stem}." + options["save_fig_type"])
             )
 
-    return fig
-
 
 # ============================================================================
 
