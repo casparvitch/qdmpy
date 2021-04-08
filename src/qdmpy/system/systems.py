@@ -408,6 +408,7 @@ class UniMelb(System):
     def get_headers_and_read_csv(self, options, path):
         # first get headers
         headers = pd.read_csv(path, sep=None, engine="python").columns.tolist()
+        headers = [h for h in headers if not h.startswith("Unnamed")]
         # then load dataset
         dataset = np.genfromtxt(path, skip_header=1, autostrip=True, delimiter="\t")
 

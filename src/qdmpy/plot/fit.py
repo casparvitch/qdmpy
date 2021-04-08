@@ -12,6 +12,7 @@ Functions
  - `qdmpy.plot.fit.plot_param_image`
  - `qdmpy.plot.fit.plot_param_images`
  - `qdmpy.plot.fit.plot_params_flattened`
+ - `qdmpy.plot.fit.plot_other_measurements`
  - `qdmpy.plot.fit._add_patch_rect`
  - `qdmpy.plot.fit._annotate_ROI_image`
  - `qdmpy.plot.fit._annotate_AOI_image`
@@ -29,6 +30,7 @@ __pdoc__ = {
     "qdmpy.plot.fit.plot_param_image": True,
     "qdmpy.plot.fit.plot_param_images": True,
     "qdmpy.plot.fit.plot_params_flattened": True,
+    "qdmpy.plot.fit.plot_other_measurements": True,
     "qdmpy.plot.fit._add_patch_rect": True,
     "qdmpy.plot.fit._annotate_ROI_image": True,
     "qdmpy.plot.fit._annotate_AOI_image": True,
