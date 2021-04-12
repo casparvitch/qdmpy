@@ -628,6 +628,7 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
         - param_images, residual_images, sigma_images, PL_images, bnv_images, dshift_images, bfield_images.
 - colormap_range_dicts
     - Choose range of values mapped across to the colormap limits, for each 'type' of image if you want to override, you must copy the full dict (not just the ones you want to change).
+    ```
         - Available options:
             type:
                     min_max                         : map between min and max of image
@@ -652,6 +653,7 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
                 - Optional boolean. If True, automatically detects if image has negative and positive values and makes colormap symmetric about zero. Only has an effect if the given c_range_type is "min_max" or "percentile". Defaults to True (i.e. if not specified)
 
         - All implemented in `qdmpy.plot.common._get_colormap_range`
+    ```
 - mpl_rcparams
     - Extra parameters (as dict) sent to matplotlib to define plotting stylesheet 
 - polygon_patch_params
