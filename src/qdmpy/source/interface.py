@@ -1,13 +1,23 @@
 # -*- coding: utf-8 -*-
 """
-TODO.
+Interface for source sub-module.
+
+Functions
+---------
+ - `qdmpy.source.interface.odmr_source_retrieval`
+ - `qdmpy.source.interface.get_current_density`
+ - `qdmpy.source.interface.get_magnetisation`
 """
 
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
-__pdoc__ = {"qdmpy.source.interface.": True}
+__pdoc__ = {
+    "qdmpy.source.interface.odmr_source_retrieval": True,
+    "qdmpy.source.interface.get_current_density": True,
+    "qdmpy.source.interface.get_magnetisation": True,
+}
 
 # ============================================================================
 
@@ -160,7 +170,7 @@ def get_current_density(
         if method == "from_bxy":
             jx, jy = qdmpy.fourier.get_j_from_bxy([bx, by, bz], *useful_opts)
         elif method == "from_bz":
-            jx, jy = qdmpy.fourier.get_j_from_bxy([bx, by, bz], *useful_opts)
+            jx, jy = qdmpy.fourier.get_j_from_bz([bx, by, bz], *useful_opts)
         elif method == "from_bnv":
             jx, jy = qdmpy.fourier.get_j_from_bnv(bnv, unv, *useful_opts)
         else:
@@ -204,9 +214,9 @@ def get_current_density(
                     "Jx_" + method + "_bground": jx_bground,
                     "Jy_" + method + "_bground": jy_bground,
                     "Jnorm_" + method + "_bground": jnorm_bground,
-                    "Jx_" + method: jx,
-                    "Jy_" + method: jy,
-                    "Jnorm_" + method: jnorm,
+                    "Jx_" + method: jx - jx_bground,
+                    "Jy_" + method: jy - jy_bground,
+                    "Jnorm_" + method: jnorm - jnorm_bground,
                 },
             }
         else:

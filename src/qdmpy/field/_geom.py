@@ -40,7 +40,7 @@ def get_unvs(options):
     Returns
     -------
     unvs : np array
-        Shape: (4,3). Equivalent to uNV_Z for each NV.
+        Shape: (4,3). Equivalent to uNV_Z for each NV. (Sorted largest to smallest Bnv)
     """
 
     bias_x, bias_y, bias_z = get_B_bias(options)
@@ -78,8 +78,6 @@ def get_unvs(options):
         sorted_dict = sorted(nv_axes, key=lambda x: x["mag"], reverse=True)
 
         for idx in range(len(sorted_dict)):
-            # nv_ori[idx, :] = sorted_dict[idx]["ori"] # not required anywhere?
-            # nv_signs[idx] = sorted_dict[idx]["sign"]
             unvs[idx, :] = np.array(sorted_dict[idx]["ori"]) * sorted_dict[idx]["sign"]
 
     return unvs

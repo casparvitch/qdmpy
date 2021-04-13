@@ -611,6 +611,7 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
 - bnv_bground_params
     - As above but for bnvs.
 - source_bground_method
+    - and/or use zero_point_normalisation_region (see above)
 - source_bground_params
 
 ### Plotting parameters

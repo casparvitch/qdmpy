@@ -105,7 +105,7 @@ def define_k_vectors(shape, pixel_size, k_vector_epsilon):
         ky, kx = np.meshgrid(ky_vec, kx_vec, indexing="ij")
 
     k = np.sqrt(ky ** 2 + kx ** 2)
-    return -ky, kx, k  # negative here to maintain correct image orientation (ky greater at top).
+    return ky, -kx, k  # negative here to maintain correct image orientation (ass. NV above source)
 
 
 # ============================================================================

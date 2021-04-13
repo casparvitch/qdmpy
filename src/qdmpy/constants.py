@@ -167,10 +167,10 @@ Measure x amps = x A
 
 # nv orientations (unit vectors) wrt lab frame [x, y, z]
 NV_AXES_100_110 = [
-    {"nv_number": 1, "ori": [np.sqrt(2 / 3), 0, np.sqrt(1 / 3)]},
-    {"nv_number": 2, "ori": [-np.sqrt(2 / 3), 0, np.sqrt(1 / 3)]},
-    {"nv_number": 3, "ori": [0, np.sqrt(2 / 3), -np.sqrt(1 / 3)]},
-    {"nv_number": 4, "ori": [0, -np.sqrt(2 / 3), -np.sqrt(1 / 3)]},
+    {"nv_number": 0, "ori": [np.sqrt(2 / 3), 0, np.sqrt(1 / 3)]},
+    {"nv_number": 1, "ori": [-np.sqrt(2 / 3), 0, np.sqrt(1 / 3)]},
+    {"nv_number": 2, "ori": [0, np.sqrt(2 / 3), -np.sqrt(1 / 3)]},
+    {"nv_number": 3, "ori": [0, -np.sqrt(2 / 3), -np.sqrt(1 / 3)]},
 ]
 """
 <100> top face oriented, <110> edge face oriented diamond (CVD).
@@ -191,10 +191,10 @@ Purple plane corresponds to top (or bottom) face of diamond, orange planes corre
 """
 
 NV_AXES_100_100 = [
-    {"nv_number": 1, "ori": [np.sqrt(1 / 3), np.sqrt(1 / 3), np.sqrt(1 / 3)]},
-    {"nv_number": 2, "ori": [-np.sqrt(1 / 3), -np.sqrt(1 / 3), np.sqrt(1 / 3)]},
-    {"nv_number": 3, "ori": [np.sqrt(1 / 3), -np.sqrt(1 / 3), -np.sqrt(1 / 3)]},
-    {"nv_number": 4, "ori": [-np.sqrt(1 / 3), np.sqrt(1 / 3), -np.sqrt(1 / 3)]},
+    {"nv_number": 0, "ori": [np.sqrt(1 / 3), np.sqrt(1 / 3), np.sqrt(1 / 3)]},
+    {"nv_number": 1, "ori": [-np.sqrt(1 / 3), -np.sqrt(1 / 3), np.sqrt(1 / 3)]},
+    {"nv_number": 2, "ori": [np.sqrt(1 / 3), -np.sqrt(1 / 3), -np.sqrt(1 / 3)]},
+    {"nv_number": 3, "ori": [-np.sqrt(1 / 3), np.sqrt(1 / 3), -np.sqrt(1 / 3)]},
 ]
 """
 <100> top face oriented, <100> edge face oriented diamond (HPHT).
@@ -215,10 +215,10 @@ Purple plane: top face of diamond, orange plane: edge faces.
 """
 
 NV_AXES_111 = [
-    {"nv_number": 1, "ori": [0, 0, 1]},
+    {"nv_number": 0, "ori": [0, 0, 1]},
+    {"nv_number": 1, "ori": [np.nan, np.nan, np.nan]},
     {"nv_number": 2, "ori": [np.nan, np.nan, np.nan]},
     {"nv_number": 3, "ori": [np.nan, np.nan, np.nan]},
-    {"nv_number": 4, "ori": [np.nan, np.nan, np.nan]},
 ]
 """
 <111> top face oriented.

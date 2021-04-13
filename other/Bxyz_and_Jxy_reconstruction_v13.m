@@ -1098,6 +1098,7 @@ if calc_J
 
     % Get J from BNV
     for ii = 1:4
+        % SAM'S NOTE 2021-04-13: kx appears too often in the 2 lines below?
         jx_from_bnv_temp = Hanning*2/mu0./exp_fac.*bnv(:,:,ii).*ky./(-NV_above_or_below*uNV(ii,1)*kx-NV_above_or_below*uNV(ii,2)*kx+uNV(ii,3)*1i*k);
         jy_from_bnv_temp = Hanning*2/mu0./exp_fac.*bnv(:,:,ii).*kx./(+NV_above_or_below*uNV(ii,1)*kx+NV_above_or_below*uNV(ii,2)*kx-uNV(ii,3)*1i*k);
         jx_from_bnv_temp(isnan(jx_from_bnv_temp)|isinf(jx_from_bnv_temp)) = 0;

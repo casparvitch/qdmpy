@@ -209,7 +209,7 @@ def get_reconstructed_bfield(
 
     $$ k \neq 0 $$
 
-    we have (analogously for y)
+    we have
 
     $$ (\hat{B}_x^{\rm recon}(x,y,z=z_{\rm NV}), \hat{B}_y^{\rm recon}(x,y,z=z_{\rm NV})) = \frac{-i}{k} (k_x, k_y) \hat{B}_z(x,y,,z=z_{\rm NV}) $$
 
@@ -242,10 +242,12 @@ def get_reconstructed_bfield(
 
     ky, kx, k = qdmpy.fourier._shared.define_k_vectors(fft_bx.shape, pixel_size, k_vector_epsilon)
 
-    bz2bx = -(1j / k) * kx
-    bz2by = -(1j / k) * ky
-    bx2bz = (1j / k) * kx
-    by2bz = (1j / k) * ky
+    # could chuck in an 'NV_above_or_below' sign here. 2020-04-13 swapped minus sign
+    # -> assumes NV above source
+    bz2bx = (1j / k) * kx
+    bz2by = (1j / k) * ky
+    bx2bz = -(1j / k) * kx
+    by2bz = -(1j / k) * ky
 
     bz2bx = qdmpy.fourier._shared.set_naninf_to_zero(bz2bx)
     bz2by = qdmpy.fourier._shared.set_naninf_to_zero(bz2by)
@@ -439,7 +441,7 @@ def get_j_from_bz(
 
     ky, kx, k = qdmpy.fourier._shared.define_k_vectors(fft_bz.shape, pixel_size, k_vector_epsilon)
 
-    # define transform
+    # define transformation
     bz_to_jx, bz_to_jy = define_current_transform([0, 0, 1], ky, kx, k, standoff)
 
     hanning_filt = qdmpy.fourier._shared.hanning_filter_kspace(
@@ -899,7 +901,7 @@ def define_current_transform(u_proj, ky, kx, k, standoff=None):
     ---------
     u_proj : array-like
         Shape: 3, the direction the magnetic field was measured on (projected onto).
-    ky kx, k : np arrays
+    ky, kx, k : np arrays
         Wavenumber meshgrids, k = sqrt( kx^2 + ky^2 )
 
     standoff : float or None, default : None
@@ -916,6 +918,7 @@ def define_current_transform(u_proj, ky, kx, k, standoff=None):
         https://doi.org/10.1103/PhysRevApplied.14.024076
         https://arxiv.org/abs/2005.06788
     """
+
     if standoff:
         exp_factor = np.exp(1 * k * standoff)
     else:
@@ -933,7 +936,7 @@ def define_current_transform(u_proj, ky, kx, k, standoff=None):
 
 
 def define_magnetisation_transformation(ky, kx, k, standoff):
-    """M => b fourier-space transformation. (NOTE given as inverse of direction 'wanted')
+    """M => b fourier-space transformation.
 
 
     Parameters

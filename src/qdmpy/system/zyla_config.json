@@ -878,7 +878,7 @@
         "option_default": {}
     },
 
-    // and for current/magnetisation
+    // and for current/magnetisation {and/or use zero_point_normalisation_region}
     "source_bground_method": {
         "option_default": null,
         "option_choices": [
