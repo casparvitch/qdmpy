@@ -953,7 +953,7 @@
             "dshift_images": "PRGn",
             "bfield_images": "bwr",
             "source_images": "viridis",
-            "current_vector_images": "BrBG",
+            "current_vector_images": "seismic",
             "current_norm_images": "turbo",
             "magnetisation_images": "PuOr"
         }
