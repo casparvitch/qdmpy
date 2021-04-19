@@ -7,6 +7,7 @@ Functions
  - `qdmpy.source.interface.odmr_source_retrieval`
  - `qdmpy.source.interface.get_current_density`
  - `qdmpy.source.interface.get_magnetisation`
+ - `qdmpy.source.interface.add_jsource_reconstructed`
 """
 
 
@@ -17,6 +18,7 @@ __pdoc__ = {
     "qdmpy.source.interface.odmr_source_retrieval": True,
     "qdmpy.source.interface.get_current_density": True,
     "qdmpy.source.interface.get_magnetisation": True,
+    "qdmpy.source.interface.add_div_j": True,
 }
 
 # ============================================================================
@@ -146,7 +148,7 @@ def get_current_density(
         for p in ["B" + comp for comp in components]:
             if p not in field_params:
                 warnings.warn(
-                    f"bfield param '{p} missing from field_params, skipping current calculation."
+                    f"bfield param '{p}' missing from field_params, skipping current calculation."
                 )
                 return None
             elif field_params[p] is None:
@@ -225,6 +227,8 @@ def get_current_density(
                 **{"Jx_" + method: jx, "Jy_" + method: jy, "Jnorm_" + method: jnorm},
             }
 
+    add_divperp_j(options, source_params)
+
     return source_params
 
 
@@ -286,7 +290,7 @@ def get_magnetisation(
         for p in ["B" + comp for comp in components]:
             if p not in field_params:
                 warnings.warn(
-                    f"bfield param '{p} missing from field_params, skipping mag calculation."
+                    f"bfield param '{p}' missing from field_params, skipping mag calculation."
                 )
                 return None
             elif field_params[p] is None:
@@ -357,3 +361,60 @@ def get_magnetisation(
             else:
                 source_params = {**source_params, **{"Mpsi_" + method: m}}
     return source_params
+
+
+# ============================================================================
+
+
+def add_divperp_j(options, source_params):
+    r"""jxy -> Divperp J
+
+    Divperp = divergence in x and y only (perpendicular to surface normal)
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options (for the main/signal experiment).
+    source_params : dict
+        Dictionary, key: param_keys, val: image (2D) of source field values across FOV.
+
+    Returns
+    -------
+    nothing (operates in place on field_params)
+
+
+    $$ \nabla \times {\bf J} = \frac{\partial {\bf J} }{\partial x} + \frac{\partial {\bf J}}{\partial y} + \frac{\partial {\bf J}}{\partial z} $$
+
+    $$ \nabla_{\perp} \times {\bf J} = \frac{\partial {\bf J} }{\partial x} + \frac{\partial {\bf J}}{\partial y} $$
+
+
+    """
+
+    if source_params is None:
+        return None
+
+    methods = options["recon_methods"]
+
+    components = ["x", "y"]
+
+    for method in methods:
+        for p in ["J" + comp + "_" + method for comp in components]:
+            if p not in source_params:
+                warnings.warn(f"source param '{p}' missing from source_params, skipping j recon.")
+                return None
+            elif source_params[p] is None:
+                return None
+
+    for method in methods:
+        jx, jy = [source_params["J" + comp + "_" + method] for comp in components]
+        conserv_j = qdmpy.fourier.get_divperp_j(
+            [jx, jy],
+            options["fourier_pad_mode"],
+            options["fourier_pad_factor"],
+            options["system"].get_raw_pixel_size(options) * options["total_bin"],
+            options["fourier_k_vector_epsilon"],
+        )
+
+        source_params[f"divperp_J_{method}"] = conserv_j
+
+    return None

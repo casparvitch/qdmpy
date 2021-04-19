@@ -6,6 +6,7 @@ Functions
 ---------
  - `qdmpy.fourier.interface.prop_single_bnv`
  - `qdmpy.fourier.interface.get_reconstructed_bfield`
+ - `qdmpy.fourier.interface.get_divperp_j`
  - `qdmpy.fourier.interface.get_j_from_bxy`
  - `qdmpy.fourier.interface.get_j_from_bz`
  - `qdmpy.fourier.interface.get_j_from_bnv`
@@ -23,6 +24,7 @@ __author__ = "Sam Scholten"
 __pdoc__ = {
     "qdmpy.fourier.interface.prop_single_bnv": True,
     "qdmpy.fourier.interface.get_reconstructed_bfield": True,
+    "qdmpy.fourier.interface.get_divperp_j": True,
     "qdmpy.fourier.interface.get_j_from_bxy": True,
     "qdmpy.fourier.interface.get_j_from_bz": True,
     "qdmpy.fourier.interface.get_j_from_bnv": True,
@@ -157,18 +159,6 @@ def get_reconstructed_bfield(
         E.g. options["system"].get_raw_pixel_size(options) * options["total_bin"].
     k_vector_epsilon : float
         Add an epsilon value to the k-vectors to avoid some issues with 1/0.
-    do_hanning_filter : bool
-        Do a hanning filter?
-    hanning_high_cutoff : float
-        Set highpass cutoff k values. Give as a distance/wavelength, e.g. k_high will be set
-        via k_high = 2pi/high_cutoff. Should be _smaller_ number than low_cutoff.
-    hanning_low_cutoff : float
-        Set lowpass cutoff k values. Give as a distance/wavelength, e.g. k_low will be set
-        via k_low = 2pi/low_cutoff. Should be _larger_ number than high_cutoff.
-    standoff : float
-        Distance NV layer <-> Sample (in metres)
-    nv_layer_thickness : float
-        Thickness of NV layer (in metres)
 
     Returns
     -------
@@ -274,6 +264,67 @@ def get_reconstructed_bfield(
 # ============================================================================
 
 
+def get_divperp_j(
+    jvec,
+    pad_mode,
+    pad_factor,
+    pixel_size,
+    k_vector_epsilon,
+):
+    r"""
+    jxy calculated -> perpindicular (in-plane) divergence of j
+
+    Arguments
+    ---------
+    jvec : list
+        List of magnetic field components, e.g [jx_image, jy_image]
+    pad_mode : str
+        Mode to use for fourier padding. See np.pad for options.
+    pad_factor : int
+        Factor to pad image on all sides. E.g. pad_factor = 2 => 2 * image width on left and right
+        and 2 * image height above and below.
+    pixel_size : float
+        Size of pixel in bnv, the rebinned pixel size.
+        E.g. options["system"].get_raw_pixel_size(options) * options["total_bin"].
+    k_vector_epsilon : float
+        Add an epsilon value to the k-vectors to avoid some issues with 1/0.
+
+
+    Returns
+    -------
+    jx_recon, jy_recon : np arrays (2D)
+        The reconstructed j (source) field maps.
+
+    $$ \nabla \times {\bf J} = \frac{\partial {\bf J} }{\partial x} + \frac{\partial {\bf J}}{\partial y} + \frac{\partial {\bf J}}{\partial z} $$
+
+    $$ \nabla_{\perp} \times {\bf J} = \frac{\partial {\bf J} }{\partial x} + \frac{\partial {\bf J}}{\partial y} $$
+
+    """
+
+    jx, jy = copy(jvec)
+    # first pad each comp
+    jx_pad, padder = qdmpy.fourier._shared.pad_image(jx, pad_mode, pad_factor)
+    jy_pad, _ = qdmpy.fourier._shared.pad_image(jy, pad_mode, pad_factor)
+
+    fft_jx = numpy_fft.fftshift(numpy_fft.fft2(jx_pad))
+    fft_jy = numpy_fft.fftshift(numpy_fft.fft2(jy_pad))
+    fft_jx = qdmpy.fourier._shared.set_naninf_to_zero(fft_jx)
+    fft_jy = qdmpy.fourier._shared.set_naninf_to_zero(fft_jy)
+
+    ky, kx, k = qdmpy.fourier._shared.define_k_vectors(fft_jx.shape, pixel_size, k_vector_epsilon)
+
+    fft_divperp_j = -1j * kx * fft_jx + -1j * ky + fft_jy
+
+    divperp_j = numpy_fft.ifft2(numpy_fft.ifftshift(fft_divperp_j)).real
+
+    # only return non-padded region
+    divperp_j_reg = qdmpy.fourier._shared.unpad_image(divperp_j, padder)
+    return divperp_j_reg
+
+
+# ============================================================================
+
+
 def get_j_from_bxy(
     bfield,
     pad_mode,
@@ -364,8 +415,8 @@ def get_j_from_bxy(
         hanning_filt * nv_thickness_correction * by_to_jx
     )
 
-    fft_jx = by_to_jx * fft_by
-    fft_jy = bx_to_jy * fft_bx
+    fft_jx = fft_by * by_to_jx
+    fft_jy = fft_bx * bx_to_jy
 
     # fourier transform back into real space
     jx = numpy_fft.ifft2(numpy_fft.ifftshift(fft_jx)).real

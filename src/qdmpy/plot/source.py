@@ -8,6 +8,7 @@ Functions
  - `qdmpy.plot.source.plot_current`
  - `qdmpy.plot.source.plot_stream`
  - `qdmpy.plot.source.plot_magnetisation`
+ - `qdmpy.plot.source.plot_jsource_consistency`
 """
 
 # ============================================================================
@@ -18,6 +19,7 @@ __pdoc__ = {
     "qdmpy.plot.source.plot_current": True,
     "qdmpy.plot.source.plot_stream": True,
     "qdmpy.plot.source.plot_magnetisation": True,
+    "qdmpy.plot.source.plot_jsource_consistency": True,
 }
 
 # ============================================================================
@@ -28,6 +30,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches
 from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
 from matplotlib_scalebar.scalebar import ScaleBar
+from matplotlib import cm
+from matplotlib.colors import ListedColormap
 import warnings
 
 # ============================================================================
@@ -121,7 +125,6 @@ def plot_current(options, source_params, plot_bgrounds=True):
     plot_bgrounds = plot_bgrounds and options["source_bground_method"]
 
     figsize = mpl.rcParams["figure.figsize"].copy()
-    c_map = options["colormaps"]["magnetisation_images"]
     width = 3
     height = len(options["recon_methods"])  # number of rows
     height *= 3 if plot_bgrounds else 1
@@ -199,7 +202,15 @@ def plot_current(options, source_params, plot_bgrounds=True):
 # ============================================================================
 
 
-def plot_stream(options, source_params, PL_image_ROI=None):
+def plot_stream(
+    options,
+    source_params,
+    PL_image_ROI=None,
+    probe_image_path=None,
+    probe_cmap="Purples",
+    probe_alpha=0.5,
+    probe_cutoff=0.8,
+):
     """Plot current density as a streamplot.
 
     Arguments
@@ -252,6 +263,18 @@ def plot_stream(options, source_params, PL_image_ROI=None):
                 vmax=np.nanmax(PL_image_ROI),
                 alpha=options["streamplot_PL_alpha"],
             )
+            if probe_image_path is not None:
+                try:
+                    probe_ar = np.loadtxt(probe_image_path)
+                    im2 = ax.imshow(
+                        probe_ar,
+                        cmap=probe_cmap,
+                        vmin=np.nanmin(probe_cutoff * np.nanmax(probe_ar)),
+                        vmax=np.nanmax(probe_ar),
+                        alpha=probe_alpha,
+                    )
+                except Exception:
+                    pass
 
         shp = source_params["Jx_" + method].shape
 
@@ -262,13 +285,30 @@ def plot_stream(options, source_params, PL_image_ROI=None):
 
         c = np.clip(jnorms, a_min=c_range[0], a_max=c_range[1])
 
+        cbar_drange = options["streamplot_cbar_options"]["cbar_dynamic_range"]
+        u = options["streamplot_cbar_options"]["streamplot_cbar_alpha_ramp_factor"]
+        h = options["streamplot_cbar_options"]["streamplot_cbar_low_cutoff"]
+        base_cmap = cm.get_cmap(options["colormaps"]["current_norm_images"], cbar_drange)
+
+        new_colors = base_cmap(np.linspace(0, 1, cbar_drange))
+
+        xvals = np.linspace(0, 1, cbar_drange)
+        cbar_alpha_ramp = np.tanh(u * (xvals - h)) / np.tanh(u * (1 - h))
+        cbar_alpha_ramp[cbar_alpha_ramp < 0] = 0
+
+        new_colors[:, 3] = new_colors[:, 3] * cbar_alpha_ramp
+
+        cmap_w_alpha = ListedColormap(new_colors)
+
+        cm.register_cmap(name="alpha_cmap", cmap=cmap_w_alpha)
+
         strm = ax.streamplot(
             np.arange(shp[1]),
             np.arange(shp[0]),
             source_params["Jx_" + method],
             -source_params["Jy_" + method],
             color=c,
-            cmap=options["colormaps"]["current_norm_images"],
+            cmap="alpha_cmap",
             **options["streamplot_options"],
         )
 
@@ -399,5 +439,49 @@ def plot_magnetisation(options, source_params, plot_bgrounds=True):
 
     if options["save_plots"]:
         fig.savefig(options["source_dir"] / (root_name + "." + options["save_fig_type"]))
+
+    return fig
+
+
+# ============================================================================
+
+
+def plot_divperp_j(options, source_params):
+    """plot perpindicular divergence of J, i.e. in-plane divergence (dJ/dx + dJ/dy).
+
+    Parameters
+    ----------
+    options : dict
+        Generic options dict holding all the user options.
+    source_params : dict
+        Dictionary, key: param_keys, val: image (2D) of source field values across FOV.
+
+    Returns
+    -------
+    fig : matplotlib Figure object
+    """
+
+    if source_params is None:
+        return None
+
+    figsize = mpl.rcParams["figure.figsize"].copy()
+    width = len(options["recon_methods"])  #  * 2  # number of rows (methods + direct/recon)
+    figsize[0] *= width
+    height = 1
+    fig, axs = plt.subplots(height, width, figsize=figsize, constrained_layout=True)
+
+    for m_idx, method in enumerate(options["recon_methods"]):  # # m_idx: each doublet of rows
+        data = source_params[f"divperp_J_{method}"]
+        title = f"Div perp ( J_{method} )"
+        c_range = plot_common._get_colormap_range(
+            options["colormap_range_dicts"]["current_div_images"], data
+        )
+        c_map = options["colormaps"]["current_div_images"]
+        plot_common.plot_image_on_ax(
+            fig, axs[m_idx], options, data, title, c_map, c_range, "Div perp J (A/m^2)"
+        )
+
+    if options["save_plots"]:
+        fig.savefig(options["source_dir"] / ("divperp_J." + options["save_fig_type"]))
 
     return fig

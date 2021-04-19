@@ -955,6 +955,7 @@
             "source_images": "viridis",
             "current_vector_images": "seismic",
             "current_norm_images": "turbo",
+            "current_div_images": "turbo",
             "magnetisation_images": "PuOr"
         }
     },
@@ -991,26 +992,22 @@
     "colormap_range_dicts": {
         "option_default": {
             "param_images": {
-                "type": "percentile",
-                "values": [1, 99]
+                "type": "min_max_symmetric_about_mean"
             },
             "residual_images": {
                 "type": "min_max"
             },
             "sigma_images": {
-                "type": "percentile",
-                "values": [1, 99]
+                "type": "min_max"
             },
             "PL_images": {
                 "type": "min_max"
             },
             "bnv_images": {
-                "type": "percentile",
-                "values": [1, 99]
+                "type": "min_max"
             },
             "dshift_images": {
-                "type": "percentile",
-                "values": [1, 99]
+                "type": "min_max"
             },
             "bfield_images": {
                 "type": "min_max"
@@ -1026,9 +1023,12 @@
                 "type": "strict_range",
                 "values": [0, 50]
             },
-            "magnetisation_images": {
+            "current_div_images": {
                 "type": "percentile",
                 "values": [1, 99]
+            },
+            "magnetisation_images": {
+                "type": "min_max"
             }
         }
     },
@@ -1107,6 +1107,16 @@
     // streamplot
     "streamplot_PL_alpha": {
         "option_default": 1.0
+    },
+    // Options to create streamplot stream colors. alpha factor: prefactor in tanh that
+    // defines the alpha values. low cutoff: values below this are set to an alpha of 0
+    // dynamic range: number of colors to use in cbar  
+    "streamplot_cbar_options": {
+        "option_default": {
+            "streamplot_cbar_alpha_ramp_factor": 2,
+            "streamplot_cbar_low_cutoff": 0.1,
+            "cbar_dynamic_range": 1000
+        }
     },
     // ===========================================================================================
     // Things set internally, allow to be anything
