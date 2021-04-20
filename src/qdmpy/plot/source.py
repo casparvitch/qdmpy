@@ -33,6 +33,7 @@ from matplotlib_scalebar.scalebar import ScaleBar
 from matplotlib import cm
 from matplotlib.colors import ListedColormap
 import warnings
+import copy
 
 # ============================================================================
 
@@ -206,10 +207,10 @@ def plot_stream(
     options,
     source_params,
     PL_image_ROI=None,
-    probe_image_path=None,
-    probe_cmap="Purples",
-    probe_alpha=0.5,
-    probe_cutoff=0.8,
+    probe_image=None,
+    probe_color="red",
+    probe_alpha=1.0,
+    probe_cutoff=0.9,
 ):
     """Plot current density as a streamplot.
 
@@ -263,18 +264,15 @@ def plot_stream(
                 vmax=np.nanmax(PL_image_ROI),
                 alpha=options["streamplot_PL_alpha"],
             )
-            if probe_image_path is not None:
-                try:
-                    probe_ar = np.loadtxt(probe_image_path)
-                    im2 = ax.imshow(
-                        probe_ar,
-                        cmap=probe_cmap,
-                        vmin=np.nanmin(probe_cutoff * np.nanmax(probe_ar)),
-                        vmax=np.nanmax(probe_ar),
-                        alpha=probe_alpha,
-                    )
-                except Exception:
-                    pass
+            if probe_image is not None:
+                my_cmap = copy.copy(cm.get_cmap("Reds")) # doesn't matter _what_ the cmap imshow
+                my_cmap.set_under('k', alpha=0)
+                my_cmap.set_over(probe_color, alpha=probe_alpha)
+                im2 = ax.imshow(
+                    probe_image,
+                    cmap=my_cmap,
+                    clim=[probe_cutoff*np.nanmax(probe_image), probe_cutoff*np.nanmax(probe_image)+0.000001],
+                )
 
         shp = source_params["Jx_" + method].shape
 
@@ -285,16 +283,18 @@ def plot_stream(
 
         c = np.clip(jnorms, a_min=c_range[0], a_max=c_range[1])
 
-        cbar_drange = options["streamplot_cbar_options"]["cbar_dynamic_range"]
-        u = options["streamplot_cbar_options"]["streamplot_cbar_alpha_ramp_factor"]
-        h = options["streamplot_cbar_options"]["streamplot_cbar_low_cutoff"]
+        cbar_drange = options["streamplot_cbar_options"]["dynamic_range"]
+        u = options["streamplot_cbar_options"]["alpha_ramp_factor"]
+        h = options["streamplot_cbar_options"]["low_cutoff"]
+        f = options["streamplot_cbar_options"]["high_cutoff"]
         base_cmap = cm.get_cmap(options["colormaps"]["current_norm_images"], cbar_drange)
 
         new_colors = base_cmap(np.linspace(0, 1, cbar_drange))
 
         xvals = np.linspace(0, 1, cbar_drange)
-        cbar_alpha_ramp = np.tanh(u * (xvals - h)) / np.tanh(u * (1 - h))
-        cbar_alpha_ramp[cbar_alpha_ramp < 0] = 0
+        cbar_alpha_ramp = np.tanh(u * (xvals - h)) / np.tanh(u * (f - h))
+        cbar_alpha_ramp[cbar_alpha_ramp < 0.0] = 0.0
+        cbar_alpha_ramp[cbar_alpha_ramp > 1.0] = 1.0
 
         new_colors[:, 3] = new_colors[:, 3] * cbar_alpha_ramp
 

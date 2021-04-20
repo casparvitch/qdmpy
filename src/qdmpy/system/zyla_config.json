@@ -955,7 +955,7 @@
             "source_images": "viridis",
             "current_vector_images": "seismic",
             "current_norm_images": "turbo",
-            "current_div_images": "turbo",
+            "current_div_images": "coolwarm",
             "magnetisation_images": "PuOr"
         }
     },
@@ -1110,12 +1110,17 @@
     },
     // Options to create streamplot stream colors. alpha factor: prefactor in tanh that
     // defines the alpha values. low cutoff: values below this are set to an alpha of 0
+    // high cutoff: values above this are set to an alpha of 1
     // dynamic range: number of colors to use in cbar  
+    // alpha operation:
+    // tanh(c (x-d) ) / tanh(c (f-d) )
+    // c: ramp factor, d: low cutoff, f: high cutoff
     "streamplot_cbar_options": {
         "option_default": {
-            "streamplot_cbar_alpha_ramp_factor": 2,
-            "streamplot_cbar_low_cutoff": 0.1,
-            "cbar_dynamic_range": 1000
+            "alpha_ramp_factor": 2,
+            "low_cutoff": 0.1,
+            "high_cutoff": 1.0,
+            "dynamic_range": 1000
         }
     },
     // ===========================================================================================
