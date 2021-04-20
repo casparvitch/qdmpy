@@ -507,6 +507,9 @@ def _field_options_compatible(options):
     # if options["bfield_bground_params"] != prev_options["bfield_bground_params"]:
     #     return False, "different bfield_bground_params"
 
+    if options["diamond_ori"] != prev_options["diamond_ori"]:
+        return False, "different diamond_ori"
+
     if options["field_method_used"] == "hamiltonian_fitting":
         if options["hamiltonian"] != prev_options["hamiltonian"]:
             return False, "different hamiltonian selected."
