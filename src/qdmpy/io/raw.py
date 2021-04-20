@@ -264,6 +264,9 @@ def reshape_dataset(options, image, sweep_list):
         Normalised measurement array, for chosen single pixel check.
     sweep_list : list
         List of sweep parameter values (with removed unwanted sweeps at start/end)
+    ROI : length 2 list of np meshgrids
+        Defines an ROI that can be applied to the 3D image through direct indexing.
+        E.g. sig_ROI = sig[:, ROI[0], ROI[1]] (post rebinning)
     """
     systems.clean_options(options)
 
@@ -283,7 +286,7 @@ def reshape_dataset(options, image, sweep_list):
         )  # opposite convention here, [x, y]
 
     # somewhat important a lot of this isn't hidden, so we can adjust it later
-    PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list = _remove_unwanted_data(
+    PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list, ROI = _remove_unwanted_data(
         options, image_rebinned, sweep_list, sig, ref, sig_norm
     )  # also cuts sig etc. down to ROI
 
@@ -316,7 +319,7 @@ def reshape_dataset(options, image, sweep_list):
         single_pixel_pl = sig_norm[:, sig_norm.shape[1] // 2, sig_norm.shape[2] // 2]
         options["single_pixel_check"] = (sig_norm.shape[2] // 2, sig_norm.shape[1] // 2)
 
-    return PL_image, PL_image_ROI, sig, ref, sig_norm, single_pixel_pl, sweep_list
+    return PL_image, PL_image_ROI, sig, ref, sig_norm, single_pixel_pl, sweep_list, ROI
 
 
 # ============================================================================
@@ -554,9 +557,11 @@ def _remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_nor
         Signal normalised by reference (via subtraction or normalisation, chosen in options),
         reshaped and rebinned. Unwanted sweeps removed.
         Format: [sweep_vals, y, x]
-
     sweep_list : list
         List of sweep parameter values (with removed unwanted sweeps at start/end)
+    ROI : length 2 list of np meshgrids
+        Defines an ROI that can be applied to the 3D image through direct indexing.
+        E.g. sig_ROI = sig[:, ROI[0], ROI[1]]
     """
     systems.clean_options(options)
 
@@ -580,7 +585,7 @@ def _remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_nor
     sig_norm = sig_norm[rem_start : -1 - rem_end, ROI[0], ROI[1]].copy()  # noqa: E203
     sweep_list = np.asarray(sweep_list[rem_start : -1 - rem_end]).copy()  # noqa: E203
 
-    return PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list
+    return PL_image, PL_image_ROI, sig, ref, sig_norm, sweep_list, ROI
 
 
 # ============================================================================
