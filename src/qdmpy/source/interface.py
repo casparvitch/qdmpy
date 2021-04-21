@@ -336,7 +336,7 @@ def get_magnetisation(
                 **options["source_bground_params"],
             )
 
-        if not options["magnetisation_angle"]:
+        if options["magnetisation_angle"] is None:
             if options["source_bground_method"]:
                 source_params = {
                     **source_params,

@@ -497,7 +497,7 @@
 
     // If option 'prop_single_bnv' given for 'field_method' but number of frequencies fit
     // is 2 or 3, this option resolves ambiguity in which bnv to utilize. 
-    // This option is used like so: single_bnv = bnvs[single_bnv_choice + 1]
+    // This option is used like so: single_bnv = bnvs[single_bnv_choice - 1]
     // Note that `freqs_to_use` must still be set (to use 2 freqs only).
     "single_bnv_choice": {
         "option_default": 1
@@ -767,7 +767,7 @@
     // ===========================================================================================
     // type of source to reconstruct to
     "source_type": {
-        "option_default": "current_density",
+        "option_default": "magnetisation",
         "option_choices": [
             "current_density",
             "magnetisation"
@@ -812,11 +812,11 @@
         "option_default": null
     },
 
-    // magnetisation direction (intrinsic). Either zero (for z-magnetisation) or an angle
+    // magnetisation direction (intrinsic). Either null/None (for z-magnetisation) or an angle
     // in degress, from (+) x-axis towards (+) y-axis.
     // untested. 
     "magnetisation_angle": {
-        "option_default": 0
+        "option_default": null
     },
 
     // ========================================================

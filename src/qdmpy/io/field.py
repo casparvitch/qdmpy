@@ -52,6 +52,8 @@ import os
 
 import qdmpy.io.fit
 import qdmpy.hamiltonian
+import qdmpy.field._bxyz as Qbxyz
+import qdmpy.field._bnv as Qbnv
 
 # ============================================================================
 
@@ -197,15 +199,20 @@ def load_prev_field_calcs(options):
     """
     sig_bnvs, sig_dshifts = load_prev_bnvs_and_dshifts(options, "sig")
     ref_bnvs, ref_dshifts = load_prev_bnvs_and_dshifts(options, "ref")
-    sig_sub_ref_bnvs, _ = load_prev_bnvs_and_dshifts(options, "sig_sub_ref")
 
     sig_params = load_prev_field_params(options, "sig")
     ref_params = load_prev_field_params(options, "ref")
-    sig_sub_ref_params = load_prev_field_params(options, "sig_sub_ref")
-
+    
     sig_sigmas = load_prev_field_sigmas(options, "sig")
     ref_sigmas = load_prev_field_sigmas(options, "ref")
-    sig_sub_ref_sigmas = load_prev_field_sigmas(options, "sig_sub_ref")
+
+    # Sam changed to below on 2021-04-21, so that background subtraction is done transparently.
+    sig_sub_ref_bnvs = Qbnv.bnv_refsub(options, sig_bnvs, ref_bnvs)
+    # sig_sub_ref_bnvs, _ = load_prev_bnvs_and_dshifts(options, "sig_sub_ref")
+    sig_sub_ref_params = Qbxyz.field_refsub(options, sig_params, ref_params)
+    # sig_sub_ref_params = load_prev_field_params(options, "sig_sub_ref")
+    sig_sub_ref_sigmas = Qbxyz.field_sigma_add(options, sig_sigmas, ref_sigmas)
+    # sig_sub_ref_sigmas = load_prev_field_sigmas(options, "sig_sub_ref")
 
     return (
         [sig_bnvs, ref_bnvs, sig_sub_ref_bnvs],
@@ -497,6 +504,8 @@ def _field_options_compatible(options):
             return False, "different unvs chosen."
 
     if str(options["field_ref_dir"]) != str(prev_options["field_ref_dir"]):
+        # Note: this could be done more intelligently -> grab field result etc. for a given file name
+        # BUT it would be prone to error. More transparent to just calculate the field for sig & ref again
         return False, "different reference (field_ref_dir name is different)."
 
     # removed this check here -> want to be able to reload field and apply different

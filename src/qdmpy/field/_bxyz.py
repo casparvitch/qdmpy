@@ -8,6 +8,9 @@ Functions
  - `qdmpy.field._bxyz.from_single_bnv`
  - `qdmpy.field._bxyz.from_unv_inversion`
  - `qdmpy.field._bxyz.from_hamiltonian_fitting`
+ - `qdmpy.field._bxyz.sub_bground_Bxyz`
+ - `qdmpy.field._bxyz.field_refsub`
+ - `qdmpy.field._bxyz.field_sigma_add`
 """
 # ============================================================================
 
@@ -16,6 +19,9 @@ __pdoc__ = {
     "qdmpy.field._bxyz.from_single_bnv": True,
     "qdmpy.field._bxyz.from_unv_inversion": True,
     "qdmpy.field._bxyz.from_hamiltonian_fitting": True,
+    "qdmpy.field._bxyz.sub_bground_Bxyz": True,
+    "qdmpy.field._bxyz.field_refsub": True,
+    "qdmpy.field._bxyz.field_sigma_add": True,
 }
 # ============================================================================
 
@@ -28,6 +34,7 @@ import qdmpy.field._geom as Qgeom
 import qdmpy.field._bnv as Qbnv
 import qdmpy.hamiltonian as Qham
 import qdmpy.fourier
+import qdmpy.itool as Qitool
 
 # ============================================================================
 
@@ -77,8 +84,8 @@ def from_single_bnv(options, bnvs):
         single_bnv = bnvs[idx]
         unv = unvs[idx]
     else:  # need to use 'single_bnv_choice' option to resolve amiguity.
-        single_bnv = bnvs[options["single_bnv_choice"] + 1]
-        unv = bnvs[options["single_bnv_choice"] + 1]
+        single_bnv = bnvs[options["single_bnv_choice"] - 1]
+        unv = bnvs[options["single_bnv_choice"] - 1]
 
     # (get unv data from chosen freqs, method in _geom)
     # (then follow methodology in DB code -> import a `fourier` module)
@@ -257,3 +264,193 @@ def from_hamiltonian_fitting(options, fit_params):
         data = np.array(freq_lst)
 
     return Qham.fit_hamiltonian_pixels(options, data, ham)
+
+
+# ============================================================================
+
+
+def sub_bground_Bxyz(options, field_params, field_sigmas, method, **method_settings):
+    """Calculate and subtract a background from the Bx, By and Bz keys in params and sigmas
+
+    Methods available for background calculation:
+        Methods available (& required params in method_settings):
+        - "fix_zero"
+            - Fix background to be a constant offset (z value)
+            - params required in method_settings:
+                "zero" an int/float, defining the constant offset of the background
+        - "three_point"
+            - Calculate plane background with linear algebra from three [x,y] lateral positions
+              given
+            - params required in method_settings:
+                - "points" a len-3 iterable containing [x, y] points
+        - "mean"
+            - background calculated from mean of image
+            - no params required
+        - "poly"
+            - background calculated from polynomial fit to image.
+            - params required in method_settings:
+                - "order": an int, the 'order' polynomial to fit. (e.g. 1 = plane).
+        - "gaussian"
+            - background calculated from gaussian fit to image.
+            - no params required
+        - "interpolate"
+            - Background defined by the dataset smoothed via a sigma-gaussian filtering,
+                and method-interpolation over masked (polygon) regions.
+            - params required in method_settings:
+                - "method":
+                - "sigma": sigma passed to gaussian filter (see scipy.ndimage.gaussian_filter)
+                    which is utilized on the background before interpolating
+        - "gaussian_filter"
+            - background calculated from image filtered with a gaussian filter.
+            - params required in method_settings:
+                - "sigma": sigma passed to gaussian filter (see scipy.ndimage.gaussian_filter)
+
+    See `qdmpy.itool.interface.get_background` for implementation etc.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options (for the main/signal experiment).
+    field_params : dict
+        Dictionary, key: param_keys, val: image (2D) of (field) param values across FOV.
+    field_sigmas : dict
+        Dictionary, key: param_keys, val: image (2D) of (field) sigma (error) values across FOV.
+    method : str
+        Method to use for background subtraction. See above for details.
+    **method_settings : dict
+        (i.e. keyword arguments).
+        Parameters passed to background subtraction algorithm. See above for details
+
+    Returns
+    -------
+    field_params : dict
+        Dictionary, key: param_keys, val: image (2D) of (field) param values across FOV.
+        Now with keys: "Bx_full" (unsubtracted), "Bx_bground", and "Bx" which has bground subbed.
+    field_sigmas : dict
+        Dictionary, key: param_keys, val: image (2D) of (field) sigma (error) values across FOV.
+        Now with keys: "Bx_full" (unsubtracted), "Bx_bground", and "Bx" which has bground subbed.
+    """
+    if not field_params:
+        return field_params, field_sigmas
+
+    for b in ["Bx", "By", "Bz"]:
+        if b not in field_params:
+            warnings.warn("no B params found in field_params? Doing nothing.")
+            return field_params, field_sigmas
+
+    if "polygons" in options and (options["mask_polygons_bground"] or method == "interpolate"):
+        polygons = options["polygons"]
+    else:
+        polygons = None
+    x_bground = Qitool.get_background(
+        field_params["Bx"], method, polygons=polygons, **method_settings
+    )
+    y_bground = Qitool.get_background(
+        field_params["By"], method, polygons=polygons, **method_settings
+    )
+    z_bground = Qitool.get_background(
+        field_params["Bz"], method, polygons=polygons, **method_settings
+    )
+
+    field_params["Bx_bground"] = x_bground
+    field_params["By_bground"] = y_bground
+    field_params["Bz_bground"] = z_bground
+
+    field_params["Bx_full"] = field_params["Bx"]
+    field_params["By_full"] = field_params["By"]
+    field_params["Bz_full"] = field_params["Bz"]
+
+    field_params["Bx"] = field_params["Bx_full"] - x_bground
+    field_params["By"] = field_params["By_full"] - y_bground
+    field_params["Bz"] = field_params["Bz_full"] - z_bground
+
+    if (
+        field_sigmas is not None
+        and "Bx" in field_sigmas
+        and "By" in field_sigmas
+        and "Bz" in field_sigmas
+    ):
+        field_sigmas["Bx_full"] = field_sigmas["Bx"]
+        field_sigmas["By_full"] = field_sigmas["By"]
+        field_sigmas["Bz_full"] = field_sigmas["Bz"]
+
+        missing = np.empty(field_sigmas["Bx"].shape)
+        missing[:] = np.nan
+        field_sigmas["Bx_bground"] = missing
+        field_sigmas["By_bground"] = missing
+        field_sigmas["Bz_bground"] = missing
+        # leave field_sigmas["Bx"] etc. the same
+
+    return field_params, field_sigmas
+
+
+# ============================================================================
+
+
+def field_refsub(options, sig_params, ref_params):
+    """Calculate sig - ref dict.
+
+    Don't need to be compatible, i.e. will only subtract params that exist in both dicts.
+
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options (for the main/signal experiment).
+    sig_params : dict
+        Dictionary, key: param_keys, val: image (2D) of (field) param values across FOV.
+    ref_params : dict
+        Dictionary, key: param_keys, val: image (2D) of (field) param values across FOV.
+
+    Returns
+    -------
+    sig_sub_ref_params : dict
+        sig - ref dictionary
+    """
+    def subtractor(key, sig, ref_params):
+        if ref_params[key] is not None:
+            return sig - ref_params[key]
+        else:
+            return sig
+    if ref_params:
+        return {
+            key: subtractor(key, sig, ref_params) for (key, sig) in sig_params.items() if key in ref_params
+        }
+    else:
+        return sig_params.copy()
+
+
+
+# ============================================================================
+
+
+def field_sigma_add(options, sig_sigmas, ref_sigmas):
+    """as qdmpy.field.interface.field_refsub` but we add sigmas (error propagation).
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options (for the main/signal experiment).
+    sig_sigmas : dict
+        Dictionary, key: param_keys, val: image (2D) of (field) sigma (error) values across FOV
+        for the signal experiment.
+    ref_sigmas : dict
+        Dictionary, key: param_keys, val: image (2D) of (field) sigma (error) values across FOV
+        for the reference experiment.
+
+    Returns
+    -------
+    sig_sub_ref_sigmas : dict
+        Same as sig_sigmas, but with ref subtracted.
+    """
+    def adder(key, sig, ref_sigmas):
+        if ref_sigmas[key] is not None:
+            return sig + ref_sigmas[key]
+        else:
+            return sig
+    if ref_sigmas:
+        return {
+            key: adder(key, sig, ref_sigmas) for (key, sig) in sig_sigmas.items() if key in ref_sigmas
+        }
+    else:
+        return sig_sigmas.copy()

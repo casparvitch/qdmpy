@@ -9,6 +9,7 @@ Functions
  - `qdmpy.field._bnv.get_bnv_sd`
  - `qdmpy.field._bnv.check_exp_bnv_compatibility`
  - `qdmpy.field._bnv.bnv_refsub`
+ - `qdmpy.field._bnv.sub_bground_bnvs`
 """
 
 # ============================================================================
@@ -19,6 +20,7 @@ __pdoc__ = {
     "qdmpy.field._bnv.get_bnv_sd": True,
     "qdmpy.field._bnv.check_exp_bnv_compatibility": True,
     "qdmpy.field._bnv.bnv_refsub": True,
+    "qdmpy.field._bnv.sub_bground_bnvs": True,
 }
 
 # ============================================================================
@@ -28,6 +30,7 @@ import numpy as np
 # ============================================================================
 
 import qdmpy.constants
+import qdmpy.itool as Qitool
 
 # ============================================================================
 
@@ -175,3 +178,77 @@ def bnv_refsub(options, sig_bnvs, ref_bnvs):
         return [sig - ref for sig, ref in zip(sig_bnvs, ref_bnvs)]
     else:
         return sig_bnvs.copy()
+
+
+# ============================================================================
+
+
+def sub_bground_bnvs(options, bnvs, method, **method_settings):
+    """Subtract a background from the bnvs.
+
+    Methods available:
+        - "fix_zero"
+            - Fix background to be a constant offset (z value)
+            - params required in method_params_dict:
+                "zero" an int/float, defining the constant offset of the background
+        - "three_point"
+            - Calculate plane background with linear algebra from three [x,y] lateral positions
+              given
+            - params required in method_params_dict:
+                - "points" a len-3 iterable containing [x, y] points
+        - "mean"
+            - background calculated from mean of image
+            - no params required
+        - "poly"
+            - background calculated from polynomial fit to image.
+            - params required in method_params_dict:
+                - "order": an int, the 'order' polynomial to fit. (e.g. 1 = plane).
+        - "gaussian"
+            - background calculated from gaussian fit to image.
+            - no params required
+        - "interpolate"
+            - Background defined by the dataset smoothed via a sigma-gaussian filtering,
+                and method-interpolation over masked (polygon) regions.
+            - params required in method_params_dict:
+                - "interp_method": nearest, linear, cubic.
+                - "sigma": sigma passed to gaussian filter (see scipy.ndimage.gaussian_filter)
+                    which is utilized on the background before interpolating
+        - "gaussian_filter"
+            - background calculated from image filtered with a gaussian filter.
+            - params required in method_params_dict:
+                - "sigma": sigma passed to gaussian filter (see scipy.ndimage.gaussian_filter)
+
+    polygon utilization:
+        - if method is not interpolate, the image is masked where the polygons are
+          and the background is calculated without these regions
+        - if the method is interpolate, these regions are interpolated over (and the rest
+          of the image, gaussian smoothed, is 'background').
+
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options (for the main/signal experiment).
+    bnvs : list
+        List of bnvs images (2D ndarrays)
+    method : str
+        Method to use for background subtraction. See above for details.
+    **method_settings : dict
+        (i.e. keyword arguments).
+        Parameters passed to background subtraction algorithm. See above for details
+
+    Returns
+    -------
+    output_bnvs
+        bnvs with background subtracted
+    """
+    if options["mask_polygons_bground"] and "polygons" in options:
+        polygons = options["polygons"]
+    else:
+        polygons = None
+    output_bnvs = []
+    for bnv in bnvs:
+        bground = Qitool.get_background(bnv, method, polygons=polygons, **method_settings)
+        output_bnvs.append(bnv - bground)
+
+    return output_bnvs

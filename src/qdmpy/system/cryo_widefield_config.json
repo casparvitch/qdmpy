@@ -133,16 +133,16 @@
             false
         ]
     },
-	// ===========================================================================================
+    // ===========================================================================================
     // ======================== Region Of Interest (ROI) params ==================================
-	// ===========================================================================================
+    // ===========================================================================================
     // For taking a region of interest and ignoring the rest of the data set
     "ROI": {
-    	"option_default": "Full",
-    	"option_choices":
-    		[
-    			"Full",
-    			"Rectangle"    		]
+        "option_default": "Full",
+        "option_choices":
+            [
+                "Full",
+                "Rectangle"         ]
     },
     // Start of ROI region (indices, [start_x, start_y]) i.e. top left corner
     "ROI_start": {
@@ -156,16 +156,16 @@
     // ========== Regions for spectra comparision, before full pixel fitting ==========
     // single pixel location that is used
     "single_pixel_check": {
-    	"option_default": [1, 1]
+        "option_default": [1, 1]
     },
     // AOI: area of interest
     // start indices (top left corner) of area 1, [start_x, start_y]
     "AOI_1_start": {
-    	"option_default": [1, 1]
+        "option_default": [1, 1]
     },
     // end indices [end_x, end_y] of the square region of area 1
     "AOI_1_end": {
-    	"option_default": [2, 2]
+        "option_default": [2, 2]
     },
     // etc. for as many as you like: need to be copied/extended below if you want more AOIs
     "AOI_2_start": {
@@ -205,39 +205,39 @@
     },
     // overrides automatic reloading of previous fit results
     "force_fit": {
-    	"option_default": false,
-    	"option_choices":
-    		[
-    			true,
-    			false
-    		]
+        "option_default": false,
+        "option_choices":
+            [
+                true,
+                false
+            ]
     }, 
      // fits all of the required pixels, false ignores the pixel fitting
     "fit_pixels": {
-    	"option_default": true,
-    	"option_choices":
-    		[
-    			true,
-    			false
-    		]
+        "option_default": true,
+        "option_choices":
+            [
+                true,
+                false
+            ]
     },
     // fit pixels in a random order to give more accurate ETA
     "scramble_pixels": {
-    	"option_default": true,
-    	"option_choices":
-    		[
-    			true,
-    			false
-    		]
+        "option_default": true,
+        "option_choices":
+            [
+                true,
+                false
+            ]
     },
     // if 'false', uses init guesses below on each pixel, 'true' uses best fit to ROI average
     "use_ROI_avg_fit_res_for_all_pixels": {
-    	"option_default": true,
-    	"option_choices":
-    		[
-    			true,
-    			false
-    		]
+        "option_default": true,
+        "option_choices":
+            [
+                true,
+                false
+            ]
     },
     // user must set this one: the functions that make up your fit model (required)
     "fit_functions": {},
@@ -250,28 +250,28 @@
 
     // Position guess for lorentzian (in MHz)
     "pos_guess": {
-    	"option_default": null
+        "option_default": null
     },
     "pos_range": {
-    	"option_default": 25
+        "option_default": 25
     },
 
     // Amplitude of peak (trough)
     "amp_guess": {
-    	"option_default": -0.0015
+        "option_default": -0.0015
     },
 
     "amp_bounds": {
-    	"option_default": [-0.0100, -0.0003]
+        "option_default": [-0.0100, -0.0003]
     },
 
     // Full width half maximum of the peaks
     "fwhm_guess": {
-    	"option_default": 9
+        "option_default": 9
     },
 
     "fwhm_bounds": {
-    	"option_default": [3, 40]
+        "option_default": [3, 40]
     },
 
     // As above but for Gaussian
@@ -298,17 +298,17 @@
 
     // linear function (background)
     "c_guess": {
-    	"option_default": 1
+        "option_default": 1
     },
     "c_bounds": {
-    	"option_default": [0.95,1.05]
+        "option_default": [0.95,1.05]
     },
 
     "m_guess": {
-    	"option_default": 0
+        "option_default": 0
     },
     "m_bounds": {
-    	"option_default": [-1e-4, 1e-4]
+        "option_default": [-1e-4, 1e-4]
     },
 
     // constant background
@@ -354,17 +354,17 @@
     },
 
     "amp_h15_hyp_1_guess": {
-    	"option_default": -0.015
+        "option_default": -0.015
     },
     "amp_h15_hyp_2_guess": {
         "option_default": -0.015
     },
 
     "amp_h15_hyp_1_bounds": {
-    	"option_default": [-0.1, -0.001]
+        "option_default": [-0.1, -0.001]
     },
     "amp_h15_hyp_2_bounds": {
-    	"option_default": [-0.1, -0.001]
+        "option_default": [-0.1, -0.001]
     },
 
     "amp_h14_hyp_1_guess": {
@@ -499,11 +499,12 @@
 
     // If option 'prop_single_bnv' given for 'field_method' but number of frequencies fit
     // is 2 or 3, this option resolves ambiguity in which bnv to utilize. 
-    // This option is used like so: single_bnv = bnvs[single_bnv_choice + 1]
+    // This option is used like so: single_bnv = bnvs[single_bnv_choice - 1]
     // Note that `freqs_to_use` must still be set (to use 2 freqs only).
     "single_bnv_choice": {
         "option_default": 1
     },
+
     // Diamond crystal orientation -> see qdmpy.constants. Default: HPHT orientation
     // format: <top face orientation>_<edge face orientation>
     // OR <111>, which only defines one unv (a convenience for single-bnv measurements)
@@ -518,7 +519,7 @@
     // Read magnetic field from options (i.e. if applied with vector electromagnet)
     // --> system dependent option (i.e. Unimelb reads from metadata)
     "auto_read_bias": {
-        "option_default": true,
+        "option_default": false,
         "option_choices": 
             [
                 true,
@@ -735,11 +736,10 @@
             "empty"
         ]
     },
-    // factor of image dimensions to pad by (on each side, e.g. 2 pad -> 2 either side of image)
+    // factor of image dimensions to pad by (on each side, e.g. 2 pad -> 2 either side of imgage)
     "fourier_pad_factor": {
         "option_default": 2
     },
-
     // add an epsilon value to the k-vectors to avoid some issues with 1/0. False/null/0 to not use
     "fourier_k_vector_epsilon": {
         "option_default": 1e-6
@@ -752,7 +752,11 @@
             false
         ]
     },
-    // cutoff freqs (for bandpass) -> give as a distance (k = 2pi/cutoff). 1e-6/1e-3
+    // cutoff freqs (for bandpass) -> give as a distance (k = 2pi/cutoff).
+    // e.g. give the diffraction limit for your optical system.
+    // if null, high_cutoff is set by standoff (if there is standoff)
+    // low_cutoff is not auto-set.
+    // if standoff is 0/None/False, no filter is used
     "fourier_high_cutoff": {
         "option_default": null
     },
@@ -763,9 +767,9 @@
     // ===========================================================================================
     // ============================= Source Recon Parameters ====================================
     // ===========================================================================================
-    // Type of source field to reconstruct, e.g. "current" or "magnetisation".
+    // type of source to reconstruct to
     "source_type": {
-        "option_default": "magnetisation",
+        "option_default": "current_density",
         "option_choices": [
             "current_density",
             "magnetisation"
@@ -803,18 +807,18 @@
     },
 
     // Region to use for zero-point normalisation. I.e. mean of this region is subtracted from
-    // Jx and Jy (or M etc.). (or null to not normalise). 
+    // Jx and Jy (or M etc.). (Or null to not normalise). 
     // Format: [[x_top_left, y_top_left], [x_bot_right, y_bot_right], where y is from top to bottom.
     // TODO add different normalisation for in-plane magnetisation? See process-widefield-py
     "zero_point_normalisation_region": {
         "option_default": null
     },
 
-    // magnetisation direction (intrinsic). Either zero (for z-magnetisation) or an angle
+    // magnetisation direction (intrinsic). Either null/None (for z-magnetisation) or an angle
     // in degress, from (+) x-axis towards (+) y-axis.
     // untested. 
     "magnetisation_angle": {
-        "option_default": 0
+        "option_default": null
     },
 
     // ========================================================
@@ -893,16 +897,16 @@
         "option_default": {}
     },
 
-	// ===========================================================================================
+    // ===========================================================================================
     // =============================== Plotting Parameters =======================================
-	// ===========================================================================================
+    // ===========================================================================================
     "save_plots": {
-    	"option_default": true,
-    	"option_choices":
-    		[
-    			true,
-    			false
-    		]
+        "option_default": true,
+        "option_choices":
+            [
+                true,
+                false
+            ]
     },
     "show_scalebar": {
         "option_default": true,
@@ -914,21 +918,21 @@
     },
     // for ROI/AOI PL plots only
     "annotate_image_regions": {
-    	"option_default": true,
-    	"option_choices":
-    		[
-    			true,
-    			false
-    		]
+        "option_default": true,
+        "option_choices":
+            [
+                true,
+                false
+            ]
     },
     "save_fig_type":  {
-    	"option_default": "png",
-    	"option_choices":
-    		[
-    			"png",
-    			"svg",
-    			"pdf"
-    		]
+        "option_default": "png",
+        "option_choices":
+            [
+                "png",
+                "svg",
+                "pdf"
+            ]
     },
     // some figs are huge as svgs (currently just jstream) so this allows them to be set differently
     "large_fig_save_type": {
@@ -953,6 +957,7 @@
             "source_images": "viridis",
             "current_vector_images": "seismic",
             "current_norm_images": "turbo",
+            "current_div_images": "coolwarm",
             "magnetisation_images": "PuOr"
         }
     },
@@ -989,26 +994,22 @@
     "colormap_range_dicts": {
         "option_default": {
             "param_images": {
-                "type": "percentile",
-                "values": [1, 99]
+                "type": "min_max_symmetric_about_mean"
             },
             "residual_images": {
                 "type": "min_max"
             },
             "sigma_images": {
-                "type": "percentile",
-                "values": [1, 99]
+                "type": "min_max"
             },
             "PL_images": {
                 "type": "min_max"
             },
             "bnv_images": {
-                "type": "percentile",
-                "values": [1, 99]
+                "type": "min_max"
             },
             "dshift_images": {
-                "type": "percentile",
-                "values": [1, 99]
+                "type": "min_max"
             },
             "bfield_images": {
                 "type": "min_max"
@@ -1024,9 +1025,12 @@
                 "type": "strict_range",
                 "values": [0, 50]
             },
-            "magnetisation_images": {
+            "current_div_images": {
                 "type": "percentile",
                 "values": [1, 99]
+            },
+            "magnetisation_images": {
+                "type": "min_max"
             }
         }
     },
@@ -1106,11 +1110,23 @@
     "streamplot_PL_alpha": {
         "option_default": 1.0
     },
+    // Options to create streamplot stream colors. alpha factor: prefactor in tanh that
+    // defines the alpha values. low cutoff: values below this are set to an alpha of 0
+    // high cutoff: values above this are set to an alpha of 1
+    // dynamic range: number of colors to use in cbar  
+    // alpha operation:
+    // tanh(c (x-d) ) / tanh(c (f-d) )
+    // c: ramp factor, d: low cutoff, f: high cutoff
+    "streamplot_cbar_options": {
+        "option_default": {
+            "alpha_ramp_factor": 2,
+            "low_cutoff": 0.1,
+            "high_cutoff": 1.0,
+            "dynamic_range": 1000
+        }
+    },
     // ===========================================================================================
-    // ===========================================================================================
-    // Things set internally, allow to be anything (user shouldn't set in options though!!!)
-    // ===========================================================================================
-    // ===========================================================================================
+    // Things set internally, allow to be anything
 
     // was the options dict (after being read from .json) checked/cleaned?
     "cleaned": {},
@@ -1153,6 +1169,7 @@
     "field_dir": {},
     "field_sig_dir": {},
     "field_ref_dir": {},
+    "field_sig_sub_ref_dir": {},
     "field_method_used" : {},
     // name of field params used in field retrieval model
     "field_params" : {},
@@ -1163,5 +1180,7 @@
     // list of list of nodes, a list for each polygon
     "polygon_nodes": {},
     // list of polygon objects
-    "polygons": {}
+    "polygons": {},
+    // source result directory
+    "source_dir": {}
 }

@@ -699,7 +699,7 @@ def get_m_from_bxy(
     # define transform
     d_matrix = define_magnetisation_transformation(ky, kx, k, standoff)
 
-    if not mag_angle or mag_angle is None:
+    if mag_angle is None:
         m_to_bx = d_matrix[2, 0, ::]  # z magnetised
         m_to_by = d_matrix[2, 1, ::]
     else:
@@ -800,7 +800,7 @@ def get_m_from_bz(
     # define transform
     d_matrix = define_magnetisation_transformation(ky, kx, k, standoff)
 
-    if not mag_angle or mag_angle is None:
+    if mag_angle is None:
         m_to_bz = d_matrix[2, 2, ::]  # z magnetised
     else:
         psi = np.deg2rad(mag_angle)
@@ -903,7 +903,7 @@ def get_m_from_bnv(
 
     m_to_bnv = None
 
-    if not mag_angle or mag_angle is None:
+    if mag_angle is None:
         m_to_bnv = (
             unv[0] * d_matrix[2, 0, ::] + unv[1] * d_matrix[2, 1, ::] + unv[2] * d_matrix[2, 2, ::]
         )  # z magnetised

@@ -379,7 +379,7 @@ def plot_magnetisation(options, source_params, plot_bgrounds=True):
     plot_bgrounds = plot_bgrounds and options["source_bground_method"]
 
     mag_angle = options["magnetisation_angle"]
-    if not mag_angle:
+    if mag_angle is None:
         root_name = "Mz"
     else:
         root_name = "Mpsi"
