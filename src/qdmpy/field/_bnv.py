@@ -29,8 +29,8 @@ import numpy as np
 
 # ============================================================================
 
-import qdmpy.constants
 import qdmpy.itool as Qitool
+import qdmpy.constants
 
 # ============================================================================
 

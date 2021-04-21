@@ -52,8 +52,6 @@ import os
 
 import qdmpy.io.fit
 import qdmpy.hamiltonian
-import qdmpy.field._bxyz as Qbxyz
-import qdmpy.field._bnv as Qbnv
 
 # ============================================================================
 
@@ -207,11 +205,13 @@ def load_prev_field_calcs(options):
     ref_sigmas = load_prev_field_sigmas(options, "ref")
 
     # Sam changed to below on 2021-04-21, so that background subtraction is done transparently.
-    sig_sub_ref_bnvs = Qbnv.bnv_refsub(options, sig_bnvs, ref_bnvs)
+    from qdmpy.field._bxyz import field_refsub, field_sigma_add
+    from qdmpy.field._bnv import bnv_refsub
+    sig_sub_ref_bnvs = bnv_refsub(options, sig_bnvs, ref_bnvs)
     # sig_sub_ref_bnvs, _ = load_prev_bnvs_and_dshifts(options, "sig_sub_ref")
-    sig_sub_ref_params = Qbxyz.field_refsub(options, sig_params, ref_params)
+    sig_sub_ref_params = field_refsub(options, sig_params, ref_params)
     # sig_sub_ref_params = load_prev_field_params(options, "sig_sub_ref")
-    sig_sub_ref_sigmas = Qbxyz.field_sigma_add(options, sig_sigmas, ref_sigmas)
+    sig_sub_ref_sigmas = field_sigma_add(options, sig_sigmas, ref_sigmas)
     # sig_sub_ref_sigmas = load_prev_field_sigmas(options, "sig_sub_ref")
 
     return (
