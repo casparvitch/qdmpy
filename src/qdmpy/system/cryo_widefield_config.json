@@ -769,7 +769,7 @@
     // ===========================================================================================
     // type of source to reconstruct to
     "source_type": {
-        "option_default": "current_density",
+        "option_default": "magnetisation",
         "option_choices": [
             "current_density",
             "magnetisation"
