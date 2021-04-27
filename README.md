@@ -524,8 +524,8 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
     - Type of hamiltonian to fit, if that bfield method is used. Or always fit if not 'bxyz' or 'approx_bxyz' assuming non-B parameters. Current options are in fact only 'bxyz' and 'approx_bxyz'.
 - freqs_to_use
     - Which frequencies (e.g. lorentzian posns) to use for field retrieval. Must be len-8 iterable of values that evaluate as True/False (>=1 must be True).
-- single_bnv_choice
-    - If option 'prop_single_bnv' given for 'field_method' but number of frequencies fit is 2 or 3, this option resolves ambiguity in which bnv to utilize. This option is used like so: single_bnv = bnvs[single_bnv_choice - 1].Note that `freqs_to_use` must still be set (to use 2 freqs only).
+- single_unv_choice
+    - If option 'prop_single_bnv' given for 'field_method' but number of frequencies fit is 2 or 3, this option resolves ambiguity in which bnv to utilize. This option is used like so: single_bnv = bnvs[single_unv_choice].Note that `freqs_to_use` must still be set (to use 2 freqs only).
 - diamond_ori
     - Diamond crystal orientation -> see qdmpy.constants. Default: HPHT orientation. Format: `<top face orientation>_<edge face orientation>`.
 - auto_read_bias
@@ -576,8 +576,6 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
     - Thickness of the NV layer, or null to not use. Disregarded if standoff is null.
 - recon_methods
     - Reconstruction methods for B -> J or B -> M,  see e.g. Broadway 2020 http://dx.doi.org/10.1103/PhysRevApplied.14.024076. Must be an array of method you would like to run (even if only 1 choice). Choices: from_bxy, from_bz, from_bnv
-- recon_unv_index
-    - If using from_bnv, set the index in bnvs (and unvs) to use for current recon. If null, uses 0 (i.e. outermost peaks).
 - zero_point_normalisation_region
     - Region to use for zero-point normalisation. I.e. mean of this region is subtracted from Jx and Jy (or M etc.). (or null/none to not normalise). 
     - Format: [[x_top_left, y_top_left], [x_bot_right, y_bot_right], where y is from top to bottom.

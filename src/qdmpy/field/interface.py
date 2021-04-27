@@ -204,7 +204,11 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
         bnv_lst = [sig_bnvs, ref_bnvs, Qbnv.bnv_refsub(options, sig_bnvs, ref_bnvs)]
         dshift_lst = [sig_dshifts, ref_dshifts]
         params_lst = [sig_params, ref_params, sub_ref_params]
-        sigmas_lst = [sig_sigmas, ref_sigmas, Qbxyz.field_sigma_add(options, sig_sigmas, ref_sigmas)]
+        sigmas_lst = [
+            sig_sigmas,
+            ref_sigmas,
+            Qbxyz.field_sigma_add(options, sig_sigmas, ref_sigmas),
+        ]
 
         if options["bfield_bground_method"]:
             params_lst[2], sigmas_lst[2] = Qbxyz.sub_bground_Bxyz(
@@ -381,6 +385,7 @@ def add_bfield_reconstructed(options, field_params):
         options["fourier_pad_factor"],
         options["system"].get_raw_pixel_size(options) * options["total_bin"],
         options["fourier_k_vector_epsilon"],
+        options["NVs_above_sample"],
     )
     field_params["Bx_recon"] = bx_recon
     field_params["By_recon"] = by_recon

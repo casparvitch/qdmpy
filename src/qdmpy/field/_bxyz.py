@@ -78,14 +78,15 @@ def from_single_bnv(options, bnvs):
     unvs = Qgeom.get_unvs(options)
     if len(bnvs) == 1:  # just use the first one (i.e. the only one...)
         single_bnv = bnvs[0]
-        unv = unvs[0]
+        idx = np.argwhere(np.array(chosen_freqs[:4]) == 1)[0][0]
+        unv = unvs[idx]
     elif len(bnvs) == 4:  # just use the chosen freq
         idx = np.argwhere(np.array(chosen_freqs[:4]) == 1)[0][0]
         single_bnv = bnvs[idx]
         unv = unvs[idx]
-    else:  # need to use 'single_bnv_choice' option to resolve amiguity.
-        single_bnv = bnvs[options["single_bnv_choice"] - 1]
-        unv = bnvs[options["single_bnv_choice"] - 1]
+    else:  # need to use 'single_unv_choice' option to resolve amiguity.
+        single_bnv = bnvs[options["single_unv_choice"]]
+        unv = bnvs[options["single_unv_choice"]]
 
     # (get unv data from chosen freqs, method in _geom)
     # (then follow methodology in DB code -> import a `fourier` module)
@@ -97,6 +98,7 @@ def from_single_bnv(options, bnvs):
         options["fourier_pad_factor"],
         options["system"].get_raw_pixel_size(options) * options["total_bin"],
         options["fourier_k_vector_epsilon"],
+        options["NVs_above_sample"],
     )
     return {
         "Bx": bxyzs[0],
@@ -407,18 +409,21 @@ def field_refsub(options, sig_params, ref_params):
     sig_sub_ref_params : dict
         sig - ref dictionary
     """
+
     def subtractor(key, sig, ref_params):
         if ref_params[key] is not None:
             return sig - ref_params[key]
         else:
             return sig
+
     if ref_params:
         return {
-            key: subtractor(key, sig, ref_params) for (key, sig) in sig_params.items() if key in ref_params
+            key: subtractor(key, sig, ref_params)
+            for (key, sig) in sig_params.items()
+            if key in ref_params
         }
     else:
         return sig_params.copy()
-
 
 
 # ============================================================================
@@ -443,14 +448,18 @@ def field_sigma_add(options, sig_sigmas, ref_sigmas):
     sig_sub_ref_sigmas : dict
         Same as sig_sigmas, but with ref subtracted.
     """
+
     def adder(key, sig, ref_sigmas):
         if ref_sigmas[key] is not None:
             return sig + ref_sigmas[key]
         else:
             return sig
+
     if ref_sigmas:
         return {
-            key: adder(key, sig, ref_sigmas) for (key, sig) in sig_sigmas.items() if key in ref_sigmas
+            key: adder(key, sig, ref_sigmas)
+            for (key, sig) in sig_sigmas.items()
+            if key in ref_sigmas
         }
     else:
         return sig_sigmas.copy()

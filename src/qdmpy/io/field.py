@@ -54,6 +54,7 @@ import qdmpy.io.fit
 import qdmpy.hamiltonian
 import qdmpy.field._bxyz as Qbxyz
 import qdmpy.field._bnv as Qbnv
+import qdmpy.field._geom as Qgeom
 
 # ============================================================================
 
@@ -202,7 +203,7 @@ def load_prev_field_calcs(options):
 
     sig_params = load_prev_field_params(options, "sig")
     ref_params = load_prev_field_params(options, "ref")
-    
+
     sig_sigmas = load_prev_field_sigmas(options, "sig")
     ref_sigmas = load_prev_field_sigmas(options, "ref")
 
@@ -486,6 +487,10 @@ def _field_options_compatible(options):
         Reason for the above decision
     """
     prev_options = qdmpy.io.fit._get_prev_options(options)
+    from qdmpy.constants import choose_system
+
+    prev_options["system"] = choose_system(prev_options["system_name"])
+
     if options["field_method_used"] != prev_options["field_method_used"]:
         return False, "method was different to that selected (or auto-selected) presently."
 
@@ -493,8 +498,8 @@ def _field_options_compatible(options):
         return False, "different freqs_to_use option."
 
     if options["field_method_used"] == "prop_single_bnv":
-        if options["single_bnv_choice"] != prev_options["single_bnv_choice"]:
-            return False, "different single_bnv_choice option."
+        if options["single_unv_choice"] != prev_options["single_unv_choice"]:
+            return False, "different single_unv_choice option."
 
     if options["use_unvs"] != prev_options["use_unvs"]:
         return False, "different 'use_unvs' option."
@@ -515,6 +520,12 @@ def _field_options_compatible(options):
 
     # if options["bfield_bground_params"] != prev_options["bfield_bground_params"]:
     #     return False, "different bfield_bground_params"
+
+    if (Qgeom.get_unvs(options) != Qgeom.get_unvs(prev_options)).all():
+        return False, "different unvs calculated"
+
+    if (Qgeom.get_unv_frames(options) != Qgeom.get_unv_frames(prev_options)).all():
+        return False, "different unv frames"
 
     if options["diamond_ori"] != prev_options["diamond_ori"]:
         return False, "different diamond_ori"

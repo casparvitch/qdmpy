@@ -497,12 +497,15 @@
         "option_default": [1, 1, 1, 1, 1, 1, 1, 1]
     },
 
-    // If option 'prop_single_bnv' given for 'field_method' but number of frequencies fit
-    // is 2 or 3, this option resolves ambiguity in which bnv to utilize. 
-    // This option is used like so: single_bnv = bnvs[single_bnv_choice - 1]
+    // If option 'prop_single_bnv' given for 'field_method' but number of bnvs calculated
+    //  is 2 or 3, this option resolves ambiguity in which bnv to utilize.
+    // I.e. you have fit 6 resonances, but only want to use 2 to calculate the magnetic field
+    //  then the algorithm does know which (physical) resonances using the freqs_to_use option 
+    //  above, but not which of the bnv maps this corresponds to.
+    // This option is used like so: single_bnv = bnvs[single_unv_choice].
     // Note that `freqs_to_use` must still be set (to use 2 freqs only).
-    "single_bnv_choice": {
-        "option_default": 1
+    "single_unv_choice": {
+        "option_default": 0
     },
 
     // Diamond crystal orientation -> see qdmpy.constants. Default: HPHT orientation
@@ -764,6 +767,15 @@
         "option_default": null
     },
 
+    // True if NVs exist at higher z (in lab frame) than NVs.
+    "NVs_above_sample": {
+        "option_default": true,
+        "option_choices": [
+            true,
+            false
+        ]
+    },
+
     // ===========================================================================================
     // ============================= Source Recon Parameters ====================================
     // ===========================================================================================
@@ -790,6 +802,7 @@
     // bz better for magnetisation
     // choices: from_bxy, from_bz, from_bnv
     // must be an array of method you would like to run (even if only 1 choice)
+    // from_bnv uses the 'single_unv_choice' option.
     "recon_methods": {
         "option_default": ["from_bxy", "from_bz", "from_bnv"]
     },

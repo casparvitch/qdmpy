@@ -157,7 +157,6 @@ def get_current_density(
         bx, by, bz = [field_params["B" + comp] for comp in components]
 
     if any([i in ["from_bnv"] for i in options["recon_methods"]]):
-
         unvs = qdmpy.field.get_unvs(options)
         unv_opt = options["recon_unv_index"]
         if unv_opt is not None:
@@ -170,11 +169,20 @@ def get_current_density(
     source_params = {}
     for method in options["recon_methods"]:
         if method == "from_bxy":
-            jx, jy = qdmpy.fourier.get_j_from_bxy([bx, by, bz], *useful_opts)
+            jx, jy = qdmpy.fourier.get_j_from_bxy(
+                [bx, by, bz],
+                *useful_opts,
+                NVs_above_sample=options["NVs_above_sample"],
+            )
         elif method == "from_bz":
             jx, jy = qdmpy.fourier.get_j_from_bz([bx, by, bz], *useful_opts)
         elif method == "from_bnv":
-            jx, jy = qdmpy.fourier.get_j_from_bnv(bnv, unv, *useful_opts)
+            jx, jy = qdmpy.fourier.get_j_from_bnv(
+                bnv,
+                unv,
+                *useful_opts,
+                NVs_above_sample=options["NVs_above_sample"],
+            )
         else:
             warnings.warn(f"recon_method option {method} not recognised.")
             return None
@@ -316,7 +324,12 @@ def get_magnetisation(
         elif method == "from_bz":
             m = qdmpy.fourier.get_m_from_bz([bx, by, bz], *useful_opts)
         elif method == "from_bnv":
-            m = qdmpy.fourier.get_m_from_bnv(bnv, unv, *useful_opts)
+            m = qdmpy.fourier.get_m_from_bnv(
+                bnv,
+                unv,
+                *useful_opts,
+                NVs_above_sample=options["NVs_above_sample"],
+            )
         else:
             warnings.warn("recon_method option not recognised.")
             return None

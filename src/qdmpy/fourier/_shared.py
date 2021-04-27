@@ -100,12 +100,12 @@ def define_k_vectors(shape, pixel_size, k_vector_epsilon):
     # Include a small factor in the k vectors to remove division by zero issues (min_k)
     # Make a meshgrid to pass back
     if k_vector_epsilon:
-        ky, kx = np.meshgrid(ky_vec + k_vector_epsilon, kx_vec - k_vector_epsilon, indexing="ij")
+        ky, kx = np.meshgrid(ky_vec - k_vector_epsilon, kx_vec + k_vector_epsilon, indexing="ij")
     else:
         ky, kx = np.meshgrid(ky_vec, kx_vec, indexing="ij")
 
     k = np.sqrt(ky ** 2 + kx ** 2)
-    return ky, -kx, k  # negative here to maintain correct image orientation (ass. NV above source)
+    return -ky, kx, k  # negative here to maintain correct image orientation
 
 
 # ============================================================================

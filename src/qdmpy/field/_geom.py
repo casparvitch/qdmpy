@@ -88,7 +88,7 @@ def get_unvs(options):
 
 def get_B_bias(options):
     """
-    Returns (bx, by, bz) for the bias field (supplied in options dict) in Gauss
+    Returns (bx, by, bz) guess for the bias field in Gauss
 
     Arguments
     ---------

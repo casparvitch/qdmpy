@@ -50,12 +50,7 @@ from qdmpy.constants import MU_0, MAG_UNIT_CONV
 
 
 def prop_single_bnv(
-    single_bnv,
-    unv,
-    pad_mode,
-    pad_factor,
-    pixel_size,
-    k_vector_epsilon,
+    single_bnv, unv, pad_mode, pad_factor, pixel_size, k_vector_epsilon, NVs_above_sample
 ):
     r"""
     Propagate single bnv to full vector magnetic field.
@@ -76,11 +71,12 @@ def prop_single_bnv(
         E.g. options["system"].get_raw_pixel_size(options) * options["total_bin"].
     k_vector_epsilon : float
         Add an epsilon value to the k-vectors to avoid some issues with 1/0.
+    NVs_above_sample : bool
+        True if NVs exist at higher z (in lab frame) than NVs.
 
     Returns
     -------
     bx_reg, by_reg, bz_reg : np arrays (2D)
-
 
     \hat{\bf B} = {\bf v} \hat{B}_z({\bf k})
 
@@ -105,10 +101,22 @@ def prop_single_bnv(
     fft_bnv = numpy_fft.fftshift(numpy_fft.fft2(padded_bnv))
     ky, kx, k = qdmpy.fourier._shared.define_k_vectors(fft_bnv.shape, pixel_size, k_vector_epsilon)
 
+    if NVs_above_sample:
+        unv_cpy = copy(unv)
+    else:
+        unv_cpy = [-unv[0], -unv[1], unv[2]]
+
     # define transformation matrices -> e.g. see Casola 2018 given above
-    bnv2bx = 1 / (unv[0] + unv[1] * ky / kx + 1j * unv[2] * k / kx)
-    bnv2by = 1 / (unv[0] * kx / ky + unv[1] + 1j * unv[2] * k / ky)
-    bnv2bz = 1 / (-1j * unv[0] * kx / k - 1j * unv[1] * ky / k + unv[2])
+    u = [-1j * kx / k, -1j * ky / k, 1]
+    unv_dot_u = np.dot(unv_cpy, u)
+
+    bnv2bx = u[0] / unv_dot_u
+    bnv2by = u[1] / unv_dot_u
+    bnv2bz = u[2] / unv_dot_u
+    # Expanded algebra below:
+    # bnv2bx = 1 / (unv_cpy[0] + unv_cpy[1] * ky / kx + 1j * unv_cpy[2] * k / kx)
+    # bnv2by = 1 / (unv_cpy[0] * kx / ky + unv_cpy[1] + 1j * unv_cpy[2] * k / ky)
+    # bnv2bz = 1 / (-1j * unv_cpy[0] * kx / k - 1j * unv_cpy[1] * ky / k + unv_cpy[2])
 
     bnv2bx = qdmpy.fourier._shared.set_naninf_to_zero(bnv2bx)
     bnv2by = qdmpy.fourier._shared.set_naninf_to_zero(bnv2by)
@@ -136,11 +144,7 @@ def prop_single_bnv(
 
 
 def get_reconstructed_bfield(
-    bfield,
-    pad_mode,
-    pad_factor,
-    pixel_size,
-    k_vector_epsilon,
+    bfield, pad_mode, pad_factor, pixel_size, k_vector_epsilon, NVs_above_sample
 ):
     r"""
     Bxyz measured -> Bxyz_recon via fourier methods.
@@ -159,6 +163,8 @@ def get_reconstructed_bfield(
         E.g. options["system"].get_raw_pixel_size(options) * options["total_bin"].
     k_vector_epsilon : float
         Add an epsilon value to the k-vectors to avoid some issues with 1/0.
+    NVs_above_sample : bool
+        True if NV layer is above (higher in z) than sample being imaged.
 
     Returns
     -------
@@ -232,12 +238,12 @@ def get_reconstructed_bfield(
 
     ky, kx, k = qdmpy.fourier._shared.define_k_vectors(fft_bx.shape, pixel_size, k_vector_epsilon)
 
-    # could chuck in an 'NV_above_or_below' sign here. 2020-04-13 swapped minus sign
-    # -> assumes NV above source
-    bz2bx = (1j / k) * kx
-    bz2by = (1j / k) * ky
-    bx2bz = -(1j / k) * kx
-    by2bz = -(1j / k) * ky
+    sign = 1 if NVs_above_sample else -1
+
+    bz2bx = -sign * (1j / k) * kx
+    bz2by = -sign * (1j / k) * ky
+    bx2bz = sign * (1j / k) * kx
+    by2bz = sign * (1j / k) * ky
 
     bz2bx = qdmpy.fourier._shared.set_naninf_to_zero(bz2bx)
     bz2by = qdmpy.fourier._shared.set_naninf_to_zero(bz2by)
@@ -336,6 +342,7 @@ def get_j_from_bxy(
     hanning_high_cutoff,
     standoff,
     nv_layer_thickness,
+    NVs_above_sample,
 ):
 
     r"""Bxy measured -> Jxy via fourier methods.
@@ -366,6 +373,8 @@ def get_j_from_bxy(
         Distance NV layer <-> Sample (in metres)
     nv_layer_thickness : float
         Thickness of NV layer (in metres)
+    NVs_above_sample : bool
+        True if NVs exist at higher z (in lab frame) than NVs.
 
     Returns
     -------
@@ -394,9 +403,11 @@ def get_j_from_bxy(
 
     ky, kx, k = qdmpy.fourier._shared.define_k_vectors(fft_bx.shape, pixel_size, k_vector_epsilon)
 
+    sign = 1 if NVs_above_sample else -1
+
     # define transform
-    _, bx_to_jy = define_current_transform([1, 0, 0], ky, kx, k, standoff)
-    by_to_jx, _ = define_current_transform([0, 1, 0], ky, kx, k, standoff)
+    _, bx_to_jy = define_current_transform([sign, 0, 0], ky, kx, k, standoff)
+    by_to_jx, _ = define_current_transform([0, sign, 0], ky, kx, k, standoff)
 
     hanning_filt = qdmpy.fourier._shared.hanning_filter_kspace(
         k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff, standoff
@@ -540,6 +551,7 @@ def get_j_from_bnv(
     hanning_high_cutoff,
     standoff,
     nv_layer_thickness,
+    NVs_above_sample,
 ):
     r"""(Single) Bnv measured -> Jxy via fourier methods.
 
@@ -571,6 +583,8 @@ def get_j_from_bnv(
         Distance NV layer <-> Sample (in metres)
     nv_layer_thickness : float
         Thickness of NV layer (in metres)
+    NVs_above_sample : bool
+        True if NVs exist at higher z (in lab frame) than NVs.
 
     Returns
     -------
@@ -591,8 +605,13 @@ def get_j_from_bnv(
 
     ky, kx, k = qdmpy.fourier._shared.define_k_vectors(fft_bnv.shape, pixel_size, k_vector_epsilon)
 
+    if NVs_above_sample:
+        unv_cpy = copy(unv)
+    else:
+        unv_cpy = [-unv[0], -unv[1], unv[2]]
+
     # define transform
-    bnv_to_jx, bnv_to_jy = define_current_transform(unv, ky, kx, k, standoff)
+    bnv_to_jx, bnv_to_jy = define_current_transform(unv_cpy, ky, kx, k, standoff)
 
     hanning_filt = qdmpy.fourier._shared.hanning_filter_kspace(
         k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff, standoff
@@ -717,9 +736,10 @@ def get_m_from_bxy(
     else:
         nv_thickness_correction = 1
 
-    fft_m_bx = fft_bx * hanning_filt * nv_thickness_correction / m_to_bx
-    fft_m_by = fft_by * hanning_filt * nv_thickness_correction / m_to_by
-    fft_m = (fft_m_bx + fft_m_by) / 2
+    with np.errstate(all="ignore"):
+        fft_m_bx = fft_bx * hanning_filt * nv_thickness_correction / m_to_bx
+        fft_m_by = fft_by * hanning_filt * nv_thickness_correction / m_to_by
+        fft_m = (fft_m_bx + fft_m_by) / 2
 
     fft_m = qdmpy.fourier._shared.set_naninf_to_zero(fft_m)
 
@@ -816,7 +836,8 @@ def get_m_from_bz(
     else:
         nv_thickness_correction = 1
 
-    fft_m = fft_bz * hanning_filt * nv_thickness_correction / m_to_bz
+    with np.errstate(all="ignore"):
+        fft_m = fft_bz * hanning_filt * nv_thickness_correction / m_to_bz
 
     # Replace troublesome pixels in fourier space
     fft_m = qdmpy.fourier._shared.set_naninf_to_zero(fft_m)
@@ -846,6 +867,7 @@ def get_m_from_bnv(
     hanning_high_cutoff,
     standoff,
     nv_layer_thickness,
+    NVs_above_sample,
 ):
     r"""(Single) Bnv measured -> M via fourier methods.
 
@@ -877,6 +899,8 @@ def get_m_from_bnv(
         Distance NV layer <-> Sample (in metres)
     nv_layer_thickness : float
         Thickness of NV layer (in metres)
+    NVs_above_sample : bool
+        True if NVs exist at higher z (in lab frame) than NVs.
 
     Returns
     -------
@@ -901,18 +925,25 @@ def get_m_from_bnv(
     # define transform
     d_matrix = define_magnetisation_transformation(ky, kx, k, standoff)
 
+    if NVs_above_sample:
+        unv_cpy = copy(unv)
+    else:
+        unv_cpy = [-unv[0], -unv[1], unv[2]]
+
     m_to_bnv = None
 
     if mag_angle is None:
         m_to_bnv = (
-            unv[0] * d_matrix[2, 0, ::] + unv[1] * d_matrix[2, 1, ::] + unv[2] * d_matrix[2, 2, ::]
+            unv_cpy[0] * d_matrix[2, 0, ::]
+            + unv_cpy[1] * d_matrix[2, 1, ::]
+            + unv_cpy[2] * d_matrix[2, 2, ::]
         )  # z magnetised
     else:
         # if the flake is magnetised in plane than use this transformation instead
-        b_axis = np.nonzero(unv)[0]
+        b_axis = np.nonzero(unv_cpy)[0]
         psi = np.deg2rad(mag_angle)
         for idx in b_axis:
-            new = unv[int(idx)] * (
+            new = unv_cpy[int(idx)] * (
                 np.cos(psi) * d_matrix[0, int(idx), ::] + np.sin(psi) * d_matrix[1, int(idx), ::]
             )
             m_to_bnv = new if m_to_bnv is None else m_to_bnv + new
@@ -927,8 +958,9 @@ def get_m_from_bnv(
     else:
         nv_thickness_correction = 1
 
-    # Get m_z from b_xyz
-    fft_m = fft_bnv * hanning_filt * nv_thickness_correction / m_to_bnv
+    with np.errstate(all="ignore"):
+        # Get m_z from b_xyz
+        fft_m = fft_bnv * hanning_filt * nv_thickness_correction / m_to_bnv
 
     # Replace troublesome pixels in fourier space
     fft_m = qdmpy.fourier._shared.set_naninf_to_zero(fft_m)
@@ -951,7 +983,7 @@ def define_current_transform(u_proj, ky, kx, k, standoff=None):
     Arguments
     ---------
     u_proj : array-like
-        Shape: 3, the direction the magnetic field was measured on (projected onto).
+        Shape: 3, the direction the magnetic field was measured in (projected onto).
     ky, kx, k : np arrays
         Wavenumber meshgrids, k = sqrt( kx^2 + ky^2 )
 
@@ -977,8 +1009,9 @@ def define_current_transform(u_proj, ky, kx, k, standoff=None):
 
     alpha = 2 * exp_factor / MU_0
 
-    b_to_jx = (alpha * ky) / (-u_proj[1] * ky - u_proj[0] * kx + 1j * u_proj[2] * k)
-    b_to_jy = (alpha * kx) / (u_proj[0] * kx + u_proj[1] * ky - 1j * u_proj[2] * k)
+    # sign on 1j's is opposite to Broadway paper due to different FT definition.
+    b_to_jx = (alpha * ky) / (-u_proj[0] * kx - u_proj[1] * ky - 1j * u_proj[2] * k)
+    b_to_jy = (alpha * kx) / (u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k)
 
     return b_to_jx, b_to_jy
 
