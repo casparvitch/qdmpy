@@ -30,7 +30,6 @@ import numpy as np
 # ============================================================================
 
 import qdmpy.itool as Qitool
-import qdmpy.constants
 
 # ============================================================================
 
@@ -70,21 +69,23 @@ def get_bnvs_and_dshifts(pixel_fit_params):
     peak_posns.sort(key=np.nanmean)
     num_peaks = len(peak_posns)
 
+    from qdmpy.constants import GAMMA
+
     if num_peaks == 1:
-        bnvs = [np.abs(peak_posns[0] / (2 * qdmpy.constants.GAMMA))]
-        dshifts = np.empty(bnvs[0].shape)
-        dshifts.fill(np.nan)
+        bnvs = [np.abs(peak_posns[0] / (2 * GAMMA))]
+        dshifts = [np.empty(bnvs[0].shape)]
+        dshifts[0].fill(np.nan)
     elif num_peaks == 2:
-        bnvs = [np.abs(peak_posns[1] - peak_posns[0]) / (2 * qdmpy.constants.GAMMA)]
+        bnvs = [np.abs(peak_posns[1] - peak_posns[0]) / (2 * GAMMA)]
         dshifts = [(peak_posns[1] + peak_posns[0]) / 2]
     else:
         bnvs = []
         dshifts = []
         for i in range(num_peaks // 2):
-            bnvs.append(np.abs(peak_posns[-i - 1] - peak_posns[i]) / (2 * qdmpy.constants.GAMMA))
+            bnvs.append(np.abs(peak_posns[-i - 1] - peak_posns[i]) / (2 * GAMMA))
             dshifts.append((peak_posns[-i - 1] + peak_posns[i]) / 2)
         if ((num_peaks // 2) * 2) + 1 == num_peaks:
-            middle_bnv = np.abs(peak_posns[num_peaks // 2 + 1]) / (2 * qdmpy.constants.GAMMA)
+            middle_bnv = np.abs(peak_posns[num_peaks // 2 + 1]) / (2 * GAMMA)
             bnvs.append(middle_bnv)
             middle_dshift = np.empty(middle_bnv.shape)
             middle_dshift.fill(np.nan)
@@ -110,16 +111,18 @@ def get_bnv_sd(sigmas):
     peak_sd = [x[1] for x in peak_sd]
     num_peaks = len(peak_sd)
 
+    from qdmpy.constants import GAMMA
+
     if num_peaks == 1:
-        return peak_sd / (2 * qdmpy.constants.GAMMA)
+        return peak_sd / (2 * GAMMA)
     elif num_peaks == 2:
-        return (peak_sd[0] + peak_sd[1]) / (2 * qdmpy.constants.GAMMA)
+        return (peak_sd[0] + peak_sd[1]) / (2 * GAMMA)
     else:
         sd = []
         for i in range(num_peaks // 2):
-            sd.append((peak_sd[-i - 1] + peak_sd[i]) / (2 * qdmpy.constants.GAMMA))
+            sd.append((peak_sd[-i - 1] + peak_sd[i]) / (2 * GAMMA))
         if ((num_peaks // 2) * 2) + 1 == num_peaks:
-            sd.append(peak_sd[num_peaks // 2 + 1] / (2 * qdmpy.constants.GAMMA))
+            sd.append(peak_sd[num_peaks // 2 + 1] / (2 * GAMMA))
         return sd
 
 

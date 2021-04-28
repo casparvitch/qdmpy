@@ -41,7 +41,7 @@ if __name__ == "__main__":
             where="src", exclude=["*.tests", "*.tests.*", "tests.*", "tests"]
         ),
         install_requires=required,
-        python_requires="=3.8", # ">=3.8, <4", > pyfftw currently <3.8 only..
+        python_requires=">=3.8, <4", # ">=3.8, <4", > pyfftw currently <3.8 only...
         package_data={"": ["*.md", "*.json"]},
     )
 # https://setuptools.readthedocs.io/en/latest/userguide/datafiles.html

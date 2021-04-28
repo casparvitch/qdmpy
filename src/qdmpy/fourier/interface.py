@@ -44,7 +44,6 @@ import numpy as np
 # ============================================================================
 
 import qdmpy.fourier._shared
-from qdmpy.constants import MU_0, MAG_UNIT_CONV
 
 # ============================================================================
 
@@ -914,6 +913,8 @@ def get_m_from_bnv(
         https://doi.org/10.1103/PhysRevApplied.14.024076
         https://arxiv.org/abs/2005.06788
     """
+    from qdmpy.constants import MU_0, MAG_UNIT_CONV
+
 
     b = copy(bnv) * 1e-4  # copy and convert Gauss to Tesla
     bnv_pad, padder = qdmpy.fourier._shared.pad_image(b, pad_mode, pad_factor)
@@ -1001,6 +1002,7 @@ def define_current_transform(u_proj, ky, kx, k, standoff=None):
         https://doi.org/10.1103/PhysRevApplied.14.024076
         https://arxiv.org/abs/2005.06788
     """
+    from qdmpy.constants import MU_0, MAG_UNIT_CONV
 
     if standoff:
         exp_factor = np.exp(1 * k * standoff)
@@ -1050,6 +1052,8 @@ def define_magnetisation_transformation(ky, kx, k, standoff):
         https://doi.org/10.1103/PhysRevApplied.14.024076
         https://arxiv.org/abs/2005.06788
     """
+    from qdmpy.constants import MU_0, MAG_UNIT_CONV
+
     if standoff:
         exp_factor = np.exp(1 * k * standoff)
     else:

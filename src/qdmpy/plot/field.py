@@ -67,12 +67,12 @@ def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
     fig : matplotlib Figure object
     """
 
-    if not bnvs and not dshifts:
+    if not bnvs and (dshifts is None or not len(dshifts)):
         return None
 
     figsize = mpl.rcParams["figure.figsize"].copy()
     width = len(bnvs)
-    height = 2 if dshifts else 1
+    height = 2 if dshifts is not None and len(dshifts) > 0 else 1
     figsize[0] *= width  # number of columns
     figsize[1] *= height  # number of rows
 
@@ -88,11 +88,11 @@ def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
             options["colormap_range_dicts"]["bnv_images"], bnv
         )
         title = f"{name} B NV_{i}"
-        if width == 1 and not dshifts:
+        if width == 1 and (dshifts is None or not len(dshifts)):
             ax = axs
         elif width == 1:
             ax = axs[0]
-        elif not dshifts:
+        elif (dshifts is None or not len(dshifts)):
             ax = axs[i]
         else:
             ax = axs[0, i]
