@@ -1010,7 +1010,7 @@ def define_current_transform(u_proj, ky, kx, k, standoff=None):
     alpha = 2 * exp_factor / MU_0
 
     # sign on 1j's is opposite to Broadway paper due to different FT definition.
-    b_to_jx = (alpha * ky) / (-u_proj[0] * kx - u_proj[1] * ky - 1j * u_proj[2] * k)
+    b_to_jx = -1 * (alpha * ky) / (u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k)
     b_to_jy = (alpha * kx) / (u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k)
 
     return b_to_jx, b_to_jy
@@ -1057,10 +1057,17 @@ def define_magnetisation_transformation(ky, kx, k, standoff):
 
     alpha = 2 * exp_factor / MU_0
 
-    return (-1 / alpha) * np.array(
+    # return (-1 / alpha) * np.array(
+    #     [
+    #         [kx ** 2 / k, (kx * ky) / k, 1j * kx],
+    #         [(kx * ky) / k, ky ** 2 / k, 1j * ky],
+    #         [1j * kx, 1j * ky, -k],
+    #     ]
+    # )
+    return (1 / alpha) * np.array(
         [
-            [kx ** 2 / k, (kx * ky) / k, 1j * kx],
-            [(kx * ky) / k, ky ** 2 / k, 1j * ky],
-            [1j * kx, 1j * ky, -k],
+            [-(kx ** 2 + 2 * ky ** 2) / k, kx * ky / k, 1j * kx],
+            [kx * ky / k, -(2 * kx ** 2 + ky ** 2) / k, 1j * ky],
+            [-1j * kx, -1j * ky, -k],
         ]
     )
