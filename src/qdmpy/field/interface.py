@@ -10,6 +10,7 @@ Functions
  - `qdmpy.field.interface.get_B_bias`
  - `qdmpy.field.interface.get_unvs`
  - `qdmpy.field.interface.add_bfield_reconstructed`
+ - `qdmpy.field.interface.add_bfield_theta_phi`
 """
 # ============================================================================
 
@@ -21,6 +22,7 @@ __pdoc__ = {
     "qdmpy.field.interface.get_B_bias": True,
     "qdmpy.field.interface.get_unvs": True,
     "qdmpy.field.interface.add_bfield_reconstructed": True,
+    "qdmpy.field.interface.add_bfield_theta_phi": True,
 }
 # ============================================================================
 
@@ -390,5 +392,58 @@ def add_bfield_reconstructed(options, field_params):
     field_params["Bx_recon"] = bx_recon
     field_params["By_recon"] = by_recon
     field_params["Bz_recon"] = bz_recon
+
+    return None
+
+
+# ============================================================================
+
+
+def add_bfield_theta_phi(options, field_params, theta, phi):
+    r"""Bxyz measured projected onto unit vector u: B_theta_phi (added to field params in-place)
+
+    Calculates the magnetic field projected onto a given unit vector specified by
+    theta (polar, from +z) and phi (azimuthal, from +x towards +y) angles in degrees.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options (for the main/signal experiment).
+    field_params : dict
+        Dictionary, key: param_keys, val: image (2D) of (field) param values across FOV.
+    theta : float
+        Polar angle of unit vector to project onto, in degrees, from +z towards equator.
+    phi : float
+        Azimuthal angle of unit vector to project onto, in degrees, from +x towards +y.
+
+    Returns
+    -------
+    nothing (operates in place on field_params)
+
+    """
+    # first check if Bx, By, Bz in fit_params
+    # extract them
+    if field_params is None:
+        return None
+
+    components = ["x", "y", "z"]
+
+    for p in ["B" + comp for comp in components]:
+        if p not in field_params:
+            warnings.warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
+            return None
+        elif field_params[p] is None:
+            return None
+
+    bvec = np.array([field_params["B" + comp] for comp in components])
+
+    ux = np.sin(theta) * np.cos(phi)
+    uy = np.sin(theta) * np.sin(phi)
+    uz = np.cos(theta)
+    u = np.array([ux, uy, uz])
+    uhat = u / np.linalg.norm(u)
+
+    field_params["B_theta_phi"] = np.dot(bvec, uhat)
+    options["bfield_proj_angles_(deg)"] = [theta, phi]
 
     return None

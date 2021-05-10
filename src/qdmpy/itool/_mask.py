@@ -25,7 +25,7 @@ import qdmpy.itool._polygon
 # ============================================================================
 
 
-def mask_polygons(image, polygons=None):
+def mask_polygons(image, polygons=None, invert_mask=False):
     """Mask image for the given polygon regions.
 
     Arguments
@@ -35,6 +35,10 @@ def mask_polygons(image, polygons=None):
     polygons : list, optional
         List of `qdmpy.itool._polygon.Polygon` objects.
         (the default is None, where image is returned with no mask)
+    invert_mask : bool, optional
+        Invert mask such that background is masked, not polygons (i.e. polygons
+        will be operated on if array is passed to np.mean instead of background).
+        (the default is False)
 
     Returns
     -------
@@ -61,7 +65,9 @@ def mask_polygons(image, polygons=None):
         m = np.ma.masked_greater_equal(in_or_out, 0).mask
         masked_area = np.logical_and(masked_area, ~m)
 
-    return np.ma.masked_array(image, mask=masked_area)
+    msk = np.logical_not(masked_area) if invert_mask else masked_area
+
+    return np.ma.masked_array(image, mask=msk)
 
 
 # ============================================================================
