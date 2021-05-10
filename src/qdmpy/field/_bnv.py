@@ -31,11 +31,12 @@ import numpy as np
 
 import qdmpy.itool as Qitool
 import qdmpy.constants
+import qdmpy.field._bxyz as Qbxyz
 
 # ============================================================================
 
 
-def get_bnvs_and_dshifts(pixel_fit_params):
+def get_bnvs_and_dshifts(options, pixel_fit_params):
     """
     pixel_fit_params -> bnvs, dshifts (both lists of np arrays, 2D)
 
@@ -66,12 +67,18 @@ def get_bnvs_and_dshifts(pixel_fit_params):
         if param_name.startswith("pos"):
             peak_posns.append(param_map)
 
+    bias = Qbxyz.get_B_bias(options)
+    bias_mag = np.linalg.norm(bias)
+
     # ensure peaks are in correct order by sorting their average position
     peak_posns.sort(key=np.nanmean)
     num_peaks = len(peak_posns)
 
     if num_peaks == 1:
-        bnvs = [np.abs(peak_posns[0] / (2 * qdmpy.constants.GAMMA))]
+        sign = -1 if np.mean(peak_posns[0]) < 2870 else +1  # determine if |-1>/|+1> resonance
+        if bias_mag > qdmpy.constants.GSLAC:
+            sign *= -1
+        bnvs = [sign * peak_posns[0] / qdmpy.constants.GAMMA]
         dshifts = np.empty(bnvs[0].shape)
         dshifts.fill(np.nan)
     elif num_peaks == 2:
@@ -84,7 +91,9 @@ def get_bnvs_and_dshifts(pixel_fit_params):
             bnvs.append(np.abs(peak_posns[-i - 1] - peak_posns[i]) / (2 * qdmpy.constants.GAMMA))
             dshifts.append((peak_posns[-i - 1] + peak_posns[i]) / 2)
         if ((num_peaks // 2) * 2) + 1 == num_peaks:
-            middle_bnv = np.abs(peak_posns[num_peaks // 2 + 1]) / (2 * qdmpy.constants.GAMMA)
+            peak = peak_posns[num_peaks // 2 + 1]
+            sign = -1 if np.mean(peak) < 2870 else +1  # determine if |-1>/|+1> resonance
+            middle_bnv = sign * peak / qdmpy.constants.GAMMA
             bnvs.append(middle_bnv)
             middle_dshift = np.empty(middle_bnv.shape)
             middle_dshift.fill(np.nan)

@@ -87,8 +87,8 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
             raise RuntimeError("Different number of frequencies fit in sig & ref.")
 
     # first get bnvs (as in global scope)
-    sig_bnvs, sig_dshifts = Qbnv.get_bnvs_and_dshifts(sig_fit_params)
-    ref_bnvs, ref_dshifts = Qbnv.get_bnvs_and_dshifts(ref_fit_params)
+    sig_bnvs, sig_dshifts = Qbnv.get_bnvs_and_dshifts(options, sig_fit_params)
+    ref_bnvs, ref_dshifts = Qbnv.get_bnvs_and_dshifts(options, ref_fit_params)
 
     meth = options["field_method"]
     if meth == "auto_dc" and not any(
@@ -119,7 +119,7 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
 
     if meth == "auto_dc":
         # need to select the appropriate one
-        if num_peaks_wanted == 2:
+        if num_peaks_wanted in [1, 2]:
             if symmetric_freqs:
                 meth = "prop_single_bnv"
             else:
@@ -129,7 +129,7 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
                 meth = "invert_unvs"
             else:
                 meth = "hamiltonian_fitting"
-        elif num_peaks_wanted in [1, 3, 4, 5, 7, 8]:  # not sure how many of these will be useful
+        elif num_peaks_wanted in [3, 4, 5, 7, 8]:  # not sure how many of these will be useful
             meth = "hamiltonian_fitting"
         else:
             raise RuntimeError(

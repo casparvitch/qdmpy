@@ -231,7 +231,7 @@ def from_hamiltonian_fitting(options, fit_params):
     # ok now need to get useful data out of fit_params (-> data)
     if use_bnvs:
         # data shape: [bnvs/freqs, y, x]
-        bnv_lst, _ = Qbnv.get_bnvs_and_dshifts(fit_params)
+        bnv_lst, _ = Qbnv.get_bnvs_and_dshifts(options, fit_params)
         if sum(chooser_ar) < 4:
             unwanted_bnvs = np.argwhere(np.array(chooser_ar) == 0)[0]
             shape = bnv_lst[0].shape

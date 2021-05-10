@@ -516,7 +516,7 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
 - field_method
     -  Method to get bfield from pixel ODMR data
     - options:
-        - "auto_dc": auto select from number of peaks (+ freqs_to_use) -> uses ham for 8 peaks, invert_unvs for 6 peaks, prop_single_bnv for 2
+        - "auto_dc": auto select from number of peaks (+ freqs_to_use) -> uses ham for 8 peaks, invert_unvs for 6 peaks, prop_single_bnv for 1,2
         - "hamiltonian_fitting": fit full hamiltonian
         - "prop_single_bnv": use fourier method to propagate bnv -> bxyz
         - "invert_unvs": take 3 unvs and (effective) approx_bxyz hamiltonian, but use simple inversion of unv matrix rather than fitting to hamiltonian

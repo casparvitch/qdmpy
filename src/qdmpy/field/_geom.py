@@ -45,8 +45,6 @@ def get_unvs(options):
 
     bias_x, bias_y, bias_z = get_B_bias(options)
 
-    # nv_ori = np.zeros((4, 3)) # not required anywhere?
-    # nv_signs = np.zeros(4)
     unvs = np.zeros((4, 3))  # z unit vectors of unv frame (in lab frame)
 
     # Get the NV orientations
@@ -90,7 +88,7 @@ def get_unvs(options):
 
 def get_B_bias(options):
     """
-    Returns (bx, by, bz) guess for the bias field in Gauss
+    Returns (bx, by, bz) guess for the bias field in Gauss.
 
     Arguments
     ---------
