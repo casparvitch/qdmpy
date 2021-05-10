@@ -1203,5 +1203,5 @@
     // source result directory
     "source_dir": {},
     // sorted unvs (from most to least aligned to bias field) used in algorithm
-    "used_unvs": {}
+    "unvs_used": {}
 }
