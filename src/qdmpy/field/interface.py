@@ -447,3 +447,16 @@ def add_bfield_theta_phi(options, field_params, theta, phi):
     options["bfield_proj_angles_(deg)"] = [theta, phi]
 
     return None
+
+
+# ============================================================================
+
+
+def add_bfield_proj_bias(options, field_params):
+    """calls add_bfield_theta_phi but grabs angle from bias field"""
+    x, y, z = get_B_bias(options)
+    xy = np.sqrt(x ** 2 + y ** 2)
+    theta = np.rad2deg(np.arctan2(xy, z))
+    phi = np.rad2deg(np.arctan2(y, x))
+    add_bfield_theta_phi(options, field_params, theta, phi)
+    return None

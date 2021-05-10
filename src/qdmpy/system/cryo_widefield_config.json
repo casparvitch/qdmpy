@@ -827,6 +827,12 @@
         "option_default": null
     },
 
+    // normalise each 'line' of in-plane magnetisation reconstruction by subtracting the average
+    // value over this many pixels at edge of image. null to not use
+    "in_plane_mag_norm_number_pixels": {
+        "option_default": null
+    },
+
     // magnetisation direction (intrinsic). Either null/None (for z-magnetisation) or an angle
     // in degress, from (+) x-axis towards (+) y-axis.
     // untested. 

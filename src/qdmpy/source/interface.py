@@ -334,6 +334,14 @@ def get_magnetisation(
             warnings.warn("recon_method option not recognised.")
             return None
 
+        if (
+            options["magnetisation_angle"] is not None
+            and options["in_plane_mag_norm_number_pixels"]
+        ):
+            m = in_plane_mag_normalise(
+                m, options["magnetisation_angle"], options["in_plane_mag_norm_number_pixels"]
+            )
+
         if options["source_bground_method"]:
             if "polygons" in options and (
                 options["mask_polygons_bground"]
@@ -431,3 +439,69 @@ def add_divperp_j(options, source_params):
         source_params[f"divperp_J_{method}"] = conserv_j
 
     return None
+
+
+# ============================================================================
+
+
+def in_plane_mag_normalise(mag_image, psi, edge_pixels_used):
+    """This function was copied from D. Broadway's previous version of the code
+
+    Parameters
+    ----------
+    mag_image : np array
+        2D magnetisation array as directly calculated.
+    psi : float
+        Assumed in-plane magnetisation angle (deg)
+    edge_pixels_used : int
+        Number of pixels to use at edge of image to calculate average to subtract.
+
+    Returns
+    -------
+    mag_image : np array
+        in-plane magnetisation image with line artifacts substracted.
+    """
+    psi = np.deg2rad(psi)
+    if psi < 0:
+        mag_image = np.flip(mag_image, 1)
+        psi = np.abs(psi)
+        flip_back = True
+    else:
+        flip_back = False
+    size = mag_image.shape
+    norm_line = size[0] - 1 - np.tan(psi) * range(size[0])
+    norm_idxs = [round(x) for x in norm_line.tolist()]
+    ii = 0
+    for idx in range(round((size[0]) - 1)):
+        norm_idxs_new = []
+        for x in norm_idxs:
+            if x - ii in range(size[0] - 1):
+                norm_idxs_new.append(x - ii)
+
+        x_idxs = [round(x) for x in range(len(norm_idxs_new))]
+        image_cut = mag_image[(norm_idxs_new, x_idxs)]
+        mag_image[(norm_idxs_new, x_idxs)] = (
+            image_cut
+            - (np.mean(image_cut[0:edge_pixels_used]) + np.mean(image_cut[-edge_pixels_used:-1]))
+            / 2
+        )
+        ii += 1
+    ii = 0
+    for idx in range(round((size[0]) - 1)):
+        ii += 1
+        norm_idxs_new = []
+        for x in norm_idxs:
+            if x + ii in range(size[0] - 1):
+                norm_idxs_new.append(x + ii)
+
+        x_idxs = [size[0] - 1 - round(x) for x in range(len(norm_idxs_new))]
+
+        image_cut = mag_image[(norm_idxs_new, x_idxs[::-1])]
+        mag_image[(norm_idxs_new, x_idxs[::-1])] = (
+            image_cut
+            - (np.mean(image_cut[0:edge_pixels_used]) + np.mean(image_cut[-edge_pixels_used:-1]))
+            / 2
+        )
+    if flip_back:
+        mag_image = np.flip(mag_image, 1)
+    return mag_image

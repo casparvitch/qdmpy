@@ -654,7 +654,7 @@ def plot_bfield_theta_phi(
         )
         c_map = options["colormaps"][c_map_type]
 
-    title = f"{name}: B_theta_{theta}_phi_{phi}"
+    title = f"{name}: B_theta_{np.round(theta,1)}_phi_{np.round(phi,1)}"
 
     plot_common.plot_image_on_ax(fig, ax, options, b, title, c_map, c_range, cbar_label)
 
@@ -662,7 +662,7 @@ def plot_bfield_theta_phi(
         fig.savefig(
             options["field_dir"]
             / (
-                f"B_theta_{int(np.floor(theta))}_phi_{int(np.floor(phi))}_{name}"
+                f"B_theta_{int(np.round(theta))}_phi_{int(np.round(phi))}_{name}"
                 + options["save_fig_type"]
             )
         )

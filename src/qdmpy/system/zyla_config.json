@@ -820,8 +820,13 @@
     // Region to use for zero-point normalisation. I.e. mean of this region is subtracted from
     // Jx and Jy (or M etc.). (Or null to not normalise). 
     // Format: [[x_top_left, y_top_left], [x_bot_right, y_bot_right], where y is from top to bottom.
-    // TODO add different normalisation for in-plane magnetisation? See process-widefield-py
     "zero_point_normalisation_region": {
+        "option_default": null
+    },
+
+    // normalise each 'line' of in-plane magnetisation reconstruction by subtracting the average
+    // value over this many pixels at edge of image. null to not use
+    "in_plane_mag_norm_number_pixels": {
         "option_default": null
     },
 
