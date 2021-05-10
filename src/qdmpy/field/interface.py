@@ -443,7 +443,7 @@ def add_bfield_theta_phi(options, field_params, theta, phi):
     u = np.array([ux, uy, uz])
     uhat = u / np.linalg.norm(u)
 
-    field_params["B_theta_phi"] = np.dot(bvec, uhat)
+    field_params["B_theta_phi"] = np.apply_along_axis(lambda b: np.dot(uhat, b), 0, bvec)
     options["bfield_proj_angles_(deg)"] = [theta, phi]
 
     return None

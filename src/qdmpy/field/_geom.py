@@ -80,6 +80,8 @@ def get_unvs(options):
         for idx in range(len(sorted_dict)):
             unvs[idx, :] = np.array(sorted_dict[idx]["ori"]) * sorted_dict[idx]["sign"]
 
+    options["unvs_used"] = unvs
+
     return unvs
 
 

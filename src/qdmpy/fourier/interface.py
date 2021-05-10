@@ -1057,17 +1057,17 @@ def define_magnetisation_transformation(ky, kx, k, standoff):
 
     alpha = 2 * exp_factor / MU_0
 
-    # return (-1 / alpha) * np.array(
-    #     [
-    #         [kx ** 2 / k, (kx * ky) / k, 1j * kx],
-    #         [(kx * ky) / k, ky ** 2 / k, 1j * ky],
-    #         [1j * kx, 1j * ky, -k],
-    #     ]
-    # )
-    return (1 / alpha) * np.array(
+    return (-1 / alpha) * np.array(
         [
-            [-(kx ** 2 + 2 * ky ** 2) / k, kx * ky / k, 1j * kx],
-            [kx * ky / k, -(2 * kx ** 2 + ky ** 2) / k, 1j * ky],
-            [-1j * kx, -1j * ky, -k],
+            [kx ** 2 / k, (kx * ky) / k, 1j * kx],
+            [(kx * ky) / k, ky ** 2 / k, 1j * ky],
+            [1j * kx, 1j * ky, -k],
         ]
     )
+    # return (1 / alpha) * np.array(
+    #     [
+    #         [-(kx ** 2 + 2 * ky ** 2) / k, kx * ky / k, 1j * kx],
+    #         [kx * ky / k, -(2 * kx ** 2 + ky ** 2) / k, 1j * ky],
+    #         [-1j * kx, -1j * ky, -k],
+    #     ]
+    # )

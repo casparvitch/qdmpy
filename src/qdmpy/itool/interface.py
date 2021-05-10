@@ -162,4 +162,4 @@ def polygon_gui(image=None):
 def mu_sigma_exclude_polygons(image, polygons=None):
     """returns (mean, standard_deviation) for image, only _within_ polygon areas."""
     image = qdmpy.itool._mask.mask_polygons(image, polygons, invert_mask=True)
-    return np.mean(image), np.stdev(image)
+    return np.mean(image), np.std(image)
