@@ -401,8 +401,6 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
     - If true the reference (often no-MW) measurement is ignored
 - additional_bins
     - Additional binning on dataset (local averaging). 0 does nothing (or 1). Must be multiple of 2 otherwise.
-- old_binning_convention
-    - Legacy option.
 - system_name
     - Name of system used (see qdmpy.system)
 - other_measurement_suffixes

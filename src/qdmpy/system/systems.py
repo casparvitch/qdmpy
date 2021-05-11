@@ -446,6 +446,18 @@ class CryoWidefield(UniMelb):
     name = "Cryo Widefield"
     config_path = _CONFIG_PATH / "cryo_widefield_config.json"
 
+    def determine_binning(self, options):
+        # silly old binning convention -> change when labview updated to new binning
+        bin_conversion = [1, 2, 3, 4, 8]
+        metadata = self._read_metadata(options["filepath"])
+        metadata_bin = int(metadata["Binning"])
+        options["original_bin"] = bin_conversion[metadata_bin]
+
+        if not int(options["additional_bins"]):
+            options["total_bin"] = options["original_bin"]
+        else:
+            options["total_bin"] = options["original_bin"] * int(options["additional_bins"])
+
 
 # ============================================================================
 

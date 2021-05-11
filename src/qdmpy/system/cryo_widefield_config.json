@@ -37,16 +37,6 @@
         "option_default": 0
     },
 
-    // legacy option
-    "old_binning_convention": {
-        "option_default": false,
-        "option_choices":
-            [
-                true,
-                false
-            ]
-    },
-
     // Name of system used (see systems.py).
     "system_name": {
         "option_default": "Cryo",
