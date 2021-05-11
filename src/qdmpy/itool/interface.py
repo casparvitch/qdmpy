@@ -7,6 +7,7 @@ Functions
  - `qdmpy.itool.interface.get_background`
  - `qdmpy.itool.interface.get_im_filtered`
  - `qdmpy.itool.interface.polygon_gui`
+ - `qdmpy.itool.interface.mu_sigma_exclude_polygons`
 """
 
 # ============================================================================
@@ -16,6 +17,7 @@ __pdoc__ = {
     "qdmpy.itool.interface.get_background": True,
     "qdmpy.itool.interface.get_im_filtered": True,
     "qdmpy.itool.interface.polygon_gui": True,
+    "qdmpy.itool.interface.mu_sigma_exclude_polygons": True,
 }
 
 # ============================================================================

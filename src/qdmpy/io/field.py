@@ -114,7 +114,7 @@ def save_bnvs_and_dshifts(options, name, bnvs, dshifts):
                 else:
                     path = options["field_dir"] / f"{name}_bnv_{i}.txt"
                 np.savetxt(path, bnv)
-    if dshifts:
+    if dshifts is not None and len(dshifts):
         for i, dshift in enumerate(dshifts):
             if dshift is not None:
                 if name in ["sig", "ref"]:

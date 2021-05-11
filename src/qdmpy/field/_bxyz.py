@@ -78,7 +78,10 @@ def from_single_bnv(options, bnvs):
     unvs = Qgeom.get_unvs(options)
     if len(bnvs) == 1:  # just use the first one (i.e. the only one...)
         single_bnv = bnvs[0]
-        idx = np.argwhere(np.array(chosen_freqs[:4]) == 1)[0][0]
+        if chosen_freqs[:4] == [0, 0, 0, 0]:  # only single freq used, |+1> transition
+            idx = np.argwhere(np.array(list(reversed(chosen_freqs[4:]))) == 1)[0][0]
+        else:
+            idx = np.argwhere(np.array(chosen_freqs[:4]) == 1)[0][0]
         unv = unvs[idx]
     elif len(bnvs) == 4:  # just use the chosen freq
         idx = np.argwhere(np.array(chosen_freqs[:4]) == 1)[0][0]

@@ -119,7 +119,9 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
 
     if meth == "auto_dc":
         # need to select the appropriate one
-        if num_peaks_wanted in [1, 2]:
+        if num_peaks_wanted == 1:  # can't be symmetric!
+            meth = "prop_single_bnv"
+        elif num_peaks_wanted == 2:
             if symmetric_freqs:
                 meth = "prop_single_bnv"
             else:
@@ -170,10 +172,10 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
 
     elif options["calc_field_pixels"]:
         if options["field_method_used"] == "prop_single_bnv":
-            if num_peaks_wanted != 2:
+            if num_peaks_wanted not in [1, 2]:
                 raise RuntimeError(
                     "field_method option was 'prop_single_bnv', but number of true values in option "
-                    + "'freqs_to_use' was not 2."
+                    + "'freqs_to_use' was not 1 or 2."
                 )
             else:
                 sig_params = Qbxyz.from_single_bnv(options, sig_bnvs)

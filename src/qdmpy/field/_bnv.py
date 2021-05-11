@@ -31,7 +31,7 @@ import numpy as np
 
 import qdmpy.itool as Qitool
 import qdmpy.constants
-import qdmpy.field._bxyz as Qbxyz
+import qdmpy.field._geom as Qgeom
 
 # ============================================================================
 
@@ -67,7 +67,7 @@ def get_bnvs_and_dshifts(options, pixel_fit_params):
         if param_name.startswith("pos"):
             peak_posns.append(param_map)
 
-    bias = Qbxyz.get_B_bias(options)
+    bias = Qgeom.get_B_bias(options)
     bias_mag = np.linalg.norm(bias)
 
     # ensure peaks are in correct order by sorting their average position
