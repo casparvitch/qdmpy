@@ -105,7 +105,7 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
         )
 
     # check how many peaks we want to use, and how many are available -> ensure compatible
-    num_peaks_fit = len(options["pos_guess"])
+    num_peaks_fit = len(options["pos_guess"]) if type(options["pos_guess"]) is list else 1
     num_peaks_wanted = sum(options["freqs_to_use"])
     if num_peaks_wanted > num_peaks_fit:
         raise RuntimeError(

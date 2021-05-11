@@ -74,7 +74,7 @@ def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
 
     figsize = mpl.rcParams["figure.figsize"].copy()
     width = len(bnvs)
-    height = 2 if dshifts is not None and len(dshifts) else 1
+    height = 2 if dshifts is not None and len(dshifts) > 0 else 1
     figsize[0] *= width  # number of columns
     figsize[1] *= height  # number of rows
 
@@ -94,7 +94,7 @@ def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
             ax = axs
         elif width == 1:
             ax = axs[0]
-        elif dshifts is None or not len(dshifts):
+        elif (dshifts is None or not len(dshifts)):
             ax = axs[i]
         else:
             ax = axs[0, i]
