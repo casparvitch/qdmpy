@@ -699,6 +699,7 @@ def get_m_from_bxy(
         https://doi.org/10.1103/PhysRevApplied.14.024076
         https://arxiv.org/abs/2005.06788
     """
+    from qdmpy.constants import MAG_UNIT_CONV
 
     # copy and convert Gauss -> Tesla
     bx = copy(bfield[0]) * 1e-4
@@ -808,6 +809,8 @@ def get_m_from_bz(
         https://doi.org/10.1103/PhysRevApplied.14.024076
         https://arxiv.org/abs/2005.06788
     """
+    from qdmpy.constants import MAG_UNIT_CONV
+
     bz = copy(bfield[2]) * 1e-4  # copy and convert Gauss to Tesla
     bz_pad, padder = qdmpy.fourier._shared.pad_image(bz, pad_mode, pad_factor)
 
@@ -913,8 +916,7 @@ def get_m_from_bnv(
         https://doi.org/10.1103/PhysRevApplied.14.024076
         https://arxiv.org/abs/2005.06788
     """
-    from qdmpy.constants import MU_0, MAG_UNIT_CONV
-
+    from qdmpy.constants import MAG_UNIT_CONV
 
     b = copy(bnv) * 1e-4  # copy and convert Gauss to Tesla
     bnv_pad, padder = qdmpy.fourier._shared.pad_image(b, pad_mode, pad_factor)

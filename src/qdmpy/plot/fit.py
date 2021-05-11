@@ -747,7 +747,6 @@ def plot_param_image(
         fig, ax, options, image, param_name + "_" + str(param_number), c_map, c_range, c_label
     )
 
-    np.savetxt(options["data_dir"] / (param_name + "_" + str(param_number) + ".txt"), image)
     if options["save_plots"]:
         if errorplot:
             path = options["output_dir"] / (

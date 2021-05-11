@@ -81,8 +81,8 @@ def get_bnvs_and_dshifts(options, pixel_fit_params):
         if bias_mag > qdmpy.constants.GSLAC:
             sign *= -1
         bnvs = [sign * peak_posns[0] / qdmpy.constants.GAMMA]
-        dshifts = np.empty(bnvs[0].shape)
-        dshifts.fill(np.nan)
+        dshifts = [np.empty(bnvs[0].shape)]
+        dshifts[0].fill(np.nan)
     elif num_peaks == 2:
         bnvs = [np.abs(peak_posns[1] - peak_posns[0]) / (2 * GAMMA)]
         dshifts = [(peak_posns[1] + peak_posns[0]) / 2]
