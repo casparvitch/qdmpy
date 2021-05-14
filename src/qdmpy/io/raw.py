@@ -509,8 +509,8 @@ def _rebin_image(options, image):
         else:
             raise KeyError("bad normalisation option, use: ['sub', 'div']")
     else:
-
-        sig = ref = image_rebinned
+        sig = image_rebinned
+        ref = image_rebinned
         sig_norm = sig / np.max(sig, 0)
 
     return image_rebinned, sig, ref, sig_norm
