@@ -152,8 +152,11 @@ def plot_image_on_ax(fig, ax, options, image_data, title, c_map, c_range, c_labe
 
     if options["polygon_nodes"] and options["annotate_polygons"]:
         for p in options["polygon_nodes"]:
+            # polygons reversed to (x,y) indexing for patch
             ax.add_patch(
-                matplotlib.patches.Polygon(np.array(p), **options["polygon_patch_params"])
+                matplotlib.patches.Polygon(
+                    np.dstack((p[:, 1], p[:, 0]))[0], **options["polygon_patch_params"]
+                )
             )
 
     return fig, ax

@@ -6,7 +6,7 @@ system etc., required for retrieving/reconstructing vector fields.
 Functions
 ---------
  - `qdmpy.field._geom.get_unvs`
- - `qdmpy.field._geom.get_B_bias`
+ - `qdmpy.field._geom.spherical_deg_to_cart`
  - `qdmpy.field._geom.get_unv_frames`
 """
 
@@ -15,7 +15,7 @@ Functions
 __author__ = "Sam Scholten"
 __pdoc__ = {
     "qdmpy.field._geom.get_unvs": True,
-    "qdmpy.field._geom.get_B_bias": True,
+    "qdmpy.field._geom.spherical_deg_to_cart": True,
     "qdmpy.field._geom.get_unv_frames": True,
 }
 
@@ -23,7 +23,6 @@ __pdoc__ = {
 
 import numpy as np
 import numpy.linalg as LA
-from math import radians
 
 # ============================================================================
 
@@ -43,7 +42,7 @@ def get_unvs(options):
         Shape: (4,3). Equivalent to uNV_Z for each NV. (Sorted largest to smallest Bnv)
     """
 
-    bias_x, bias_y, bias_z = get_B_bias(options)
+    bias_x, bias_y, bias_z = options["bias_field_cartesian_gauss"]
 
     unvs = np.zeros((4, 3))  # z unit vectors of unv frame (in lab frame)
 
@@ -81,41 +80,6 @@ def get_unvs(options):
     options["unvs_used"] = unvs
 
     return unvs
-
-
-# ============================================================================
-
-
-def get_B_bias(options):
-    """
-    Returns (bx, by, bz) guess for the bias field in Gauss.
-
-    Arguments
-    ---------
-    options : dict
-        Generic options dict holding all the user options.
-
-    Returns
-    -------
-    bxyz : tuple
-        (bx, by, bz) for the bias field, in Gauss.
-    """
-    bias_field = None
-    if options["auto_read_bias"]:
-        bias_on, bias_field = options["system"].get_bias_field(options)
-        if not bias_on:
-            bias_field = None
-    if bias_field is not None:
-        Bmag, Btheta_rad, Bphi_rad = bias_field
-    else:
-        Bmag = options["bias_mag"]
-        Btheta_rad = radians(options["bias_theta"])
-        Bphi_rad = radians(options["bias_phi"])
-
-    bx = Bmag * np.sin(Btheta_rad) * np.cos(Bphi_rad)
-    by = Bmag * np.sin(Btheta_rad) * np.sin(Bphi_rad)
-    bz = Bmag * np.cos(Btheta_rad)
-    return bx, by, bz
 
 
 # ============================================================================

@@ -40,7 +40,6 @@ import warnings
 
 import qdmpy.plot.common as plot_common
 import qdmpy.hamiltonian as Qham
-import qdmpy.field as Qfield
 
 # ============================================================================
 
@@ -86,27 +85,40 @@ def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
     c_map = options["colormaps"]["bnv_images"]
     # axs index: axs[row, col]
     for i, bnv in enumerate(bnvs):
+        data = (
+            -bnv
+            if options["plot_bnv_flip_with_bias_mag"]
+            and options["bias_field_spherical_deg_gauss"][0] < 0
+            else bnv
+        )
+
         c_range = plot_common._get_colormap_range(
-            options["colormap_range_dicts"]["bnv_images"], bnv
+            options["colormap_range_dicts"]["bnv_images"], data
         )
         title = f"{name} B NV_{i}"
         if width == 1 and (dshifts is None or not len(dshifts)):
             ax = axs
         elif width == 1:
             ax = axs[0]
-        elif (dshifts is None or not len(dshifts)):
+        elif dshifts is None or not len(dshifts):
             ax = axs[i]
         else:
             ax = axs[0, i]
-        plot_common.plot_image_on_ax(fig, ax, options, bnv, title, c_map, c_range, "B (G)")
+        plot_common.plot_image_on_ax(fig, ax, options, data, title, c_map, c_range, "B (G)")
     c_map = options["colormaps"]["dshift_images"]
     for i, dshift in enumerate(dshifts):
+        data = (
+            -dshift
+            if options["plot_bnv_flip_with_bias_mag"]
+            and options["bias_field_spherical_deg_gauss"][0] < 0
+            else dshift
+        )
         c_range = plot_common._get_colormap_range(
-            options["colormap_range_dicts"]["dshift_images"], dshift
+            options["colormap_range_dicts"]["dshift_images"], data
         )
         title = f"{name} D_{i}"
         ax = axs[1] if width == 1 else axs[1, i]
-        plot_common.plot_image_on_ax(fig, ax, options, dshift, title, c_map, c_range, "D (MHz)")
+        plot_common.plot_image_on_ax(fig, ax, options, data, title, c_map, c_range, "D (MHz)")
 
     if options["save_plots"]:
         fig.savefig(options["field_dir"] / (f"Bnv_{name}." + options["save_fig_type"]))
@@ -416,7 +428,7 @@ def plot_field_param_flattened(
         bounds = None  # no bounds if not a fit
         comps = ["Bx", "By", "Bz"]
         if param_name in comps:
-            Bguesses = Qfield.get_B_bias(options)
+            Bguesses = options["bias_field_cartesian_gauss"]
             guess = Bguesses[comps.index(param_name)]
 
     if not plot_guess:

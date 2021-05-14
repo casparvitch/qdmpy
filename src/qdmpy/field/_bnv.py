@@ -31,12 +31,11 @@ import numpy as np
 
 import qdmpy.itool as Qitool
 import qdmpy.constants
-import qdmpy.field._geom as Qgeom
 
 # ============================================================================
 
 
-def get_bnvs_and_dshifts(options, pixel_fit_params):
+def get_bnvs_and_dshifts(pixel_fit_params, bias_field_spherical_deg):
     """
     pixel_fit_params -> bnvs, dshifts (both lists of np arrays, 2D)
 
@@ -46,6 +45,8 @@ def get_bnvs_and_dshifts(options, pixel_fit_params):
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
         Ordered by the order of functions in options["fit_functions"].
         If None, returns ([], [])
+    bias_field_spherical_deg : tuple
+        Bias field in spherical polar degrees (and gauss).
 
     Returns
     -------
@@ -67,8 +68,7 @@ def get_bnvs_and_dshifts(options, pixel_fit_params):
         if param_name.startswith("pos"):
             peak_posns.append(param_map)
 
-    bias = Qgeom.get_B_bias(options)
-    bias_mag = np.linalg.norm(bias)
+    bias_mag = np.abs(bias_field_spherical_deg[0])
 
     # ensure peaks are in correct order by sorting their average position
     peak_posns.sort(key=np.nanmean)
@@ -77,7 +77,7 @@ def get_bnvs_and_dshifts(options, pixel_fit_params):
     from qdmpy.constants import GAMMA
 
     if num_peaks == 1:
-        sign = -1 if np.mean(peak_posns[0]) < 2870 else +1  # determine if |-1>/|+1> resonance
+        sign = -1 if np.mean(peak_posns[0]) < 2870 else +1  # det. if L/R resonance (rel to bias)
         if bias_mag > qdmpy.constants.GSLAC:
             sign *= -1
         bnvs = [sign * peak_posns[0] / qdmpy.constants.GAMMA]
@@ -94,7 +94,7 @@ def get_bnvs_and_dshifts(options, pixel_fit_params):
             dshifts.append((peak_posns[-i - 1] + peak_posns[i]) / 2)
         if ((num_peaks // 2) * 2) + 1 == num_peaks:
             peak = peak_posns[num_peaks // 2 + 1]
-            sign = -1 if np.mean(peak) < 2870 else +1  # determine if |-1>/|+1> resonance
+            sign = -1 if np.mean(peak) < 2870 else +1  # det. if L/R resonance (rel to bias)
             middle_bnv = sign * peak / qdmpy.constants.GAMMA
             bnvs.append(middle_bnv)
             middle_dshift = np.empty(middle_bnv.shape)
@@ -255,7 +255,7 @@ def sub_bground_bnvs(options, bnvs, method, **method_settings):
     output_bnvs
         bnvs with background subtracted
     """
-    if options["mask_polygons_bground"] and "polygons" in options:
+    if "polygons" in options and (options["mask_polygons_bground"] or method == "interpolate"):
         polygons = options["polygons"]
     else:
         polygons = None

@@ -7,7 +7,8 @@ Functions
  - `qdmpy.source.interface.odmr_source_retrieval`
  - `qdmpy.source.interface.get_current_density`
  - `qdmpy.source.interface.get_magnetisation`
- - `qdmpy.source.interface.add_jsource_reconstructed`
+ - `qdmpy.source.interface.add_div_j`
+ - `qdmpy.source.interface.in_plane_mag_normalise`
 """
 
 
@@ -19,6 +20,7 @@ __pdoc__ = {
     "qdmpy.source.interface.get_current_density": True,
     "qdmpy.source.interface.get_magnetisation": True,
     "qdmpy.source.interface.add_div_j": True,
+    "qdmpy.source.interface.in_plane_mag_normalise": True,
 }
 
 # ============================================================================
@@ -445,7 +447,8 @@ def add_divperp_j(options, source_params):
 
 
 def in_plane_mag_normalise(mag_image, psi, edge_pixels_used):
-    """This function was copied from D. Broadway's previous version of the code
+    """Normalise in-plane magnetisation by taking average of mag near edge of image per line @ psi.
+    The jist of this function was copied from D. Broadway's previous version of the code.
 
     Parameters
     ----------
@@ -462,46 +465,46 @@ def in_plane_mag_normalise(mag_image, psi, edge_pixels_used):
         in-plane magnetisation image with line artifacts substracted.
     """
     psi = np.deg2rad(psi)
+    new_im = mag_image.copy()
     if psi < 0:
         mag_image = np.flip(mag_image, 1)
+        new_im = np.flip(new_im, 1)
         psi = np.abs(psi)
         flip_back = True
     else:
         flip_back = False
-    size = mag_image.shape
-    norm_line = size[0] - 1 - np.tan(psi) * range(size[0])
-    norm_idxs = [round(x) for x in norm_line.tolist()]
-    ii = 0
-    for idx in range(round((size[0]) - 1)):
-        norm_idxs_new = []
-        for x in norm_idxs:
-            if x - ii in range(size[0] - 1):
-                norm_idxs_new.append(x - ii)
+    height, width = mag_image.shape
+    max_y_idx = height - 1
 
-        x_idxs = [round(x) for x in range(len(norm_idxs_new))]
-        image_cut = mag_image[(norm_idxs_new, x_idxs)]
-        mag_image[(norm_idxs_new, x_idxs)] = (
-            image_cut
-            - (np.mean(image_cut[0:edge_pixels_used]) + np.mean(image_cut[-edge_pixels_used:-1]))
-            / 2
-        )
-        ii += 1
-    ii = 0
-    for idx in range(round((size[0]) - 1)):
-        ii += 1
-        norm_idxs_new = []
-        for x in norm_idxs:
-            if x + ii in range(size[0] - 1):
-                norm_idxs_new.append(x + ii)
+    # first get indices of a line from origin at bottom left at psi (from +x to +y)
+    origin_line_y = max_y_idx - np.tan(psi) * range(width)  # y = y_max - x*tan(psi) (y downwards)
+    origin_line_y_ints = [
+        round(y) for y in origin_line_y.tolist()
+    ]  # y-idxs of line from bot. left @ psi
 
-        x_idxs = [size[0] - 1 - round(x) for x in range(len(norm_idxs_new))]
+    offset = 0  # now look for parallel lines, at +- 'offset' in y
+    for idx in range(height):
+        above_y_idxs = []  # above origin line, i.e. lower y
+        above_x_idxs = []  # corresponding x indices to above_y_idxs
+        below_y_idxs = []
+        below_x_idxs = []
+        for x_idx, y_idx in enumerate(origin_line_y_ints):
+            if y_idx - offset >= 0 and y_idx - offset <= max_y_idx:
+                above_y_idxs.append(y_idx - offset)
+                above_x_idxs.append(x_idx)
 
-        image_cut = mag_image[(norm_idxs_new, x_idxs[::-1])]
-        mag_image[(norm_idxs_new, x_idxs[::-1])] = (
-            image_cut
-            - (np.mean(image_cut[0:edge_pixels_used]) + np.mean(image_cut[-edge_pixels_used:-1]))
-            / 2
-        )
+            if y_idx + offset >= 0 and y_idx + offset <= max_y_idx:
+                below_y_idxs.append(y_idx + offset)
+                below_x_idxs.append(x_idx)
+
+        for coords in [(above_y_idxs, above_x_idxs), (below_y_idxs, below_x_idxs)]:
+            im_cut = mag_image[coords]
+            new_im[coords] = im_cut - (
+                np.mean(im_cut[0:edge_pixels_used] + np.mean(im_cut[-edge_pixels_used:])) / 2
+            )
+
+        offset += 1
+
     if flip_back:
-        mag_image = np.flip(mag_image, 1)
-    return mag_image
+        new_im = np.flip(new_im, 1)
+    return new_im

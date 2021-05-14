@@ -154,9 +154,16 @@ class System:
     def get_bias_field(self):
         """
         Method to get magnet bias field from experiment metadata,
-        i.e. if set with programmed electromagnet. Default: None.
+        i.e. if set with programmed electromagnet. Default: False, None.
+
+        Returns
+        -------
+        bias_on : bool
+            Was programmed bias field used?
+        bias_field : tuple
+            Tuple representing vector bias field (B_mag (gauss), B_theta (rad), B_phi (rad))
         """
-        return None
+        return False, None
 
     def system_specific_option_update(self, options):
         """

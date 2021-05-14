@@ -65,9 +65,7 @@ def gen_init_guesses(options):
     init_guesses = {}
     init_bounds = {}
     if options["auto_read_B"]:
-        import qdmpy.field as Qfield  # avoid circular import
-
-        bias_x, bias_y, bias_z = Qfield.get_B_bias(options)
+        bias_x, bias_y, bias_z = options["bias_field_cartesian_gauss"]
         override_guesses = {"Bx": bias_x, "By": bias_y, "Bz": bias_z}
 
     from qdmpy.constants import AVAILABLE_HAMILTONIANS  # avoid circ. imports

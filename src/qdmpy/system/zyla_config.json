@@ -67,6 +67,18 @@
                 "sub"
             ]
     },
+    // how to handle experiment reference (if one found).
+    // field: basically everything you would want
+    // dshift: provide a dshift reference for single-peak odmr past gslac with 2-peak below gslac.
+    //  (can be used with both below gslac, but does require 1/2 peaks in sig/ref along same uNV)
+    "exp_reference_type": {
+        "option_default": "field",
+        "option_choices":
+            [
+                "field",
+                "dshift"
+            ]
+    },
 
     // =======================================
     // === microscope settings ===
@@ -536,6 +548,7 @@
             ]
     },
     // unit vectors of NV orientations, must be shape = (4,3). Equiv. to each NV frame's z axis. 
+    // (from most-aligned to least aligned with bias field)
     "unvs": {
         "option_default": [
             [0.57735, 0.57735, 0.57735],
@@ -967,6 +980,11 @@
             "magnetisation_images": "PuOr"
         }
     },
+    // Add a minus sign to bnv (and dshift) plots if bias field magnitude (in spherical coords)
+    // is negative. Useful to compare magnetic flake bnv images when you're +- the vector bias.
+    "plot_bnv_flip_with_bias_mag": {
+        "option_default": false
+    },
     // =========== Colormap Ranges ===========
     // Choose range of values mapped across to the colormap limits, for each 'type' of image
     // if you want to override, you must copy the full dict (not just the ones you want to change).
@@ -1191,5 +1209,10 @@
     // source result directory
     "source_dir": {},
     // sorted unvs (from most to least aligned to bias field) used in algorithm
-    "unvs_used": {}
+    "unvs_used": {},
+    // bias field extracted from metadata/options in different coordinates
+    "bias_field_cartesian_gauss": {},
+    "bias_field_spherical_deg_gauss": {},
+    "ref_bias_field_cartesian_gauss": {},
+    "ref_bias_field_spherical_deg_gauss": {}
 }
