@@ -17,6 +17,7 @@ Functions
  - `qdmpy.io.field.load_field_sigma`
  - `qdmpy.io.field.load_arb_field_param`
  - `qdmpy.io.field.load_arb_field_params`
+ - `qdmpy.io.field.choose_field_method`
  - `qdmpy.io.field.check_for_prev_field_calc`
  - `qdmpy.io.field._prev_pixel_field_calcs_exist`
  - `qdmpy.io.field._field_options_compatible`
@@ -38,6 +39,7 @@ __pdoc__ = {
     "qdmpy.io.field.load_field_sigma": True,
     "qdmpy.io.field.load_arb_field_param": True,
     "qdmpy.io.field.load_arb_field_params": True,
+    "qdmpy.io.field.choose_field_method": True,
     "qdmpy.io.field.check_for_prev_field_calc": True,
     "qdmpy.io.field._prev_pixel_field_calcs_exist": True,
     "qdmpy.io.field._field_options_compatible": True,
@@ -52,6 +54,9 @@ import os
 
 import qdmpy.io.fit
 import qdmpy.hamiltonian
+import qdmpy.field._bxyz as Qbxyz
+import qdmpy.field._bnv as Qbnv
+import qdmpy.field._geom as Qgeom
 
 # ============================================================================
 
@@ -103,7 +108,7 @@ def save_bnvs_and_dshifts(options, name, bnvs, dshifts):
     dshifts : list
         list of dshift results (2D image)
     """
-    if bnvs:
+    if bnvs is not None and len(bnvs) > 0:
         for i, bnv in enumerate(bnvs):
             if bnv is not None:
                 if name in ["sig", "ref", "sig_sub_ref"]:
@@ -111,7 +116,7 @@ def save_bnvs_and_dshifts(options, name, bnvs, dshifts):
                 else:
                     path = options["field_dir"] / f"{name}_bnv_{i}.txt"
                 np.savetxt(path, bnv)
-    if dshifts:
+    if dshifts is not None and len(dshifts) > 0:
         for i, dshift in enumerate(dshifts):
             if dshift is not None:
                 if name in ["sig", "ref"]:
@@ -197,15 +202,20 @@ def load_prev_field_calcs(options):
     """
     sig_bnvs, sig_dshifts = load_prev_bnvs_and_dshifts(options, "sig")
     ref_bnvs, ref_dshifts = load_prev_bnvs_and_dshifts(options, "ref")
-    sig_sub_ref_bnvs, _ = load_prev_bnvs_and_dshifts(options, "sig_sub_ref")
 
     sig_params = load_prev_field_params(options, "sig")
     ref_params = load_prev_field_params(options, "ref")
-    sig_sub_ref_params = load_prev_field_params(options, "sig_sub_ref")
 
     sig_sigmas = load_prev_field_sigmas(options, "sig")
     ref_sigmas = load_prev_field_sigmas(options, "ref")
-    sig_sub_ref_sigmas = load_prev_field_sigmas(options, "sig_sub_ref")
+
+    # Sam changed to below on 2021-04-21, so that background subtraction is done transparently.
+    sig_sub_ref_bnvs = Qbnv.bnv_refsub(options, sig_bnvs, ref_bnvs)
+    # sig_sub_ref_bnvs, _ = load_prev_bnvs_and_dshifts(options, "sig_sub_ref")
+    sig_sub_ref_params = Qbxyz.field_refsub(options, sig_params, ref_params)
+    # sig_sub_ref_params = load_prev_field_params(options, "sig_sub_ref")
+    sig_sub_ref_sigmas = Qbxyz.field_sigma_add(options, sig_sigmas, ref_sigmas)
+    # sig_sub_ref_sigmas = load_prev_field_sigmas(options, "sig_sub_ref")
 
     return (
         [sig_bnvs, ref_bnvs, sig_sub_ref_bnvs],
@@ -244,7 +254,7 @@ def load_prev_bnvs_and_dshifts(options, name):
             dpath = options[f"field_{name}_dir"] / f"{name}_dshift_{i}.txt"
         else:
             bpath = options["field_dir"] / f"{name}_bnv_{i}.txt"
-            dpath = options[f"field_dir"] / f"{name}_dshift_{i}.txt"
+            dpath = options["field_dir"] / f"{name}_dshift_{i}.txt"
         if os.path.isfile(bpath):
             bnvs.append(np.loadtxt(bpath))
         if os.path.isfile(dpath):
@@ -397,6 +407,75 @@ def load_arb_field_param(path, param):
 # ============================================================================
 
 
+def choose_field_method(options):
+    """Chooses a field calculation/retrievel method to use, based on user options.
+
+    Parameters
+    ----------
+    options : dict
+        Generic options dict holding all the user options.
+
+    """
+    if options["calc_field_pixels"]:  # user might not want field
+
+        meth = options["field_method"]
+        if meth == "auto_dc" and not any(
+            map(lambda x: x.startswith("pos"), options["fit_param_defn"])
+        ):
+            raise RuntimeError(
+                """
+                field_method 'auto_dc' not compatible with fit functions that do not include 'pos'
+                parameters. You are probably not fitting ODMR data.
+                Implement a module for non-odmr data, and an 'auto_ac' option for field retrieval in
+                that regime. If you've done that you may want to implement an 'auto' option that
+                selects the most applicable module and method :).
+                """
+            )
+
+        # check how many peaks we want to use, and how many are available -> ensure compatible
+        num_peaks_fit = len(options["pos_guess"]) if type(options["pos_guess"]) is list else 1
+        num_peaks_wanted = sum(options["freqs_to_use"])
+        if num_peaks_wanted > num_peaks_fit:
+            raise RuntimeError(
+                f"Number of freqs wanted in option 'freqs_to_use' ({num_peaks_wanted})"
+                + f"is greater than number fit ({num_peaks_fit}).\n"
+                + "We need to identify which NVs each resonance corresponds to "
+                + "for our algorithm to work, so please define this in the options dict/json."
+            )
+        # check that freqs_to_use is symmetric (necessary for bnvs retrieval methods)
+        symmetric_freqs = (
+            list(reversed(options["freqs_to_use"][4:])) == options["freqs_to_use"][:4]
+        )
+
+        if meth == "auto_dc":
+            # need to select the appropriate one
+            if num_peaks_wanted == 1:  # can't be symmetric!
+                meth = "prop_single_bnv"
+            elif num_peaks_wanted == 2:
+                if symmetric_freqs:
+                    meth = "prop_single_bnv"
+                else:
+                    meth = "hamiltonian_fitting"
+            elif num_peaks_wanted == 6:
+                if symmetric_freqs:
+                    meth = "invert_unvs"
+                else:
+                    meth = "hamiltonian_fitting"
+            elif num_peaks_wanted in [3, 4, 5, 7, 8]:  # not sure how many of these will be useful
+                meth = "hamiltonian_fitting"
+            else:
+                raise RuntimeError(
+                    "Number of true values in option 'freqs_to_use' is not between 1 and 8."
+                )
+
+        options["field_method_used"] = meth
+
+        check_for_prev_field_calc(options)
+
+
+# ============================================================================
+
+
 def check_for_prev_field_calc(options):
     # loads all of sig, ref, and sig_sub_ref info.
 
@@ -479,6 +558,14 @@ def _field_options_compatible(options):
         Reason for the above decision
     """
     prev_options = qdmpy.io.fit._get_prev_options(options)
+    from qdmpy.constants import choose_system
+
+    prev_options["system"] = choose_system(prev_options["system_name"])
+
+    # can't load dshift (etc.) reference types
+    if options["exp_reference_type"] != "field" or prev_options["exp_reference_type"] != "field":
+        return False, "exp_reference_type was not field in either current or prev options."
+
     if options["field_method_used"] != prev_options["field_method_used"]:
         return False, "method was different to that selected (or auto-selected) presently."
 
@@ -486,8 +573,8 @@ def _field_options_compatible(options):
         return False, "different freqs_to_use option."
 
     if options["field_method_used"] == "prop_single_bnv":
-        if options["single_bnv_choice"] != prev_options["single_bnv_choice"]:
-            return False, "different single_bnv_choice option."
+        if options["single_unv_choice"] != prev_options["single_unv_choice"]:
+            return False, "different single_unv_choice option."
 
     if options["use_unvs"] != prev_options["use_unvs"]:
         return False, "different 'use_unvs' option."
@@ -497,6 +584,8 @@ def _field_options_compatible(options):
             return False, "different unvs chosen."
 
     if str(options["field_ref_dir"]) != str(prev_options["field_ref_dir"]):
+        # Note: this could be done more intelligently -> grab field result etc. for a given file name
+        # BUT it would be prone to error. More transparent to just calculate the field for sig & ref again
         return False, "different reference (field_ref_dir name is different)."
 
     # removed this check here -> want to be able to reload field and apply different
@@ -506,6 +595,15 @@ def _field_options_compatible(options):
 
     # if options["bfield_bground_params"] != prev_options["bfield_bground_params"]:
     #     return False, "different bfield_bground_params"
+
+    if (Qgeom.get_unvs(options) != Qgeom.get_unvs(prev_options)).all():
+        return False, "different unvs calculated"
+
+    if (Qgeom.get_unv_frames(options) != Qgeom.get_unv_frames(prev_options)).all():
+        return False, "different unv frames"
+
+    if options["diamond_ori"] != prev_options["diamond_ori"]:
+        return False, "different diamond_ori"
 
     if options["field_method_used"] == "hamiltonian_fitting":
         if options["hamiltonian"] != prev_options["hamiltonian"]:

@@ -11,6 +11,7 @@ Functions
  - `qdmpy.plot.field.plot_field_param`
  - `qdmpy.plot.field.plot_field_param_flattened`
  - `qdmpy.plot.field.plot_bfield_consistency`
+ - `qdmpy.plot.field.plot_bfield_theta_phi`
 """
 
 # ============================================================================
@@ -24,6 +25,7 @@ __pdoc__ = {
     "qdmpy.plot.fields.plot_field_param": True,
     "qdmpy.plot.fields.plot_field_param_flattened": True,
     "qdmpy.plot.fields.plot_bfield_consistency": True,
+    "qdmpy.plot.fields.plot_bfield_theta_phi": True,
 }
 
 # ============================================================================
@@ -38,7 +40,6 @@ import warnings
 
 import qdmpy.plot.common as plot_common
 import qdmpy.hamiltonian as Qham
-import qdmpy.field as Qfield
 
 # ============================================================================
 
@@ -67,12 +68,12 @@ def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
     fig : matplotlib Figure object
     """
 
-    if not bnvs and not dshifts:
+    if not bnvs and (dshifts is None or not len(dshifts)):
         return None
 
     figsize = mpl.rcParams["figure.figsize"].copy()
     width = len(bnvs)
-    height = 2 if dshifts else 1
+    height = 2 if dshifts is not None and len(dshifts) > 0 else 1
     figsize[0] *= width  # number of columns
     figsize[1] *= height  # number of rows
 
@@ -84,27 +85,40 @@ def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
     c_map = options["colormaps"]["bnv_images"]
     # axs index: axs[row, col]
     for i, bnv in enumerate(bnvs):
+        data = (
+            -bnv
+            if options["plot_bnv_flip_with_bias_mag"]
+            and options["bias_field_spherical_deg_gauss"][0] < 0
+            else bnv
+        )
+
         c_range = plot_common._get_colormap_range(
-            options["colormap_range_dicts"]["bnv_images"], bnv
+            options["colormap_range_dicts"]["bnv_images"], data
         )
         title = f"{name} B NV_{i}"
-        if width == 1 and not dshifts:
+        if width == 1 and (dshifts is None or not len(dshifts)):
             ax = axs
         elif width == 1:
             ax = axs[0]
-        elif not dshifts:
+        elif dshifts is None or not len(dshifts):
             ax = axs[i]
         else:
             ax = axs[0, i]
-        plot_common.plot_image_on_ax(fig, ax, options, bnv, title, c_map, c_range, "B (G)")
+        plot_common.plot_image_on_ax(fig, ax, options, data, title, c_map, c_range, "B (G)")
     c_map = options["colormaps"]["dshift_images"]
     for i, dshift in enumerate(dshifts):
+        data = (
+            -dshift
+            if options["plot_bnv_flip_with_bias_mag"]
+            and options["bias_field_spherical_deg_gauss"][0] < 0
+            else dshift
+        )
         c_range = plot_common._get_colormap_range(
-            options["colormap_range_dicts"]["dshift_images"], dshift
+            options["colormap_range_dicts"]["dshift_images"], data
         )
         title = f"{name} D_{i}"
         ax = axs[1] if width == 1 else axs[1, i]
-        plot_common.plot_image_on_ax(fig, ax, options, dshift, title, c_map, c_range, "D (MHz)")
+        plot_common.plot_image_on_ax(fig, ax, options, data, title, c_map, c_range, "D (MHz)")
 
     if options["save_plots"]:
         fig.savefig(options["field_dir"] / (f"Bnv_{name}." + options["save_fig_type"]))
@@ -298,18 +312,20 @@ def plot_field_param(
     options : dict
         Generic options dict holding all the user options.
     name : str
-        Name of these results (e.g. sig, ref, sig sub ref etc.) for titles and filenames
+        Name of these results (e.g. sig, ref, sig sub ref etc.) for titles and filenames.
+    param_name : str
+        Name of specific param to plot (e.g. "Bx" etc.).
     field_params : dict
         Dictionary, key: param_keys, val: image (2D) of (field) param values across FOV.
     c_map : str, default: None
-        colormap to use overrides c_map_type and c_range_type
+        colormap to use overrides c_map_type and c_range_type.
     c_map_type : str, default: "param_images"
-        colormap type to search options (options["colormaps"][c_map_type]) for
+        colormap type to search options (options["colormaps"][c_map_type]) for.
     c_map_range : str, default: "percentile"
-        colormap range option (see `qdmpy.plot.common._get_colormap_range`) to use
+        colormap range option (see `qdmpy.plot.common._get_colormap_range`) to use.
     c_range_vals : number or list, default: [5, 95]
         passed with c_map_range to _get_colormap_range
-    c_bar_label : str, default:""
+    cbar_label : str, default:""
         label to chuck on ye olde colorbar (z-axis label).
 
     Returns
@@ -330,7 +346,7 @@ def plot_field_param(
         )
         c_map = options["colormaps"][c_map_type]
 
-    title = f"{name}"
+    title = f"{name}: {param_name}"
 
     plot_common.plot_image_on_ax(
         fig, ax, options, field_params[param_name], title, c_map, c_range, cbar_label
@@ -412,7 +428,7 @@ def plot_field_param_flattened(
         bounds = None  # no bounds if not a fit
         comps = ["Bx", "By", "Bz"]
         if param_name in comps:
-            Bguesses = Qfield.get_B_bias(options)
+            Bguesses = options["bias_field_cartesian_gauss"]
             guess = Bguesses[comps.index(param_name)]
 
     if not plot_guess:
@@ -595,3 +611,70 @@ def plot_bfield_consistency(options, name, field_params):
 
 
 # ============================================================================
+
+
+def plot_bfield_theta_phi(
+    options,
+    name,
+    field_params,
+    c_map=None,
+    c_map_type="bfield_images",
+    c_range_type="percentile",
+    c_range_vals=[5, 95],
+    cbar_label="",
+):
+    """Plots B_theta_phi if found in field_params (the vector field projected onto
+    some direction).
+
+    Parameters
+    ----------
+    options : dict
+        Generic options dict holding all the user options.
+    name : str
+        Name of these results (e.g. sig, ref, sig sub ref etc.) for titles and filenames.
+    field_params : dict
+        Dictionary, key: param_keys, val: image (2D) of (field) param values across FOV.
+    c_map : str, default: None
+        colormap to use overrides c_map_type and c_range_type.
+    c_map_type : str, default: "bfield_images"
+        colormap type to search options (options["colormaps"][c_map_type]) for.
+    c_map_range : str, default: "percentile"
+        colormap range option (see `qdmpy.plot.common._get_colormap_range`) to use.
+    c_range_vals : number or list, default: [5, 95]
+        passed with c_map_range to _get_colormap_range.
+    c_bar_label : str, default:""
+        label to chuck on ye olde colorbar (z-axis label).
+    Returns
+    -------
+    fig : matplotlib Figure object
+    """
+    if field_params is None:
+        return None
+
+    if "B_theta_phi" not in field_params:
+        warnings.warn("Couldn't find 'B_theta_phi' in field_params.")
+        return None
+
+    b = field_params["B_theta_phi"]
+    theta, phi = options["bfield_proj_angles_(deg)"]
+
+    fig, ax = plt.subplots(constrained_layout=True)
+
+    if c_map is None:
+        c_range = plot_common._get_colormap_range(
+            {"type": c_range_type, "values": c_range_vals}, b
+        )
+        c_map = options["colormaps"][c_map_type]
+
+    title = f"{name}: B_theta_{np.round(theta,1)}_phi_{np.round(phi,1)}"
+
+    plot_common.plot_image_on_ax(fig, ax, options, b, title, c_map, c_range, cbar_label)
+
+    if options["save_plots"]:
+        fig.savefig(
+            options["field_dir"]
+            / (
+                f"B_theta_{int(np.round(theta))}_phi_{int(np.round(phi))}_{name}"
+                + options["save_fig_type"]
+            )
+        )

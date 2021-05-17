@@ -7,6 +7,8 @@ Functions
  - `qdmpy.source.interface.odmr_source_retrieval`
  - `qdmpy.source.interface.get_current_density`
  - `qdmpy.source.interface.get_magnetisation`
+ - `qdmpy.source.interface.add_div_j`
+ - `qdmpy.source.interface.in_plane_mag_normalise`
 """
 
 
@@ -17,6 +19,8 @@ __pdoc__ = {
     "qdmpy.source.interface.odmr_source_retrieval": True,
     "qdmpy.source.interface.get_current_density": True,
     "qdmpy.source.interface.get_magnetisation": True,
+    "qdmpy.source.interface.add_div_j": True,
+    "qdmpy.source.interface.in_plane_mag_normalise": True,
 }
 
 # ============================================================================
@@ -146,7 +150,7 @@ def get_current_density(
         for p in ["B" + comp for comp in components]:
             if p not in field_params:
                 warnings.warn(
-                    f"bfield param '{p} missing from field_params, skipping current calculation."
+                    f"bfield param '{p}' missing from field_params, skipping current calculation."
                 )
                 return None
             elif field_params[p] is None:
@@ -155,7 +159,6 @@ def get_current_density(
         bx, by, bz = [field_params["B" + comp] for comp in components]
 
     if any([i in ["from_bnv"] for i in options["recon_methods"]]):
-
         unvs = qdmpy.field.get_unvs(options)
         unv_opt = options["recon_unv_index"]
         if unv_opt is not None:
@@ -168,11 +171,20 @@ def get_current_density(
     source_params = {}
     for method in options["recon_methods"]:
         if method == "from_bxy":
-            jx, jy = qdmpy.fourier.get_j_from_bxy([bx, by, bz], *useful_opts)
+            jx, jy = qdmpy.fourier.get_j_from_bxy(
+                [bx, by, bz],
+                *useful_opts,
+                NVs_above_sample=options["NVs_above_sample"],
+            )
         elif method == "from_bz":
             jx, jy = qdmpy.fourier.get_j_from_bz([bx, by, bz], *useful_opts)
         elif method == "from_bnv":
-            jx, jy = qdmpy.fourier.get_j_from_bnv(bnv, unv, *useful_opts)
+            jx, jy = qdmpy.fourier.get_j_from_bnv(
+                bnv,
+                unv,
+                *useful_opts,
+                NVs_above_sample=options["NVs_above_sample"],
+            )
         else:
             warnings.warn(f"recon_method option {method} not recognised.")
             return None
@@ -224,6 +236,8 @@ def get_current_density(
                 **source_params,
                 **{"Jx_" + method: jx, "Jy_" + method: jy, "Jnorm_" + method: jnorm},
             }
+
+    add_divperp_j(options, source_params)
 
     return source_params
 
@@ -286,7 +300,7 @@ def get_magnetisation(
         for p in ["B" + comp for comp in components]:
             if p not in field_params:
                 warnings.warn(
-                    f"bfield param '{p} missing from field_params, skipping mag calculation."
+                    f"bfield param '{p}' missing from field_params, skipping mag calculation."
                 )
                 return None
             elif field_params[p] is None:
@@ -312,10 +326,23 @@ def get_magnetisation(
         elif method == "from_bz":
             m = qdmpy.fourier.get_m_from_bz([bx, by, bz], *useful_opts)
         elif method == "from_bnv":
-            m = qdmpy.fourier.get_m_from_bnv(bnv, unv, *useful_opts)
+            m = qdmpy.fourier.get_m_from_bnv(
+                bnv,
+                unv,
+                *useful_opts,
+                NVs_above_sample=options["NVs_above_sample"],
+            )
         else:
             warnings.warn("recon_method option not recognised.")
             return None
+
+        if (
+            options["magnetisation_angle"] is not None
+            and options["in_plane_mag_norm_number_pixels"]
+        ):
+            m = in_plane_mag_normalise(
+                m, options["magnetisation_angle"], options["in_plane_mag_norm_number_pixels"]
+            )
 
         if options["source_bground_method"]:
             if "polygons" in options and (
@@ -332,7 +359,7 @@ def get_magnetisation(
                 **options["source_bground_params"],
             )
 
-        if not options["magnetisation_angle"]:
+        if options["magnetisation_angle"] is None:
             if options["source_bground_method"]:
                 source_params = {
                     **source_params,
@@ -357,3 +384,127 @@ def get_magnetisation(
             else:
                 source_params = {**source_params, **{"Mpsi_" + method: m}}
     return source_params
+
+
+# ============================================================================
+
+
+def add_divperp_j(options, source_params):
+    r"""jxy -> Divperp J
+
+    Divperp = divergence in x and y only (perpendicular to surface normal)
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options (for the main/signal experiment).
+    source_params : dict
+        Dictionary, key: param_keys, val: image (2D) of source field values across FOV.
+
+    Returns
+    -------
+    nothing (operates in place on field_params)
+
+
+    $$ \nabla \times {\bf J} = \frac{\partial {\bf J} }{\partial x} + \frac{\partial {\bf J}}{\partial y} + \frac{\partial {\bf J}}{\partial z} $$
+
+    $$ \nabla_{\perp} \times {\bf J} = \frac{\partial {\bf J} }{\partial x} + \frac{\partial {\bf J}}{\partial y} $$
+
+
+    """
+
+    if source_params is None:
+        return None
+
+    methods = options["recon_methods"]
+
+    components = ["x", "y"]
+
+    for method in methods:
+        for p in ["J" + comp + "_" + method for comp in components]:
+            if p not in source_params:
+                warnings.warn(f"source param '{p}' missing from source_params, skipping j recon.")
+                return None
+            elif source_params[p] is None:
+                return None
+
+    for method in methods:
+        jx, jy = [source_params["J" + comp + "_" + method] for comp in components]
+        conserv_j = qdmpy.fourier.get_divperp_j(
+            [jx, jy],
+            options["fourier_pad_mode"],
+            options["fourier_pad_factor"],
+            options["system"].get_raw_pixel_size(options) * options["total_bin"],
+            options["fourier_k_vector_epsilon"],
+        )
+
+        source_params[f"divperp_J_{method}"] = conserv_j
+
+    return None
+
+
+# ============================================================================
+
+
+def in_plane_mag_normalise(mag_image, psi, edge_pixels_used):
+    """Normalise in-plane magnetisation by taking average of mag near edge of image per line @ psi.
+    The jist of this function was copied from D. Broadway's previous version of the code.
+
+    Parameters
+    ----------
+    mag_image : np array
+        2D magnetisation array as directly calculated.
+    psi : float
+        Assumed in-plane magnetisation angle (deg)
+    edge_pixels_used : int
+        Number of pixels to use at edge of image to calculate average to subtract.
+
+    Returns
+    -------
+    mag_image : np array
+        in-plane magnetisation image with line artifacts substracted.
+    """
+    psi = np.deg2rad(psi)
+    new_im = mag_image.copy()
+    if psi < 0:
+        mag_image = np.flip(mag_image, 1)
+        new_im = np.flip(new_im, 1)
+        psi = np.abs(psi)
+        flip_back = True
+    else:
+        flip_back = False
+    height, width = mag_image.shape
+    max_y_idx = height - 1
+
+    # first get indices of a line from origin at bottom left at psi (from +x to +y)
+    origin_line_y = max_y_idx - np.tan(psi) * range(width)  # y = y_max - x*tan(psi) (y downwards)
+    origin_line_y_ints = [
+        round(y) for y in origin_line_y.tolist()
+    ]  # y-idxs of line from bot. left @ psi
+
+    offset = 0  # now look for parallel lines, at +- 'offset' in y
+    for idx in range(height):
+        above_y_idxs = []  # above origin line, i.e. lower y
+        above_x_idxs = []  # corresponding x indices to above_y_idxs
+        below_y_idxs = []
+        below_x_idxs = []
+        for x_idx, y_idx in enumerate(origin_line_y_ints):
+            if y_idx - offset >= 0 and y_idx - offset <= max_y_idx:
+                above_y_idxs.append(y_idx - offset)
+                above_x_idxs.append(x_idx)
+
+            if y_idx + offset >= 0 and y_idx + offset <= max_y_idx:
+                below_y_idxs.append(y_idx + offset)
+                below_x_idxs.append(x_idx)
+
+        for coords in [(above_y_idxs, above_x_idxs), (below_y_idxs, below_x_idxs)]:
+            im_cut = mag_image[coords]
+            new_im[coords] = im_cut - (
+                np.mean(im_cut[0:edge_pixels_used] + np.mean(im_cut[-edge_pixels_used:])) / 2
+            )
+
+        offset += 1
+
+    if flip_back:
+        new_im = np.flip(new_im, 1)
+    return new_im

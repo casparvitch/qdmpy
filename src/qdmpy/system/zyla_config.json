@@ -37,16 +37,6 @@
         "option_default": 0
     },
 
-    // legacy option
-    "old_binning_convention": {
-        "option_default": false,
-        "option_choices":
-            [
-                true,
-                false
-            ]
-    },
-
     // Name of system used (see systems.py).
     "system_name": {
         "option_default": "Zyla",
@@ -75,6 +65,18 @@
             [
                 "div",
                 "sub"
+            ]
+    },
+    // how to handle experiment reference (if one found).
+    // field: basically everything you would want
+    // dshift: provide a dshift reference for single-peak odmr past gslac with 2-peak below gslac.
+    //  (can be used with both below gslac, but does require 1/2 peaks in sig/ref along same uNV)
+    "exp_reference_type": {
+        "option_default": "field",
+        "option_choices":
+            [
+                "field",
+                "dshift"
             ]
     },
 
@@ -495,12 +497,15 @@
         "option_default": [1, 1, 1, 1, 1, 1, 1, 1]
     },
 
-    // If option 'prop_single_bnv' given for 'field_method' but number of frequencies fit
-    // is 2 or 3, this option resolves ambiguity in which bnv to utilize. 
-    // This option is used like so: single_bnv = bnvs[single_bnv_choice + 1]
-    // Note that `freqs_to_use` must still be set (to use 2 freqs only).
-    "single_bnv_choice": {
-        "option_default": 1
+    // If option 'prop_single_bnv' given for 'field_method' but number of bnvs calculated
+    //  is 2 or 3, this option resolves ambiguity in which bnv to utilize.
+    // I.e. you have fit 6 resonances, and want to use 2 to calculate the magnetic field
+    //  then the algorithm does know which (physical) resonances using the freqs_to_use option 
+    //  above, but not which of the bnv maps this corresponds to.
+    // This option is used like so: single_bnv = bnvs[single_unv_choice].
+    // Note that `freqs_to_use` must still be set (to use 2 resonances only).
+    "single_unv_choice": {
+        "option_default": 0
     },
 
     // Diamond crystal orientation -> see qdmpy.constants. Default: HPHT orientation
@@ -543,6 +548,7 @@
             ]
     },
     // unit vectors of NV orientations, must be shape = (4,3). Equiv. to each NV frame's z axis. 
+    // (from most-aligned to least aligned with bias field)
     "unvs": {
         "option_default": [
             [0.57735, 0.57735, 0.57735],
@@ -762,6 +768,15 @@
         "option_default": null
     },
 
+    // True if NVs exist at higher z (in lab frame) than NVs.
+    "NVs_above_sample": {
+        "option_default": true,
+        "option_choices": [
+            true,
+            false
+        ]
+    },
+
     // ===========================================================================================
     // ============================= Source Recon Parameters ====================================
     // ===========================================================================================
@@ -788,6 +803,7 @@
     // bz better for magnetisation
     // choices: from_bxy, from_bz, from_bnv
     // must be an array of method you would like to run (even if only 1 choice)
+    // from_bnv uses the 'single_unv_choice' option.
     "recon_methods": {
         "option_default": ["from_bxy", "from_bz", "from_bnv"]
     },
@@ -807,16 +823,21 @@
     // Region to use for zero-point normalisation. I.e. mean of this region is subtracted from
     // Jx and Jy (or M etc.). (Or null to not normalise). 
     // Format: [[x_top_left, y_top_left], [x_bot_right, y_bot_right], where y is from top to bottom.
-    // TODO add different normalisation for in-plane magnetisation? See process-widefield-py
     "zero_point_normalisation_region": {
         "option_default": null
     },
 
-    // magnetisation direction (intrinsic). Either zero (for z-magnetisation) or an angle
+    // normalise each 'line' of in-plane magnetisation reconstruction by subtracting the average
+    // value over this many pixels at edge of image. null to not use
+    "in_plane_mag_norm_number_pixels": {
+        "option_default": null
+    },
+
+    // magnetisation direction (intrinsic). Either null/None (for z-magnetisation) or an angle
     // in degress, from (+) x-axis towards (+) y-axis.
     // untested. 
     "magnetisation_angle": {
-        "option_default": 0
+        "option_default": null
     },
 
     // ========================================================
@@ -953,10 +974,16 @@
             "dshift_images": "PRGn",
             "bfield_images": "bwr",
             "source_images": "viridis",
-            "current_vector_images": "BrBG",
+            "current_vector_images": "seismic",
             "current_norm_images": "turbo",
+            "current_div_images": "coolwarm",
             "magnetisation_images": "PuOr"
         }
+    },
+    // Add a minus sign to bnv (and dshift) plots if bias field magnitude (in spherical coords)
+    // is negative. Useful to compare magnetic flake bnv images when you're +- the vector bias.
+    "plot_bnv_flip_with_bias_mag": {
+        "option_default": false
     },
     // =========== Colormap Ranges ===========
     // Choose range of values mapped across to the colormap limits, for each 'type' of image
@@ -988,29 +1015,26 @@
     //    Defaults to True (i.e. if not specified)
     //
     // implemented in qdmpy.plot.common._get_colormap_range
+    // param_images: PL fit parameters
     "colormap_range_dicts": {
         "option_default": {
             "param_images": {
-                "type": "percentile",
-                "values": [1, 99]
+                "type": "min_max_symmetric_about_mean"
             },
             "residual_images": {
                 "type": "min_max"
             },
             "sigma_images": {
-                "type": "percentile",
-                "values": [1, 99]
+                "type": "min_max"
             },
             "PL_images": {
                 "type": "min_max"
             },
             "bnv_images": {
-                "type": "percentile",
-                "values": [1, 99]
+                "type": "min_max"
             },
             "dshift_images": {
-                "type": "percentile",
-                "values": [1, 99]
+                "type": "min_max"
             },
             "bfield_images": {
                 "type": "min_max"
@@ -1026,9 +1050,12 @@
                 "type": "strict_range",
                 "values": [0, 50]
             },
-            "magnetisation_images": {
+            "current_div_images": {
                 "type": "percentile",
                 "values": [1, 99]
+            },
+            "magnetisation_images": {
+                "type": "min_max"
             }
         }
     },
@@ -1108,6 +1135,21 @@
     "streamplot_PL_alpha": {
         "option_default": 1.0
     },
+    // Options to create streamplot stream colors. alpha factor: prefactor in tanh that
+    // defines the alpha values. low cutoff: values below this are set to an alpha of 0
+    // high cutoff: values above this are set to an alpha of 1
+    // dynamic range: number of colors to use in cbar  
+    // alpha operation:
+    // tanh(c (x-d) ) / tanh(c (f-d) )
+    // c: ramp factor, d: low cutoff, f: high cutoff
+    "streamplot_cbar_options": {
+        "option_default": {
+            "alpha_ramp_factor": 2,
+            "low_cutoff": 0.1,
+            "high_cutoff": 1.0,
+            "dynamic_range": 1000
+        }
+    },
     // ===========================================================================================
     // Things set internally, allow to be anything
 
@@ -1165,5 +1207,12 @@
     // list of polygon objects
     "polygons": {},
     // source result directory
-    "source_dir": {}
+    "source_dir": {},
+    // sorted unvs (from most to least aligned to bias field) used in algorithm
+    "unvs_used": {},
+    // bias field extracted from metadata/options in different coordinates
+    "bias_field_cartesian_gauss": {},
+    "bias_field_spherical_deg_gauss": {},
+    "ref_bias_field_cartesian_gauss": {},
+    "ref_bias_field_spherical_deg_gauss": {}
 }

@@ -29,6 +29,7 @@ Module variables
  - `qdmpy.constants.SYSTEMS`
  - `qdmpy.constants.AVAILABLE_FNS`
  - `qdmpy.constants.GAMMA`
+ - `qdmpy.constants.GSLAC`
  - `qdmpy.constants.MU_0`
  - `qdmpy.constants.MAG_UNIT_CONV`
  - `qdmpy.constants.S_MAT_X`
@@ -45,6 +46,7 @@ __pdoc__ = {
     "qdmpy.constants.AVAILABLE_FNS": True,
     "qdmpy.constants.choose_system": True,
     "qdmpy.constants.GAMMA": True,
+    "qdmpy.constants.GSLAC": True,
     "qdmpy.constants.MU_0": True,
     "qdmpy.constants.MAG_UNIT_CONV": True,
     "qdmpy.constants.S_MAT_X": True,
@@ -139,6 +141,14 @@ for details of the g-factor anisotropy.
 | \( g_e \approx 2.0023 \)                                         |  [Doherty2013](https://doi.org/10.1016/j.physrep.2013.02.001) |
 | \( \Rightarrow  \gamma_{\rm NV} \approx 2.80 {\rm MHz/G} \)      |                                                               |
 
+"""
+
+GSLAC = 1024
+"""
+Ground state level anticrossing (in Gauss).
+Used to determine if a single-peak ODMR resonance is shifting to larger or smaller field.
+(if bias field magnitude is larger than the GSLAC value bnv is reversed).
+Currently NOT used for ODMR with >1 resonance.
 """
 
 MU_0 = np.pi * 1e-7

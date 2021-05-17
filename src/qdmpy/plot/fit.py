@@ -454,6 +454,8 @@ def plot_AOI_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_ls
 
     Note here and elsewhere the single pixel check is the first element of the AOI array.
 
+    NOTE this could be faster if we passed in sig_norm as well (backwards-compat. issues tho)
+
     Arguments
     ---------
     options : dict
@@ -494,33 +496,35 @@ def plot_AOI_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_ls
         2 + len(AOIs), 3, figsize=figsize, sharex=True, sharey=False, constrained_layout=True
     )
 
-    # pre-process raw data to plot
-    sig_avgs = []
-    ref_avgs = []
-    # add roi data
-    roi_avg_sig = np.nanmean(np.nanmean(sig, axis=2), axis=1)
-    roi_avg_ref = np.nanmean(np.nanmean(ref, axis=2), axis=1)
-    sig_avgs.append(roi_avg_sig)
-    ref_avgs.append(roi_avg_ref)
+    #  pre-process raw data to plot -> note some are not averaged yet (will check for this below)
+    sigs = []
+    refs = []
+    sigs.append(sig)
+    refs.append(ref)
     # add single pixel check
     pixel_sig = sig[:, options["single_pixel_check"][1], options["single_pixel_check"][0]]
     pixel_ref = ref[:, options["single_pixel_check"][1], options["single_pixel_check"][0]]
-    sig_avgs.append(pixel_sig)
-    ref_avgs.append(pixel_ref)
+    sigs.append(pixel_sig)
+    refs.append(pixel_ref)
     # add AOI data
     for i, AOI in enumerate(AOIs):
-        sig_avg = np.nanmean(np.nanmean(sig[:, AOI[0], AOI[1]], axis=2), axis=1)
-        ref_avg = np.nanmean(np.nanmean(ref[:, AOI[0], AOI[1]], axis=2), axis=1)
-        sig_avgs.append(sig_avg)
-        ref_avgs.append(ref_avg)
+        aoi_sig = sig[:, AOI[0], AOI[1]]
+        aoi_ref = ref[:, AOI[0], AOI[1]]
+        sigs.append(aoi_sig)
+        refs.append(aoi_ref)
 
     # plot sig, ref data as first column
-    for i, (sig, ref) in enumerate(zip(sig_avgs, ref_avgs)):
-
+    for i, (s, r) in enumerate(zip(sigs, refs)):
+        if len(s.shape) > 1:
+            s_avg = np.nanmean(np.nanmean(s, axis=2), axis=1)
+            r_avg = np.nanmean(np.nanmean(r, axis=2), axis=1)
+        else:
+            s_avg = s
+            r_avg = r
         # plot sig
         axs[i, 0].plot(
             sweep_list,
-            sig,
+            s_avg,
             label="sig",
             c="blue",
             ls="dashed",
@@ -531,7 +535,7 @@ def plot_AOI_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_ls
         # plot ref
         axs[i, 0].plot(
             sweep_list,
-            ref,
+            r_avg,
             label="ref",
             c="green",
             ls="dashed",
@@ -554,10 +558,20 @@ def plot_AOI_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_ls
     axs[-1, 0].set_xlabel("Sweep parameter")
 
     # plot normalisation as second column
-    for i, (sig, ref) in enumerate(zip(sig_avgs, ref_avgs)):
+    for i, (s, r) in enumerate(zip(sigs, refs)):
+        sub = 1 + (s - r) / (s + r)
+        div = s / r
+
+        if len(sub.shape) > 1:
+            sub_avg = np.nanmean(np.nanmean(sub, axis=2), axis=1)
+            div_avg = np.nanmean(np.nanmean(div, axis=2), axis=1)
+        else:
+            sub_avg = sub
+            div_avg = div
+
         axs[i, 1].plot(
             sweep_list,
-            1 + (sig - ref) / (sig + ref),
+            sub_avg,
             label="subtraction",
             c="firebrick",
             ls="dashed",
@@ -567,7 +581,7 @@ def plot_AOI_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_ls
         )
         axs[i, 1].plot(
             sweep_list,
-            sig / ref,
+            div_avg,
             label="division",
             c="cadetblue",
             ls="dashed",
@@ -610,13 +624,19 @@ def plot_AOI_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_ls
             *fit_backend_fit_result.AOI_fit_results_lst,
         ]
         # now plot fits as third column
-        for i, (fit_param_ar, sig, ref) in enumerate(zip(fit_params_lst, sig_avgs, ref_avgs)):
+        for i, (fit_param_ar, s, r) in enumerate(zip(fit_params_lst, sigs, refs)):
+
             if not options["used_ref"]:
-                sig_norm = sig
+                sig_norm = s
             elif options["normalisation"] == "div":
-                sig_norm = sig / ref
+                sig_norm = s / r
             elif options["normalisation"] == "sub":
-                sig_norm = 1 + (sig - ref) / (sig + ref)
+                sig_norm = 1 + (s - r) / (s + r)
+
+            if len(sig_norm.shape) > 1:
+                sig_norm_avg = np.nanmean(np.nanmean(sig_norm, axis=2), axis=1)
+            else:
+                sig_norm_avg = sig_norm
 
             best_fit_ydata = fit_model(fit_param_ar, high_res_xdata)
             roi_fit_ydata = fit_model(
@@ -629,7 +649,7 @@ def plot_AOI_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_ls
                 # raw data
                 axs[i, 2].plot(
                     sweep_list,
-                    sig_norm,
+                    sig_norm_avg,
                     label=f"raw data ({options['normalisation']})",
                     ls="",
                     marker="o",
@@ -747,7 +767,6 @@ def plot_param_image(
         fig, ax, options, image, param_name + "_" + str(param_number), c_map, c_range, c_label
     )
 
-    np.savetxt(options["data_dir"] / (param_name + "_" + str(param_number) + ".txt"), image)
     if options["save_plots"]:
         if errorplot:
             path = options["output_dir"] / (
