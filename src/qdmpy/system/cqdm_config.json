@@ -49,13 +49,11 @@
 
     // Name of system used (see systems.py).
     "system_name": {
-        "option_default": "Cryo",
+        "option_default": "cQDM",
         "option_choices":
             [
-                "Zyla",
-                "Liams_Widefield",
-                "Cryo_Widefield",
-                "cQDM"
+                "cQDM",
+                "Liams_Widefield"
             ]
     },
 
@@ -82,22 +80,21 @@
 
     // =======================================
     // === microscope settings ===
-    // Default options for this microscope
+    // Default options for the Zyla microscope
     "microscope_setup": {
-        "option_default": null
+        "option_default": {
+            "sensor_pixel_size": 5.5e-6,
+            "default_objective_mag": 20,
+            "default_objective_reference_focal_length":  200e-3,
+            "default_camera_tube_lens": 200e-3
+        }
     },
-        // "option_default": {
-        //     "sensor_pixel_size": 6.5e-6,
-        //     "default_objective_mag": 4,
-        //     "default_objective_reference_focal_length":  200e-3,
-        //     "default_camera_tube_lens": 300e-3
-        // }
 
     // === override default microscope settings ===
     // provide raw, unbinned pixel size manually 
     // {can be used instead of microscope_setup in system config}
     "pixel_size": {
-        "option_default": 59.6e-9
+        "option_default": null
     },
     // pixel_size = sensor_pixel_size * (focal length objective / focal length camera tube lens)
     // where tube lens is the lens that focuses onto the camera, and:
@@ -505,6 +502,7 @@
     "single_bnv_choice": {
         "option_default": 1
     },
+
     // Diamond crystal orientation -> see qdmpy.constants. Default: HPHT orientation
     // format: <top face orientation>_<edge face orientation>
     // OR <111>, which only defines one unv (a convenience for single-bnv measurements)
@@ -519,7 +517,7 @@
     // Read magnetic field from options (i.e. if applied with vector electromagnet)
     // --> system dependent option (i.e. Unimelb reads from metadata)
     "auto_read_bias": {
-        "option_default": true,
+        "option_default": false,
         "option_choices": 
             [
                 true,
@@ -736,11 +734,10 @@
             "empty"
         ]
     },
-    // factor of image dimensions to pad by (on each side, e.g. 2 pad -> 2 either side of image)
+    // factor of image dimensions to pad by (on each side, e.g. 2 pad -> 2 either side of imgage)
     "fourier_pad_factor": {
         "option_default": 2
     },
-
     // add an epsilon value to the k-vectors to avoid some issues with 1/0. False/null/0 to not use
     "fourier_k_vector_epsilon": {
         "option_default": 1e-6
@@ -753,7 +750,11 @@
             false
         ]
     },
-    // cutoff freqs (for bandpass) -> give as a distance (k = 2pi/cutoff). 1e-6/1e-3
+    // cutoff freqs (for bandpass) -> give as a distance (k = 2pi/cutoff).
+    // e.g. give the diffraction limit for your optical system.
+    // if null, high_cutoff is set by standoff (if there is standoff)
+    // low_cutoff is not auto-set.
+    // if standoff is 0/None/False, no filter is used
     "fourier_high_cutoff": {
         "option_default": null
     },
@@ -764,9 +765,9 @@
     // ===========================================================================================
     // ============================= Source Recon Parameters ====================================
     // ===========================================================================================
-    // Type of source field to reconstruct, e.g. "current" or "magnetisation".
+    // type of source to reconstruct to
     "source_type": {
-        "option_default": "magnetisation",
+        "option_default": "current_density",
         "option_choices": [
             "current_density",
             "magnetisation"
@@ -804,7 +805,7 @@
     },
 
     // Region to use for zero-point normalisation. I.e. mean of this region is subtracted from
-    // Jx and Jy (or M etc.). (or null to not normalise). 
+    // Jx and Jy (or M etc.). (Or null to not normalise). 
     // Format: [[x_top_left, y_top_left], [x_bot_right, y_bot_right], where y is from top to bottom.
     // TODO add different normalisation for in-plane magnetisation? See process-widefield-py
     "zero_point_normalisation_region": {
@@ -1108,10 +1109,7 @@
         "option_default": 1.0
     },
     // ===========================================================================================
-    // ===========================================================================================
-    // Things set internally, allow to be anything (user shouldn't set in options though!!!)
-    // ===========================================================================================
-    // ===========================================================================================
+    // Things set internally, allow to be anything
 
     // was the options dict (after being read from .json) checked/cleaned?
     "cleaned": {},
@@ -1154,6 +1152,7 @@
     "field_dir": {},
     "field_sig_dir": {},
     "field_ref_dir": {},
+    "field_sig_sub_ref_dir": {},
     "field_method_used" : {},
     // name of field params used in field retrieval model
     "field_params" : {},
@@ -1164,5 +1163,7 @@
     // list of list of nodes, a list for each polygon
     "polygon_nodes": {},
     // list of polygon objects
-    "polygons": {}
+    "polygons": {},
+    // source result directory
+    "source_dir": {}
 }
