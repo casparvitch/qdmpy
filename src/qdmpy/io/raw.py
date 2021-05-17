@@ -22,6 +22,8 @@ Functions
  - `qdmpy.io.raw.define_AOIs`
  - `qdmpy.io.raw._recursive_dict_update`
  - `qdmpy.io.raw._check_start_end_rectangle`
+ - `qdmpy.io.raw._get_B_bias`
+ - `qdmpy.io.raw._spherical_deg_to_cart`
 """
 
 
@@ -43,6 +45,8 @@ __pdoc__ = {
     "qdmpy.io.raw.define_AOIs": True,
     "qdmpy.io.raw._recursive_dict_update": True,
     "qdmpy.io.raw._check_start_end_rectangle": True,
+    "qdmpy.io.raw._get_B_bias": True,
+    "qdmpy.io.raw._spherical_deg_to_cart": True,
 }
 
 # ============================================================================
@@ -132,6 +136,8 @@ def load_options(
     )  # do this again on full options to be sure
 
     options["system"] = chosen_system
+
+    _add_bias_field(options)
 
     systems.clean_options(options)  # check all the options make sense
 
@@ -503,8 +509,8 @@ def _rebin_image(options, image):
         else:
             raise KeyError("bad normalisation option, use: ['sub', 'div']")
     else:
-
-        sig = ref = image_rebinned
+        sig = image_rebinned
+        ref = image_rebinned
         sig_norm = sig / np.max(sig, 0)
 
     return image_rebinned, sig, ref, sig_norm
@@ -773,6 +779,79 @@ def _check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_w
         end_y = full_size_h - 1
 
     return (start_x, start_y), (end_x, end_y)
+
+
+# ============================================================================
+
+
+def _add_bias_field(options):
+    """Adds bias field in-place to options."""
+    bias_cart = _get_B_bias(options)
+    bias_spherical_deg = _get_B_bias(options, spherical_deg=True)
+    options["bias_field_cartesian_gauss"] = bias_cart
+    options["bias_field_spherical_deg_gauss"] = bias_spherical_deg
+
+
+# ============================================================================
+
+
+def _get_B_bias(options, spherical_deg=False):
+    """
+    Returns (bx, by, bz) guess for the bias field in Gauss.
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+    spherical_deg : bool, default=False
+        Return as (magnitude, theta, phi) in Gauss & degrees.
+
+    Returns
+    -------
+    bxyz : tuple
+        (bx, by, bz) for the bias field, in Gauss. (or in spherical polar Gauss, degrees).
+    """
+    bias_field = None
+    if options["auto_read_bias"]:
+        bias_on, bias_field = options["system"].get_bias_field(options)
+        if not bias_on:
+            bias_field = None
+    if bias_field is not None:
+        Bmag_gauss, Btheta_rad, Bphi_rad = bias_field
+        Btheta_deg = np.rad2deg(Btheta_rad)
+        Bphi_deg = np.rad2deg(Bphi_rad)
+    else:
+        Bmag_gauss = options["bias_mag"]
+        Btheta_deg = options["bias_theta"]
+        Bphi_deg = options["bias_phi"]
+
+    if spherical_deg:
+        return Bmag_gauss, Btheta_deg, Bphi_deg
+    else:
+        return _spherical_deg_to_cart(Bmag_gauss, Btheta_deg, Bphi_deg)
+
+
+# ============================================================================
+
+
+def _spherical_deg_to_cart(Bmag_gauss, Btheta_deg, Bphi_deg):
+    """Field vector in spherical polar degrees -> cartesian (gauss)
+
+    Parameters
+    ----------
+    Bmag_gauss, Btheta_deg, Bphi_deg : float
+        Field components in spherical polar (degrees)
+    Returns
+    -------
+    Bx, By, Bz : tuple
+        All floats in gauss, cartesian field components.
+    """
+    Btheta_rad = np.deg2rad(Btheta_deg)
+    Bphi_rad = np.deg2rad(Bphi_deg)
+    bx_gauss = Bmag_gauss * np.sin(Btheta_rad) * np.cos(Bphi_rad)
+    by_gauss = Bmag_gauss * np.sin(Btheta_rad) * np.sin(Bphi_rad)
+    bz_gauss = Bmag_gauss * np.cos(Btheta_rad)
+    return bx_gauss, by_gauss, bz_gauss
 
 
 # ============================================================================

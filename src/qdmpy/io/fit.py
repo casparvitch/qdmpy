@@ -164,13 +164,13 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
         If no reference experiment is given (i.e. ref_options and ref_options_dir are None) then
         returns None
     """
-    if not ref_options:
+    if not ref_options or options["exp_reference_type"] is None:
         ref_options = None
-    if not ref_options_dir:
+    if not ref_options_dir or options["exp_reference_type"] is None:
         ref_options_dir = None
     if ref_options is None and ref_options_dir is None:
         warnings.warn(
-            "No reference experiment options dict provided, continuing without reference."
+            "Continuing without reference. (No reference chosen or exp_referece_type was 'None')"
         )
         options["field_dir"] = options["output_dir"].joinpath("field")
         options["field_sig_dir"] = options["field_dir"].joinpath("sig")
@@ -198,6 +198,9 @@ def load_reference_experiment_fit_results(options, ref_options=None, ref_options
         check_for_prev_result=True,
         loading_ref=True,
     )
+    # copy reference bias to sig options.
+    options["ref_bias_field_cartesian_gauss"] = ref_options["bias_field_cartesian_gauss"]
+    options["ref_bias_field_spherical_deg_gauss"] = ref_options["bias_field_spherical_deg_gauss"]
 
     ref_name = Path(ref_options["filepath"]).stem
     options["field_dir"] = options["output_dir"].joinpath("field")

@@ -699,6 +699,7 @@ def get_m_from_bxy(
         https://doi.org/10.1103/PhysRevApplied.14.024076
         https://arxiv.org/abs/2005.06788
     """
+    from qdmpy.constants import MAG_UNIT_CONV
 
     # copy and convert Gauss -> Tesla
     bx = copy(bfield[0]) * 1e-4
@@ -808,6 +809,8 @@ def get_m_from_bz(
         https://doi.org/10.1103/PhysRevApplied.14.024076
         https://arxiv.org/abs/2005.06788
     """
+    from qdmpy.constants import MAG_UNIT_CONV
+
     bz = copy(bfield[2]) * 1e-4  # copy and convert Gauss to Tesla
     bz_pad, padder = qdmpy.fourier._shared.pad_image(bz, pad_mode, pad_factor)
 
@@ -913,8 +916,7 @@ def get_m_from_bnv(
         https://doi.org/10.1103/PhysRevApplied.14.024076
         https://arxiv.org/abs/2005.06788
     """
-    from qdmpy.constants import MU_0, MAG_UNIT_CONV
-
+    from qdmpy.constants import MAG_UNIT_CONV
 
     b = copy(bnv) * 1e-4  # copy and convert Gauss to Tesla
     bnv_pad, padder = qdmpy.fourier._shared.pad_image(b, pad_mode, pad_factor)
@@ -1012,7 +1014,7 @@ def define_current_transform(u_proj, ky, kx, k, standoff=None):
     alpha = 2 * exp_factor / MU_0
 
     # sign on 1j's is opposite to Broadway paper due to different FT definition.
-    b_to_jx = (alpha * ky) / (-u_proj[0] * kx - u_proj[1] * ky - 1j * u_proj[2] * k)
+    b_to_jx = -1 * (alpha * ky) / (u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k)
     b_to_jy = (alpha * kx) / (u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k)
 
     return b_to_jx, b_to_jy
@@ -1068,3 +1070,10 @@ def define_magnetisation_transformation(ky, kx, k, standoff):
             [1j * kx, 1j * ky, -k],
         ]
     )
+    # return (1 / alpha) * np.array(
+    #     [
+    #         [-(kx ** 2 + 2 * ky ** 2) / k, kx * ky / k, 1j * kx],
+    #         [kx * ky / k, -(2 * kx ** 2 + ky ** 2) / k, 1j * ky],
+    #         [-1j * kx, -1j * ky, -k],
+    #     ]
+    # )

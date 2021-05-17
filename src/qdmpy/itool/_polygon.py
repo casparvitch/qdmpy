@@ -476,8 +476,17 @@ def polygon_gui(image=None):
         polygon_nodes = None
 
     fig, ax = plt.subplots()
-    abs_max = max(image.min(), image.max(), key=abs)
-    img = ax.imshow(image, aspect="equal", cmap=values["cmap"], vmin=(-abs_max), vmax=abs_max)
+    minimum = np.nanmin(image)
+    maximum = np.nanmax(image)
+    mean = np.mean(image)
+    max_distance_from_mean = np.max([abs(maximum - mean), abs(minimum - mean)])
+    img = ax.imshow(
+        image,
+        aspect="equal",
+        cmap=values["cmap"],
+        vmin=mean - max_distance_from_mean,
+        vmax=mean + max_distance_from_mean,
+    )
 
     ax.tick_params(
         axis="x",  # changes apply to the x-axis

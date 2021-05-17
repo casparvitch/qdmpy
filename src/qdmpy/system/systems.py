@@ -154,9 +154,16 @@ class System:
     def get_bias_field(self):
         """
         Method to get magnet bias field from experiment metadata,
-        i.e. if set with programmed electromagnet. Default: None.
+        i.e. if set with programmed electromagnet. Default: False, None.
+
+        Returns
+        -------
+        bias_on : bool
+            Was programmed bias field used?
+        bias_field : tuple
+            Tuple representing vector bias field (B_mag (gauss), B_theta (rad), B_phi (rad))
         """
-        return None
+        return False, None
 
     def system_specific_option_update(self, options):
         """
@@ -445,6 +452,18 @@ class CryoWidefield(UniMelb):
 
     name = "Cryo Widefield"
     config_path = _CONFIG_PATH / "cryo_widefield_config.json"
+
+    def determine_binning(self, options):
+        # silly old binning convention -> change when labview updated to new binning
+        bin_conversion = [1, 2, 3, 4, 8]
+        metadata = self._read_metadata(options["filepath"])
+        metadata_bin = int(metadata["Binning"])
+        options["original_bin"] = bin_conversion[metadata_bin]
+
+        if not int(options["additional_bins"]):
+            options["total_bin"] = options["original_bin"]
+        else:
+            options["total_bin"] = options["original_bin"] * int(options["additional_bins"])
 
 
 # ============================================================================

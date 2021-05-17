@@ -37,16 +37,6 @@
         "option_default": 0
     },
 
-    // legacy option
-    "old_binning_convention": {
-        "option_default": false,
-        "option_choices":
-            [
-                true,
-                false
-            ]
-    },
-
     // Name of system used (see systems.py).
     "system_name": {
         "option_default": "Zyla",
@@ -75,6 +65,18 @@
             [
                 "div",
                 "sub"
+            ]
+    },
+    // how to handle experiment reference (if one found).
+    // field: basically everything you would want
+    // dshift: provide a dshift reference for single-peak odmr past gslac with 2-peak below gslac.
+    //  (can be used with both below gslac, but does require 1/2 peaks in sig/ref along same uNV)
+    "exp_reference_type": {
+        "option_default": "field",
+        "option_choices":
+            [
+                "field",
+                "dshift"
             ]
     },
 
@@ -546,6 +548,7 @@
             ]
     },
     // unit vectors of NV orientations, must be shape = (4,3). Equiv. to each NV frame's z axis. 
+    // (from most-aligned to least aligned with bias field)
     "unvs": {
         "option_default": [
             [0.57735, 0.57735, 0.57735],
@@ -820,8 +823,13 @@
     // Region to use for zero-point normalisation. I.e. mean of this region is subtracted from
     // Jx and Jy (or M etc.). (Or null to not normalise). 
     // Format: [[x_top_left, y_top_left], [x_bot_right, y_bot_right], where y is from top to bottom.
-    // TODO add different normalisation for in-plane magnetisation? See process-widefield-py
     "zero_point_normalisation_region": {
+        "option_default": null
+    },
+
+    // normalise each 'line' of in-plane magnetisation reconstruction by subtracting the average
+    // value over this many pixels at edge of image. null to not use
+    "in_plane_mag_norm_number_pixels": {
         "option_default": null
     },
 
@@ -971,6 +979,11 @@
             "current_div_images": "coolwarm",
             "magnetisation_images": "PuOr"
         }
+    },
+    // Add a minus sign to bnv (and dshift) plots if bias field magnitude (in spherical coords)
+    // is negative. Useful to compare magnetic flake bnv images when you're +- the vector bias.
+    "plot_bnv_flip_with_bias_mag": {
+        "option_default": false
     },
     // =========== Colormap Ranges ===========
     // Choose range of values mapped across to the colormap limits, for each 'type' of image
@@ -1194,5 +1207,12 @@
     // list of polygon objects
     "polygons": {},
     // source result directory
-    "source_dir": {}
+    "source_dir": {},
+    // sorted unvs (from most to least aligned to bias field) used in algorithm
+    "unvs_used": {},
+    // bias field extracted from metadata/options in different coordinates
+    "bias_field_cartesian_gauss": {},
+    "bias_field_spherical_deg_gauss": {},
+    "ref_bias_field_cartesian_gauss": {},
+    "ref_bias_field_spherical_deg_gauss": {}
 }

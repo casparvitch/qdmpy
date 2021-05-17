@@ -1,17 +1,23 @@
 # -*- coding: utf-8 -*-
 """
-This module holds ...
+This module holds some simple functions for image backgrounding, filtering etc.
 
 Functions
 ---------
- - `qdmpy.itool.interface.`
+ - `qdmpy.itool.interface.get_background`
+ - `qdmpy.itool.interface.get_im_filtered`
+ - `qdmpy.itool.interface.polygon_gui`
+ - `qdmpy.itool.interface.mu_sigma_exclude_polygons`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.itool.interface.": True,
+    "qdmpy.itool.interface.get_background": True,
+    "qdmpy.itool.interface.get_im_filtered": True,
+    "qdmpy.itool.interface.polygon_gui": True,
+    "qdmpy.itool.interface.mu_sigma_exclude_polygons": True,
 }
 
 # ============================================================================
@@ -150,3 +156,12 @@ def get_im_filtered(*args, **kwargs):
 def polygon_gui(image=None):
     """transparent wrapper for `qdmpy.itool._polygon.polygon_gui(image)`"""
     return qdmpy.itool._polygon.polygon_gui(image)
+
+
+# ============================================================================
+
+
+def mu_sigma_exclude_polygons(image, polygons=None):
+    """returns (mean, standard_deviation) for image, only _within_ polygon areas."""
+    image = qdmpy.itool._mask.mask_polygons(image, polygons, invert_mask=True)
+    return np.mean(image), np.std(image)

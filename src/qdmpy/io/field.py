@@ -17,6 +17,7 @@ Functions
  - `qdmpy.io.field.load_field_sigma`
  - `qdmpy.io.field.load_arb_field_param`
  - `qdmpy.io.field.load_arb_field_params`
+ - `qdmpy.io.field.choose_field_method`
  - `qdmpy.io.field.check_for_prev_field_calc`
  - `qdmpy.io.field._prev_pixel_field_calcs_exist`
  - `qdmpy.io.field._field_options_compatible`
@@ -38,6 +39,7 @@ __pdoc__ = {
     "qdmpy.io.field.load_field_sigma": True,
     "qdmpy.io.field.load_arb_field_param": True,
     "qdmpy.io.field.load_arb_field_params": True,
+    "qdmpy.io.field.choose_field_method": True,
     "qdmpy.io.field.check_for_prev_field_calc": True,
     "qdmpy.io.field._prev_pixel_field_calcs_exist": True,
     "qdmpy.io.field._field_options_compatible": True,
@@ -252,7 +254,7 @@ def load_prev_bnvs_and_dshifts(options, name):
             dpath = options[f"field_{name}_dir"] / f"{name}_dshift_{i}.txt"
         else:
             bpath = options["field_dir"] / f"{name}_bnv_{i}.txt"
-            dpath = options[f"field_dir"] / f"{name}_dshift_{i}.txt"
+            dpath = options["field_dir"] / f"{name}_dshift_{i}.txt"
         if os.path.isfile(bpath):
             bnvs.append(np.loadtxt(bpath))
         if os.path.isfile(dpath):
@@ -405,6 +407,75 @@ def load_arb_field_param(path, param):
 # ============================================================================
 
 
+def choose_field_method(options):
+    """Chooses a field calculation/retrievel method to use, based on user options.
+
+    Parameters
+    ----------
+    options : dict
+        Generic options dict holding all the user options.
+
+    """
+    if options["calc_field_pixels"]:  # user might not want field
+
+        meth = options["field_method"]
+        if meth == "auto_dc" and not any(
+            map(lambda x: x.startswith("pos"), options["fit_param_defn"])
+        ):
+            raise RuntimeError(
+                """
+                field_method 'auto_dc' not compatible with fit functions that do not include 'pos'
+                parameters. You are probably not fitting ODMR data.
+                Implement a module for non-odmr data, and an 'auto_ac' option for field retrieval in
+                that regime. If you've done that you may want to implement an 'auto' option that
+                selects the most applicable module and method :).
+                """
+            )
+
+        # check how many peaks we want to use, and how many are available -> ensure compatible
+        num_peaks_fit = len(options["pos_guess"]) if type(options["pos_guess"]) is list else 1
+        num_peaks_wanted = sum(options["freqs_to_use"])
+        if num_peaks_wanted > num_peaks_fit:
+            raise RuntimeError(
+                f"Number of freqs wanted in option 'freqs_to_use' ({num_peaks_wanted})"
+                + f"is greater than number fit ({num_peaks_fit}).\n"
+                + "We need to identify which NVs each resonance corresponds to "
+                + "for our algorithm to work, so please define this in the options dict/json."
+            )
+        # check that freqs_to_use is symmetric (necessary for bnvs retrieval methods)
+        symmetric_freqs = (
+            list(reversed(options["freqs_to_use"][4:])) == options["freqs_to_use"][:4]
+        )
+
+        if meth == "auto_dc":
+            # need to select the appropriate one
+            if num_peaks_wanted == 1:  # can't be symmetric!
+                meth = "prop_single_bnv"
+            elif num_peaks_wanted == 2:
+                if symmetric_freqs:
+                    meth = "prop_single_bnv"
+                else:
+                    meth = "hamiltonian_fitting"
+            elif num_peaks_wanted == 6:
+                if symmetric_freqs:
+                    meth = "invert_unvs"
+                else:
+                    meth = "hamiltonian_fitting"
+            elif num_peaks_wanted in [3, 4, 5, 7, 8]:  # not sure how many of these will be useful
+                meth = "hamiltonian_fitting"
+            else:
+                raise RuntimeError(
+                    "Number of true values in option 'freqs_to_use' is not between 1 and 8."
+                )
+
+        options["field_method_used"] = meth
+
+        check_for_prev_field_calc(options)
+
+
+# ============================================================================
+
+
 def check_for_prev_field_calc(options):
     # loads all of sig, ref, and sig_sub_ref info.
 
@@ -490,6 +561,10 @@ def _field_options_compatible(options):
     from qdmpy.constants import choose_system
 
     prev_options["system"] = choose_system(prev_options["system_name"])
+
+    # can't load dshift (etc.) reference types
+    if options["exp_reference_type"] != "field" or prev_options["exp_reference_type"] != "field":
+        return False, "exp_reference_type was not field in either current or prev options."
 
     if options["field_method_used"] != prev_options["field_method_used"]:
         return False, "method was different to that selected (or auto-selected) presently."

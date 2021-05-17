@@ -27,6 +27,7 @@ __pdoc__ = {
 
 import numpy as np
 import numpy.linalg as LA
+import warnings
 
 # ============================================================================
 
@@ -74,11 +75,22 @@ def from_single_bnv(options, bnvs):
         )
     if len(bnvs) > 1 and sum(chosen_freqs) != 2:
         raise ValueError("Only 2 freqs should be chosen for the 'prop_single_bnv' method.")
+    elif len(bnvs) == 1 and sum(chosen_freqs) not in [1, 2]:
+        raise ValueError("Too many freqs chosen ('freqs_to_use'), with only 1 bnv found.")
+    elif (
+        len(bnvs) == 1
+        and sum(chosen_freqs) == 2
+        and not list(reversed(chosen_freqs[4:])) == chosen_freqs[:4]
+    ):
+        raise ValueError("Chosen freqs ('freqs_to_use') must be symmetric for prop_single_bnv.")
 
     unvs = Qgeom.get_unvs(options)
     if len(bnvs) == 1:  # just use the first one (i.e. the only one...)
         single_bnv = bnvs[0]
-        idx = np.argwhere(np.array(chosen_freqs[:4]) == 1)[0][0]
+        if chosen_freqs[:4] == [0, 0, 0, 0]:  # only single freq used, R transition rel to bias
+            idx = np.argwhere(np.array(list(reversed(chosen_freqs[4:]))) == 1)[0][0]
+        else:
+            idx = np.argwhere(np.array(chosen_freqs[:4]) == 1)[0][0]
         unv = unvs[idx]
     elif len(bnvs) == 4:  # just use the chosen freq
         idx = np.argwhere(np.array(chosen_freqs[:4]) == 1)[0][0]
@@ -189,7 +201,7 @@ def from_unv_inversion(options, bnvs):
 # ============================================================================
 
 
-def from_hamiltonian_fitting(options, fit_params):
+def from_hamiltonian_fitting(options, fit_params, bias_field_spherical_deg_gauss):
     """
     (PL fitting) fit_params -> (freq/bnvs fitting) ham_results.
 
@@ -202,6 +214,8 @@ def from_hamiltonian_fitting(options, fit_params):
         (fit results from PL fitting).
         Also has 'residual' as a key.
         If None, returns None
+    bias_field_spherical_deg_gauss : tuple
+        Bias field in spherical polar degrees (and gauss). (possibly different for sig/ref)
 
     Returns
     -------
@@ -231,7 +245,7 @@ def from_hamiltonian_fitting(options, fit_params):
     # ok now need to get useful data out of fit_params (-> data)
     if use_bnvs:
         # data shape: [bnvs/freqs, y, x]
-        bnv_lst, _ = Qbnv.get_bnvs_and_dshifts(fit_params)
+        bnv_lst, _ = Qbnv.get_bnvs_and_dshifts(fit_params, bias_field_spherical_deg_gauss)
         if sum(chooser_ar) < 4:
             unwanted_bnvs = np.argwhere(np.array(chooser_ar) == 0)[0]
             shape = bnv_lst[0].shape
