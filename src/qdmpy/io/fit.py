@@ -302,6 +302,8 @@ def _options_compatible(options, prev_options):
     reason : str
         Reason for the above
     """
+    if "found_prev_result" in options and options["found_prev_result"] is not None and not options["found_prev_result"]:
+        return False, "already checked for previous fit result and didn't find anything."
 
     if not (
         options["additional_bins"] == prev_options["additional_bins"]
