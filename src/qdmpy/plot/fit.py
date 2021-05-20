@@ -854,8 +854,9 @@ def plot_param_images(options, fit_model, pixel_fit_params, param_name, errorplo
         figsize[0] *= num_columns
         figsize[1] *= num_rows
 
-        figsize[0] *= 3 / 4
-        figsize[1] *= 3 / 4
+        # standardise figsize of output
+        # figsize[0] *= 3 / 4
+        # figsize[1] *= 3 / 4
 
         fig, axs = plt.subplots(
             num_rows,
