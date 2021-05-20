@@ -34,8 +34,6 @@ import numpy as np
 import qdmpy.field._bnv as Qbnv
 import qdmpy.field._bxyz as Qbxyz
 import qdmpy.field._geom as Qgeom
-
-import qdmpy.io as Qio
 import qdmpy.fourier
 
 # ============================================================================
@@ -118,6 +116,7 @@ def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
         ref_fit_params, options["ref_bias_field_spherical_deg_gauss"]
     )
 
+    import qdmpy.io as Qio
     Qio.choose_field_method(options)
 
     if options["calc_field_pixels"] and options["found_prev_field_calc"]:
