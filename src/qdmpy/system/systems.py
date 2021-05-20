@@ -278,7 +278,7 @@ class UniMelb(System):
     def get_bias_field(self, options):
         """ get bias on (bool) and field as tuple (mag (G), theta (rad), phi (rad)) """
         if "metadata" not in options:
-            return None
+            return False, None
         key_ars = [["Field Strength (G)"], ["Theta (deg)"], ["Phi (def)", "Phi (deg)"]]
         bias_field = []
         for ar in key_ars:
@@ -288,13 +288,13 @@ class UniMelb(System):
                     bias_field.append(options["metadata"][key])
                     found = True
             if not found:
-                return None
+                return False, None
         if len(bias_field) != 3:
             warnings.warn(
                 f"Found {len(bias_field)} bias field params in metadata, "
                 + "this shouldn't happen (expected 3)."
             )
-            return None
+            return  False, None
         onoff_str = options["metadata"].get("Mag on/off", "")
         bias_on = onoff_str == " TRUE"
         return bias_on, (bias_field[0], radians(bias_field[1]), radians(bias_field[2]))

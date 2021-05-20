@@ -35,7 +35,6 @@ import warnings
 # ============================================================================
 
 import qdmpy.fit.model as fit_models
-import qdmpy.io as Qio
 
 # ============================================================================
 
@@ -188,6 +187,8 @@ def fit_AOIs(options, sig_norm, single_pixel_pl, sweep_list, fit_model, backend_
     fit_result_collection : `qdmpy.fit._shared.FitResultCollection`
         `qdmpy.fit._shared.FitResultCollection` object.
     """
+    import qdmpy.io as Qio
+
     AOIs = Qio.define_AOIs(options)
 
     fit_result_collection_lst = []  # list of FitResultCollection objects
@@ -301,6 +302,7 @@ def get_PL_fit_result(options, sig_norm, sweep_list, fit_model, wanted_roi_resul
     """
 
     if options["found_prev_result"]:
+        import qdmpy.io as Qio
         pixel_fit_params = Qio.load_prev_fit_results(options)
         sigmas = Qio.load_prev_fit_sigmas(options)
         warnings.warn("Using previous fit results.")
