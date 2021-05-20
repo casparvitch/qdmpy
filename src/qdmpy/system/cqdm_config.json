@@ -37,15 +37,23 @@
         "option_default": 0
     },
 
-    // Name of system used (see systems.py).
-    "system_name": {
-        "option_default": "Cryo",
+    // legacy option
+    "old_binning_convention": {
+        "option_default": false,
         "option_choices":
             [
-                "Zyla",
-                "Liams_Widefield",
-                "Cryo_Widefield",
-                "cQDM"
+                true,
+                false
+            ]
+    },
+
+    // Name of system used (see systems.py).
+    "system_name": {
+        "option_default": "cQDM",
+        "option_choices":
+            [
+                "cQDM",
+                "Liams_Widefield"
             ]
     },
 
@@ -69,37 +77,24 @@
                 "sub"
             ]
     },
-    // how to handle experiment reference (if one found).
-    // field: basically everything you would want
-    // dshift: provide a dshift reference for single-peak odmr past gslac with 2-peak below gslac.
-    //  (can be used with both below gslac, but does require 1/2 peaks in sig/ref along same uNV)
-    "exp_reference_type": {
-        "option_default": "field",
-        "option_choices":
-            [
-                "field",
-                "dshift"
-            ]
-    },
 
     // =======================================
     // === microscope settings ===
-    // Default options for this microscope
+    // Default options for the Zyla microscope
     "microscope_setup": {
-        "option_default": null
+        "option_default": {
+            "sensor_pixel_size": 5.5e-6,
+            "default_objective_mag": 20,
+            "default_objective_reference_focal_length":  200e-3,
+            "default_camera_tube_lens": 200e-3
+        }
     },
-        // "option_default": {
-        //     "sensor_pixel_size": 6.5e-6,
-        //     "default_objective_mag": 4,
-        //     "default_objective_reference_focal_length":  200e-3,
-        //     "default_camera_tube_lens": 300e-3
-        // }
 
     // === override default microscope settings ===
     // provide raw, unbinned pixel size manually 
     // {can be used instead of microscope_setup in system config}
     "pixel_size": {
-        "option_default": 59.6e-9
+        "option_default": null
     },
     // pixel_size = sensor_pixel_size * (focal length objective / focal length camera tube lens)
     // where tube lens is the lens that focuses onto the camera, and:
@@ -136,16 +131,16 @@
             false
         ]
     },
-    // ===========================================================================================
+	// ===========================================================================================
     // ======================== Region Of Interest (ROI) params ==================================
-    // ===========================================================================================
+	// ===========================================================================================
     // For taking a region of interest and ignoring the rest of the data set
     "ROI": {
-        "option_default": "Full",
-        "option_choices":
-            [
-                "Full",
-                "Rectangle"         ]
+    	"option_default": "Full",
+    	"option_choices":
+    		[
+    			"Full",
+    			"Rectangle"    		]
     },
     // Start of ROI region (indices, [start_x, start_y]) i.e. top left corner
     "ROI_start": {
@@ -159,16 +154,16 @@
     // ========== Regions for spectra comparision, before full pixel fitting ==========
     // single pixel location that is used
     "single_pixel_check": {
-        "option_default": [1, 1]
+    	"option_default": [1, 1]
     },
     // AOI: area of interest
     // start indices (top left corner) of area 1, [start_x, start_y]
     "AOI_1_start": {
-        "option_default": [1, 1]
+    	"option_default": [1, 1]
     },
     // end indices [end_x, end_y] of the square region of area 1
     "AOI_1_end": {
-        "option_default": [2, 2]
+    	"option_default": [2, 2]
     },
     // etc. for as many as you like: need to be copied/extended below if you want more AOIs
     "AOI_2_start": {
@@ -208,39 +203,39 @@
     },
     // overrides automatic reloading of previous fit results
     "force_fit": {
-        "option_default": false,
-        "option_choices":
-            [
-                true,
-                false
-            ]
+    	"option_default": false,
+    	"option_choices":
+    		[
+    			true,
+    			false
+    		]
     }, 
      // fits all of the required pixels, false ignores the pixel fitting
     "fit_pixels": {
-        "option_default": true,
-        "option_choices":
-            [
-                true,
-                false
-            ]
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false
+    		]
     },
     // fit pixels in a random order to give more accurate ETA
     "scramble_pixels": {
-        "option_default": true,
-        "option_choices":
-            [
-                true,
-                false
-            ]
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false
+    		]
     },
     // if 'false', uses init guesses below on each pixel, 'true' uses best fit to ROI average
     "use_ROI_avg_fit_res_for_all_pixels": {
-        "option_default": true,
-        "option_choices":
-            [
-                true,
-                false
-            ]
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false
+    		]
     },
     // user must set this one: the functions that make up your fit model (required)
     "fit_functions": {},
@@ -253,28 +248,28 @@
 
     // Position guess for lorentzian (in MHz)
     "pos_guess": {
-        "option_default": null
+    	"option_default": null
     },
     "pos_range": {
-        "option_default": 25
+    	"option_default": 25
     },
 
     // Amplitude of peak (trough)
     "amp_guess": {
-        "option_default": -0.0015
+    	"option_default": -0.0015
     },
 
     "amp_bounds": {
-        "option_default": [-0.0100, -0.0003]
+    	"option_default": [-0.0100, -0.0003]
     },
 
     // Full width half maximum of the peaks
     "fwhm_guess": {
-        "option_default": 9
+    	"option_default": 9
     },
 
     "fwhm_bounds": {
-        "option_default": [3, 40]
+    	"option_default": [3, 40]
     },
 
     // As above but for Gaussian
@@ -301,17 +296,17 @@
 
     // linear function (background)
     "c_guess": {
-        "option_default": 1
+    	"option_default": 1
     },
     "c_bounds": {
-        "option_default": [0.95,1.05]
+    	"option_default": [0.95,1.05]
     },
 
     "m_guess": {
-        "option_default": 0
+    	"option_default": 0
     },
     "m_bounds": {
-        "option_default": [-1e-4, 1e-4]
+    	"option_default": [-1e-4, 1e-4]
     },
 
     // constant background
@@ -357,17 +352,17 @@
     },
 
     "amp_h15_hyp_1_guess": {
-        "option_default": -0.015
+    	"option_default": -0.015
     },
     "amp_h15_hyp_2_guess": {
         "option_default": -0.015
     },
 
     "amp_h15_hyp_1_bounds": {
-        "option_default": [-0.1, -0.001]
+    	"option_default": [-0.1, -0.001]
     },
     "amp_h15_hyp_2_bounds": {
-        "option_default": [-0.1, -0.001]
+    	"option_default": [-0.1, -0.001]
     },
 
     "amp_h14_hyp_1_guess": {
@@ -500,15 +495,12 @@
         "option_default": [1, 1, 1, 1, 1, 1, 1, 1]
     },
 
-    // If option 'prop_single_bnv' given for 'field_method' but number of bnvs calculated
-    //  is 2 or 3, this option resolves ambiguity in which bnv to utilize.
-    // I.e. you have fit 6 resonances, but only want to use 2 to calculate the magnetic field
-    //  then the algorithm does know which (physical) resonances using the freqs_to_use option 
-    //  above, but not which of the bnv maps this corresponds to.
-    // This option is used like so: single_bnv = bnvs[single_unv_choice].
+    // If option 'prop_single_bnv' given for 'field_method' but number of frequencies fit
+    // is 2 or 3, this option resolves ambiguity in which bnv to utilize. 
+    // This option is used like so: single_bnv = bnvs[single_bnv_choice + 1]
     // Note that `freqs_to_use` must still be set (to use 2 freqs only).
-    "single_unv_choice": {
-        "option_default": 0
+    "single_bnv_choice": {
+        "option_default": 1
     },
 
     // Diamond crystal orientation -> see qdmpy.constants. Default: HPHT orientation
@@ -770,21 +762,12 @@
         "option_default": null
     },
 
-    // True if NVs exist at higher z (in lab frame) than NVs.
-    "NVs_above_sample": {
-        "option_default": true,
-        "option_choices": [
-            true,
-            false
-        ]
-    },
-
     // ===========================================================================================
     // ============================= Source Recon Parameters ====================================
     // ===========================================================================================
     // type of source to reconstruct to
     "source_type": {
-        "option_default": "magnetisation",
+        "option_default": "current_density",
         "option_choices": [
             "current_density",
             "magnetisation"
@@ -805,7 +788,6 @@
     // bz better for magnetisation
     // choices: from_bxy, from_bz, from_bnv
     // must be an array of method you would like to run (even if only 1 choice)
-    // from_bnv uses the 'single_unv_choice' option.
     "recon_methods": {
         "option_default": ["from_bxy", "from_bz", "from_bnv"]
     },
@@ -825,21 +807,16 @@
     // Region to use for zero-point normalisation. I.e. mean of this region is subtracted from
     // Jx and Jy (or M etc.). (Or null to not normalise). 
     // Format: [[x_top_left, y_top_left], [x_bot_right, y_bot_right], where y is from top to bottom.
+    // TODO add different normalisation for in-plane magnetisation? See process-widefield-py
     "zero_point_normalisation_region": {
         "option_default": null
     },
 
-    // normalise each 'line' of in-plane magnetisation reconstruction by subtracting the average
-    // value over this many pixels at edge of image. null to not use
-    "in_plane_mag_norm_number_pixels": {
-        "option_default": null
-    },
-
-    // magnetisation direction (intrinsic). Either null/None (for z-magnetisation) or an angle
+    // magnetisation direction (intrinsic). Either zero (for z-magnetisation) or an angle
     // in degress, from (+) x-axis towards (+) y-axis.
     // untested. 
     "magnetisation_angle": {
-        "option_default": null
+        "option_default": 0
     },
 
     // ========================================================
@@ -918,16 +895,16 @@
         "option_default": {}
     },
 
-    // ===========================================================================================
+	// ===========================================================================================
     // =============================== Plotting Parameters =======================================
-    // ===========================================================================================
+	// ===========================================================================================
     "save_plots": {
-        "option_default": true,
-        "option_choices":
-            [
-                true,
-                false
-            ]
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false
+    		]
     },
     "show_scalebar": {
         "option_default": true,
@@ -939,21 +916,21 @@
     },
     // for ROI/AOI PL plots only
     "annotate_image_regions": {
-        "option_default": true,
-        "option_choices":
-            [
-                true,
-                false
-            ]
+    	"option_default": true,
+    	"option_choices":
+    		[
+    			true,
+    			false
+    		]
     },
     "save_fig_type":  {
-        "option_default": "png",
-        "option_choices":
-            [
-                "png",
-                "svg",
-                "pdf"
-            ]
+    	"option_default": "png",
+    	"option_choices":
+    		[
+    			"png",
+    			"svg",
+    			"pdf"
+    		]
     },
     // some figs are huge as svgs (currently just jstream) so this allows them to be set differently
     "large_fig_save_type": {
@@ -976,16 +953,10 @@
             "dshift_images": "PRGn",
             "bfield_images": "bwr",
             "source_images": "viridis",
-            "current_vector_images": "seismic",
+            "current_vector_images": "BrBG",
             "current_norm_images": "turbo",
-            "current_div_images": "coolwarm",
             "magnetisation_images": "PuOr"
         }
-    },
-    // Add a minus sign to bnv (and dshift) plots if bias field magnitude (in spherical coords)
-    // is negative. Useful to compare magnetic flake bnv images when you're +- the vector bias.
-    "plot_bnv_flip_with_bias_mag": {
-        "option_default": false
     },
     // =========== Colormap Ranges ===========
     // Choose range of values mapped across to the colormap limits, for each 'type' of image
@@ -1020,22 +991,26 @@
     "colormap_range_dicts": {
         "option_default": {
             "param_images": {
-                "type": "min_max_symmetric_about_mean"
+                "type": "percentile",
+                "values": [1, 99]
             },
             "residual_images": {
                 "type": "min_max"
             },
             "sigma_images": {
-                "type": "min_max"
+                "type": "percentile",
+                "values": [1, 99]
             },
             "PL_images": {
                 "type": "min_max"
             },
             "bnv_images": {
-                "type": "min_max"
+                "type": "percentile",
+                "values": [1, 99]
             },
             "dshift_images": {
-                "type": "min_max"
+                "type": "percentile",
+                "values": [1, 99]
             },
             "bfield_images": {
                 "type": "min_max"
@@ -1051,12 +1026,9 @@
                 "type": "strict_range",
                 "values": [0, 50]
             },
-            "current_div_images": {
+            "magnetisation_images": {
                 "type": "percentile",
                 "values": [1, 99]
-            },
-            "magnetisation_images": {
-                "type": "min_max"
             }
         }
     },
@@ -1136,21 +1108,6 @@
     "streamplot_PL_alpha": {
         "option_default": 1.0
     },
-    // Options to create streamplot stream colors. alpha factor: prefactor in tanh that
-    // defines the alpha values. low cutoff: values below this are set to an alpha of 0
-    // high cutoff: values above this are set to an alpha of 1
-    // dynamic range: number of colors to use in cbar  
-    // alpha operation:
-    // tanh(c (x-d) ) / tanh(c (f-d) )
-    // c: ramp factor, d: low cutoff, f: high cutoff
-    "streamplot_cbar_options": {
-        "option_default": {
-            "alpha_ramp_factor": 2,
-            "low_cutoff": 0.1,
-            "high_cutoff": 1.0,
-            "dynamic_range": 1000
-        }
-    },
     // ===========================================================================================
     // Things set internally, allow to be anything
 
@@ -1208,12 +1165,5 @@
     // list of polygon objects
     "polygons": {},
     // source result directory
-    "source_dir": {},
-    // sorted unvs (from most to least aligned to bias field) used in algorithm
-    "unvs_used": {},
-    // bias field extracted from metadata/options in different coordinates
-    "bias_field_cartesian_gauss": {},
-    "bias_field_spherical_deg_gauss": {},
-    "ref_bias_field_cartesian_gauss": {},
-    "ref_bias_field_spherical_deg_gauss": {}
+    "source_dir": {}
 }
