@@ -520,7 +520,8 @@ def polygon_gui(image=None):
     if len(pgons) < 1:
         raise RuntimeError("You didn't define any polygons")
 
-    pgon_lst = [pgon.get_nodes() for pgon in pgons]
+    # exclude polygons with nodes < 3
+    pgon_lst = [pgon.get_nodes() for pgon in pgons if np.shape(pgon.get_nodes())[0] > 2]
     output_dict = {"nodes": pgon_lst}
 
     from qdmpy.io.json2dict import dict_to_json  # avoid circular imports...
