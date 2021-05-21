@@ -73,6 +73,7 @@ SYSTEMS = {
     "Zyla": qdmpy.system.Zyla,
     "Liams_Widefield": qdmpy.system.LiamsWidefield,
     "Cryo_Widefield": qdmpy.system.CryoWidefield,
+    "cQDM": qdmpy.system.cQDM,
 }
 """
 Dictionary that defines systems available for use.

@@ -174,7 +174,7 @@ def save_options(options):
     save_options = {}
 
     for key, val in options.items():
-        if key.endswith("dir") or key == "filepath":
+        if key.endswith("dir") or key.endswith("path"):
             val = str(val).replace("\\", "\\\\")
         if key not in keys_to_remove:
             save_options[key] = val
