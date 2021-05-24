@@ -5,6 +5,8 @@ This module holds tools for calculating Bxyz from Bnv.
 Functions
 ---------
  - `qdmpy.field.interface.odmr_field_retrieval`
+ - `qdmpy.field.interface._odmr_with_field_ref`
+ - `qdmpy.field.interface._odmr_with_dshift_ref`
  - `qdmpy.field.interface.field_refsub`
  - `qdmpy.field.interface.field_sigma_add`
  - `qdmpy.field.interface.get_unvs`
@@ -17,6 +19,8 @@ Functions
 __author__ = "Sam Scholten"
 __pdoc__ = {
     "qdmpy.field.interface.odmr_field_retrieval": True,
+    "qdmpy.field.interface._odmr_with_field_ref": True,
+    "qdmpy.field.interface._odmr_with_dshift_ref": True,
     "qdmpy.field.interface.field_refsub": True,
     "qdmpy.field.interface.field_sigma_add": True,
     "qdmpy.field.interface.get_unvs": True,
@@ -117,6 +121,7 @@ def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
     )
 
     import qdmpy.io as Qio
+
     Qio.choose_field_method(options)
 
     if options["calc_field_pixels"] and options["found_prev_field_calc"]:
@@ -338,8 +343,9 @@ def _odmr_with_dshift_ref(options, sig_fit_params, ref_fit_params):
             ref_bnv = ref_bnvs[0]
             ref_dshift = ref_dshifts[0] / GAMMA
 
+            # glac +- should be sorted in freq -> bnv
             sig_sub_ref_bnv = (
-                sig_bnv + ref_dshift if sig_bias_mag > GSLAC else sig_bnv - ref_dshift
+                sig_bnv + ref_dshift  # if sig_bias_mag > GSLAC else sig_bnv - ref_dshift
             )
 
             other_opts = [
