@@ -69,14 +69,16 @@
     },
     // how to handle experiment reference (if one found).
     // field: basically everything you would want
-    // dshift: provide a dshift reference for single-peak odmr past gslac with 2-peak below gslac.
+    // pre_gslac: provide a dshift reference for single-peak odmr past gslac with 2-peak below gslac.
     //  (can be used with both below gslac, but does require 1/2 peaks in sig/ref along same uNV)
+    // inverted_bias: FIXME
     "exp_reference_type": {
         "option_default": "field",
         "option_choices":
             [
                 "field",
-                "dshift"
+                "pre_gslac",
+                "inverted_bias"
             ]
     },
 
