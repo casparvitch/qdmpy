@@ -675,7 +675,7 @@ def plot_bfield_theta_phi(
         fig.savefig(
             options["field_dir"]
             / (
-                f"B_theta_{int(np.round(theta))}_phi_{int(np.round(phi))}_{name}"
+                f"B_theta_{int(np.round(theta))}_phi_{int(np.round(phi))}_{name}."
                 + options["save_fig_type"]
             )
         )

@@ -77,6 +77,22 @@
                 "sub"
             ]
     },
+    // how to handle experiment reference (if one found).
+    // field: basically everything you would want
+    // pre_gslac: provide a dshift reference for single-peak odmr past gslac with 2-peak below gslac.
+    //  (can be used with both below gslac, but does require 1/2 peaks in sig/ref along same uNV)
+    // inverted_bias: <UNTESTED> if mag stays the same under inverted bias, use this reference to 
+    //  remove strain information. 
+    //  bnv = (sig_bnv + ref_bnv) / 2 || dshift = GAMMA * (sig_bnv - ref_bnv) / 2 
+    "exp_reference_type": {
+        "option_default": "field",
+        "option_choices":
+            [
+                "field",
+                "pre_gslac",
+                "inverted_bias"
+            ]
+    },
 
     // =======================================
     // === microscope settings ===
@@ -970,8 +986,9 @@
     //        percentile                      : maps the range between percentiles of the data
     //        percentile_symmetric_about_zero : as above but symmetric about zero, caps. all vals
     //        strict_range                    : maps colors between the values given
+    //        mean_plus_minus"                : mean plus or minus value given.
     //
-    // values : float or array
+    // values : int/float or array
     //    Different for each type:
     //        min_max                         : not used
     //        deviation_from_mean             : ('dev' above) float between 0 and 1
@@ -980,6 +997,7 @@
     //        percentile                      : list len 2 of (pref.) ints or floats in [0, 100]
     //        percentile_symmetric_about_zero : list len 2 of (pref.) ints or floats in [0, 100]
     //        strict_range                    : list len 2 of ints/floats
+    //        mean_plus_minus                 : int/float.
     //
     // auto_sym_zero : bool
     //    Optional boolean. If True, automatically detects if image has negative and

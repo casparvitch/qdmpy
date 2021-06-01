@@ -441,10 +441,10 @@ def _odmr_with_inverted_bias_ref(options, sig_fit_params, ref_fit_params):
         List of field sigmas (errors) (each a dict), [sig_dict, ref_dict, sig_sub_ref_dict]
     """
     # first get bnvs (as in global scope)
-    sig_bnvs, None = Qbnv.get_bnvs_and_dshifts(
+    sig_bnvs, _ = Qbnv.get_bnvs_and_dshifts(
         sig_fit_params, options["bias_field_spherical_deg_gauss"]
     )
-    ref_bnvs, None = Qbnv.get_bnvs_and_dshifts(
+    ref_bnvs, _ = Qbnv.get_bnvs_and_dshifts(
         ref_fit_params, options["ref_bias_field_spherical_deg_gauss"]
     )
 
@@ -470,6 +470,21 @@ def _odmr_with_inverted_bias_ref(options, sig_fit_params, ref_fit_params):
             )
         else:
             warnings.warn("Using pre_gslac reference. Assuming unv is same for sig & ref.")
+
+            # first check both sig & ref are past gslac (but opposite sign...)
+
+            # sig_bias = options["bias_field_spherical_deg_gauss"]
+            # ref_bias = options["ref_bias_field_spherical_deg_gauss"]
+            # sig_bias_mag = np.abs(sig_bias[0])
+            # ref_bias_mag = np.abs(ref_bias[0])
+            from qdmpy.constants import GSLAC, GAMMA
+
+            # if sig_bias_mag < GSLAC:
+            #     raise RuntimeError("As currently coded, invert_bias refere")
+            # if ref_bias_mag > GSLAC:
+            #     raise RuntimeError(
+            #         "As currently coded, ref bias mag must be < GSLAC for dshift reference."
+            #     )
             # must match expected pattern
             num_freqs_sig = len(list(filter(lambda x: x.startswith("pos"), sig_fit_params)))
             num_freqs_ref = len(list(filter(lambda x: x.startswith("pos"), ref_fit_params)))
@@ -492,8 +507,8 @@ def _odmr_with_inverted_bias_ref(options, sig_fit_params, ref_fit_params):
             sig_bnv = sig_bnvs[0]
             ref_bnv = ref_bnvs[0]
 
-            sig_sub_ref_bnv = (sig_bnv - ref_bnv) / 2  # FIXME Sam check sign here is correct
-            sig_dshift = (sig_bnv + ref_bnv) / 2  # may as well plot it etc. eh
+            sig_sub_ref_bnv = (sig_bnv + ref_bnv) / 2
+            sig_dshift = GAMMA * (sig_bnv - ref_bnv) / 2  # may as well plot it etc. eh
 
             other_opts = [
                 options["fourier_pad_mode"],
