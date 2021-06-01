@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
-"""
-This module defines global constants of the qdmpy package.
+"""Module defining global constants of the qdmpy package.
 
 Of particular interest to the user are the SYSTEMS and AVAILABLE_FNS dictionaries.
 
@@ -75,8 +74,7 @@ SYSTEMS = {
     "Cryo_Widefield": qdmpy.system.CryoWidefield,
     "cQDM": qdmpy.system.cQDM,
 }
-"""
-Dictionary that defines systems available for use.
+"""Dictionary that defines systems available for use.
 
 Add any systems you define here so you can use them.
 """
@@ -93,8 +91,7 @@ AVAILABLE_FNS = {
     "circular": qdmpy.fit._funcs.Circular,
     "stretched_exponential": qdmpy.fit._funcs.Stretched_exponential,
 }
-"""
-Dictionary that defines fit functions available for use.
+"""Dictionary that defines fit functions available for use.
 
 Add any functions you define here so you can use them.
 
@@ -105,8 +102,7 @@ AVAILABLE_HAMILTONIANS = {
     "approx_bxyz": qdmpy.hamiltonian._hamiltonians.ApproxBxyz,
     "bxyz": qdmpy.hamiltonian._hamiltonians.Bxyz,
 }
-"""
-Dictionary that defines hamiltonians available for use.
+"""Dictionary that defines hamiltonians available for use.
 
 Add any classes you define here so you can use them.
 
@@ -116,7 +112,7 @@ classes can not be used in combination.
 
 
 def choose_system(name):
-    """Returns `qdmpy.system.systems.System` object called 'name'"""
+    """Returns `qdmpy.system.systems.System` object called 'name'."""
     return SYSTEMS[name]()
 
 
