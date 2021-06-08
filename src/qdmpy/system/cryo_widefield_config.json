@@ -388,29 +388,39 @@
     "amp_h14_hyp_3_bounds": {
         "option_default": [-0.1, -0.001]
     },
-
+    
     "fwhm_h15_hyp_1_guess": {
-        "option_default": -0.015
+        "option_default": 3
     },
     "fwhm_h15_hyp_2_guess": {
-        "option_default": -0.015
+        "option_default": 3
     },
 
     "fwhm_h15_hyp_1_bounds": {
-        "option_default": [-0.1, -0.001]
+        "option_default": [1, 20]
     },
     "fwhm_h15_hyp_2_bounds": {
-        "option_default": [-0.1, -0.001]
+        "option_default": [1, 20]
     },
 
     "fwhm_h14_hyp_1_guess": {
-        "option_default": -0.015
+        "option_default": 3
     },
     "fwhm_h14_hyp_2_guess": {
-        "option_default": -0.015
+        "option_default": 3
     },
     "fwhm_h14_hyp_3_guess": {
-        "option_default": -0.015
+        "option_default": 3
+    },
+
+    "fwhm_h14_hyp_1_bounds": {
+        "option_default": [1, 20]
+    },
+    "fwhm_h14_hyp_2_bounds": {
+        "option_default": [1, 20]
+    },
+    "fwhm_h14_hyp_3_bounds": {
+        "option_default": [1, 20]
     },
 
     "power_exp_guess": {

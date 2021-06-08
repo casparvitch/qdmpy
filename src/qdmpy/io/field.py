@@ -433,13 +433,14 @@ def choose_field_method(options):
             )
 
         # check how many peaks we want to use, and how many are available -> ensure compatible
+        # FIXME doesn't take pos h14/h15 etc...
         num_peaks_fit = len(options["pos_guess"]) if type(options["pos_guess"]) is list else 1
         num_peaks_wanted = sum(options["freqs_to_use"])
         if num_peaks_wanted > num_peaks_fit:
             raise RuntimeError(
                 f"Number of freqs wanted in option 'freqs_to_use' ({num_peaks_wanted})"
                 + f"is greater than number fit ({num_peaks_fit}).\n"
-                + "We need to identify which NVs each resonance corresponds to "
+                + " We need to identify which NVs each resonance corresponds to "
                 + "for our algorithm to work, so please define this in the options dict/json."
             )
         # check that freqs_to_use is symmetric (necessary for bnvs retrieval methods)
