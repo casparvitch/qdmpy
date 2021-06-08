@@ -81,15 +81,16 @@ Add any systems you define here so you can use them.
 
 AVAILABLE_FNS = {
     "lorentzian": qdmpy.fit._funcs.Lorentzian,
-    "lorentzian_hyperfine_14": qdmpy.fit._funcs.Lorentzian_hyperfine_14,
-    "lorentzian_hyperfine_15": qdmpy.fit._funcs.Lorentzian_hyperfine_15,
+    "lorentzian_hyperfine_14": qdmpy.fit._funcs.LorentzianHyperfine14,
+    "lorentzian_hyperfine_15": qdmpy.fit._funcs.LorentzianHyperfine15,
     "gaussian": qdmpy.fit._funcs.Gaussian,
-    "gaussian_hyperfine_14": qdmpy.fit._funcs.Gaussian_hyperfine_14,
-    "gaussian_hyperfine_15": qdmpy.fit._funcs.Gaussian_hyperfine_15,
+    "gaussian_hyperfine_14": qdmpy.fit._funcs.GaussianHyperfine14,
+    "gaussian_hyperfine_15": qdmpy.fit._funcs.GaussianHyperfine15,
     "constant": qdmpy.fit._funcs.Constant,
     "linear": qdmpy.fit._funcs.Linear,
     "circular": qdmpy.fit._funcs.Circular,
-    "stretched_exponential": qdmpy.fit._funcs.Stretched_exponential,
+    "stretched_exponential": qdmpy.fit._funcs.StretchedExponential,
+    "damped_rabi": qdmpy.fit._funcs.DampedRabi,
 }
 """Dictionary that defines fit functions available for use.
 

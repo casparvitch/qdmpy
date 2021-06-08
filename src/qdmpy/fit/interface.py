@@ -54,6 +54,21 @@ def define_fit_model(options):
     """
 
     fit_functions = options["fit_functions"]
+    # reorder fit functions to as expected by gpufit (if model matches a gpufit model)
+    ffs = sorted(list(fit_functions.items()))
+    for i in range(8):
+        if ffs == [("constant", 1), ("stretched_exponential", 1)]:
+            fit_functions = {"constant": 1, "stretched_exponential": 1}
+            break
+        elif ffs == [("constant", 1), ("damped_rabi", 1)]:
+            fit_functions = {"constant": 1, "damped_rabi": 1}
+            break
+        elif ffs == [("linear", 1), ("lorentzian", i + 1)]:
+            fit_functions = {"linear": 1, "lorentzian": i + 1}
+            break
+        elif ffs == [("constant", 1), ("lorentzian", i + 1)]:
+            fit_functions = {"constant": 1, "lorentzian": i + 1}
+            break
 
     fit_model = fit_models.FitModel(fit_functions)
 
@@ -303,6 +318,7 @@ def get_PL_fit_result(options, sig_norm, sweep_list, fit_model, wanted_roi_resul
 
     if options["found_prev_result"]:
         import qdmpy.io as Qio
+
         pixel_fit_params = Qio.load_prev_fit_results(options)
         sigmas = Qio.load_prev_fit_sigmas(options)
         warnings.warn("Using previous fit results.")

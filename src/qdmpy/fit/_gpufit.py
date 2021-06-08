@@ -14,6 +14,7 @@ Functions
  - `qdmpy.fit._gpufit.fit_pixels_gpufit`
  - `qdmpy.fit._gpufit.gpufit_data_shape`
  - `qdmpy.fit._gpufit.gpufit_reshape_result`
+ - `qdmpy.fit._gpufit.get_params_to_fit`
 
 """
 # ============================================================================
@@ -30,6 +31,7 @@ __pdoc__ = {
     "qdmpy.fit._gpufit.fit_pixels_gpufit": True,
     "qdmpy.fit._gpufit.gpufit_data_shape": True,
     "qdmpy.fit._gpufit.gpufit_reshape_result": True,
+    "qdmpy.fit._gpufit.get_params_to_fit": True,
 }
 
 # ============================================================================
@@ -90,8 +92,9 @@ def get_gpufit_modelID(options, fit_model):
     options : dict
         Generic options dict holding all the user options.
     fit_model : `qdmpy.fit.model.FitModel`
-        Must be one of (in this exact order/format):
-        for odmr, LORENTZ8: {'linear': 1, 'lorentzian': 1<=n<=8}
+        for odmr, LORENTZ8, one of:
+            {'linear': 1, 'lorentzian': 1<=n<=8}
+            {'constant': 1, 'lorentzian': 1<=n<=8}
         for t1/etc., STRETCHED_EXP: {'constant': 1, 'stretched_exponential': 1}
 
     Returns
@@ -106,23 +109,32 @@ def get_gpufit_modelID(options, fit_model):
     """
 
     ffs = fit_model.fit_functions
-    ModelID = None
+    model = None
     for i in range(8):
-        if ffs == {"linear": 1, "lorentzian": i + 1}:
-            ModelID = gf.ModelID.LORENTZ8
-    if ffs == {"constant": 1, "stretched_exponential": 1}:
-        ModelID = gf.ModelID.STRETCHED_EXP
+        if ffs == {"constant": 1, "lorentzian": i + 1}:
+            model = gf.ModelID.LORENTZ8_CONST
+            break
+        elif ffs == {"linear": 1, "lorentzian": i + 1}:
+            model = gf.ModelID.LORENTZ8_LINEAR
+            break
+    if ffs in [{"constant": 1, "stretched_exponential": 1}]:
+        model = gf.ModelID.STRETCHED_EXP
+    if ffs in [{"contstant": 1, "damped_rabi": 1}]:
+        model = gf.ModelID.DAMPED_RABI
 
-    if ModelID is None:
+    if model is None:
         raise RuntimeError(
             "No gpufit modelID found for those fit_functions.\n"
             + "Available fit_functions:\n"  # noqa: W503
-            + "LORENTZ8: {'linear': 1, 'lorentzian': 1<=n<=8}"  # noqa: W503
-            + "STRETCHED_EXP: {'constant': 1, 'stretched_exponential': 1}"  # noqa: W503
-            + "NOTE THEY MUST BE IN THAT ORDER & FORMAT!"  # noqa: W503
+            + "LORENTZ8 (one of): \n"
+            + "\t{'linear': 1, 'lorentzian': 1<=n<=8}\n"  # noqa: W503
+            + "\t{'constant': 1, 'lorentzian': 1<=n<=8}\n"  # noqa: W503
+            + "\t{'lorentzian': 1<=n<=8}\n"  # noqa: W503
+            + "STRETCHED_EXP: \n"
+            + "\t{'constant': 1, 'stretched_exponential': 1}"  # noqa: W503
         )
 
-    return ModelID
+    return model
 
 
 # ============================================================================
@@ -140,8 +152,10 @@ def prep_gpufit_backend(options, fit_model):
     options : dict
         Generic options dict holding all the user options.
     fit_model : `qdmpy.fit.model.FitModel`
-        Must be one of (in this exact order/format):
-        for odmr, LORENTZ8: {'linear': 1, 'lorentzian': 1<=n<=8}
+        Must be one of:
+        for odmr, LORENTZ8, one of (in this order!):
+            {'linear': 1, 'lorentzian': 1<=n<=8}
+            {'constant': 1, 'lorentzian': 1<=n<=8}
         for t1/etc., STRETCHED_EXP: {'constant': 1, 'stretched_exponential': 1}
 
     """
@@ -259,12 +273,7 @@ def fit_single_pixel_gpufit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg
         init_guess_params = roi_avg_fit_result.best_params.copy()
 
     # only fit the params we want to :)
-    if options["ModelID"] == gf.ModelID.LORENTZ8:
-        params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
-        while len(params_to_fit) < 26:
-            params_to_fit.append(0)
-    else:
-        params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
+    params_to_fit = get_params_to_fit(options, fit_model)
 
     params_to_fit = np.array(params_to_fit, dtype=np.int32)
     init_guess_params = np.repeat([init_guess_params], repeats=2, axis=0)
@@ -327,12 +336,7 @@ def fit_ROI_avg_gpufit(options, sig_norm, sweep_list, fit_model):
     gpufit_fit_options = prep_gpufit_fit_options(options)
 
     # only fit the params we want to :)
-    if options["ModelID"] == gf.ModelID.LORENTZ8:
-        params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
-        while len(params_to_fit) < 26:
-            params_to_fit.append(0)
-    else:
-        params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
+    params_to_fit = get_params_to_fit(options, fit_model)
 
     params_to_fit = np.array(params_to_fit, dtype=np.int32)
     init_guess_params = np.repeat([init_guess_params], repeats=2, axis=0)
@@ -413,12 +417,7 @@ def fit_AOIs_gpufit(
     AOI_avg_best_fit_results_lst = []
 
     # only fit the params we want to :)
-    if options["ModelID"] == gf.ModelID.LORENTZ8:
-        params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
-        while len(params_to_fit) < 26:
-            params_to_fit.append(0)
-    else:
-        params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
+    params_to_fit = get_params_to_fit(options, fit_model)
 
     params_to_fit = np.array(params_to_fit, dtype=np.int32)
     init_guess_params = np.repeat([init_guess_params], repeats=2, axis=0)
@@ -499,12 +498,7 @@ def fit_pixels_gpufit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
     init_guess_params_reshaped = np.repeat(guess_params, repeats=num_pixels, axis=0)
 
     # only fit the params we want to :) {i.e. < 8 peak ODMR fit etc.}
-    if options["ModelID"] == gf.ModelID.LORENTZ8:
-        params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
-        while len(params_to_fit) < 26:
-            params_to_fit.append(0)
-    else:
-        params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
+    params_to_fit = get_params_to_fit(options, fit_model)
 
     # reshape sig_norm in a way that gpufit likes: (number_fits, number_points)
     sig_norm_shaped, pixel_posns = gpufit_data_shape(pixel_data)
@@ -600,3 +594,24 @@ def gpufit_reshape_result(pixel_param_results, pixel_posns, jacs):
 
 
 # ============================================================================
+
+
+def get_params_to_fit(options, fit_model):
+    if options["ModelID"] in [
+        gf.ModelID.LORENTZ8,
+        gf.ModelID.LORENTZ8_CONST,
+        gf.ModelID.LORENTZ8_LINEAR,
+    ]:
+        num_lorentzians = options["fit_functions"]["lorentzian"]
+        if options["ModelID"] == gf.ModelID.LORENTZ8_CONST:
+            params_to_fit = [1 for i in range(num_lorentzians + 1)]  # + 1 for const
+            num_params = 25
+        elif options["ModelID"] == gf.ModelID.LORENTZ8_LINEAR:
+            params_to_fit = [1 for i in range(num_lorentzians + 2)]  # + 2 for c, m
+            num_params = 26
+        while len(params_to_fit) < num_params:
+            params_to_fit.append(0)
+    else:
+        params_to_fit = [1 for i in range(len(fit_models.get_param_defn(fit_model)))]
+
+    return params_to_fit

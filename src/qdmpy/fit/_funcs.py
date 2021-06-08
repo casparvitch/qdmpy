@@ -16,12 +16,13 @@ Classes
  - `qdmpy.fit._funcs.Linear`
  - `qdmpy.fit._funcs.Circular`
  - `qdmpy.fit._funcs.Gaussian`
- - `qdmpy.fit._funcs.Gaussian_hyperfine_14`
- - `qdmpy.fit._funcs.Gaussian_hyperfine_15`
+ - `qdmpy.fit._funcs.GaussianHyperfine14`
+ - `qdmpy.fit._funcs.GaussianHyperfine15`
  - `qdmpy.fit._funcs.Lorentzian`
- - `qdmpy.fit._funcs.Lorentzian_hyperfine_14`
- - `qdmpy.fit._funcs.Lorentzian_hyperfine_15`
- - `qdmpy.fit._funcs.Stretched_exponential`
+ - `qdmpy.fit._funcs.LorentzianHyperfine14`
+ - `qdmpy.fit._funcs.LorentzianHyperfine15`
+ - `qdmpy.fit._funcs.StretchedExponential`
+ - `qdmpy.fit._funcs.DampedRabi`
 """
 
 
@@ -34,12 +35,12 @@ __pdoc__ = {
     "qdmpy.fit._funcs.Linear": True,
     "qdmpy.fit._funcs.Circular": True,
     "qdmpy.fit._funcs.Gaussian": True,
-    "qdmpy.fit._funcs.Gaussian_hyperfine_14": True,
-    "qdmpy.fit._funcs.Gaussian_hyperfine_15": True,
+    "qdmpy.fit._funcs.GaussianHyperfine14": True,
+    "qdmpy.fit._funcs.GaussianHyperfine15": True,
     "qdmpy.fit._funcs.Lorentzian": True,
-    "qdmpy.fit._funcs.Lorentzian_hyperfine_14": True,
-    "qdmpy.fit._funcs.Lorentzian_hyperfine_15": True,
-    "qdmpy.fit._funcs.Stretched_exponential": True,
+    "qdmpy.fit._funcs.LorentzianHyperfine_14": True,
+    "qdmpy.fit._funcs.LorentzianHyperfine_15": True,
+    "qdmpy.fit._funcs.StretchedExponential": True,
 }
 
 # ============================================================================
@@ -172,25 +173,25 @@ class Circular(FitFunc):
     Circular function (sine)
     """
 
-    param_defn = ["rabi_freq", "t0_circ", "amp_circ"]
-    param_units = {"rabi_freq": "Nu (Hz)", "t0_circ": "Tau (s)", "amp_circ": "Amp (a.u.)"}
+    param_defn = ["circ_freq", "t0_circ", "amp_circ"]
+    param_units = {"circ_freq": "Nu (Hz)", "t0_circ": "Tau (s)", "amp_circ": "Amp (a.u.)"}
 
     @staticmethod
     @njit
-    def eval(x, rabi_freq, pos, amp):
-        return amp * np.sin(2 * np.pi * rabi_freq * (x - pos))
+    def eval(x, circ_freq, pos, amp):
+        return amp * np.sin(2 * np.pi * circ_freq * (x - pos))
 
     @staticmethod
     @njit
-    def grad_fn(x, rabi_freq, pos, amp):
+    def grad_fn(x, circ_freq, pos, amp):
         """Compute the grad of the residue, excluding PL as a param
         {output shape: (len(x), 3)}
         """
         # Lorentzian: a*g^2/ ((x-c)^2 + g^2)
         J = np.empty((x.shape[0], 3), dtype=np.float32)
-        J[:, 0] = 2 * np.pi * amp * (x - pos) * np.cos(2 * np.pi * rabi_freq * (x - pos))
-        J[:, 1] = -2 * np.pi * rabi_freq * amp * np.cos(2 * np.pi * rabi_freq * (x - pos))
-        J[:, 2] = np.sin(2 * np.pi * rabi_freq * (x - pos))
+        J[:, 0] = 2 * np.pi * amp * (x - pos) * np.cos(2 * np.pi * circ_freq * (x - pos))
+        J[:, 1] = -2 * np.pi * circ_freq * amp * np.cos(2 * np.pi * circ_freq * (x - pos))
+        J[:, 2] = np.sin(2 * np.pi * circ_freq * (x - pos))
         return J
 
 
@@ -218,7 +219,7 @@ class Gaussian(FitFunc):
         return amp * np.exp(-SCALE_SIGMA * (x - pos) ** 2 / fwhm ** 2)
 
 
-class Gaussian_hyperfine_14(FitFunc):
+class GaussianHyperfine14(FitFunc):
 
     param_defn = [
         "pos_gauss_h14",
@@ -250,7 +251,7 @@ class Gaussian_hyperfine_14(FitFunc):
         )
 
 
-class Gaussian_hyperfine_15(FitFunc):
+class GaussianHyperfine15(FitFunc):
 
     param_defn = [
         "pos_gauss_h15",
@@ -317,7 +318,7 @@ class Lorentzian(FitFunc):
         return J
 
 
-class Lorentzian_hyperfine_14(FitFunc):
+class LorentzianHyperfine14(FitFunc):
 
     param_defn = [
         "pos_h14",
@@ -352,7 +353,7 @@ class Lorentzian_hyperfine_14(FitFunc):
         )
 
 
-class Lorentzian_hyperfine_15(FitFunc):
+class LorentzianHyperfine15(FitFunc):
 
     param_defn = ["pos_h15", "amp_h15_hyp_1", "amp_h15_hyp_2", "fwhm_h15_hyp_1", "fwhm_h15_hyp_2"]
     param_units = {
@@ -379,7 +380,7 @@ class Lorentzian_hyperfine_15(FitFunc):
 # ==========================================================================
 
 
-class Stretched_exponential(FitFunc):
+class StretchedExponential(FitFunc):
 
     param_defn = ["charac_exp_t", "amp_exp", "power_exp"]
     param_units = {
@@ -423,6 +424,41 @@ class Stretched_exponential(FitFunc):
             * (x / charac_exp_t) ** power_exp
             * np.log(x / charac_exp_t)
         )
+        return J
+
+
+# ==========================================================================
+
+
+class DampedRabi(FitFunc):
+    """
+    Damped oscillation
+    """
+
+    param_defn = ["rabi_freq", "rabi_t_offset", "rabi_amp", "rabi_decay_time"]
+    param_units = {
+        "rabi_freq": "Omega (rad/s)",
+        "rabi_t_offset": "Tau_0 (s)",
+        "amp_circ": "Amp (a.u.)",
+        "rabi_decay_time": "Tau_d (s)",
+    }
+
+    @staticmethod
+    @njit
+    def eval(x, omega, pos, amp, tau):
+        return amp * np.exp(-(x / tau)) * np.cos(omega * (x - pos))
+
+    @staticmethod
+    @njit
+    def grad_fn(x, omega, pos, amp, tau):
+        """Compute the grad of the residue, excluding PL as a param
+        {output shape: (len(x), 4)}
+        """
+        J = np.empty((x.shape[0], 4), dtype=np.float32)
+        J[:, 0] = amp * (pos - x) * np.sin(omega * (x - pos)) * np.exp(-x / tau)  # wrt omega
+        J[:, 1] = (amp * omega * np.sin(omega * (x - pos))) * np.exp(-x / tau)  # wrt pos
+        J[:, 2] = np.exp(-x / tau) * np.cos(omega * (x - pos))  # wrt amp
+        J[:, 3] = (amp * x * np.cos(omega * (x - pos))) / (np.exp(x / tau) * tau ^ 2)  # wrt tau
         return J
 
 

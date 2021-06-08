@@ -244,6 +244,7 @@
     		]
     },
     // user must set this one: the functions that make up your fit model (required)
+    // note: may be reordered to match pattern expected by gpufit
     "fit_functions": {},
 
     // All parameters below can either have a range or a bound.
@@ -324,10 +325,10 @@
     },
 
     // circular function (haven't defined useful defaults)
-    "rabi_freq_guess": {
+    "circ_freq_guess": {
         "option_default": null
     },
-    "rabi_freq_bounds": {
+    "circ_freq_bounds": {
         "option_default": [null, null]
     },
     "pos_circ_guess": {
