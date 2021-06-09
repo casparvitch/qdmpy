@@ -598,7 +598,6 @@ def gpufit_reshape_result(pixel_param_results, pixel_posns, jacs):
 
 def get_params_to_fit(options, fit_model):
     if options["ModelID"] in [
-        gf.ModelID.LORENTZ8,
         gf.ModelID.LORENTZ8_CONST,
         gf.ModelID.LORENTZ8_LINEAR,
     ]:
