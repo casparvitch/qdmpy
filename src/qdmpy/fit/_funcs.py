@@ -310,9 +310,7 @@ class Lorentzian(FitFunc):
         g = fwhm / 2
         c = pos
         a = amp
-        J[:, 0] = ((2 * a * g) / (g ** 2 + (x - c) ** 2)) - (
-            (2 * a * g ** 3) / (g ** 2 + (x - c) ** 2) ** 2
-        )
+        J[:, 0] = (a * g * (x - c) ** 2) / ((x - c) ** 2 + g ** 2) ** 2
         J[:, 1] = (2 * a * g ** 2 * (x - c)) / (g ** 2 + (x - c) ** 2) ** 2
         J[:, 2] = g ** 2 / ((x - c) ** 2 + g ** 2)
         return J
