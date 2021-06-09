@@ -603,10 +603,10 @@ def get_params_to_fit(options, fit_model):
     ]:
         num_lorentzians = options["fit_functions"]["lorentzian"]
         if options["ModelID"] == gf.ModelID.LORENTZ8_CONST:
-            params_to_fit = [1 for i in range(num_lorentzians + 1)]  # + 1 for const
+            params_to_fit = [1 for i in range(3 * num_lorentzians + 1)]  # + 1 for const
             num_params = 25
         elif options["ModelID"] == gf.ModelID.LORENTZ8_LINEAR:
-            params_to_fit = [1 for i in range(num_lorentzians + 2)]  # + 2 for c, m
+            params_to_fit = [1 for i in range(3 * num_lorentzians + 2)]  # + 2 for c, m
             num_params = 26
         while len(params_to_fit) < num_params:
             params_to_fit.append(0)
