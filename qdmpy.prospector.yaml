@@ -1,0 +1,22 @@
+
+
+ignore-paths:
+  - docs
+  - examples
+  - other
+  - build
+  - dist
+
+doc-warnings: false
+
+pyroma:
+  run: true
+
+vulture:
+  run: true
+
+bandit:
+  run: true
+
+mccabe:
+  run: false

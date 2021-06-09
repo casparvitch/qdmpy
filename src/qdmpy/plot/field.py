@@ -77,8 +77,9 @@ def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
     figsize[0] *= width  # number of columns
     figsize[1] *= height  # number of rows
 
-    figsize[0] *= 3 / 4  # (usually 4 images wide not 3...)
-    figsize[1] *= 3 / 4
+    # standardise figsize of output
+    # figsize[0] *= 3 / 4  # (usually 4 images wide not 3...)
+    # figsize[1] *= 3 / 4
 
     fig, axs = plt.subplots(height, width, figsize=figsize, constrained_layout=True)
 
@@ -674,7 +675,7 @@ def plot_bfield_theta_phi(
         fig.savefig(
             options["field_dir"]
             / (
-                f"B_theta_{int(np.round(theta))}_phi_{int(np.round(phi))}_{name}"
+                f"B_theta_{int(np.round(theta))}_phi_{int(np.round(phi))}_{name}."
                 + options["save_fig_type"]
             )
         )

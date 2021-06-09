@@ -227,8 +227,10 @@ def _get_colormap_range(c_range_dict, image):
          - "percentile_symmetric_about_zero" : requires c_range_dict["values"] be a list of two
            numbers between 0 and 100. Maps symmetrically about zero, capturing all values between
            those percentiles in the data (plus perhaps a bit more to ensure symmety)
-         - "strict_range" : requires c_range_dict["values"] be an int of float. Maps colors
-           between the values given.
+         - "strict_range" : requires c_range_dict["values"] be list length 2 of floats or ints.
+           Maps colors between the values given.
+         - "mean_plus_minus" : mean plus or minus this value. c_range_dict["values"] must be an int
+           or float.
         as well as accompanying 'values' key, used for some of the options below
 
     image : array-like
@@ -250,6 +252,9 @@ def _get_colormap_range(c_range_dict, image):
         "strict_range": """Invalid c_range_dict['values'] encountered.
         For c_range type 'strict_range', c_range_dict['values'] must be a a list of length 2,
         with elements that are floats or ints.
+        Changing to 'min_max_symmetric_about_mean' c_range.""",
+        "mean_plus_minus": """Invalid c_range_dict['values'] encountered.
+        For c_range type 'mean_plus_minus', c_range_dict['values'] must be an int or float.
         Changing to 'min_max_symmetric_about_mean' c_range.""",
         "percentile": """Invalid c_range_dict['values'] encountered.
         For c_range type 'percentile', c_range_dict['values'] must be a list of length 2,
@@ -290,6 +295,7 @@ def _get_colormap_range(c_range_dict, image):
         "percentile": _percentile,
         "percentile_symmetric_about_zero": _percentile_sym_zero,
         "strict_range": _strict_range,
+        "mean_plus_minus": _mean_plus_minus,
     }
 
     if c_range_type == "strict_range":
@@ -300,6 +306,10 @@ def _get_colormap_range(c_range_dict, image):
             or (type(c_range_values[1]) != float and type(c_range_values[1]) != int)  # noqa: W503
             or c_range_values[0] > c_range_values[1]  # noqa: W503
         ):
+            warnings.warn(warning_messages[c_range_type])
+            return _min_max_sym_mean(image, c_range_values)
+    elif c_range_type == "mean_plus_minus":
+        if type(c_range_values) != float and type(c_range_values) != int:
             warnings.warn(warning_messages[c_range_type])
             return _min_max_sym_mean(image, c_range_values)
     elif c_range_type == "deviation_from_mean":
@@ -435,6 +445,21 @@ def _percentile_sym_zero(image, c_range_values):
     plow, phigh = np.nanpercentile(image, c_range_values)  # e.g. [10, 90]
     val = max(abs(plow), abs(phigh))
     return [-val, val]
+
+
+def _mean_plus_minus(image, c_range_values):
+    """
+    Maps the range to mean +- value given in c_range_values
+
+    Arguments
+    ---------
+    image : np array, 3D
+        image data being shown as ax.imshow
+    c_range_values : unknown (depends on user settings)
+        See `qdmpy.plot.common._get_colormap_range`
+    """
+    mean = np.mean(image)
+    return [mean - c_range_values, mean + c_range_values]
 
 
 # ============================================================================

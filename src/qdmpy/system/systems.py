@@ -43,6 +43,7 @@ __pdoc__ = {
     "qdmpy.system.systems.System": True,
     "qdmpy.system.systems.UniMelb": True,
     "qdmpy.system.systems.Zyla": True,
+    "qdmpy.system.systems.cQDM":True,
     "qdmpy.system.systems.LiamsWidefield": True,
     "qdmpy.system.systems.CryoWidefield": True,
     "qdmpy.system.systems.OptionsError": True,
@@ -434,6 +435,14 @@ class Zyla(UniMelb):
 
     name = "Zyla"
     config_path = _CONFIG_PATH / "zyla_config.json"
+
+class cQDM(UniMelb):
+    """
+    Specific system details for the cQDM QDM.
+    """
+
+    name = "cQDM"
+    config_path = _CONFIG_PATH / "cqdm_config.json"
 
 
 class LiamsWidefield(UniMelb):

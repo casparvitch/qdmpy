@@ -13,7 +13,7 @@ required = [
     "pandas",
     "rebin",
     "pyfftw",
-    "PySimpleGUI"
+    "PySimpleGUI",
 ]
 
 here = pathlib.Path(__file__).parent.resolve()
@@ -30,10 +30,14 @@ if __name__ == "__main__":
         long_description=long_description,
         long_description_content_type="text/markdown",
         url="https://gitlab.unimelb.edu.au/sscholten/qdmpy",
+        keywords=["NV", "QDM", "Diamond", "Quantum", "Quantum Sensing", "gpufit"],
         classifiers=[
             "Programming Language :: Python :: 3",
-            "License :: MIT License",
-            # "Operating System :: OS Independent",
+            "Programming Language :: Python :: 3 :: Only",
+            "Programming Language :: Python :: 3.8",
+            "Programming Language :: Python :: Implementation :: CPython",
+            "License :: OSI Approved :: MIT License",
+            "Development Status :: 2 - Pre-Alpha",
         ],
         license="MIT",
         package_dir={"": "src"},
@@ -41,7 +45,7 @@ if __name__ == "__main__":
             where="src", exclude=["*.tests", "*.tests.*", "tests.*", "tests"]
         ),
         install_requires=required,
-        python_requires=">=3.8, <4", # ">=3.8, <4", > pyfftw currently <3.8 only...
+        python_requires="==3.8.*",  # ">=3.8, <4", pyfftw currently <3.8 only...
         package_data={"": ["*.md", "*.json"]},
     )
 # https://setuptools.readthedocs.io/en/latest/userguide/datafiles.html

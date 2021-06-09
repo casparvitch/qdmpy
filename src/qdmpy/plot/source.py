@@ -265,13 +265,16 @@ def plot_stream(
                 alpha=options["streamplot_PL_alpha"],
             )
             if probe_image is not None:
-                my_cmap = copy.copy(cm.get_cmap("Reds")) # doesn't matter _what_ the cmap imshow
-                my_cmap.set_under('k', alpha=0)
+                my_cmap = copy.copy(cm.get_cmap("Reds"))  # doesn't matter _what_ the cmap imshow
+                my_cmap.set_under("k", alpha=0)
                 my_cmap.set_over(probe_color, alpha=probe_alpha)
                 im2 = ax.imshow(
                     probe_image,
                     cmap=my_cmap,
-                    clim=[probe_cutoff*np.nanmax(probe_image), probe_cutoff*np.nanmax(probe_image)+0.000001],
+                    clim=[
+                        probe_cutoff * np.nanmax(probe_image),
+                        probe_cutoff * np.nanmax(probe_image) + 0.000001,
+                    ],
                 )
 
         shp = source_params["Jx_" + method].shape
@@ -282,6 +285,10 @@ def plot_stream(
         )
 
         c = np.clip(jnorms, a_min=c_range[0], a_max=c_range[1])
+
+        # clear previous cmap if registered already
+        if "alpha_cmap" in plt.colourmaps():
+            cm.unregister_cmap("alpha_cmap")
 
         cbar_drange = options["streamplot_cbar_options"]["dynamic_range"]
         u = options["streamplot_cbar_options"]["alpha_ramp_factor"]
