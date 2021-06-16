@@ -262,8 +262,8 @@ def fit_single_pixel_gpufit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg
     pixel_parameters : np array, 1D
         Best fit parameters, as determined by gpufit
     """
-    # note need to do the fit at least twice (gpufit requirements) so we do it twice here.
-    # (and disregard one of em)
+    # NOTE we need to do the fit at least twice (gpufit requirements) so we do it
+    # (indentically) twice here, and then disregard one result.
 
     # this is just constructing the initial parameter guesses and bounds in the right format
     init_guess_params, init_bounds = gen_gpufit_init_guesses(
