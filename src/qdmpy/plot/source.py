@@ -287,7 +287,7 @@ def plot_stream(
         c = np.clip(jnorms, a_min=c_range[0], a_max=c_range[1])
 
         # clear previous cmap if registered already
-        if "alpha_cmap" in plt.colourmaps():
+        if "alpha_cmap" in plt.colormaps():
             cm.unregister_cmap("alpha_cmap")
 
         cbar_drange = options["streamplot_cbar_options"]["dynamic_range"]
