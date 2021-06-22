@@ -1012,7 +1012,7 @@
     //        percentile                      : maps the range between percentiles of the data
     //        percentile_symmetric_about_zero : as above but symmetric about zero, caps. all vals
     //        strict_range                    : maps colors between the values given
-    //        mean_plus_minus"                : mean plus or minus value given.
+    //        mean_plus_minus                 : mean plus or minus value given.
     //
     // values : int/float or array
     //    Different for each type:

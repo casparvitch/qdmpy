@@ -356,7 +356,7 @@ class Polygon:
 # ============================================================================
 
 
-def polygon_gui(image=None):
+def polygon_gui(image=None, mean_pm=None):
     """Load gui to select polygon regions. Follow the prompts.
 
     Arguments
@@ -479,13 +479,14 @@ def polygon_gui(image=None):
     minimum = np.nanmin(image)
     maximum = np.nanmax(image)
     mean = np.mean(image)
-    max_distance_from_mean = np.max([abs(maximum - mean), abs(minimum - mean)])
+    if mean_pm is None:
+        mean_pm = np.max([abs(maximum - mean), abs(minimum - mean)])
     img = ax.imshow(
         image,
         aspect="equal",
         cmap=values["cmap"],
-        vmin=mean - max_distance_from_mean,
-        vmax=mean + max_distance_from_mean,
+        vmin=mean - mean_pm,
+        vmax=mean + mean_pm,
     )
 
     ax.tick_params(
