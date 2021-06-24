@@ -93,7 +93,7 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
 
 def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
     """Calculate field, for case where we are using a field reference (even if field ref is None,
-    as long as it isn't a dshift ref etc.).
+    as long as it isn't a pre_gslac etc.).
 
     Parameters
     ----------

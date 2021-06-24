@@ -784,7 +784,7 @@
         "option_default": null
     },
 
-    // True if NVs exist at higher z (in lab frame) than NVs.
+    // True if NVs exist at higher z (in lab frame) than sample.
     "NVs_above_sample": {
         "option_default": true,
         "option_choices": [

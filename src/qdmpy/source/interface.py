@@ -185,8 +185,12 @@ def get_current_density(
                 *useful_opts,
                 NVs_above_sample=options["NVs_above_sample"],
             )
+        elif method == "from_bxyz_w_src":
+            jx, jy = qdmpy.fourier.get_j_from_bxyz_w_src(
+                [bx, by, bz], *useful_opts, sigma=options["src_sigma"]
+            )
         else:
-            warnings.warn(f"recon_method option {method} not recognised.")
+            warnings.warn(f"recon_method '{method}' not recognised for j recon, skipping.")
             return None
 
         jnorm = np.sqrt(jx ** 2 + jy ** 2)
@@ -333,7 +337,9 @@ def get_magnetisation(
                 NVs_above_sample=options["NVs_above_sample"],
             )
         else:
-            warnings.warn("recon_method option not recognised.")
+            warnings.warn(
+                "recon_method '{method}' option not recognised for mag. recon, skipping."
+            )
             return None
 
         if (

@@ -8,7 +8,7 @@ Functions
  - `qdmpy.plot.source.plot_current`
  - `qdmpy.plot.source.plot_stream`
  - `qdmpy.plot.source.plot_magnetisation`
- - `qdmpy.plot.source.plot_jsource_consistency`
+ - `qdmpy.plot.source.plot_divperp_j`
 """
 
 # ============================================================================
@@ -19,7 +19,7 @@ __pdoc__ = {
     "qdmpy.plot.source.plot_current": True,
     "qdmpy.plot.source.plot_stream": True,
     "qdmpy.plot.source.plot_magnetisation": True,
-    "qdmpy.plot.source.plot_jsource_consistency": True,
+    "qdmpy.plot.source.plot_divperp_j": True,
 }
 
 # ============================================================================
@@ -472,12 +472,15 @@ def plot_divperp_j(options, source_params):
         return None
 
     figsize = mpl.rcParams["figure.figsize"].copy()
-    width = len(options["recon_methods"])  #  * 2  # number of rows (methods + direct/recon)
+    width = len(options["recon_methods"])  # * 2  # number of rows (methods + direct/recon)
     figsize[0] *= width
     height = 1
     fig, axs = plt.subplots(height, width, figsize=figsize, constrained_layout=True)
 
     for m_idx, method in enumerate(options["recon_methods"]):  # # m_idx: each doublet of rows
+        if f"divperp_J_{method}" not in source_params:
+            warnings.warn("missing recon_method '{method}', skipping.")
+            continue
         data = source_params[f"divperp_J_{method}"]
         title = f"Div perp ( J_{method} )"
         c_range = plot_common._get_colormap_range(
