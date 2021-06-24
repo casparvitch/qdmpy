@@ -3,11 +3,11 @@ import setuptools, pathlib
 required = [
     "setuptools-git",
     "numpy",
-    "matplotlib",
+    "matplotlib>=3.4.0",
     "scipy",
     "numba",
     "psutil",
-    "matplotlib-scalebar",
+    "matplotlib-scalebar>=0.7.2",
     "tqdm",
     "simplejson",
     "pandas",
@@ -23,7 +23,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 if __name__ == "__main__":
     setuptools.setup(
         name="qdmpy",  # Replace with your own username
-        version="0.2.0",
+        version="0.3.0",
         author="Sam Scholten",
         author_email="samcaspar@gmail.com",
         description="Quantum Diamond MicroscoPy",

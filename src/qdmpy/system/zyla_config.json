@@ -855,11 +855,6 @@
         "option_default": null
     },
 
-    // in testing
-    "src_sigma": {
-        "option_default": null // force to be set
-    },
-
     // ========================================================
     // ========== Background subtraction parameters ===========
     // ========================================================
