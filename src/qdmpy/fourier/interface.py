@@ -589,7 +589,7 @@ def get_j_from_bz(
 #     jx, jy : np arrays (2D)
 #         The calculated current density images, in A/m.
 
-#     TODO explain
+#     <explain>
 
 #     See D. A. Broadway, S. E. Lillie, S. C. Scholten, D. Rohner, N. Dontschuk, P. Maletinsky,
 #         J.-P. Tetienne, and L. C. L. Hollenberg,
