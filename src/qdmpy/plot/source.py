@@ -206,7 +206,7 @@ def plot_current(options, source_params, plot_bgrounds=True):
 def plot_stream(
     options,
     source_params,
-    PL_image_ROI=None,
+    pl_image_ROI=None,
     probe_image=None,
     probe_color="red",
     probe_alpha=1.0,
@@ -220,8 +220,8 @@ def plot_stream(
         Generic options dict holding all the user options.
     source_params : dict
         Dictionary, key: param_keys, val: image (2D) of (source field) param values across FOV.
-    PL_image_ROI : numpy array or None, default: None
-        If not None, must be PL image of ROI, to plot behind streams
+    pl_image_ROI : numpy array or None, default: None
+        If not None, must be pl image of ROI, to plot behind streams
 
     Returns
     -------
@@ -256,13 +256,13 @@ def plot_stream(
 
         ax = axs if width == 1 else axs[m_idx]
 
-        if PL_image_ROI is not None:
+        if pl_image_ROI is not None:
             im = ax.imshow(
-                PL_image_ROI,
+                pl_image_ROI,
                 cmap="Greys_r",
-                vmin=np.nanmin(PL_image_ROI),
-                vmax=np.nanmax(PL_image_ROI),
-                alpha=options["streamplot_PL_alpha"],
+                vmin=np.nanmin(pl_image_ROI),
+                vmax=np.nanmax(pl_image_ROI),
+                alpha=options["streamplot_pl_alpha"],
             )
             if probe_image is not None:
                 my_cmap = copy.copy(cm.get_cmap("Reds"))  # doesn't matter _what_ the cmap imshow

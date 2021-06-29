@@ -51,7 +51,7 @@ View in text editor if scrambled.
 |                                                   │ }            │       │ ref_options_dir │    |
 |                           ┌──────────────┐        └──────┬───────┘       └───────┬─────────┘    |
 |                           │              │               │                       │              |
-|                           │ Raw PL data  │           load_options                │              |
+|                           │ Raw pl data  │           load_options                │              |
 | set_mpl_rcparams          │    on disk   │               │                       │              |
 |                           │              │           ┌───┴─────┐                 │              |
 |                           └─────┬────────┘           │         │            ┌────┴───────┐      |
@@ -59,16 +59,16 @@ View in text editor if scrambled.
 |                           load_image_and_sweep ──────┤ dict    │       │    │Dict        │      |
 |                           reshape_dataset            │         │       │    └────┬───────┘      |
 |                                 │                    └───┬─────┘       │         │              |
-| plot_ROI_PL_image          ┌────┴───────┐                │             │         │              |
-| plot_AOI_PL_images         │ sig_norm   │                │             │         │              |
+| plot_ROI_pl_image          ┌────┴───────┐                │             │         │              |
+| plot_AOI_pl_images         │ sig_norm   │                │             │         │              |
 | plot_AOI_spectra           │ sweep_list │          define_fit_model    │         │              |
 |                            └────┬───────┘                │             │         │              |
-| save_PL_data                    │                    ┌───┴──────┐      │         │              |
-|                           get_PL_fit_result ─────────┤fit_model │      │         │              |
+| save_pl_data                    │                    ┌───┴──────┐      │         │              |
+|                           get_pl_fit_result ─────────┤fit_model │      │         │              |
 |                                 │                    └──────────┘      │         │              |
-| fit_ROI_avg                     │                                      ├──load_reference_exp.   |
+| fit_roi_avg_pl                     │                                      ├──load_reference_exp.   |
 | plot_ROI_avg_fits        ┌──────┴───────────┐                          │      fit_results       |
-| fit_AOIs                 │ pixel_fit_params │                          │         │              |
+| fit_aois_pl                 │ pixel_fit_params │                          │         │              |
 | plot_AOI_spectra_fit     │                  ├────────────┬─────────────┘         │              |
 | plot_param_images        │   ref_sigmas     │            │                 ┌─────┴─────────┐    |
 | plot_params_flattened    └──────┬───────────┘            │                 │ ref_fit_params│    |
@@ -354,7 +354,7 @@ Functions
 
 - Docstrings for all functions (and methods etc.) describing inputs and outputs:
 ```python
-def fit_ROI_avg(options, sig_norm, sweep_list, fit_model):
+def fit_roi_avg_pl(options, sig_norm, sweep_list, fit_model):
     """
     Fit the average of the measurement over the region of interest specified.
 
@@ -389,7 +389,7 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
 - base_dir
     - Not required, if not "" it is prepended to filepath.
 - filepath
-    - Required, specify path to raw (PL) data.
+    - Required, specify path to raw (pl) data.
 - custom_output_dir_prefix
     - See below.
 - custom_outpur_dir_suffix
@@ -455,14 +455,14 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
     - Which backends to use in initial single pixel/ROI/AOI fit checks.
 - force_fit
     - Overrides automatic reloading of previous fit results.
-- fit_pixels
+- fit_pl_pixels
     - False ignores the pixel fitting altogether, even if a previous fit result was found.
 - scramble_pixels
     - Fit pixels in a random order to give a more accurate ETA (at no loss to fit speed).
 - use_ROI_avg_fit_res_for_all_pixels
     - If 'false', uses init guesses below on each pixel, 'true' uses best fit to ROI average as initial guess.
 - fit_functions
-    - Dictionary. This one is important & required. The functions that make up your (PL) fit model. Each function type can be used multiple times. E.g. {"linear": 1, "lorentzian": 8} would give 8 lorentzian peaks with a linear (y= mx + c) background slope.
+    - Dictionary. This one is important & required. The functions that make up your (pl) fit model. Each function type can be used multiple times. E.g. {"linear": 1, "lorentzian": 8} would give 8 lorentzian peaks with a linear (y= mx + c) background slope.
 - param_guess
     - For some fit model parameter called 'param', this is the provided guess. Can be an array if you want different guesses for each of the 'n' functions in fit_functions (e.g. pos_0, pos_1, ... pos_7 for 8 lorentzians).
 - param_range
@@ -544,7 +544,7 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
 - bias_phi
     - In degrees.
 - field_param_guess
-    - Same guess, range and bounds as above for PL fitting, but here for hamiltonian fitting. 
+    - Same guess, range and bounds as above for pl fitting, but here for hamiltonian fitting. 
 - field_param_range
 - field_param_bounds
 
@@ -615,14 +615,14 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
 - save_plots
 - show_scalebar
 - annotate_image_regions
-    - Used for ROI/AOI PL plots only.
+    - Used for ROI/AOI pl plots only.
 - save_fig_type
     - E.g. "png", "pdf", "svg" (svg slow!).
 - large_fig_save_type
     - Jstream is huge & slow as an svg, allows large figs like this to have different type.
 - colormaps
     - Choose colormap used for each type of image, a dict with possible keys:
-        - param_images, residual_images, sigma_images, PL_images, bnv_images, dshift_images, bfield_images.
+        - param_images, residual_images, sigma_images, pl_images, bnv_images, dshift_images, bfield_images.
 - colormap_range_dicts
     - Choose range of values mapped across to the colormap limits, for each 'type' of image if you want to override, you must copy the full dict (not just the ones you want to change).
     ```
@@ -661,8 +661,8 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
     - Colors to identify with each fit backend (dict of dicts).
 - streamplot_options
     - fit options for streamplot
-- streamplot_PL_alpha
-    - alpha (i.e. transparency between 0 (invisible) and 1 (fully opaque)) of PL image behind behing streamplot
+- streamplot_pl_alpha
+    - alpha (i.e. transparency between 0 (invisible) and 1 (fully opaque)) of pl image behind behing streamplot
 
 
 ### Set internally
@@ -702,7 +702,7 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
 - CUDA_version_driver
     - CUDA information, stored for the record.
 - fit_time_(s)
-    - Time to fit (PL) image.
+    - Time to fit (pl) image.
 - ham_fit_time_(s)
     - As above but for any hamiltonian fitting.
 - field_dir

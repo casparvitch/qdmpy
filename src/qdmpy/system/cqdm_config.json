@@ -227,7 +227,7 @@
     		]
     }, 
      // fits all of the required pixels, false ignores the pixel fitting
-    "fit_pixels": {
+    "fit_pl_pixels": {
     	"option_default": true,
     	"option_choices":
     		[
@@ -939,7 +939,7 @@
                 false
             ]
     },
-    // for ROI/AOI PL plots only
+    // for ROI/AOI pl plots only
     "annotate_image_regions": {
     	"option_default": true,
     	"option_choices":
@@ -973,7 +973,7 @@
             "param_images": "viridis",
             "residual_images": "inferno",
             "sigma_images": "magma",
-            "PL_images": "Greys_r",
+            "pl_images": "Greys_r",
             "bnv_images": "RdBu_r",
             "dshift_images": "PRGn",
             "bfield_images": "bwr",
@@ -1028,7 +1028,7 @@
                 "type": "percentile",
                 "values": [1, 99]
             },
-            "PL_images": {
+            "pl_images": {
                 "type": "min_max"
             },
             "bnv_images": {
@@ -1109,16 +1109,16 @@
     "fit_backend_colors": {
         "option_default": {
             "scipyfit": {
-                "roifit_linecolor": "mediumblue",
+                "ROIfit_linecolor": "mediumblue",
                 "residual_linecolor": "black",
-                "aoi_roi_fit_linecolor": "indigo",
-                "aoi_best_fit_linecolor": "crimson"
+                "AOI_ROI_fit_linecolor": "indigo",
+                "AOI_best_fit_linecolor": "crimson"
             },
             "gpufit": {
-                "roifit_linecolor": "cornflowerblue",
+                "ROIfit_linecolor": "cornflowerblue",
                 "residual_linecolor": "dimgrey",
-                "aoi_roi_fit_linecolor": "mediumpurple",
-                "aoi_best_fit_linecolor": "coral"
+                "AOI_ROI_fit_linecolor": "mediumpurple",
+                "AOI_best_fit_linecolor": "coral"
             }
         }
     },
@@ -1130,9 +1130,9 @@
             "arrowsize": 0.75
         }
     },
-    // alpha (i.e. transparency between 0 (invisible) and 1 (fully opaque)) of PL image behind
+    // alpha (i.e. transparency between 0 (invisible) and 1 (fully opaque)) of pl image behind
     // streamplot
-    "streamplot_PL_alpha": {
+    "streamplot_pl_alpha": {
         "option_default": 1.0
     },
     // ===========================================================================================

@@ -35,4 +35,8 @@ Structure of sub-modules:
     - This modules contains the tooling for defining institution specific settings for example
      for loading raw datafiles etc. These settings can be implemented down to the specific
      experimental 'system' to define pixel sizes etc.
+
+qdmpy itself also exposes some functions from qdmpy.interface
 """
+
+from qdmpy.interface import *  # noqa: F401, F403

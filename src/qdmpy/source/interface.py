@@ -174,7 +174,7 @@ def get_current_density(
             jx, jy = qdmpy.fourier.get_j_from_bxy(
                 [bx, by, bz],
                 *useful_opts,
-                NVs_above_sample=options["NVs_above_sample"],
+                nvs_above_sample=options["NVs_above_sample"],
             )
         elif method == "from_bz":
             jx, jy = qdmpy.fourier.get_j_from_bz([bx, by, bz], *useful_opts)
@@ -183,7 +183,7 @@ def get_current_density(
                 bnv,
                 unv,
                 *useful_opts,
-                NVs_above_sample=options["NVs_above_sample"],
+                nvs_above_sample=options["NVs_above_sample"],
             )
         elif method == "from_bxyz_w_src":
             jx, jy = qdmpy.fourier.get_j_from_bxyz_w_src(
@@ -334,7 +334,7 @@ def get_magnetisation(
                 bnv,
                 unv,
                 *useful_opts,
-                NVs_above_sample=options["NVs_above_sample"],
+                nvs_above_sample=options["NVs_above_sample"],
             )
         else:
             warnings.warn(

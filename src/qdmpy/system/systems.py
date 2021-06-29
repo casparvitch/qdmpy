@@ -19,19 +19,17 @@ Classes
  - `qdmpy.system.systems.Zyla`
  - `qdmpy.system.systems.LiamsWidefield`
  - `qdmpy.system.systems.CryoWidefield`
- - `qdmpy.system.systems.OptionsError`
 
 
 Functions
 ---------
- - `qdmpy.system.systems.check_option`
- - `qdmpy.system.systems.check_options`
- - `qdmpy.system.systems.clean_options`
+ - `qdmpy.system.systems.choose_system`
 
 
 Module variables
 ----------------
  - `qdmpy.system.systems._CONFIG_PATH`
+ - `qdmpy.system.systems._SYSTEMS`
 
 """
 
@@ -43,14 +41,12 @@ __pdoc__ = {
     "qdmpy.system.systems.System": True,
     "qdmpy.system.systems.UniMelb": True,
     "qdmpy.system.systems.Zyla": True,
-    "qdmpy.system.systems.cQDM":True,
+    "qdmpy.system.systems.cQDM": True,
     "qdmpy.system.systems.LiamsWidefield": True,
     "qdmpy.system.systems.CryoWidefield": True,
-    "qdmpy.system.systems.OptionsError": True,
-    "qdmpy.system.systems.check_option": True,
-    "qdmpy.system.systems.check_options": True,
-    "qdmpy.system.systems.clean_options": True,
     "qdmpy.system.systems._CONFIG_PATH": True,
+    "qdmpy.system.systems._SYSTEMS": True,
+    "qdmpy.system.systems.choose_system": True,
 }
 
 # ============================================================================
@@ -66,7 +62,7 @@ from math import radians
 
 # ============================================================================
 
-import qdmpy.io as Qio
+import qdmpy.shared.json2dict
 
 # ============================================================================
 
@@ -205,7 +201,7 @@ class UniMelb(System):
     def __init__(self, *args, **kwargs):
         super().__init__(self, *args, **kwargs)
         # ensure all values default to None (at all levels of reading in json)
-        self.options_dict = Qio.json_to_dict(self.config_path, hook="dd")
+        self.options_dict = qdmpy.shared.json2dict.json_to_dict(self.config_path, hook="dd")
 
     def get_raw_pixel_size(self, options):
         if "pixel_size" in options and options["pixel_size"]:
@@ -294,7 +290,7 @@ class UniMelb(System):
                 f"Found {len(bias_field)} bias field params in metadata, "
                 + "this shouldn't happen (expected 3)."
             )
-            return  False, None
+            return False, None
         onoff_str = options["metadata"].get("Mag on/off", "")
         bias_on = onoff_str == " TRUE"
         return bias_on, (bias_field[0], radians(bias_field[1]), radians(bias_field[2]))
@@ -340,7 +336,7 @@ class UniMelb(System):
                 rest_str,
                 re.MULTILINE,
             )
-            metadata = {a: Qio.json2dict._failfloat(b) for (a, b) in matches}
+            metadata = {a: qdmpy.shared.json2dict._failfloat(b) for (a, b) in matches}
         return metadata
 
     def _reshape_raw(self, options, raw_data, sweep_list):
@@ -436,7 +432,8 @@ class Zyla(UniMelb):
     name = "Zyla"
     config_path = _CONFIG_PATH / "zyla_config.json"
 
-class cQDM(UniMelb):
+
+class cQDM(UniMelb):  # noqa: N801
     """
     Specific system details for the cQDM QDM.
     """
@@ -477,64 +474,21 @@ class CryoWidefield(UniMelb):
 
 # ============================================================================
 
+_SYSTEMS = {
+    "Zyla": Zyla,
+    "Liams_Widefield": LiamsWidefield,
+    "Cryo_Widefield": CryoWidefield,
+    "cQDM": cQDM,
+}
+"""Dictionary that defines systems available for use.
 
-class OptionsError(Exception):
-    """
-    Exception with custom messages for errors to do with options dictionary.
-    """
-
-    def __init__(self, option_name, option_given, system, custom_msg=None):
-
-        self.custom_msg = custom_msg
-
-        choices = system.option_choices(option_name)
-
-        if choices is not None:
-            self.default_msg = (
-                f"Option {option_given} not a valid option for {option_name}"
-                + f", pick from: {choices}"
-            )
-        else:
-            self.default_msg = f"Option {option_given} not a valid option for {option_name}."
-
-        super().__init__(custom_msg)
-
-    def __str__(self):
-        if self.custom_msg is not None:
-            return str(self.custom_msg) + "\n" + self.default_msg
-        else:
-            # use system to get possible options (read specific json into dict etc.)
-            return self.default_msg
+Add any systems you define here so you can use them.
+"""
 
 
-# ===============================
+def choose_system(name):
+    """Returns `qdmpy.system.systems.System` object called 'name'."""
+    return _SYSTEMS[name]()
 
 
-def check_option(key, val, system):
-    if key not in system.available_options():
-        warnings.warn(f"Option {key} was not recognised by the {system.name} system.")
-    elif system.option_choices(key) is not None and val not in system.option_choices(key):
-        OptionsError(key, val, system)
-    elif key == "freqs_to_use":
-        if len(val) != 8:
-            OptionsError(key, val, system, custom_msg="Length of option 'freqs_to_use' must be 8.")
-
-
-# ===============================
-
-
-def check_options(options):
-    system = options["system"]
-    for key, val in options.items():
-        check_option(key, val, system)
-    options["cleaned"] = True
-
-
-# ===============================
-
-
-def clean_options(options):
-    if "cleaned" in options.keys() and options["cleaned"]:
-        return
-    else:
-        check_options(options)
+# ============================================================================

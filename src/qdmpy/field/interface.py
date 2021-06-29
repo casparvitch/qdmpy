@@ -40,7 +40,6 @@ import numpy as np
 import qdmpy.field._bnv as Qbnv
 import qdmpy.field._bxyz as Qbxyz
 import qdmpy.field._geom as Qgeom
-import qdmpy.fourier
 
 # ============================================================================
 
@@ -285,6 +284,8 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
     sigmas_lst : list
         List of field sigmas (errors) (each a dict), [sig_dict, ref_dict, sig_sub_ref_dict]
     """
+    # FIXME move some of this into other files?
+
     # first get bnvs (as in global scope)
     sig_bnvs, sig_dshifts = Qbnv.get_bnvs_and_dshifts(
         sig_fit_params, options["bias_field_spherical_deg_gauss"]
@@ -362,9 +363,9 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
                 options["NVs_above_sample"],
             ]
 
-            sig_bxyz = qdmpy.fourier.prop_single_bnv(sig_bnv, unv, *other_opts)
-            ref_bxyz = qdmpy.fourier.prop_single_bnv(ref_bnv, unv, *other_opts)
-            sig_sub_ref_bxyz = qdmpy.fourier.prop_single_bnv(sig_sub_ref_bnv, unv, *other_opts)
+            sig_bxyz = qdmpy.field.bnv.prop_single_bnv(sig_bnv, unv, *other_opts)
+            ref_bxyz = qdmpy.field.bnv.prop_single_bnv(ref_bnv, unv, *other_opts)
+            sig_sub_ref_bxyz = qdmpy.field.bnv.prop_single_bnv(sig_sub_ref_bnv, unv, *other_opts)
 
             sig_params, ref_params, sub_ref_params = [
                 {
@@ -518,9 +519,9 @@ def _odmr_with_inverted_bias_ref(options, sig_fit_params, ref_fit_params):
                 options["NVs_above_sample"],
             ]
 
-            sig_bxyz = qdmpy.fourier.prop_single_bnv(sig_bnv, unv, *other_opts)
-            ref_bxyz = qdmpy.fourier.prop_single_bnv(ref_bnv, unv, *other_opts)
-            sig_sub_ref_bxyz = qdmpy.fourier.prop_single_bnv(sig_sub_ref_bnv, unv, *other_opts)
+            sig_bxyz = qdmpy.field.bnv.prop_single_bnv(sig_bnv, unv, *other_opts)
+            ref_bxyz = qdmpy.field.bnv.prop_single_bnv(ref_bnv, unv, *other_opts)
+            sig_sub_ref_bxyz = qdmpy.field.bnv.prop_single_bnv(sig_sub_ref_bnv, unv, *other_opts)
 
             sig_params, ref_params, sub_ref_params = [
                 {
@@ -674,7 +675,7 @@ def add_bfield_reconstructed(options, field_params):
 
     bx, by, bz = [field_params["B" + comp] for comp in components]
 
-    bx_recon, by_recon, bz_recon = qdmpy.fourier.get_reconstructed_bfield(
+    bx_recon, by_recon, bz_recon = qdmpy.field.bxyz.get_reconstructed_bfield(
         [bx, by, bz],
         options["fourier_pad_mode"],
         options["fourier_pad_factor"],
