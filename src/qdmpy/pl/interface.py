@@ -8,24 +8,24 @@ sub-package is imported. (e.g. import qdmpy.fit).
 
 Functions
 ---------
- - `qdmpy.fit.interface.define_fit_model`
- - `qdmpy.fit.interface.fit_roi_avg_pl`
- - `qdmpy.fit.interface.fit_aois_pl`
- - `qdmpy.fit.interface.fit_pl_pixels`
- - `qdmpy.fit.interface._prep_fit_backends`
- - `qdmpy.fit.interface.get_pl_fit_result`
+ - `qdmpy.pl.interface.define_fit_model`
+ - `qdmpy.pl.interface.fit_roi_avg_pl`
+ - `qdmpy.pl.interface.fit_aois_pl`
+ - `qdmpy.pl.interface.fit_pl_pixels`
+ - `qdmpy.pl.interface._prep_fit_backends`
+ - `qdmpy.pl.interface.get_pl_fit_result`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.fit.interface.define_fit_model": True,
-    "qdmpy.fit.interface.fit_roi_avg_pl": True,
-    "qdmpy.fit.interface.fit_aois_pl": True,
-    "qdmpy.fit.interface.fit_pl_pixels": True,
-    "qdmpy.fit.interface._prep_fit_backends": True,
-    "qdmpy.fit.interface.get_pl_fit_result": True,
+    "qdmpy.pl.interface.define_fit_model": True,
+    "qdmpy.pl.interface.fit_roi_avg_pl": True,
+    "qdmpy.pl.interface.fit_aois_pl": True,
+    "qdmpy.pl.interface.fit_pl_pixels": True,
+    "qdmpy.pl.interface._prep_fit_backends": True,
+    "qdmpy.pl.interface.get_pl_fit_result": True,
 }
 
 # ============================================================================
@@ -112,15 +112,15 @@ def _prep_fit_backends(options, fit_model):
         if fit_backend == "scipyfit":
             # import, but make it globally available (to module)
             global fit_scipyfit
-            _temp = __import__("qdmpy.fit._scipyfit", globals(), locals())
-            fit_scipyfit = _temp.fit._scipyfit
+            _temp = __import__("qdmpy.fit.scipyfit", globals(), locals())
+            fit_scipyfit = _temp.fit.scipyfit
 
         elif fit_backend == "gpufit":
             # here we use a programmatic import as we don't want to load (and crash)
             # if user doesn't have the gpufit stuff installed
             global fit_gpufit
-            _temp = __import__("qdmpy.fit._gpufit", globals(), locals())
-            fit_gpufit = _temp.fit._gpufit
+            _temp = __import__("qdmpy.fit.gpufit", globals(), locals())
+            fit_gpufit = _temp.fit.gpufit
 
             fit_gpufit.prep_gpufit_backend(options, fit_model)
         else:
@@ -151,7 +151,7 @@ def fit_roi_avg_pl(options, sig_norm, sweep_list, fit_model):
     Returns
     -------
     backend_roi_results_lst : list
-        List of `qdmpy.fit._shared.ROIAvgFitResult` objects containing the fit result
+        List of `qdmpy.pl.common.ROIAvgFitResult` objects containing the fit result
         (see class specifics) for each fit backend selected for comparison.
 
     """
@@ -198,12 +198,12 @@ def fit_aois_pl(
     fit_model : `qdmpy.fit.model.FitModel`
         Model we're fitting to.
     backend_roi_results_lst : list
-        List of `qdmpy.fit._shared.ROIAvgFitResult` objects, to pull fit_options from.
+        List of `qdmpy.pl.common.ROIAvgFitResult` objects, to pull fit_options from.
 
     Returns
     -------
-    fit_result_collection : `qdmpy.fit._shared.FitResultCollection`
-        `qdmpy.fit._shared.FitResultCollection` object.
+    fit_result_collection : `qdmpy.pl.common.FitResultCollection`
+        `qdmpy.pl.common.FitResultCollection` object.
     """
 
     aois = qdmpy.shared.misc.define_AOIs(options)
@@ -259,8 +259,8 @@ def fit_pl_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
         Affine parameter list (e.g. tau or freq)
     fit_model : `qdmpy.fit.model.FitModel`
         Model we're fitting to.
-    roi_avg_fit_result : `qdmpy.fit._shared.ROIAvgFitResult`
-        `qdmpy.fit._shared.ROIAvgFitResult` object, to pull fit_options from.
+    roi_avg_fit_result : `qdmpy.pl.common.ROIAvgFitResult`
+        `qdmpy.pl.common.ROIAvgFitResult` object, to pull fit_options from.
 
     Returns
     -------
@@ -305,8 +305,8 @@ def get_pl_fit_result(options, sig_norm, sweep_list, fit_model, wanted_roi_resul
         Affine parameter list (e.g. tau or freq)
     fit_model : `qdmpy.fit.model.FitModel`
         Model we're fitting to.
-    wanted_roi_result : `qdmpy.fit._shared.ROIAvgFitResult`
-        `qdmpy.fit._shared.ROIAvgFitResult` object, to pull fit_options from.
+    wanted_roi_result : `qdmpy.pl.common.ROIAvgFitResult`
+        `qdmpy.pl.common.ROIAvgFitResult` object, to pull fit_options from.
 
     Returns
     -------

@@ -1,10 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-
+Implement inversion of magnetic field to current density.
 
 Functions
 ---------
- - `qdmpy.field._bxyz.from_single_bnv`
+ - `qdmpy.source.current.define_current_transform`
+ - `qdmpy.source.current.get_divperp_j`
+ - `qdmpy.source.current.get_j_from_bxy`
+ - `qdmpy.source.current.get_j_from_bz`
+ - `qdmpy.source.current.get_j_from_bnv`
 """
 
 
@@ -12,16 +16,23 @@ Functions
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.shared.fourier.get_reconstructed_bfield": True,
+    "qdmpy.source.current.define_current_transform": True,
+    "qdmpy.source.current.get_divperp_j": True,
+    "qdmpy.source.current.get_j_from_bxy": True,
+    "qdmpy.source.current.get_j_from_bz": True,
+    "qdmpy.source.current.get_j_from_bnv": True,
 }
 
 # ============================================================================
 
 import numpy as np
+from pyfftw.interfaces import numpy_fft
+from copy import copy
 
 # ============================================================================
 
 import qdmpy.shared.fourier
+from qdmpy.shared.fourier import MU_0
 
 # ============================================================================
 
@@ -49,7 +60,6 @@ def define_current_transform(u_proj, ky, kx, k, standoff=None):
         https://doi.org/10.1103/PhysRevApplied.14.024076
         https://arxiv.org/abs/2005.06788
     """
-    from qdmpy.constants import MU_0
 
     if standoff:
         exp_factor = np.exp(1 * k * standoff)

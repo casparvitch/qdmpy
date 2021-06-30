@@ -5,22 +5,22 @@ ODMR datasets (after they've been fit with the `qdmpy.fit.interface` tooling).
 
 Functions
 ---------
- - `qdmpy.field._bnv.get_bnvs_and_dshifts`
- - `qdmpy.field._bnv.get_bnv_sd`
- - `qdmpy.field._bnv.check_exp_bnv_compatibility`
- - `qdmpy.field._bnv.bnv_refsub`
- - `qdmpy.field._bnv.sub_bground_bnvs`
+ - `qdmpy.field.bnv.get_bnvs_and_dshifts`
+ - `qdmpy.field.bnv.get_bnv_sd`
+ - `qdmpy.field.bnv.check_exp_bnv_compatibility`
+ - `qdmpy.field.bnv.bnv_refsub`
+ - `qdmpy.field.bnv.sub_bground_bnvs`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.field._bnv.get_bnvs_and_dshifts": True,
-    "qdmpy.field._bnv.get_bnv_sd": True,
-    "qdmpy.field._bnv.check_exp_bnv_compatibility": True,
-    "qdmpy.field._bnv.bnv_refsub": True,
-    "qdmpy.field._bnv.sub_bground_bnvs": True,
+    "qdmpy.field.bnv.get_bnvs_and_dshifts": True,
+    "qdmpy.field.bnv.get_bnv_sd": True,
+    "qdmpy.field.bnv.check_exp_bnv_compatibility": True,
+    "qdmpy.field.bnv.bnv_refsub": True,
+    "qdmpy.field.bnv.sub_bground_bnvs": True,
 }
 
 # ============================================================================
@@ -32,6 +32,7 @@ from copy import copy
 # ============================================================================
 
 import qdmpy.shared.fourier
+import qdmpy.shared.itool
 
 # ============================================================================
 
@@ -102,8 +103,6 @@ def get_bnvs_and_dshifts(pixel_fit_params, bias_field_spherical_deg):
     peak_posns.sort(key=np.nanmean)
     num_peaks = len(peak_posns)
 
-    from qdmpy.constants import GAMMA, GSLAC
-
     if num_peaks == 1:
         sign = -1 if np.mean(peak_posns[0]) < 2870 else +1  # det. if L/R resonance (rel to bias)
         if bias_mag > GSLAC:
@@ -148,8 +147,6 @@ def get_bnv_sd(sigmas):
     peak_sd.sort(key=lambda x: x[0])
     peak_sd = [x[1] for x in peak_sd]
     num_peaks = len(peak_sd)
-
-    from qdmpy.constants import GAMMA
 
     if num_peaks == 1:
         return peak_sd / (2 * GAMMA)
@@ -289,8 +286,9 @@ def sub_bground_bnvs(options, bnvs, method, **method_settings):
         polygons = None
     output_bnvs = []
     for bnv in bnvs:
-        # FIXME
-        bground = Qitool.get_background(bnv, method, polygons=polygons, **method_settings)
+        bground = qdmpy.shared.itool.get_background(
+            bnv, method, polygons=polygons, **method_settings
+        )
         output_bnvs.append(bnv - bground)
 
     return output_bnvs

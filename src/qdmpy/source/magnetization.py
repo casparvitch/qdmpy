@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 """
-
+Implement inversion of magnetic field to magnetization source
 
 Functions
 ---------
- - `qdmpy.field._bxyz.from_single_bnv`
+ - `qdmpy.source.magnetization.define_magnetization_transformation`
+ - `qdmpy.source.magnetization.get_m_from_bxy`
+ - `qdmpy.source.magnetization.get_m_from_bz`
+ - `qdmpy.source.magnetization.get_m_from_bnv`
 """
 
 
@@ -13,21 +16,28 @@ Functions
 __author__ = "Sam Scholten"
 __pdoc__ = {
     "qdmpy.shared.fourier.get_reconstructed_bfield": True,
+    "qdmpy.source.magnetization.define_magnetization_transformation": True,
+    "qdmpy.source.magnetization.get_m_from_bxy": True,
+    "qdmpy.source.magnetization.get_m_from_bz": True,
+    "qdmpy.source.magnetization.get_m_from_bnv": True,
 }
 
 # ============================================================================
 
 import numpy as np
+from pyfftw.interfaces import numpy_fft
+from copy import copy
 
 # ============================================================================
 
 import qdmpy.shared.fourier
+from qdmpy.shared.fourier import MU_0, MAG_UNIT_CONV
 
 # ============================================================================
 # ============================================================================
 
 
-def define_magnetisation_transformation(ky, kx, k, standoff):
+def define_magnetization_transformation(ky, kx, k, standoff):
     """M => b fourier-space transformation.
 
 
@@ -42,7 +52,7 @@ def define_magnetisation_transformation(ky, kx, k, standoff):
     Returns
     -------
     d_matrix : np array
-        Transformation such that B = d_matrix * m. E.g. for z magnetised sample:
+        Transformation such that B = d_matrix * m. E.g. for z magnetized sample:
         m_to_bnv = (
             unv[0] * d_matrix[2, 0, ::] + unv[1] * d_matrix[2, 1, ::] + unv[2] * d_matrix[2, 2, ::]
         )
@@ -58,7 +68,6 @@ def define_magnetisation_transformation(ky, kx, k, standoff):
         https://doi.org/10.1103/PhysRevApplied.14.024076
         https://arxiv.org/abs/2005.06788
     """
-    from qdmpy.constants import MU_0
 
     if standoff:
         exp_factor = np.exp(1 * k * standoff)
@@ -131,7 +140,7 @@ def get_m_from_bxy(
     Returns
     -------
     m : np array (2D)
-        The calculated magnetisation, in mu_B / nm^2
+        The calculated magnetization, in mu_B / nm^2
 
     See D. A. Broadway, S. E. Lillie, S. C. Scholten, D. Rohner, N. Dontschuk, P. Maletinsky,
         J.-P. Tetienne, and L. C. L. Hollenberg,
@@ -140,7 +149,6 @@ def get_m_from_bxy(
         https://doi.org/10.1103/PhysRevApplied.14.024076
         https://arxiv.org/abs/2005.06788
     """
-    from qdmpy.constants import MAG_UNIT_CONV
 
     # copy and convert Gauss -> Tesla
     bx = copy(bfield[0]) * 1e-4
@@ -157,10 +165,10 @@ def get_m_from_bxy(
     ky, kx, k = qdmpy.shared.fourier.define_k_vectors(fft_bx.shape, pixel_size, k_vector_epsilon)
 
     # define transform
-    d_matrix = define_magnetisation_transformation(ky, kx, k, standoff)
+    d_matrix = define_magnetization_transformation(ky, kx, k, standoff)
 
     if mag_angle is None:
-        m_to_bx = d_matrix[2, 0, ::]  # z magnetised
+        m_to_bx = d_matrix[2, 0, ::]  # z magnetized
         m_to_by = d_matrix[2, 1, ::]
     else:
         psi = np.deg2rad(mag_angle)
@@ -241,7 +249,7 @@ def get_m_from_bz(
     Returns
     -------
     m : np array (2D)
-        The calculated magnetisation, in mu_B / nm^2
+        The calculated magnetization, in mu_B / nm^2
 
     See D. A. Broadway, S. E. Lillie, S. C. Scholten, D. Rohner, N. Dontschuk, P. Maletinsky,
         J.-P. Tetienne, and L. C. L. Hollenberg,
@@ -250,7 +258,6 @@ def get_m_from_bz(
         https://doi.org/10.1103/PhysRevApplied.14.024076
         https://arxiv.org/abs/2005.06788
     """
-    from qdmpy.constants import MAG_UNIT_CONV
 
     bz = copy(bfield[2]) * 1e-4  # copy and convert Gauss to Tesla
     bz_pad, padder = qdmpy.shared.fourier.pad_image(bz, pad_mode, pad_factor)
@@ -261,10 +268,10 @@ def get_m_from_bz(
     ky, kx, k = qdmpy.shared.fourier.define_k_vectors(fft_bz.shape, pixel_size, k_vector_epsilon)
 
     # define transform
-    d_matrix = define_magnetisation_transformation(ky, kx, k, standoff)
+    d_matrix = define_magnetization_transformation(ky, kx, k, standoff)
 
     if mag_angle is None:
-        m_to_bz = d_matrix[2, 2, ::]  # z magnetised
+        m_to_bz = d_matrix[2, 2, ::]  # z magnetized
     else:
         psi = np.deg2rad(mag_angle)
         m_to_bz = np.cos(psi) * d_matrix[0, 2, ::] + np.sin(psi) * d_matrix[1, 2, ::]
@@ -348,7 +355,7 @@ def get_m_from_bnv(
     Returns
     -------
     m : np array (2D)
-        The calculated magnetisation, in mu_B / nm^2
+        The calculated magnetization, in mu_B / nm^2
 
     See D. A. Broadway, S. E. Lillie, S. C. Scholten, D. Rohner, N. Dontschuk, P. Maletinsky,
         J.-P. Tetienne, and L. C. L. Hollenberg,
@@ -357,7 +364,6 @@ def get_m_from_bnv(
         https://doi.org/10.1103/PhysRevApplied.14.024076
         https://arxiv.org/abs/2005.06788
     """
-    from qdmpy.constants import MAG_UNIT_CONV
 
     b = copy(bnv) * 1e-4  # copy and convert Gauss to Tesla
     bnv_pad, padder = qdmpy.shared.fourier.pad_image(b, pad_mode, pad_factor)
@@ -367,7 +373,7 @@ def get_m_from_bnv(
     ky, kx, k = qdmpy.shared.fourier.define_k_vectors(fft_bnv.shape, pixel_size, k_vector_epsilon)
 
     # define transform
-    d_matrix = define_magnetisation_transformation(ky, kx, k, standoff)
+    d_matrix = define_magnetization_transformation(ky, kx, k, standoff)
 
     if nvs_above_sample:
         unv_cpy = copy(unv)
@@ -381,9 +387,9 @@ def get_m_from_bnv(
             unv_cpy[0] * d_matrix[2, 0, ::]
             + unv_cpy[1] * d_matrix[2, 1, ::]
             + unv_cpy[2] * d_matrix[2, 2, ::]
-        )  # z magnetised
+        )  # z magnetized
     else:
-        # if the flake is magnetised in plane than use this transformation instead
+        # if the flake is magnetized in plane than use this transformation instead
         b_axis = np.nonzero(unv_cpy)[0]
         psi = np.deg2rad(mag_angle)
         for idx in b_axis:

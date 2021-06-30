@@ -4,23 +4,23 @@ This module holds scipyfit specific options for hamiltonian fitting.
 
 Functions
 ---------
- - `qdmpy.hamiltonian._scipyfit.gen_scipyfit_init_guesses`
- - `qdmpy.hamiltonian._scipyfit.prep_scipyfit_options`
- - `qdmpy.hamiltonian._scipyfit.limit_cpu`
- - `qdmpy.hamiltonian._scipyfit.fit_hamiltonian_scipyfit`
- - `qdmpy.hamiltonian._scipyfit.fit_hamiltonian_ROI_avg_scipyfit`
- - `qdmpy.hamiltonian._scipyfit.to_squares_wrapper`
+ - `qdmpy.field.ham_scipyfit.gen_ham_scipyfit_init_guesses`
+ - `qdmpy.field.ham_scipyfit.prep_ham_scipyfit_options`
+ - `qdmpy.field.ham_scipyfit.ham_limit_cpu`
+ - `qdmpy.field.ham_scipyfit.fit_hamiltonian_scipyfit`
+ - `qdmpy.field.ham_scipyfit.fit_hamiltonian_roi_avg_scipyfit`
+ - `qdmpy.field.ham_scipyfit.ham_to_squares_wrapper`
 """
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.hamiltonian._scipyfit.gen_scipyfit_init_guesses": True,
-    "qdmpy.hamiltonian._scipyfit.prep_scipyfit_options": True,
-    "qdmpy.hamiltonian._scipyfit.limit_cpu": True,
-    "qdmpy.hamiltonian._scipyfit.fit_hamiltonian_scipyfit": True,
-    "qdmpy.hamiltonian._scipyfit.fit_hamiltonian_ROI_avg_scipyfit": True,
-    "qdmpy.hamiltonian._scipyfit.to_squares_wrapper": True,
+    "qdmpy.field.ham_scipyfit.gen_ham_scipyfit_init_guesses": True,
+    "qdmpy.field.ham_scipyfit.prep_ham_scipyfit_options": True,
+    "qdmpy.field.ham_scipyfit.ham_limit_cpu": True,
+    "qdmpy.field.ham_scipyfit.fit_hamiltonian_scipyfit": True,
+    "qdmpy.field.ham_scipyfit.fit_hamiltonian_roi_avg_scipyfit": True,
+    "qdmpy.field.ham_scipyfit.ham_to_squares_wrapper": True,
 }
 # ============================================================================
 
@@ -38,13 +38,12 @@ from datetime import timedelta
 
 # ============================================================================
 
-import qdmpy.hamiltonian._shared as ham_shared
-import qdmpy.system as systems
+import qdmpy.field.hamiltonian
 
 # ============================================================================
 
 
-def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
+def gen_ham_scipyfit_init_guesses(options, init_guesses, init_bounds):
     """
     Generate arrays of initial fit guesses and bounds in correct form for scipy least_squares.
 
@@ -70,9 +69,9 @@ def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
     param_lst = []
     bound_lst = []
 
-    from qdmpy.constants import AVAILABLE_HAMILTONIANS
-
-    for pos, key in enumerate(AVAILABLE_HAMILTONIANS[options["hamiltonian"]].param_defn):
+    for pos, key in enumerate(
+        qdmpy.field.hamiltonian.AVAILABLE_HAMILTONIANS[options["hamiltonian"]].param_defn
+    ):
         # this check is to handle the edge case of guesses/bounds
         # options being provided as numbers rather than lists of numbers
         try:
@@ -92,7 +91,7 @@ def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
 # ==========================================================================
 
 
-def prep_scipyfit_options(options, ham):
+def prep_ham_scipyfit_options(options, ham):
     """
     General options dict -> scipyfit_options
     in format that scipy least_squares expects.
@@ -110,8 +109,8 @@ def prep_scipyfit_options(options, ham):
         Dictionary with options that scipy.optimize.least_squares expects, specific to fitting.
     """
     # this is just constructing the initial parameter guesses and bounds in the right format
-    _, fit_param_bound_ar = gen_scipyfit_init_guesses(
-        options, *ham_shared.gen_init_guesses(options)
+    _, fit_param_bound_ar = gen_ham_scipyfit_init_guesses(
+        options, *qdmpy.field.hamiltonian.gen_init_guesses(options)
     )
     fit_bounds = (fit_param_bound_ar[:, 0], fit_param_bound_ar[:, 1])
 
@@ -146,7 +145,7 @@ def prep_scipyfit_options(options, ham):
 # ==========================================================================
 
 
-def limit_cpu():
+def ham_limit_cpu():
     """Called at every process start, to reduce the priority of this process"""
     p = psutil.Process(os.getpid())
     # set to lowest priority
@@ -185,7 +184,6 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
     sigmas: dict
         As ham_results, but containing parameters errors (standard deviations) across FOV.
     """
-    systems.clean_options(options)
 
     threads = options["threads"]
 
@@ -200,24 +198,24 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
 
     # randomize order of fitting pixels (will un-scramble later) so ETA is more correct
     if options["scramble_pixels"]:
-        pixel_data, unshuffler = ham_shared.shuffle_pixels(data)
+        pixel_data, unshuffler = qdmpy.field.hamiltonian.shuffle_pixels(data)
     else:
         pixel_data = data
 
-    ROI_avg_params, fit_options = fit_hamiltonian_ROI_avg_scipyfit(options, data, hamiltonian)
+    roi_avg_params, fit_options = fit_hamiltonian_roi_avg_scipyfit(options, data, hamiltonian)
 
     # call into the library (measure time)
     t0 = timer()
     with concurrent.futures.ProcessPoolExecutor(
-        max_workers=threads, initializer=limit_cpu
+        max_workers=threads, initializer=ham_limit_cpu
     ) as executor:
         ham_fit_results = list(
             tqdm(
                 executor.map(
-                    to_squares_wrapper,
+                    ham_to_squares_wrapper,
                     repeat(hamiltonian.residuals_scipyfit),
-                    repeat(ROI_avg_params),
-                    ham_shared.pixel_generator(pixel_data),
+                    repeat(roi_avg_params),
+                    qdmpy.field.hamiltonian.pixel_generator(pixel_data),
                     repeat(fit_options),
                     chunksize=chunksize,
                 ),
@@ -232,10 +230,12 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
     # for the record
     options["ham_fit_time_(s)"] = timedelta(seconds=t1 - t0).total_seconds()
 
-    res, sigmas = ham_shared.get_pixel_fitting_results(hamiltonian, ham_fit_results, pixel_data)
+    res, sigmas = qdmpy.field.hamiltonian.get_pixel_fitting_results(
+        hamiltonian, ham_fit_results, pixel_data
+    )
     if options["scramble_pixels"]:
-        res = ham_shared.unshuffle_fit_results(res, unshuffler)
-        sigmas = ham_shared.unshuffle_fit_results(sigmas, unshuffler)
+        res = qdmpy.field.hamiltonian.ham_unshuffle_fit_results(res, unshuffler)
+        sigmas = qdmpy.field.hamiltonian.ham_unshuffle_fit_results(sigmas, unshuffler)
 
     return res, sigmas
 
@@ -243,7 +243,7 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
 # ==========================================================================
 
 
-def fit_hamiltonian_ROI_avg_scipyfit(options, data, hamiltonian):
+def fit_hamiltonian_roi_avg_scipyfit(options, data, hamiltonian):
     """
     Fits each pixel ODMR result to hamiltonian and returns dictionary of
     param_name -> param_image.
@@ -265,19 +265,20 @@ def fit_hamiltonian_ROI_avg_scipyfit(options, data, hamiltonian):
         Options dictionary for this fit method, as will be passed to fitting function.
         E.g. scipy least_squares is handed various options as a dictionary.
     """
-    systems.clean_options(options)
 
     # average freqs/bnvs over image -> ignore nanmean of empty slice warning (for nan bnvs etc.)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        data_ROI = np.nanmean(np.nanmean(data, axis=2), axis=1)
+        data_roi = np.nanmean(np.nanmean(data, axis=2), axis=1)
 
-    fit_options = prep_scipyfit_options(options, hamiltonian)
+    fit_options = prep_ham_scipyfit_options(options, hamiltonian)
 
-    init_param_guess, _ = gen_scipyfit_init_guesses(options, *ham_shared.gen_init_guesses(options))
+    init_param_guess, _ = gen_ham_scipyfit_init_guesses(
+        options, *qdmpy.field.hamiltinian.gen_init_guesses(options)
+    )
 
     ham_result = least_squares(
-        hamiltonian.residuals_scipyfit, init_param_guess, args=(data_ROI,), **fit_options
+        hamiltonian.residuals_scipyfit, init_param_guess, args=(data_roi,), **fit_options
     )
     best_params = ham_result.x
 
@@ -287,7 +288,7 @@ def fit_hamiltonian_ROI_avg_scipyfit(options, data, hamiltonian):
 # ==========================================================================
 
 
-def to_squares_wrapper(fun, p0, shaped_data, kwargs={}):
+def ham_to_squares_wrapper(fun, p0, shaped_data, **kwargs):
     """
     Simple wrapper of scipy.optimize.least_squares to allow us to keep track of which
     solution is which (or where).

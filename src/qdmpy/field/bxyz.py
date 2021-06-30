@@ -5,38 +5,38 @@ different methods.
 
 Functions
 ---------
- - `qdmpy.field._bxyz.from_single_bnv`
- - `qdmpy.field._bxyz.from_unv_inversion`
- - `qdmpy.field._bxyz.from_hamiltonian_fitting`
- - `qdmpy.field._bxyz.sub_bground_Bxyz`
- - `qdmpy.field._bxyz.field_refsub`
- - `qdmpy.field._bxyz.field_sigma_add`
+ - `qdmpy.field.bxyz.from_single_bnv`
+ - `qdmpy.field.bxyz.from_unv_inversion`
+ - `qdmpy.field.bxyz.from_hamiltonian_fitting`
+ - `qdmpy.field.bxyz.sub_bground_bxyz`
+ - `qdmpy.field.bxyz.field_refsub`
+ - `qdmpy.field.bxyz.field_sigma_add`
 """
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.field._bxyz.from_single_bnv": True,
-    "qdmpy.field._bxyz.from_unv_inversion": True,
-    "qdmpy.field._bxyz.from_hamiltonian_fitting": True,
-    "qdmpy.field._bxyz.sub_bground_Bxyz": True,
-    "qdmpy.field._bxyz.field_refsub": True,
-    "qdmpy.field._bxyz.field_sigma_add": True,
+    "qdmpy.field.bxyz.from_single_bnv": True,
+    "qdmpy.field.bxyz.from_unv_inversion": True,
+    "qdmpy.field.bxyz.from_hamiltonian_fitting": True,
+    "qdmpy.field.bxyz.sub_bground_bxyz": True,
+    "qdmpy.field.bxyz.field_refsub": True,
+    "qdmpy.field.bxyz.field_sigma_add": True,
 }
 # ============================================================================
 
 import numpy as np
-import numpy.linalg as LA
+import numpy.linalg as LA  # noqa: N812
 from pyfftw.interfaces import numpy_fft
 from copy import copy
 import warnings
 
 # ============================================================================
 
-import qdmpy.field._geom as Qgeom
-import qdmpy.field._bnv as Qbnv
-import qdmpy.hamiltonian as Qham
-import qdmpy.itool as Qitool
+import qdmpy.field.bnv
+import qdmpy.field.hamiltonian
+import qdmpy.shared.geom
+import qdmpy.shared.itool
 import qdmpy.shared.fourier
 
 # ============================================================================
@@ -86,7 +86,7 @@ def from_single_bnv(options, bnvs):
     ):
         raise ValueError("Chosen freqs ('freqs_to_use') must be symmetric for prop_single_bnv.")
 
-    unvs = Qgeom.get_unvs(options)
+    unvs = qdmpy.shared.geom.get_unvs(options)
     if len(bnvs) == 1:  # just use the first one (i.e. the only one...)
         single_bnv = bnvs[0]
         if chosen_freqs[:4] == [0, 0, 0, 0]:  # only single freq used, R transition rel to bias
@@ -165,7 +165,9 @@ def from_unv_inversion(options, bnvs):
             "'field_method' was 'invert_unvs' but there were not 3 or 4 bnvs in the dataset."
         )
 
-    unvs = Qgeom.get_unvs(options)  # z unit vectors of unv frame (in lab frame) = nv orientations
+    unvs = qdmpy.shared.geom.get_unvs(
+        options
+    )  # z unit vectors of unv frame (in lab frame) = nv orientations
 
     # cut unvs down to only bnvs (freqs) we want
 
@@ -242,12 +244,18 @@ def from_hamiltonian_fitting(options, fit_params, bias_field_spherical_deg_gauss
         chooser_ar = options["freqs_to_use"]
 
     # if user doesn't want to fit all freqs, then don't fit em! (with Chooser obj.)
-    ham = Qham.define_hamiltonian(options, Qham.Chooser(chooser_ar), Qgeom.get_unv_frames(options))
+    ham = qdmpy.field.hamiltonian.define_hamiltonian(
+        options,
+        qdmpy.field.hamiltonian.Chooser(chooser_ar),
+        qdmpy.shared.geom.get_unv_frames(options),
+    )
 
     # ok now need to get useful data out of fit_params (-> data)
     if use_bnvs:
         # data shape: [bnvs/freqs, y, x]
-        bnv_lst, _ = Qbnv.get_bnvs_and_dshifts(fit_params, bias_field_spherical_deg_gauss)
+        bnv_lst, _ = qdmpy.field.bnv.get_bnvs_and_dshifts(
+            fit_params, bias_field_spherical_deg_gauss
+        )
         if sum(chooser_ar) < 4:
             unwanted_bnvs = np.argwhere(np.array(chooser_ar) == 0)[0]
             shape = bnv_lst[0].shape
@@ -281,13 +289,13 @@ def from_hamiltonian_fitting(options, fit_params, bias_field_spherical_deg_gauss
                 freq_lst.append(freqs_given_lst.pop(0))
         data = np.array(freq_lst)
 
-    return Qham.fit_hamiltonian_pixels(options, data, ham)
+    return qdmpy.field.hamiltonian.fit_hamiltonian_pixels(options, data, ham)
 
 
 # ============================================================================
 
 
-def sub_bground_Bxyz(options, field_params, field_sigmas, method, **method_settings):
+def sub_bground_bxyz(options, field_params, field_sigmas, method, **method_settings):
     """Calculate and subtract a background from the Bx, By and Bz keys in params and sigmas
 
     Methods available for background calculation:
@@ -323,7 +331,7 @@ def sub_bground_Bxyz(options, field_params, field_sigmas, method, **method_setti
             - params required in method_settings:
                 - "sigma": sigma passed to gaussian filter (see scipy.ndimage.gaussian_filter)
 
-    See `qdmpy.itool.interface.get_background` for implementation etc.
+    See `qdmpy.shared.itool.get_background` for implementation etc.
 
     Arguments
     ---------
@@ -360,13 +368,13 @@ def sub_bground_Bxyz(options, field_params, field_sigmas, method, **method_setti
         polygons = options["polygons"]
     else:
         polygons = None
-    x_bground = Qitool.get_background(
+    x_bground = qdmpy.shared.itool.get_background(
         field_params["Bx"], method, polygons=polygons, **method_settings
     )
-    y_bground = Qitool.get_background(
+    y_bground = qdmpy.shared.itool.get_background(
         field_params["By"], method, polygons=polygons, **method_settings
     )
-    z_bground = Qitool.get_background(
+    z_bground = qdmpy.shared.itool.get_background(
         field_params["Bz"], method, polygons=polygons, **method_settings
     )
 

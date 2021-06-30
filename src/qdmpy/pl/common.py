@@ -5,32 +5,32 @@ fitting backends, but are not a part of the user-facing interface.
 
 Classes
 -------
- - `qdmpy.fit._shared.FitResultCollection`
- - `qdmpy.fit._shared.ROIAvgFitResult`
+ - `qdmpy.pl.common.FitResultCollection`
+ - `qdmpy.pl.common.ROIAvgFitResult`
 
 Functions
 ---------
- - `qdmpy.fit._shared.shuffle_pixels`
- - `qdmpy.fit._shared.unshuffle_pixels`
- - `qdmpy.fit._shared.unshuffle_fit_results`
- - `qdmpy.fit._shared.pixel_generator`
- - `qdmpy.fit._shared.gen_init_guesses`
- - `qdmpy.fit._shared.bounds_from_range`
- - `qdmpy.fit._shared.get_pixel_fitting_results`
+ - `qdmpy.pl.common.shuffle_pixels`
+ - `qdmpy.pl.common.unshuffle_pixels`
+ - `qdmpy.pl.common.unshuffle_fit_results`
+ - `qdmpy.pl.common.pixel_generator`
+ - `qdmpy.pl.common.gen_init_guesses`
+ - `qdmpy.pl.common.bounds_from_range`
+ - `qdmpy.pl.common.get_pixel_fitting_results`
 """
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.fit._shared.FitResultCollection": True,
-    "qdmpy.fit._shared.ROIAvgFitResult": True,
-    "qdmpy.fit._shared.shuffle_pixels": True,
-    "qdmpy.fit._shared.unshuffle_pixels": True,
-    "qdmpy.fit._shared.unshuffle_fit_results": True,
-    "qdmpy.fit._shared.pixel_generator": True,
-    "qdmpy.fit._shared.gen_init_guesses": True,
-    "qdmpy.fit._shared.bounds_from_range": True,
-    "qdmpy.fit._shared.get_pixel_fitting_results": True,
+    "qdmpy.pl.common.FitResultCollection": True,
+    "qdmpy.pl.common.ROIAvgFitResult": True,
+    "qdmpy.pl.common.shuffle_pixels": True,
+    "qdmpy.pl.common.unshuffle_pixels": True,
+    "qdmpy.pl.common.unshuffle_fit_results": True,
+    "qdmpy.pl.common.pixel_generator": True,
+    "qdmpy.pl.common.gen_init_guesses": True,
+    "qdmpy.pl.common.bounds_from_range": True,
+    "qdmpy.pl.common.get_pixel_fitting_results": True,
 }
 
 # ============================================================================
@@ -56,7 +56,7 @@ class FitResultCollection:
         fit_backend : str
             Name of the fit backend (e.g. scipy, gpufit, etc.) used.
         roi_avg_fit_result
-            `qdmpy.fit._shared.ROIAvgFitResult` object.
+            `qdmpy.pl.common.ROIAvgFitResult` object.
         single_pixel_result
             Best (optimal) fit/model parameters for single pixel check.
         aoi_fit_results_lst : list of lists
@@ -122,7 +122,7 @@ class ROIAvgFitResult:
         self.init_param_guess = init_param_guess
         self.init_param_bounds = init_param_bounds
 
-    def savejson(self, filename, dir):
+    def savejson(self, filename, directory):
         """ Save all attributes as a json file in dir/filename, via `qdmpy.io.json2dict.dict_to_json` """
 
         output_dict = {
@@ -133,7 +133,7 @@ class ROIAvgFitResult:
             "init_param_guess": self.init_param_guess,
             "init_param_bounds": self.init_param_bounds,
         }
-        qdmpy.shared.json2dict.dict_to_json(output_dict, filename, dir)
+        qdmpy.shared.json2dict.dict_to_json(output_dict, filename, directory)
 
 
 # ============================================================================
@@ -153,7 +153,7 @@ def shuffle_pixels(data_3d):
     shuffled_in_yx : np array, 3D
         data_3d shuffled in 2nd, 3rd axis.
     unshuffler : (y_unshuf, x_unshuf)
-        Both np array. Can be used to unshuffle shuffled_in_yx, i.e. through `qdmpy.fit._shared.unshuffle_pixels`.
+        Both np array. Can be used to unshuffle shuffled_in_yx, i.e. through `qdmpy.pl.common.unshuffle_pixels`.
     """
 
     rng = np.random.default_rng()
@@ -182,12 +182,12 @@ def unshuffle_pixels(data_2d, unshuffler):
     data_2d : np array, 2D
         i.e. 'image' of a single fit parameter, all shuffled up!
     unshuffler : (y_unshuf, x_unshuf)
-        Two arrays returned by `qdmpy.fit._shared.shuffle_pixels that allow unshuffling of data_2d.
+        Two arrays returned by `qdmpy.pl.common.shuffle_pixels that allow unshuffling of data_2d.
 
     Returns
     -------
     unshuffled_in_yx: np array, 2D
-        data_2d but the inverse operation of `qdmpy.fit._shared.shuffle_pixels` has been applied
+        data_2d but the inverse operation of `qdmpy.pl.common.shuffle_pixels` has been applied
     """
     y_unshuf, x_unshuf = unshuffler
     unshuffled_in_y = data_2d[y_unshuf, :]
@@ -209,7 +209,7 @@ def unshuffle_fit_results(fit_result_dict, unshuffler):
         requires reshuffling (which this function achieves).
         Also has 'residual' as a key.
     unshuffler : (y_unshuf, x_unshuf)
-        Two arrays returned by `qdmpy.fit._shared.shuffle_pixels` that allow unshuffling of data_2d.
+        Two arrays returned by `qdmpy.pl.common.shuffle_pixels` that allow unshuffling of data_2d.
 
     Returns
     -------
@@ -241,7 +241,7 @@ def pixel_generator(our_array):
     generator : list
         [y, x, our_array[:, y, x]] generator (yielded)
     """
-    len_z, len_y, len_x = np.shape(our_array)
+    _, len_y, len_x = np.shape(our_array)
     for y in range(len_y):
         for x in range(len_x):
             yield [y, x, our_array[:, y, x]]
@@ -276,7 +276,7 @@ def gen_init_guesses(options):
     init_bounds = {}
 
     for fn_type, num in options["fit_functions"].items():
-        fit_func = qdmpy.pl.funcs._AVAILABLE_FNS[fn_type](num)
+        fit_func = qdmpy.pl.funcs.AVAILABLE_FNS[fn_type](num)
         for param_key in fit_func.param_defn:
             guess = options[param_key + "_guess"]
             if param_key + "_range" in options:
@@ -318,10 +318,10 @@ def bounds_from_range(options, param_key, guess):
         bounds for each parameter. Dimension depends on dimension of param guess.
     """
     rang = options[param_key + "_range"]
-    if type(guess) is list and len(guess) > 1:
+    if isinstance(guess, (list, tuple)) and len(guess) > 1:
 
         # separate bounds for each fn of this type
-        if type(rang) is list and len(rang) > 1:
+        if isinstance(rang, (list, tuple)) and len(rang) > 1:
             bounds = [
                 [each_guess - each_range, each_guess + each_range]
                 for each_guess, each_range in zip(guess, rang)
@@ -336,7 +336,7 @@ def bounds_from_range(options, param_key, guess):
                 for each_guess in guess
             ]
     else:
-        if type(rang) is list:
+        if isinstance(rang, (list, tuple)):
             if len(rang) == 1:
                 rang = rang[0]
             else:

@@ -17,12 +17,12 @@ Functions
  - `qdmpy.pl.io.save_pl_fit_sigmas`
  - `qdmpy.pl.io.save_pl_fit_results`
  - `qdmpy.pl.io.load_ref_exp_pl_fit_results`
- - `qdmpy.pl.io._check_if_already_fit`
- - `qdmpy.pl.io._prev_options_exist`
- - `qdmpy.pl.io._options_compatible`
+ - `qdmpy.pl.io.check_if_already_fit`
+ - `qdmpy.pl.io.prev_options_exist`
+ - `qdmpy.pl.io.options_compatible`
  - `qdmpy.pl.io._prev_pl_fits_exist`
  - `qdmpy.pl.io._prev_pl_sigmas_exist`
- - `qdmpy.pl.io._get_prev_options`
+ - `qdmpy.pl.io.get_prev_options`
 """
 
 
@@ -43,12 +43,12 @@ __pdoc__ = {
     "qdmpy.pl.io.save_pl_fit_sigmas": True,
     "qdmpy.pl.io.save_pl_fit_results": True,
     "qdmpy.pl.io.load_ref_exp_pl_fit_results": True,
-    "qdmpy.pl.io._check_if_already_fit": True,
-    "qdmpy.pl.io._prev_options_exist": True,
-    "qdmpy.pl.io._options_compatible": True,
+    "qdmpy.pl.io.check_if_already_fit": True,
+    "qdmpy.pl.io.prev_options_exist": True,
+    "qdmpy.pl.io.options_compatible": True,
     "qdmpy.pl.io._prev_pl_fits_exist": True,
     "qdmpy.pl.io._prev_pl_sigmas_exist": True,
-    "qdmpy.pl.io._get_prev_options": True,
+    "qdmpy.pl.io.get_prev_options": True,
 }
 
 # ============================================================================
@@ -387,15 +387,10 @@ def _check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_w
 
     if start_x >= end_x:
         warnings.warn(f"{name} Rectangle ends before it starts (in x), swapping them")
-        temp = start_x
-        start_x = end_x
-        end_x = temp
+        start_x, end_x = end_x, start_x
     if start_y >= end_y:
         warnings.warn(f"{name} Rectangle ends before it starts (in y), swapping them")
-        temp = start_x
-        start_x = end_y
-        end_x = temp
-
+        start_y, end_y = end_y, start_y
     if start_x >= full_size_w:
         warnings.warn(f"{name} Rectangle starts outside image (too large in x), setting to zero.")
         start_x = 0
@@ -426,12 +421,12 @@ def _check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_w
 def load_prev_pl_fit_results(options):
     """Load (all) parameter pl fits from previous processing."""
 
-    prev_options = qdmpy.io.fit._get_prev_options(options)
+    prev_options = qdmpy.io.fit.get_prev_options(options)
 
     fit_param_res_dict = {}
 
     for fn_type, num in prev_options["fit_functions"].items():
-        for param_name in qdmpy.pl.funcs._AVAILABLE_FNS[fn_type].param_defn:
+        for param_name in qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn:
             for n in range(num):
                 param_key = param_name + "_" + str(n)
                 fit_param_res_dict[param_key] = load_fit_param(options, param_key)
@@ -445,12 +440,12 @@ def load_prev_pl_fit_results(options):
 def load_prev_pl_fit_sigmas(options):
     """Load (all) parameter pl fits from previous processing."""
 
-    prev_options = qdmpy.io.fit._get_prev_options(options)
+    prev_options = qdmpy.io.fit.get_prev_options(options)
 
     sigmas = {}
 
     for fn_type, num in prev_options["fit_functions"].items():
-        for param_name in qdmpy.pl.funcs._AVAILABLE_FNS[fn_type].param_defn:
+        for param_name in qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn:
             for n in range(num):
                 key = param_name + "_" + str(n)
                 sigmas[key] = load_pl_fit_sigma(options, key)
@@ -549,7 +544,7 @@ def load_ref_exp_pl_fit_results(ref_options):
 # ============================================================================
 
 
-def _check_if_already_fit(options, loading_ref=False):
+def check_if_already_fit(options, loading_ref=False):
     """
     Looks for previous fit result.
 
@@ -561,10 +556,10 @@ def _check_if_already_fit(options, loading_ref=False):
     """
     if not loading_ref:
         if not options["force_fit"]:
-            if not _prev_options_exist(options):  # i.e. look for saved options in output dir
+            if not prev_options_exist(options):  # i.e. look for saved options in output dir
                 options["found_prev_result_reason"] = "couldn't find previous options"
                 options["found_prev_result"] = False
-            elif not (res := _options_compatible(options, _get_prev_options(options)))[0]:
+            elif not (res := options_compatible(options, get_prev_options(options)))[0]:
                 options["found_prev_result_reason"] = "option not compatible: " + res[1]
                 options["found_prev_result"] = False
             elif not (res2 := _prev_pl_fits_exist(options))[0]:
@@ -589,7 +584,7 @@ def _check_if_already_fit(options, loading_ref=False):
 # ============================================================================
 
 
-def _prev_options_exist(options):
+def prev_options_exist(options):
     """
     Checks if options file from previous result can be found in default location, returns Bool.
     """
@@ -600,7 +595,7 @@ def _prev_options_exist(options):
 # ============================================================================
 
 
-def _options_compatible(options, prev_options):
+def options_compatible(options, prev_options):
     """
     Checks if option choices are compatible with previously fit options
 
@@ -613,7 +608,7 @@ def _options_compatible(options, prev_options):
 
     Returns
     -------
-    _options_compatible : bool
+    options_compatible : bool
         Whether or not options are compatible.
 
     reason : str
@@ -723,7 +718,7 @@ def _prev_pl_fits_exist(options):
     """
 
     for fn_type, num in options["fit_functions"].items():
-        for param_name in qdmpy.pl.funcs._AVAILABLE_FNS[fn_type].param_defn:
+        for param_name in qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn:
             for n in range(num):
                 param_key = param_name + "_" + str(n)
                 if not (pathlib.Path(options["data_dir"]) / (param_key + ".txt")).is_file():
@@ -742,7 +737,7 @@ def _prev_pl_sigmas_exist(prev_options):
     # avoid cyclic imports
 
     for fn_type, num in prev_options["fit_functions"].items():
-        for param_name in qdmpy.pl.funcs._AVAILABLE_FNS[fn_type].param_defn:
+        for param_name in qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn:
             for n in range(num):
                 param_key = param_name + "_" + str(n)
                 if not (
@@ -756,7 +751,7 @@ def _prev_pl_sigmas_exist(prev_options):
 # ============================================================================
 
 
-def _get_prev_options(options):
+def get_prev_options(options):
     """
     Reads options file from previous fit result (.json), returns a dictionary.
     """

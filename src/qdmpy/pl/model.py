@@ -12,23 +12,26 @@ prefixed by 'pos'. (see `qdmpy.field._bnv.get_bnvs_and_dshifts` for the reasonin
 
 Classes
 -------
- - `qdmpy.fit.model.FitModel`
+ - `qdmpy.pl.model.FitModel`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.fit.model.FitModel": True,
-    "qdmpy.fit.model.get_param_defn": True,
-    "qdmpy.fit.model.get_param_odict": True,
-    "qdmpy.fit.model.get_param_unit": True,
+    "qdmpy.pl.model.FitModel": True,
 }
 
 # ============================================================================
 
 import numpy as np
 from collections import OrderedDict
+
+# ============================================================================
+
+import qdmpy.pl.funcs
+
+# ============================================================================
 
 # ================================================================================================
 # ================================================================================================
@@ -58,11 +61,9 @@ class FitModel:
         all_param_len = 0
 
         # this import is not at top level to avoid cyclic import issues
-        from qdmpy.constants import AVAILABLE_FNS as FN_SELECTOR
-
         for fn_type, num_fns in fit_functions.items():
-            for i in range(num_fns):
-                next_fn = FN_SELECTOR[fn_type]
+            for _ in range(num_fns):
+                next_fn = qdmpy.pl.funcs.AVAILABLE_FNS[fn_type]
                 next_fn_param_len = len(next_fn.param_defn)
                 next_fn_param_indices = [all_param_len + i for i in range(next_fn_param_len)]
                 all_param_len += next_fn_param_len
@@ -119,7 +120,7 @@ class FitModel:
 
     def jacobian_defined(self):
         """Check if analytic jacobian is defined for this fit model."""
-        for i, fn in enumerate(self.fn_chain):
+        for fn in self.fn_chain:
             dummy_params = np.array([1 for i in range(len(fn.param_defn))])
             if fn.grad_fn(np.array([0]), *dummy_params) is None:
                 return False

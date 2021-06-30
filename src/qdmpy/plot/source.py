@@ -7,7 +7,7 @@ Functions
  - `qdmpy.plot.source.plot_source_param`
  - `qdmpy.plot.source.plot_current`
  - `qdmpy.plot.source.plot_stream`
- - `qdmpy.plot.source.plot_magnetisation`
+ - `qdmpy.plot.source.plot_magnetization`
  - `qdmpy.plot.source.plot_divperp_j`
 """
 
@@ -18,7 +18,7 @@ __pdoc__ = {
     "qdmpy.plot.source.plot_source_param": True,
     "qdmpy.plot.source.plot_current": True,
     "qdmpy.plot.source.plot_stream": True,
-    "qdmpy.plot.source.plot_magnetisation": True,
+    "qdmpy.plot.source.plot_magnetization": True,
     "qdmpy.plot.source.plot_divperp_j": True,
 }
 
@@ -37,7 +37,7 @@ import copy
 
 # ============================================================================
 
-import qdmpy.plot.common as plot_common
+import qdmpy.plot.common
 
 # ============================================================================
 
@@ -49,7 +49,7 @@ def plot_source_param(
     c_map=None,
     c_map_type="source_images",
     c_range_type="percentile",
-    c_range_vals=[1, 99],
+    c_range_vals=(1, 99),
     cbar_label="",
 ):
     """plot a given source param.
@@ -67,9 +67,9 @@ def plot_source_param(
     c_map_type : str, default: "source_images"
         colormap type to search options (options["colormaps"][c_map_type]) for
     c_map_range : str, default: "percentile"
-        colormap range option (see `qdmpy.plot.common._get_colormap_range`) to use
-    c_range_vals : number or list, default: [5, 95]
-        passed with c_map_range to _get_colormap_range
+        colormap range option (see `qdmpy.plot.common.get_colormap_range`) to use
+    c_range_vals : number or list, default: (1, 99)
+        passed with c_map_range to get_colormap_range
     c_bar_label : str, default:""
         label to chuck on ye olde colorbar (z-axis label).
 
@@ -86,19 +86,21 @@ def plot_source_param(
     fig, ax = plt.subplots(constrained_layout=True)
 
     if c_map is None:
-        c_range = plot_common._get_colormap_range(
+        c_range = qdmpy.plot.common.get_colormap_range(
             {"type": c_range_type, "values": c_range_vals}, source_params[param_name]
         )
         c_map = options["colormaps"][c_map_type]
 
     title = f"{param_name}"
 
-    plot_common.plot_image_on_ax(
+    qdmpy.plot.common.plot_image_on_ax(
         fig, ax, options, source_params[param_name], title, c_map, c_range, cbar_label
     )
 
     if options["save_plots"]:
         fig.savefig(options["source_dir"] / (f"{param_name}." + options["save_fig_type"]))
+
+    return fig
 
 
 # ============================================================================
@@ -161,11 +163,11 @@ def plot_current(options, source_params, plot_bgrounds=True):
 
                     jmap = source_params[name]
 
-                    c_range = plot_common._get_colormap_range(
+                    c_range = qdmpy.plot.common.get_colormap_range(
                         options["colormap_range_dicts"][ckey], jmap
                     )
                     c_map = options["colormaps"][ckey]
-                    plot_common.plot_image_on_ax(
+                    qdmpy.plot.common.plot_image_on_ax(
                         fig, ax, options, jmap, name, c_map, c_range, "J (A/m)"
                     )
     else:
@@ -185,12 +187,12 @@ def plot_current(options, source_params, plot_bgrounds=True):
 
                 jmap = source_params[name]
 
-                c_range = plot_common._get_colormap_range(
+                c_range = qdmpy.plot.common.get_colormap_range(
                     options["colormap_range_dicts"][ckey], jmap
                 )
                 c_map = options["colormaps"][ckey]
 
-                plot_common.plot_image_on_ax(
+                qdmpy.plot.common.plot_image_on_ax(
                     fig, ax, options, jmap, name, c_map, c_range, "J (A/m)"
                 )
 
@@ -206,7 +208,7 @@ def plot_current(options, source_params, plot_bgrounds=True):
 def plot_stream(
     options,
     source_params,
-    pl_image_ROI=None,
+    background_image=None,
     probe_image=None,
     probe_color="red",
     probe_alpha=1.0,
@@ -220,8 +222,8 @@ def plot_stream(
         Generic options dict holding all the user options.
     source_params : dict
         Dictionary, key: param_keys, val: image (2D) of (source field) param values across FOV.
-    pl_image_ROI : numpy array or None, default: None
-        If not None, must be pl image of ROI, to plot behind streams
+    background_image : numpy array or None, default: None
+        If not None, must be pl image of ROI (or other background image), to plot behind streams
 
     Returns
     -------
@@ -256,19 +258,19 @@ def plot_stream(
 
         ax = axs if width == 1 else axs[m_idx]
 
-        if pl_image_ROI is not None:
-            im = ax.imshow(
-                pl_image_ROI,
+        if background_image is not None:
+            ax.imshow(
+                background_image,
                 cmap="Greys_r",
-                vmin=np.nanmin(pl_image_ROI),
-                vmax=np.nanmax(pl_image_ROI),
+                vmin=np.nanmin(background_image),
+                vmax=np.nanmax(background_image),
                 alpha=options["streamplot_pl_alpha"],
             )
             if probe_image is not None:
                 my_cmap = copy.copy(cm.get_cmap("Reds"))  # doesn't matter _what_ the cmap imshow
                 my_cmap.set_under("k", alpha=0)
                 my_cmap.set_over(probe_color, alpha=probe_alpha)
-                im2 = ax.imshow(
+                ax.imshow(
                     probe_image,
                     cmap=my_cmap,
                     clim=[
@@ -280,7 +282,7 @@ def plot_stream(
         shp = source_params["Jx_" + method].shape
 
         jnorms = source_params["Jnorm_" + method]
-        c_range = plot_common._get_colormap_range(
+        c_range = qdmpy.plot.common.get_colormap_range(
             options["colormap_range_dicts"]["current_norm_images"], jnorms
         )
 
@@ -364,8 +366,8 @@ def plot_stream(
 # ============================================================================
 
 
-def plot_magnetisation(options, source_params, plot_bgrounds=True):
-    """Plots magnetisation. Optionally plot background subtracted.
+def plot_magnetization(options, source_params, plot_bgrounds=True):
+    """Plots magnetization. Optionally plot background subtracted.
 
     Arguments
     ---------
@@ -385,14 +387,14 @@ def plot_magnetisation(options, source_params, plot_bgrounds=True):
 
     plot_bgrounds = plot_bgrounds and options["source_bground_method"]
 
-    mag_angle = options["magnetisation_angle"]
+    mag_angle = options["magnetization_angle"]
     if mag_angle is None:
         root_name = "Mz"
     else:
         root_name = "Mpsi"
 
     figsize = mpl.rcParams["figure.figsize"].copy()
-    c_map = options["colormaps"]["magnetisation_images"]
+    c_map = options["colormaps"]["magnetization_images"]
     width = 3 if plot_bgrounds else 1
     height = len(options["recon_methods"])  # number of rows
     figsize[0] *= width  # number of columns
@@ -413,10 +415,10 @@ def plot_magnetisation(options, source_params, plot_bgrounds=True):
                 continue
 
             data = source_params[name]
-            c_range = plot_common._get_colormap_range(
-                options["colormap_range_dicts"]["magnetisation_images"], data
+            c_range = qdmpy.plot.common.get_colormap_range(
+                options["colormap_range_dicts"]["magnetization_images"], data
             )
-            plot_common.plot_image_on_ax(
+            qdmpy.plot.common.plot_image_on_ax(
                 fig, ax, options, data, name, c_map, c_range, root_name + " (mu_B/nm^2)"
             )
     # step through recon methods with background
@@ -437,10 +439,10 @@ def plot_magnetisation(options, source_params, plot_bgrounds=True):
                     continue
 
                 data = source_params[name]
-                c_range = plot_common._get_colormap_range(
-                    options["colormap_range_dicts"]["magnetisation_images"], data
+                c_range = qdmpy.plot.common.get_colormap_range(
+                    options["colormap_range_dicts"]["magnetization_images"], data
                 )
-                plot_common.plot_image_on_ax(
+                qdmpy.plot.common.plot_image_on_ax(
                     fig, ax, options, data, name, c_map, c_range, root_name + " (mu_B/nm^2)"
                 )
 
@@ -483,11 +485,11 @@ def plot_divperp_j(options, source_params):
             continue
         data = source_params[f"divperp_J_{method}"]
         title = f"Div perp ( J_{method} )"
-        c_range = plot_common._get_colormap_range(
+        c_range = qdmpy.plot.common.get_colormap_range(
             options["colormap_range_dicts"]["current_div_images"], data
         )
         c_map = options["colormaps"]["current_div_images"]
-        plot_common.plot_image_on_ax(
+        qdmpy.plot.common.plot_image_on_ax(
             fig, axs[m_idx], options, data, title, c_map, c_range, "Div perp J (A/m^2)"
         )
 

@@ -12,8 +12,9 @@ Functions
  - `qdmpy.io.json2dict._basictype2str`
  - `qdmpy.io.json2dict._indentitems`
  - `qdmpy.io.json2dict._json_remove_comments`
- - `qdmpy.io.json2dict._failfloat`
+ - `qdmpy.io.json2dict.failfloat`
  - `qdmpy.io.json2dict._defaultdict_from_d`
+ - `qdmpy.io.json2dict.recursive_dict_update`
 """
 
 # ============================================================================
@@ -29,15 +30,16 @@ __pdoc__ = {
     "qdmpy.io.json2dict._basictype2str": True,
     "qdmpy.io.json2dict._indentitems": True,
     "qdmpy.io.json2dict._json_remove_comments": True,
-    "qdmpy.io.json2dict._failfloat": True,
+    "qdmpy.io.json2dict.failfloat": True,
     "qdmpy.io.json2dict._defaultdict_from_d": True,
+    "qdmpy.io.json2dict.recursive_dict_update": True,
 }
 
 # ============================================================================
 
 import os
 import warnings
-from collections import OrderedDict, defaultdict
+from collections import OrderedDict, defaultdict, abc
 import re
 import simplejson as json
 import numpy as np
@@ -172,13 +174,13 @@ def _getsubitems(obj, itemkey, islast, maxlinelength):
                 totallength += len(item)
             totallength += len(subitems) - 1  # spaces between items
             if totallength <= maxlinelength:
-                str = ""
+                str_ = ""
                 # add space between items, comma is already there
                 for item in subitems:
-                    str += item + " "
-                str = str.strip()
+                    str_ += item + " "
+                str_ = str_.strip()
                 # wrap concatenated content in a new list
-                subitems = [str]
+                subitems = [str_]
             else:
                 can_concat = False
 
@@ -237,7 +239,7 @@ def _indentitems(items, indent, indentcurrent):
     res = ""
     indentstr = " " * indentcurrent
     for item in items:
-        if isinstance(item, list):
+        if isinstance(item, (list, tuple)):
             res += _indentitems(item, indent, indentcurrent + indent)
         else:
             res += indentstr + item + "\n"
@@ -248,7 +250,7 @@ def _indentitems(items, indent, indentcurrent):
 
 
 def _json_remove_comments(string, strip_space=True):
-    tokenizer = re.compile('"|(/\*)|(\*/)|(//)|\n|\r')
+    tokenizer = re.compile(r'"|(/\*)|(\*/)|(//)|\n|\r')
     end_slashes_re = re.compile(r"(\\)*$")
 
     in_string = False
@@ -261,7 +263,7 @@ def _json_remove_comments(string, strip_space=True):
     for match in re.finditer(tokenizer, string):
 
         if not (in_multi or in_single):
-            tmp = string[index : match.start()]
+            tmp = string[index : match.start()]  # noqa: E203
             if not in_string and strip_space:
                 # replace white space as defined in standard
                 tmp = re.sub("[ \t\n\r]+", "", tmp)
@@ -308,7 +310,7 @@ def _json_remove_comments(string, strip_space=True):
 # ============================================================================
 
 
-def _failfloat(a):
+def failfloat(a):
     """Used in particular for reading the metadata to convert all numbers into
     floats and leave strings as strings.
     """
@@ -326,3 +328,21 @@ def _defaultdict_from_d(d):
     dd = defaultdict(lambda: None)
     dd.update(d)
     return dd
+
+
+# ============================================================================
+
+
+def recursive_dict_update(to_be_updated_dict, updating_dict):
+    """
+    Recursively updates to_be_updated_dict with values from updating_dict (to all dict depths).
+    """
+    if not isinstance(to_be_updated_dict, abc.Mapping):
+        return updating_dict
+    for key, val in updating_dict.items():
+        if isinstance(val, abc.Mapping):
+            # avoids KeyError by returning {}
+            to_be_updated_dict[key] = recursive_dict_update(to_be_updated_dict.get(key, {}), val)
+        else:
+            to_be_updated_dict[key] = val
+    return to_be_updated_dict

@@ -4,59 +4,59 @@ This module holds the tools for loading/saving field results.
 
 Functions
 ---------
- - `qdmpy.io.field.save_field_calcs`
- - `qdmpy.io.field.save_bnvs_and_dshifts`
- - `qdmpy.io.field.save_field_params`
- - `qdmpy.io.field.save_field_sigmas`
- - `qdmpy.io.field.load_prev_field_calcs`
- - `qdmpy.io.field.load_prev_bnvs_and_dshifts`
- - `qdmpy.io.field.load_prev_field_params`
- - `qdmpy.io.field.load_prev_bnvs_and_dshifts`
- - `qdmpy.io.field.load_prev_field_sigmas`
- - `qdmpy.io.field.load_field_param`
- - `qdmpy.io.field.load_field_sigma`
- - `qdmpy.io.field.load_arb_field_param`
- - `qdmpy.io.field.load_arb_field_params`
- - `qdmpy.io.field.choose_field_method`
- - `qdmpy.io.field.check_for_prev_field_calc`
- - `qdmpy.io.field._prev_pixel_field_calcs_exist`
- - `qdmpy.io.field._field_options_compatible`
+ - `qdmpy.field.io.save_field_calcs`
+ - `qdmpy.field.io.save_bnvs_and_dshifts`
+ - `qdmpy.field.io.save_field_params`
+ - `qdmpy.field.io.save_field_sigmas`
+ - `qdmpy.field.io.load_prev_field_calcs`
+ - `qdmpy.field.io.load_prev_bnvs_and_dshifts`
+ - `qdmpy.field.io.load_prev_field_params`
+ - `qdmpy.field.io.load_prev_bnvs_and_dshifts`
+ - `qdmpy.field.io.load_prev_field_sigmas`
+ - `qdmpy.field.io.load_field_param`
+ - `qdmpy.field.io.load_field_sigma`
+ - `qdmpy.field.io.load_arb_field_param`
+ - `qdmpy.field.io.load_arb_field_params`
+ - `qdmpy.field.io.choose_field_method`
+ - `qdmpy.field.io.check_for_prev_field_calc`
+ - `qdmpy.field.io._prev_pixel_field_calcs_exist`
+ - `qdmpy.field.io._field_options_compatible`
 
 """
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.io.field.save_field_calcs": True,
-    "qdmpy.io.field.save_bnvs_and_dshifts": True,
-    "qdmpy.io.field.save_field_params": True,
-    "qdmpy.io.field.save_field_sigmas": True,
-    "qdmpy.io.field.load_prev_field_calcs": True,
-    "qdmpy.io.field.load_prev_bnvs_and_dshifts": True,
-    "qdmpy.io.field.load_prev_field_params": True,
-    "qdmpy.io.field.load_prev_field_sigmas": True,
-    "qdmpy.io.field.load_field_param": True,
-    "qdmpy.io.field.load_field_sigma": True,
-    "qdmpy.io.field.load_arb_field_param": True,
-    "qdmpy.io.field.load_arb_field_params": True,
-    "qdmpy.io.field.choose_field_method": True,
-    "qdmpy.io.field.check_for_prev_field_calc": True,
-    "qdmpy.io.field._prev_pixel_field_calcs_exist": True,
-    "qdmpy.io.field._field_options_compatible": True,
+    "qdmpy.field.io.save_field_calcs": True,
+    "qdmpy.field.io.save_bnvs_and_dshifts": True,
+    "qdmpy.field.io.save_field_params": True,
+    "qdmpy.field.io.save_field_sigmas": True,
+    "qdmpy.field.io.load_prev_field_calcs": True,
+    "qdmpy.field.io.load_prev_bnvs_and_dshifts": True,
+    "qdmpy.field.io.load_prev_field_params": True,
+    "qdmpy.field.io.load_prev_field_sigmas": True,
+    "qdmpy.field.io.load_field_param": True,
+    "qdmpy.field.io.load_field_sigma": True,
+    "qdmpy.field.io.load_arb_field_param": True,
+    "qdmpy.field.io.load_arb_field_params": True,
+    "qdmpy.field.io.choose_field_method": True,
+    "qdmpy.field.io.check_for_prev_field_calc": True,
+    "qdmpy.field.io._prev_pixel_field_calcs_exist": True,
+    "qdmpy.field.io._field_options_compatible": True,
 }
-
 # ============================================================================
 
 import numpy as np
-import os  # FIXME
+import pathlib
 
 # ============================================================================
 
-import qdmpy.io.fit
-import qdmpy.hamiltonian
-import qdmpy.field._bxyz as Qbxyz
-import qdmpy.field._bnv as Qbnv
-import qdmpy.field._geom as Qgeom
+import qdmpy.pl.io
+import qdmpy.field.hamiltonian
+import qdmpy.field.bxyz
+import qdmpy.field.bnv
+import qdmpy.shared.geom
+import qdmpy.system
 
 # ============================================================================
 
@@ -210,11 +210,11 @@ def load_prev_field_calcs(options):
     ref_sigmas = load_prev_field_sigmas(options, "ref")
 
     # Sam changed to below on 2021-04-21, so that background subtraction is done transparently.
-    sig_sub_ref_bnvs = Qbnv.bnv_refsub(options, sig_bnvs, ref_bnvs)
+    sig_sub_ref_bnvs = qdmpy.field.bnv.bnv_refsub(options, sig_bnvs, ref_bnvs)
     # sig_sub_ref_bnvs, _ = load_prev_bnvs_and_dshifts(options, "sig_sub_ref")
-    sig_sub_ref_params = Qbxyz.field_refsub(options, sig_params, ref_params)
+    sig_sub_ref_params = qdmpy.field.bxyz.field_refsub(options, sig_params, ref_params)
     # sig_sub_ref_params = load_prev_field_params(options, "sig_sub_ref")
-    sig_sub_ref_sigmas = Qbxyz.field_sigma_add(options, sig_sigmas, ref_sigmas)
+    sig_sub_ref_sigmas = qdmpy.field.bxyz.field_sigma_add(options, sig_sigmas, ref_sigmas)
     # sig_sub_ref_sigmas = load_prev_field_sigmas(options, "sig_sub_ref")
 
     return (
@@ -255,9 +255,9 @@ def load_prev_bnvs_and_dshifts(options, name):
         else:
             bpath = options["field_dir"] / f"{name}_bnv_{i}.txt"
             dpath = options["field_dir"] / f"{name}_dshift_{i}.txt"
-        if os.path.isfile(bpath):
+        if pathlib.Path(bpath).is_file():
             bnvs.append(np.loadtxt(bpath))
-        if os.path.isfile(dpath):
+        if pathlib.Path(dpath).is_file():
             dshifts.append(np.loadtxt(dpath))
     return bnvs, dshifts
 
@@ -282,7 +282,7 @@ def load_prev_field_params(options, name):
         Dictionary, key: param_keys, val: image (2D) of field param values across FOV.
     """
 
-    prev_options = qdmpy.io.fit._get_prev_options(options)
+    prev_options = qdmpy.pl.io.get_prev_options(options)
 
     load_params = prev_options["field_params"]
     remove_these_params = [
@@ -319,7 +319,7 @@ def load_prev_field_sigmas(options, name):
     sigma_params : dict
         Dictionary, key: param_keys, val: image (2D) of field sigma values across FOV.
     """
-    prev_options = qdmpy.io.fit._get_prev_options(options)
+    prev_options = qdmpy.pl.io.fit.get_prev_options(options)
 
     load_params = prev_options["field_params"]
     remove_these_params = [
@@ -352,11 +352,11 @@ def load_field_param(options, name, param):
             path = options[f"field_{name}_dir"] / (f"{name}_{param}" + s)
         else:
             path = options["field_dir"] / (f"{name}_{param}" + s)
-        if os.path.isfile(path):
+        if pathlib.Path(path).is_file():
             break
 
     # handle if we don't have a ref param (with any suffix candidate)
-    if not os.path.isfile(path) and name == "ref":
+    if not pathlib.Path(path).is_file() and name == "ref":
         return None
     else:
         return np.loadtxt(path)
@@ -375,11 +375,11 @@ def load_field_sigma(options, name, sigma):
             path = options[f"field_{name}_dir"] / (f"{name}_{sigma}_sigma" + s)
         else:
             path = options["field_dir"] / (f"{name}_{sigma}_sigma" + s)
-        if os.path.isfile(path):
+        if pathlib.Path(path).is_file():
             break
 
     # handle if we don't have a ref sigma (with any suffix candidate)
-    if not os.path.isfile(path) and name == "ref":
+    if not pathlib.Path(path).is_file() and name == "ref":
         return None
     else:
         return np.loadtxt(path)
@@ -434,7 +434,9 @@ def choose_field_method(options):
 
         # check how many peaks we want to use, and how many are available -> ensure compatible
         # FIXME doesn't take pos h14/h15 etc...
-        num_peaks_fit = len(options["pos_guess"]) if type(options["pos_guess"]) is list else 1
+        num_peaks_fit = (
+            len(options["pos_guess"]) if isinstance(options["pos_guess"], (list, tuple)) else 1
+        )
         num_peaks_wanted = sum(options["freqs_to_use"])
         if num_peaks_wanted > num_peaks_fit:
             raise RuntimeError(
@@ -482,12 +484,10 @@ def check_for_prev_field_calc(options):
 
     # first find prev_options
     if not options["force_field_calc"]:
-        if not qdmpy.io.fit._prev_options_exist(options):
+        if not qdmpy.pl.io.prev_options_exist(options):
             options["found_prev_field_calc"] = False
             options["found_prev_field_calc_reason"] = "couldn't find previous options"
-        elif not qdmpy.io.fit._options_compatible(
-            options, qdmpy.io.fit._get_prev_options(options)
-        ):
+        elif not qdmpy.pl.io.options_compatible(options, qdmpy.pl.io.get_prev_options(options)):
             options["found_prev_field_calc"] = False
             options["found_prev_field_calc_reason"] = "incompatible fit options"
         elif not (res := _field_options_compatible(options))[0]:
@@ -524,16 +524,16 @@ def _prev_pixel_field_calcs_exist(options):
     reason : str
         Reason for the above decision
     """
-    prev_options = qdmpy.io.fit._get_prev_options(options)
+    prev_options = qdmpy.pl.io.fit.get_prev_options(options)
     if "field_params" not in prev_options or prev_options["field_params"] is None:
         return False, "no key 'field params' in prev_options"
     # skip 'ref' check, as it isn't always there!
     for param_key in prev_options["field_params"]:
         spath = options["field_sig_dir"] / f"sig_{param_key}.txt"
-        if not os.path.isfile(spath):
+        if not pathlib.Path(spath).is_file():
             return False, f"couldn't find previous field param: sig_{param_key}"
         ssfpath = options["field_sig_sub_ref_dir"] / f"sig_sub_ref_{param_key}.txt"
-        if not os.path.isfile(ssfpath):
+        if not pathlib.Path(ssfpath).is_file():
             return False, f"couldn't find previous field param: sig_sub_ref_{param_key}"
 
     return True, "found all prev field pixel results :)"
@@ -558,10 +558,9 @@ def _field_options_compatible(options):
     reason : str
         Reason for the above decision
     """
-    prev_options = qdmpy.io.fit._get_prev_options(options)
-    from qdmpy.constants import choose_system
+    prev_options = qdmpy.pl.io.fit.get_prev_options(options)
 
-    prev_options["system"] = choose_system(prev_options["system_name"])
+    prev_options["system"] = qdmpy.system.choose_system(prev_options["system_name"])
 
     # can't load dshift (etc.) reference types
     if options["exp_reference_type"] != "field" or prev_options["exp_reference_type"] != "field":
@@ -597,10 +596,12 @@ def _field_options_compatible(options):
     # if options["bfield_bground_params"] != prev_options["bfield_bground_params"]:
     #     return False, "different bfield_bground_params"
 
-    if (Qgeom.get_unvs(options) != Qgeom.get_unvs(prev_options)).all():
+    if (qdmpy.shared.geom.get_unvs(options) != qdmpy.shared.geom.get_unvs(prev_options)).all():
         return False, "different unvs calculated"
 
-    if (Qgeom.get_unv_frames(options) != Qgeom.get_unv_frames(prev_options)).all():
+    if (
+        qdmpy.shared.geom.get_unv_frames(options) != qdmpy.shared.geom.get_unv_frames(prev_options)
+    ).all():
         return False, "different unv frames"
 
     if options["diamond_ori"] != prev_options["diamond_ori"]:
@@ -610,7 +611,7 @@ def _field_options_compatible(options):
         if options["hamiltonian"] != prev_options["hamiltonian"]:
             return False, "different hamiltonian selected."
 
-        guesser = qdmpy.hamiltonian.get_ham_guess_and_bounds
+        guesser = qdmpy.field.hamiltonian.get_ham_guess_and_bounds
         this_guess, this_bounds = guesser(options)
         prev_guess, prev_bounds = guesser(prev_options)
 

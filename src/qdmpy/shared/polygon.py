@@ -9,7 +9,7 @@ Polygon-GUI
 Function to select polygons on an image. Ensure you have the required
 gui backends for matplotlib. Best ran seperately/not within jupyter.
 E.g. open python REpl (python at cmd), 'import qdmpy.itool', then
-run qdmpy.itool.polygon_gui() & follow the prompts.
+run qdmpy.shared.polygon.Polygonpolygon_gui() & follow the prompts.
 
 An optional array (i.e. the image used to define regions) can be passed
 to polygon_gui.
@@ -39,21 +39,21 @@ http://code.activestate.com/recipes/578381-a-point-in-polygon-program-sw-sloan-a
 
 Classes
 -------
- - `qdmpy.itool._polygon.Polygon`
+ - `qdmpy.shared.polygon.Polygon_polygon.Polygon`
 
 Functions
 ---------
- - `qdmpy.itool._polygon.polygon_gui`
- - `qdmpy.itool._polygon._tri_2area_det`
+ - `qdmpy.shared.polygon.Polygon_polygon.polygon_gui`
+ - `qdmpy.shared.polygon.Polygon_polygon._tri_2area_det`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.itool._polygon.polygon_gui": True,
-    "qdmpy.itool._polygon.Polygon": True,
-    "qdmpy.itool._polygon._tri_2area_det": True,
+    "qdmpy.shared.polygon.Polygon_polygon.polygon_gui": True,
+    "qdmpy.shared.polygon.Polygon_polygon.Polygon": True,
+    "qdmpy.shared.polygon.Polygon_polygon._tri_2area_det": True,
 }
 
 # ============================================================================
@@ -68,7 +68,7 @@ from numbers import Integral
 
 # ============================================================================
 
-from qdmpy.shared.json2dict import json_to_dict
+from qdmpy.shared.json2dict import json_to_dict, dict_to_json
 
 # ============================================================================
 
@@ -312,7 +312,8 @@ class Polygon:
             # infinite line
             t = -(x1p * x21 + y1p * y21) / (x21 ** 2 + y21 ** 2)
             tlt0 = t < 0
-            tle1 = (0 <= t) & (t <= 1)
+            # tle1 = (0 <= t) & (t <= 1) # THIS LOOKS SILLY
+            tle1 = t >= 0  # changed from above on 2021-06-30, @sscholten
             # Normal intersects side
             d[tle1] = (x1p[tle1] + t[tle1] * x21) ** 2 + (y1p[tle1] + t[tle1] * y21) ** 2
             # Normal does not intersects side
@@ -358,30 +359,161 @@ class Polygon:
 # ============================================================================
 
 
-def polygon_selector(numpy_txt_file_path, json_output_path=None, json_input_path=None, help=False):
-    if help:
-        print("Help")
-        print("====")
-        print()
-        print("Input help")
-        print("----------")
-        print("numpy_txt_file_path: path to (numpy) .txt file to load as image.")
-        print("json_output_path: (optional) where to put output json, defaults to home/poly.json.")
-        print("json_input_path: (optional) loads previous polygons at this path for editing.")
-        print("")
-        print("help: (optional) view this message")
-        print()
-        print("GUI help")
-        print("--------")
-        print("In the mpl gui, select points to draw polygons.")
-        print("Press 'enter' to continue in the program.")
-        print("Press the 'esc' key to reset the current polygon")
-        print("Hold 'shift' to move all of the vertices (from all polygons)")
-        print("'ctrl' to move a single vertex in the current polygon")
-        print("'alt' to start a new polygon (and finalise the current one)")
-        print("'del' to clear all lines from the graphic  (thus deleting all polygons).")
+def polygon_selector(
+    numpy_txt_file_path,
+    json_output_path=None,
+    json_input_path=None,
+    mean_plus_minus=None,
+    strict_range=None,
+    print_help=False,
+    **kwargs
+):
+    """
+    Generates mpl (qt) gui for selecting a polygon.
+
+    Arguments
+    ---------
+    numpy_txt_file_path : path
+        Path to (numpy) .txt file to load as image.
+    json_output_path : str or path-like, default="~/poly.json"
+        Path to put output json, defaults to home/poly.json.
+    json_input_path : str or path-like, default=None
+        Loads previous polygons at this path for editing.
+    mean_plus_minus : float, default=None
+        Plot image with color scaled to mean +- this number.
+    strict_range: length 2 list, default=None
+        Plot image with color scaled between these values. Precedence over mean_plus_minus.
+    print_help : bool, default=False
+        View this message.
+    **kwargs : dict
+        Other keyword arguments to pass to plotters. Currently implemented:
+            cmap : string
+                Passed to imshow.
+            lineprops : dict
+                Passed to PolygonSelectionWidget.
+            markerprops : dict
+                Passed to PolygonSelectionWidget.
+
+
+    GUI help
+    --------
+    In the mpl gui, select points to draw polygons.
+    Press 'enter' to continue in the program.
+    Press the 'esc' key to reset the current polygon
+    Hold 'shift' to move all of the vertices (from all polygons)
+    'ctrl' to move a single vertex in the current polygon
+    'alt' to start a new polygon (and finalise the current one)
+    'del' to clear all lines from the graphic  (thus deleting all polygons).
+
+    """
+    if print_help:
+        print(
+            """
+        Help
+        ====
+
+        Input help
+        ----------
+        numpy_txt_file_path : path 
+            Path to (numpy) .txt file to load as image.
+        json_output_path : str or path-like, default="~/poly.json"
+            Path to put output json, defaults to home/poly.json.
+        json_input_path : str or path-like, default=None
+            Loads previous polygons at this path for editing.
+        mean_plus_minus : float, default=None
+            Plot image with color scaled to mean +- this number.
+        strict_range: length 2 list, default=None
+            Plot image with color scaled between these values. Precedence over mean_plus_minus.
+        help : bool, Default=False
+            View this message.
+        **kwargs : dict
+        Other keyword arguments to pass to plotters. Currently implemented:
+            cmap : string
+                Passed to imshow.
+            lineprops : dict
+                Passed to PolygonSelectionWidget.
+            markerprops : dict
+                Passed to PolygonSelectionWidget.
+
+        GUI help
+        --------
+        In the mpl gui, select points to draw polygons.
+        Press 'enter' to continue in the program.
+        Press the 'esc' key to reset the current polygon
+        Hold 'shift' to move all of the vertices (from all polygons)
+        'ctrl' to move a single vertex in the current polygon
+        'alt' to start a new polygon (and finalise the current one)
+        'del' to clear all lines from the graphic  (thus deleting all polygons).
+        """
+        )
         return []
-    pass
+
+    image = np.loadtxt(numpy_txt_file_path)
+
+    if json_input_path is not None:
+        polygon_nodes = json_to_dict(json_input_path)["nodes"]
+
+    fig, ax = plt.subplots()
+    minimum = np.nanmin(image)
+    maximum = np.nanmax(image)
+    if strict_range is not None:
+        vmin, vmax = strict_range
+    elif mean_plus_minus is not None:
+        mean = np.mean(image)
+        md = np.max([abs(maximum - mean), abs(minimum - mean)])
+        vmin, vmax = mean - md, mean + md
+    else:
+        vmin = vmax = None
+    img = ax.imshow(
+        image,
+        aspect="equal",
+        cmap=kwargs["cmap"] if "cmap" in kwargs else "bwr",
+        vmin=vmin,
+        vmax=vmax,
+    )
+
+    ax.tick_params(
+        axis="x",  # changes apply to the x-axis
+        which="both",  # both major and minor ticks are affected
+        bottom=False,  # ticks along the bottom edge are off
+        top=False,  # ticks along the top edge are off
+        labelbottom=False,
+    )
+    ax.tick_params(
+        axis="y",  # changes apply to the y-axis
+        which="both",  # both major and minor ticks are affected
+        left=False,
+        right=False,
+        labelleft=False,
+    )
+    divider = make_axes_locatable(ax)
+    cax = divider.append_axes("right", size="5%", pad=0.05)
+    fig.colorbar(img, cax=cax)
+    ax.set_title("Select polygons to exclude from background fit")
+
+    psw = PolygonSelectionWidget(ax, style=kwargs)
+
+    if polygon_nodes is not None:
+        psw.load_nodes(polygon_nodes)
+
+    plt.tight_layout()
+    plt.show(block=True)
+    psw.disconnect()
+
+    pgons = psw.get_polygons_lst()
+    if len(pgons) < 1:
+        raise RuntimeError("You didn't define any polygons")
+
+    # exclude polygons with nodes < 3
+    pgon_lst = [pgon.get_nodes() for pgon in pgons if np.shape(pgon.get_nodes())[0] > 2]
+    output_dict = {"nodes": pgon_lst}
+
+    dict_to_json(output_dict, json_output_path)
+
+    return pgon_lst
+
+
+# ===============================================================================================
 
 
 def polygon_gui(image=None):
@@ -550,8 +682,6 @@ def polygon_gui(image=None):
     pgon_lst = [pgon.get_nodes() for pgon in pgons if np.shape(pgon.get_nodes())[0] > 2]
     output_dict = {"nodes": pgon_lst}
 
-    from qdmpy.io.json2dict import dict_to_json  # avoid circular imports...
-
     dict_to_json(output_dict, values["output_path"])
 
     return pgon_lst
@@ -565,7 +695,7 @@ def polygon_gui(image=None):
 # ================================================================================================ #
 # ================================================================================================ #
 # ================================================================================================ #
-class Widget(object):
+class Widget:
     """
     Abstract base class for GUI neutral widgets
     """
@@ -873,7 +1003,7 @@ class _SelectorWidget(AxesWidget):
 # ================================================================================================ #
 
 
-class ToolHandles(object):
+class ToolHandles:
     """Control handles for canvas tools.
 
     Arguments

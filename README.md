@@ -528,7 +528,7 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
     - Diamond crystal orientation -> see qdmpy.constants. Default: HPHT orientation. Format: `<top face orientation>_<edge face orientation>`.
 - auto_read_bias
     - Read magnetic field from options (i.e. if applied with vector electromagnet). --> system dependent option (i.e. Unimelb reads from metadata).
-- auto_read_B
+- auto_guess_B
     - Guess mag field (Bx, By, Bz) from bias field parameters (bias_mag etc.).
 - use_unvs
     - To specify unvs directly (below with "unvs" option) instead of guessing from bias_mag etc.
@@ -567,7 +567,7 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
 ### Source recon parameters
 
 - source_type
-    - Type of source field to reconstruct, e.g. "current" or "magnetisation".
+    - Type of source field to reconstruct, e.g. "current" or "magnetization".
 - standoff
     - Average distance NV layer <-> sample, or null/None to not use.
 - nv_layer_thickness
@@ -577,8 +577,8 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
 - zero_point_normalisation_region
     - Region to use for zero-point normalisation. I.e. mean of this region is subtracted from Jx and Jy (or M etc.). (or null/none to not normalise). 
     - Format: [[x_top_left, y_top_left], [x_bot_right, y_bot_right], where y is from top to bottom.
-- magnetisation_angle
-    - magnetisation direction (intrinsic). Either zero (for z-magnetisation) or an angle in degress, from (+) x-axis towards (+) y-axis. untested.
+- magnetization_angle
+    - magnetization direction (intrinsic). Either zero (for z-magnetization) or an angle in degress, from (+) x-axis towards (+) y-axis. untested.
 
 ### Background subtraction parameters
 
@@ -649,7 +649,7 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
             - auto_sym_zero : bool
                 - Optional boolean. If True, automatically detects if image has negative and positive values and makes colormap symmetric about zero. Only has an effect if the given c_range_type is "min_max" or "percentile". Defaults to True (i.e. if not specified)
 
-        - All implemented in `qdmpy.plot.common._get_colormap_range`
+        - All implemented in `qdmpy.plot.common.get_colormap_range`
     ```
 - mpl_rcparams
     - Extra parameters (as dict) sent to matplotlib to define plotting stylesheet 

@@ -3,7 +3,7 @@
 This module defines the fit functions used in the `qdmpy.fit.model.FitModel`.
 We grab/use this regardless of fitting on cpu (scipy) or gpu etc.
 
-Ensure any fit functions you define are added to the _AVAILABLE_FNS module variable at bottom.
+Ensure any fit functions you define are added to the AVAILABLE_FNS module variable at bottom.
 Try not to have overlapping parameter names in the same fit.
 
 For ODMR peaks, ensure the frequency position of the peak is named something
@@ -11,18 +11,18 @@ prefixed by 'pos'. (see `qdmpy.field._bnv.get_bnvs_and_dshifts` for the reasonin
 
 Classes
 -------
- - `qdmpy.fit._funcs.FitFunc`
- - `qdmpy.fit._funcs.Constant`
- - `qdmpy.fit._funcs.Linear`
- - `qdmpy.fit._funcs.Circular`
- - `qdmpy.fit._funcs.Gaussian`
- - `qdmpy.fit._funcs.GaussianHyperfine14`
- - `qdmpy.fit._funcs.GaussianHyperfine15`
- - `qdmpy.fit._funcs.Lorentzian`
- - `qdmpy.fit._funcs.LorentzianHyperfine14`
- - `qdmpy.fit._funcs.LorentzianHyperfine15`
- - `qdmpy.fit._funcs.StretchedExponential`
- - `qdmpy.fit._funcs.DampedRabi`
+ - `qdmpy.pl.funcs.FitFunc`
+ - `qdmpy.pl.funcs.Constant`
+ - `qdmpy.pl.funcs.Linear`
+ - `qdmpy.pl.funcs.Circular`
+ - `qdmpy.pl.funcs.Gaussian`
+ - `qdmpy.pl.funcs.GaussianHyperfine14`
+ - `qdmpy.pl.funcs.GaussianHyperfine15`
+ - `qdmpy.pl.funcs.Lorentzian`
+ - `qdmpy.pl.funcs.LorentzianHyperfine14`
+ - `qdmpy.pl.funcs.LorentzianHyperfine15`
+ - `qdmpy.pl.funcs.StretchedExponential`
+ - `qdmpy.pl.funcs.DampedRabi`
 """
 
 
@@ -30,17 +30,17 @@ Classes
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.fit._funcs.FitFunc": True,
-    "qdmpy.fit._funcs.Constant": True,
-    "qdmpy.fit._funcs.Linear": True,
-    "qdmpy.fit._funcs.Circular": True,
-    "qdmpy.fit._funcs.Gaussian": True,
-    "qdmpy.fit._funcs.GaussianHyperfine14": True,
-    "qdmpy.fit._funcs.GaussianHyperfine15": True,
-    "qdmpy.fit._funcs.Lorentzian": True,
-    "qdmpy.fit._funcs.LorentzianHyperfine_14": True,
-    "qdmpy.fit._funcs.LorentzianHyperfine_15": True,
-    "qdmpy.fit._funcs.StretchedExponential": True,
+    "qdmpy.pl.funcs.FitFunc": True,
+    "qdmpy.pl.funcs.Constant": True,
+    "qdmpy.pl.funcs.Linear": True,
+    "qdmpy.pl.funcs.Circular": True,
+    "qdmpy.pl.funcs.Gaussian": True,
+    "qdmpy.pl.funcs.GaussianHyperfine14": True,
+    "qdmpy.pl.funcs.GaussianHyperfine15": True,
+    "qdmpy.pl.funcs.Lorentzian": True,
+    "qdmpy.pl.funcs.LorentzianHyperfine_14": True,
+    "qdmpy.pl.funcs.LorentzianHyperfine_15": True,
+    "qdmpy.pl.funcs.StretchedExponential": True,
 }
 
 # ============================================================================
@@ -72,13 +72,13 @@ class FitFunc:
     # =================================
 
     @staticmethod
-    def eval(sweep_vec, *fit_params):
+    def eval(x, *fit_params):
         raise NotImplementedError("You MUST override eval, check your spelling.")
 
     # =================================
 
     @staticmethod
-    def grad_fn(sweep_vec, *fit_params):
+    def grad_fn(x, *fit_params):
         """ if you want to use a grad_fn override this in the subclass """
         return None
 
@@ -107,8 +107,9 @@ class Constant(FitFunc):
 
     @staticmethod
     @njit(fastmath=True)
-    def eval(x, c):
+    def eval(x, *fit_params):
         """ speed tested multiple methods, this was the fastest """
+        c = fit_params[0]
         ret = np.empty(np.shape(x))
         ret.fill(c)
         return ret
@@ -117,7 +118,7 @@ class Constant(FitFunc):
 
     @staticmethod
     @njit
-    def grad_fn(x, c):
+    def grad_fn(x, *fit_params):
         """Compute the grad of the residue, excluding pl as a param
         {output shape: (len(x), 1)}
         """
@@ -145,18 +146,20 @@ class Linear(FitFunc):
     # speed tested, marginally faster with fastmath off (idk why)
     @staticmethod
     @njit(fastmath=False)
-    def eval(x, c, m):
+    def eval(x, *fit_params):
+        c, m = fit_params
         return m * x + c
 
     # =================================
 
     @staticmethod
     @njit(fastmath=True)
-    def grad_fn(x, c, m):
+    def grad_fn(x, *fit_params):
         """
         Compute the grad of the residual, excluding pl as a param
         {output shape: (len(x), 2)}
         """
+        c, m = fit_params
         j = np.empty((x.shape[0], 2))
         j[:, 0] = 1
         j[:, 1] = x
@@ -178,16 +181,18 @@ class Circular(FitFunc):
 
     @staticmethod
     @njit
-    def eval(x, circ_freq, pos, amp):
+    def eval(x, *fit_params):
+        circ_freq, pos, amp = fit_params
         return amp * np.sin(2 * np.pi * circ_freq * (x - pos))
 
     @staticmethod
     @njit
-    def grad_fn(x, circ_freq, pos, amp):
+    def grad_fn(x, *fit_params):
         """Compute the grad of the residue, excluding pl as a param
         {output shape: (len(x), 3)}
         """
         # Lorentzian: a*g^2/ ((x-c)^2 + g^2)
+        circ_freq, pos, amp = fit_params
         j = np.empty((x.shape[0], 3), dtype=np.float32)
         j[:, 0] = 2 * np.pi * amp * (x - pos) * np.cos(2 * np.pi * circ_freq * (x - pos))
         j[:, 1] = -2 * np.pi * circ_freq * amp * np.cos(2 * np.pi * circ_freq * (x - pos))
@@ -215,7 +220,8 @@ class Gaussian(FitFunc):
 
     @staticmethod
     @njit(fastmath=True)
-    def eval(x, fwhm, pos, amp):
+    def eval(x, *fit_params):
+        fwhm, pos, amp = fit_params
         return amp * np.exp(-SCALE_SIGMA * (x - pos) ** 2 / fwhm ** 2)
 
 
@@ -243,7 +249,8 @@ class GaussianHyperfine14(FitFunc):
     # A14 para = -2.14 MHz
     @staticmethod
     @njit(fastmath=True)
-    def eval(x, pos, amp_1_hyp, amp_2_hyp, amp_3_hyp, fwhm_1_hyp, fwhm_2_hyp, fwhm_3_hyp):
+    def eval(x, *fit_params):
+        pos, amp_1_hyp, amp_2_hyp, amp_3_hyp, fwhm_1_hyp, fwhm_2_hyp, fwhm_3_hyp = fit_params
         return (
             amp_1_hyp * np.exp(-SCALE_SIGMA * (x - pos - 2.14) ** 2 / fwhm_1_hyp ** 2)
             + amp_2_hyp * np.exp(-SCALE_SIGMA * (x - pos) ** 2 / fwhm_2_hyp ** 2)
@@ -271,7 +278,8 @@ class GaussianHyperfine15(FitFunc):
     # A15 para = 3.03 MHz
     @staticmethod
     @njit(fastmath=True)
-    def eval(x, pos, amp_1_hyp, amp_2_hyp, fwhm_1_hyp, fwhm_2_hyp):
+    def eval(x, *fit_params):
+        pos, amp_1_hyp, amp_2_hyp, fwhm_1_hyp, fwhm_2_hyp = fit_params
         return amp_1_hyp * np.exp(
             -SCALE_SIGMA * (x - pos - 1.515) ** 2 / fwhm_1_hyp ** 2
         ) + amp_2_hyp * np.exp(-SCALE_SIGMA * (x - pos + 1.515) ** 2 / fwhm_2_hyp ** 2)
@@ -293,7 +301,8 @@ class Lorentzian(FitFunc):
     # fastmath gives a ~10% speed up on my testing
     @staticmethod
     @njit(fastmath=True)
-    def eval(x, fwhm, pos, amp):
+    def eval(x, *fit_params):
+        fwhm, pos, amp = fit_params
         hwhmsqr = (fwhm ** 2) / 4
         return amp * hwhmsqr / ((x - pos) ** 2 + hwhmsqr)
 
@@ -301,11 +310,12 @@ class Lorentzian(FitFunc):
 
     @staticmethod
     @njit
-    def grad_fn(x, fwhm, pos, amp):
+    def grad_fn(x, *fit_params):
         """Compute the grad of the residue, excluding pl as a param
         {output shape: (len(x), 3)}
         """
         # Lorentzian: a*g^2/ ((x-c)^2 + g^2)
+        fwhm, pos, amp = fit_params
         j = np.empty((x.shape[0], 3), dtype=np.float32)
         g = fwhm / 2
         c = pos
@@ -340,7 +350,8 @@ class LorentzianHyperfine14(FitFunc):
     # A14 para = -2.14 MHz
     @staticmethod
     @njit(fastmath=True)
-    def eval(x, pos, amp_1_hyp, amp_2_hyp, amp_3_hyp, fwhm_1_hyp, fwhm_2_hyp, fwhm_3_hyp):
+    def eval(x, *fit_params):
+        pos, amp_1_hyp, amp_2_hyp, amp_3_hyp, fwhm_1_hyp, fwhm_2_hyp, fwhm_3_hyp = fit_params
         hwhmsqr1 = (fwhm_1_hyp ** 2) / 4
         hwhmsqr2 = (fwhm_2_hyp ** 2) / 4
         hwhmsqr3 = (fwhm_3_hyp ** 2) / 4
@@ -365,7 +376,8 @@ class LorentzianHyperfine15(FitFunc):
     # A15 para = 3.03 MHz
     @staticmethod
     @njit(fastmath=True)
-    def eval(x, pos, amp_1_hyp, amp_2_hyp, fwhm_1_hyp, fwhm_2_hyp):
+    def eval(x, *fit_params):
+        pos, amp_1_hyp, amp_2_hyp, fwhm_1_hyp, fwhm_2_hyp = fit_params
         hwhmsqr1 = fwhm_1_hyp ** 2 / 4
         hwhmsqr2 = fwhm_2_hyp ** 2 / 4
         return amp_1_hyp * hwhmsqr1 / (
@@ -392,18 +404,19 @@ class StretchedExponential(FitFunc):
     @staticmethod
     # njit here not speed tested
     @njit
-    def eval(x, charac_exp_t, amp_exp, power_exp):
+    def eval(x, *fit_params):
+        charac_exp_t, amp_exp, power_exp = fit_params
         return amp_exp * np.exp(-((x / charac_exp_t) ** power_exp))
 
     # =================================
 
     @staticmethod
     @njit
-    def grad_fn(x, charac_exp_t, amp_exp, power_exp):
+    def grad_fn(x, *fit_params):
         """Compute the grad of the residue, excluding pl as a param
         {output shape: (len(x), 3)}
         """
-
+        charac_exp_t, amp_exp, power_exp = fit_params
         j = np.empty((x.shape[0], 3), dtype=np.float32)
         # stretched exponential = a * e ^ ((x / t) ^ p)
         # -(a p e^((x/t)^p) (x/t)^p)/t
@@ -443,15 +456,17 @@ class DampedRabi(FitFunc):
 
     @staticmethod
     @njit
-    def eval(x, omega, pos, amp, tau):
+    def eval(x, *fit_params):
+        omega, pos, amp, tau = fit_params
         return amp * np.exp(-(x / tau)) * np.cos(omega * (x - pos))
 
     @staticmethod
     @njit
-    def grad_fn(x, omega, pos, amp, tau):
+    def grad_fn(x, *fit_params):
         """Compute the grad of the residue, excluding pl as a param
         {output shape: (len(x), 4)}
         """
+        omega, pos, amp, tau = fit_params
         j = np.empty((x.shape[0], 4), dtype=np.float32)
         j[:, 0] = amp * (pos - x) * np.sin(omega * (x - pos)) * np.exp(-x / tau)  # wrt omega
         j[:, 1] = (amp * omega * np.sin(omega * (x - pos))) * np.exp(-x / tau)  # wrt pos
@@ -462,7 +477,7 @@ class DampedRabi(FitFunc):
 
 # ==========================================================================
 
-_AVAILABLE_FNS = {
+AVAILABLE_FNS = {
     "lorentzian": Lorentzian,
     "lorentzian_hyperfine_14": LorentzianHyperfine14,
     "lorentzian_hyperfine_15": LorentzianHyperfine15,

@@ -39,7 +39,7 @@ import numpy as np
 
 MAG_UNIT_CONV = 1e-18 / 9.274010e-24
 """
-Convert unit for magnetisation to something more helpful.
+Convert unit for magnetization to something more helpful.
 
 SI unit measured: Amps: A
 

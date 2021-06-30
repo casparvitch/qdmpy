@@ -4,34 +4,34 @@ This module holds tools for fitting raw data via gpufit. (gpufit backend)
 
 Functions
 ---------
- - `qdmpy.fit._gpufit.prep_gpufit_fit_options`
- - `qdmpy.fit._gpufit.get_gpufit_modelID`
- - `qdmpy.fit._gpufit.prep_gpufit_backend`
- - `qdmpy.fit._gpufit.gen_gpufit_init_guesses`
- - `qdmpy.fit._gpufit.fit_single_pixel_gpufit`
- - `qdmpy.fit._gpufit.fit_roi_avg_pl_gpufit`
- - `qdmpy.fit._gpufit.fit_aois_pl_gpufit`
- - `qdmpy.fit._gpufit.fit_pl_pixels_gpufit`
- - `qdmpy.fit._gpufit.gpufit_data_shape`
- - `qdmpy.fit._gpufit.gpufit_reshape_result`
- - `qdmpy.fit._gpufit.get_params_to_fit`
+ - `qdmpy.pl.gpufit.prep_gpufit_fit_options`
+ - `qdmpy.pl.gpufit.get_gpufit_modelID`
+ - `qdmpy.pl.gpufit.prep_gpufit_backend`
+ - `qdmpy.pl.gpufit.gen_gpufit_init_guesses`
+ - `qdmpy.pl.gpufit.fit_single_pixel_gpufit`
+ - `qdmpy.pl.gpufit.fit_roi_avg_pl_gpufit`
+ - `qdmpy.pl.gpufit.fit_aois_pl_gpufit`
+ - `qdmpy.pl.gpufit.fit_pl_pixels_gpufit`
+ - `qdmpy.pl.gpufit.gpufit_data_shape`
+ - `qdmpy.pl.gpufit.gpufit_reshape_result`
+ - `qdmpy.pl.gpufit.get_params_to_fit`
 
 """
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.fit._gpufit.prep_gpufit_fit_options": True,
-    "qdmpy.fit._gpufit.get_gpufit_modelID": True,
-    "qdmpy.fit._gpufit.prep_gpufit_backend": True,
-    "qdmpy.fit._gpufit.gen_gpufit_init_guesses": True,
-    "qdmpy.fit._gpufit.fit_single_pixel_gpufit": True,
-    "qdmpy.fit._gpufit.fit_roi_avg_pl_gpufit": True,
-    "qdmpy.fit._gpufit.fit_aois_pl_gpufit": True,
-    "qdmpy.fit._gpufit.fit_pl_pixels_gpufit": True,
-    "qdmpy.fit._gpufit.gpufit_data_shape": True,
-    "qdmpy.fit._gpufit.gpufit_reshape_result": True,
-    "qdmpy.fit._gpufit.get_params_to_fit": True,
+    "qdmpy.pl.gpufit.prep_gpufit_fit_options": True,
+    "qdmpy.pl.gpufit.get_gpufit_modelID": True,
+    "qdmpy.pl.gpufit.prep_gpufit_backend": True,
+    "qdmpy.pl.gpufit.gen_gpufit_init_guesses": True,
+    "qdmpy.pl.gpufit.fit_single_pixel_gpufit": True,
+    "qdmpy.pl.gpufit.fit_roi_avg_pl_gpufit": True,
+    "qdmpy.pl.gpufit.fit_aois_pl_gpufit": True,
+    "qdmpy.pl.gpufit.fit_pl_pixels_gpufit": True,
+    "qdmpy.pl.gpufit.gpufit_data_shape": True,
+    "qdmpy.pl.gpufit.gpufit_reshape_result": True,
+    "qdmpy.pl.gpufit.get_params_to_fit": True,
 }
 
 # ============================================================================
@@ -213,7 +213,7 @@ def gen_gpufit_init_guesses(options, init_guesses, init_bounds):
         for n in range(num_fns_required):
 
             if n < num:
-                for pos, key in enumerate(qdmpy.pl.funcs._AVAILABLE_FNS[fn_type].param_defn):
+                for pos, key in enumerate(qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn):
                     # these checks here are to handling the edge case of guesses/bounds
                     # options being provided as numbers rather than lists of numbers
                     try:
@@ -228,7 +228,7 @@ def gen_gpufit_init_guesses(options, init_guesses, init_bounds):
                         bound_lst.append(init_bounds[key][1])
             else:
                 # insert guesses and bounds for params we won't fit. (gpufit requires full array)
-                for pos, key in enumerate(qdmpy.pl.funcs._AVAILABLE_FNS[fn_type].param_defn):
+                for pos, key in enumerate(qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn):
                     param_lst.append(0)
                     bound_lst.append(0)
                     bound_lst.append(1)
@@ -255,8 +255,8 @@ def fit_single_pixel_gpufit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg
         Affine parameter list (e.g. tau or freq)
     fit_model : `qdmpy.fit.model.FitModel`
         Model we're fitting to.
-    roi_avg_fit_result : `qdmpy.fit._shared.ROIAvgFitResult`
-        `qdmpy.fit._shared.ROIAvgFitResult` object, to pull fit_options from.
+    roi_avg_fit_result : `qdmpy.pl.common.ROIAvgFitResult`
+        `qdmpy.pl.common.ROIAvgFitResult` object, to pull fit_options from.
 
     Returns
     -------
@@ -318,7 +318,7 @@ def fit_roi_avg_pl_gpufit(options, sig_norm, sweep_list, fit_model):
 
     Returns
     -------
-    result : `qdmpy.fit._shared.ROIAvgFitResult`
+    result : `qdmpy.pl.common.ROIAvgFitResult`
         object containing the fit result (see class specifics)
     """
 
@@ -393,14 +393,14 @@ def fit_aois_pl_gpufit(
     aois : list
         List of AOI specifications - each a length-2 iterable that can be used to directly index
         into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].
-    roi_avg_fit_result : `qdmpy.fit._shared.ROIAvgFitResult`
-        `qdmpy.fit._shared.ROIAvgFitResult` object, to pull `qdmpy.fit._shared.ROIAvgFitResult.fit_options`
+    roi_avg_fit_result : `qdmpy.pl.common.ROIAvgFitResult`
+        `qdmpy.pl.common.ROIAvgFitResult` object, to pull `qdmpy.pl.common.ROIAvgFitResult.fit_options`
         from.
 
     Returns
     -------
-    fit_result_collection : `qdmpy.fit._shared.FitResultCollection`
-        `qdmpy.fit._shared.FitResultCollection` object
+    fit_result_collection : `qdmpy.pl.common.FitResultCollection`
+        `qdmpy.pl.common.FitResultCollection` object
     """
     # note need to do the fit at least twice (gpufit requirements) so we do it twice per AOI here.
 
@@ -466,8 +466,8 @@ def fit_pl_pixels_gpufit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_r
         Affine parameter list (e.g. tau or freq)
     fit_model : `qdmpy.fit.model.FitModel`
         Model we're fitting to.
-    roi_avg_fit_result : `qdmpy.fit._shared.ROIAvgFitResult`
-        `qdmpy.fit._shared..ROIAvgFitResult` object, to pull fit_options from.
+    roi_avg_fit_result : `qdmpy.pl.common.ROIAvgFitResult`
+        `qdmpy.pl.common.ROIAvgFitResult` object, to pull fit_options from.
 
     Returns
     -------
@@ -569,7 +569,7 @@ def gpufit_data_shape(sig_norm):
 def gpufit_reshape_result(pixel_param_results, pixel_posns, jacs):
     """
     Mimics `qdmpy.fit._scipy.to_squares_wrapper`, so gpufit can use the
-    `qdmpy.fit._shared.get_pixel_fitting_results` function to get the nice
+    `qdmpy.pl.common.get_pixel_fitting_results` function to get the nice
     usual dict of param result images.
 
     Arguments

@@ -28,7 +28,7 @@ __pdoc__ = {
 
 from qdmpy.plot.common import *
 
-from qdmpy.plot.fit import *
+from qdmpy.plot.pl import *
 
 from qdmpy.plot.field import *
 

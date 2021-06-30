@@ -4,28 +4,28 @@ This module holds tools for fitting raw data via scipy. (scipy backend)
 
 Functions
 ---------
- - `qdmpy.fit._scipyfit.prep_scipyfit_options`
- - `qdmpy.fit._scipyfit.gen_scipyfit_init_guesses`
- - `qdmpy.fit._scipyfit.fit_roi_avg_pl_scipyfit`
- - `qdmpy.fit._scipyfit.fit_single_pixel_scipyfit`
- - `qdmpy.fit._scipyfit.fit_aois_pl_scipyfit`
- - `qdmpy.fit._scipyfit.limit_cpu`
- - `qdmpy.fit._scipyfit.to_squares_wrapper`
- - `qdmpy.fit._scipyfit.fit_pl_pixels_scipyfit`
+ - `qdmpy.pl.scipyfit.prep_scipyfit_options`
+ - `qdmpy.pl.scipyfit.gen_scipyfit_init_guesses`
+ - `qdmpy.pl.scipyfit.fit_roi_avg_pl_scipyfit`
+ - `qdmpy.pl.scipyfit.fit_single_pixel_scipyfit`
+ - `qdmpy.pl.scipyfit.fit_aois_pl_scipyfit`
+ - `qdmpy.pl.scipyfit.limit_cpu`
+ - `qdmpy.pl.scipyfit.to_squares_wrapper`
+ - `qdmpy.pl.scipyfit.fit_pl_pixels_scipyfit`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.fit._scipyfit.prep_scipyfit_options": True,
-    "qdmpy.fit._scipyfit.gen_scipyfit_init_guesses": True,
-    "qdmpy.fit._scipyfit.fit_roi_avg_pl_scipyfit": True,
-    "qdmpy.fit._scipyfit.fit_single_pixel_scipyfit": True,
-    "qdmpy.fit._scipyfit.fit_aois_pl_scipyfit": True,
-    "qdmpy.fit._scipyfit.limit_cpu": True,
-    "qdmpy.fit._scipyfit.to_squares_wrapper": True,
-    "qdmpy.fit._scipyfit.fit_pl_pixels_scipyfit": True,
+    "qdmpy.pl.scipyfit.prep_scipyfit_options": True,
+    "qdmpy.pl.scipyfit.gen_scipyfit_init_guesses": True,
+    "qdmpy.pl.scipyfit.fit_roi_avg_pl_scipyfit": True,
+    "qdmpy.pl.scipyfit.fit_single_pixel_scipyfit": True,
+    "qdmpy.pl.scipyfit.fit_aois_pl_scipyfit": True,
+    "qdmpy.pl.scipyfit.limit_cpu": True,
+    "qdmpy.pl.scipyfit.to_squares_wrapper": True,
+    "qdmpy.pl.scipyfit.fit_pl_pixels_scipyfit": True,
 }
 
 # ==========================================================================
@@ -137,7 +137,7 @@ def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
         # extract a guess/bounds for each of the copies of each fn_type (e.g. 8 lorentzians)
         for n in range(num):
 
-            for pos, key in enumerate(qdmpy.constants.AVAILABLE_FNS[fn_type].param_defn):
+            for pos, key in enumerate(qdmpy.pl.common.AVAILABLE_FNS[fn_type].param_defn):
                 # this check is to handle the edge case of guesses/bounds
                 # options being provided as numbers rather than lists of numbers
                 try:
@@ -336,7 +336,7 @@ def limit_cpu():
 # ==========================================================================
 
 
-def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, kwargs={}):
+def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, **kwargs):
     """
     Simple wrapper of scipy.optimize.least_squares to allow us to keep track of which
     solution is which (or where).
