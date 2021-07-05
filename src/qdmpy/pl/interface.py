@@ -23,7 +23,7 @@ __pdoc__ = {
     "qdmpy.pl.interface.define_fit_model": True,
     "qdmpy.pl.interface.fit_roi_avg_pl": True,
     "qdmpy.pl.interface.fit_aois_pl": True,
-    "qdmpy.pl.interface.fit_pl_pixels": True,
+    "qdmpy.pl.interface.fit_all_pixels_pl": True,
     "qdmpy.pl.interface._prep_fit_backends": True,
     "qdmpy.pl.interface.get_pl_fit_result": True,
 }
@@ -74,7 +74,7 @@ def define_fit_model(options):
 
     fit_model = qdmpy.pl.model.FitModel(fit_functions)
 
-    options["fit_param_defn"] = qdmpy.pl.model.get_param_odict(fit_model)
+    options["fit_param_defn"] = fit_model.get_param_odict()
 
     _prep_fit_backends(options, fit_model)
 
@@ -112,15 +112,15 @@ def _prep_fit_backends(options, fit_model):
         if fit_backend == "scipyfit":
             # import, but make it globally available (to module)
             global fit_scipyfit
-            _temp = __import__("qdmpy.fit.scipyfit", globals(), locals())
-            fit_scipyfit = _temp.fit.scipyfit
+            _temp = __import__("qdmpy.pl.scipyfit", globals(), locals())
+            fit_scipyfit = _temp.pl.scipyfit
 
         elif fit_backend == "gpufit":
             # here we use a programmatic import as we don't want to load (and crash)
             # if user doesn't have the gpufit stuff installed
             global fit_gpufit
-            _temp = __import__("qdmpy.fit.gpufit", globals(), locals())
-            fit_gpufit = _temp.fit.gpufit
+            _temp = __import__("qdmpy.pl.gpufit", globals(), locals())
+            fit_gpufit = _temp.pl.gpufit
 
             fit_gpufit.prep_gpufit_backend(options, fit_model)
         else:
@@ -206,7 +206,7 @@ def fit_aois_pl(
         `qdmpy.pl.common.FitResultCollection` object.
     """
 
-    aois = qdmpy.shared.misc.define_AOIs(options)
+    aois = qdmpy.shared.misc.define_aois(options)
 
     fit_result_collection_lst = []  # list of FitResultCollection objects
     # iterate through all possible fit backend choices
@@ -245,7 +245,7 @@ def fit_aois_pl(
 # ============================================================================
 
 
-def fit_pl_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
+def fit_all_pixels_pl(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
     """
     Fit all pixels in image with chosen fit backend.
 
@@ -273,11 +273,11 @@ def fit_pl_pixels(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
 
     # here only use only chosen backend!
     if options["fit_backend"] == "scipyfit":
-        return fit_scipyfit.fit_pl_pixels_scipyfit(
+        return fit_scipyfit.fit_all_pixels_pl_scipyfit(
             options, sig_norm, sweep_list, fit_model, roi_avg_fit_result
         )
     elif options["fit_backend"] == "gpufit":
-        return fit_gpufit.fit_pl_pixels_gpufit(
+        return fit_gpufit.fit_all_pixels_pl_gpufit(
             options, sig_norm, sweep_list, fit_model, roi_avg_fit_result
         )
     else:
@@ -325,7 +325,7 @@ def get_pl_fit_result(options, sig_norm, sweep_list, fit_model, wanted_roi_resul
         sigmas = qdmpy.pl.io.load_prev_pl_fit_sigmas(options)
         warnings.warn("Using previous fit results.")
     elif options["fit_pl_pixels"]:
-        pixel_fit_params, sigmas = fit_pl_pixels(
+        pixel_fit_params, sigmas = fit_all_pixels_pl(
             options, sig_norm, sweep_list, fit_model, wanted_roi_result
         )
     else:

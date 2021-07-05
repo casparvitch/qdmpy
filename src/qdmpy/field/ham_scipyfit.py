@@ -110,7 +110,7 @@ def prep_ham_scipyfit_options(options, ham):
     """
     # this is just constructing the initial parameter guesses and bounds in the right format
     _, fit_param_bound_ar = gen_ham_scipyfit_init_guesses(
-        options, *qdmpy.field.hamiltonian.gen_init_guesses(options)
+        options, *qdmpy.field.hamiltonian.ham_gen_init_guesses(options)
     )
     fit_bounds = (fit_param_bound_ar[:, 0], fit_param_bound_ar[:, 1])
 
@@ -198,7 +198,7 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
 
     # randomize order of fitting pixels (will un-scramble later) so ETA is more correct
     if options["scramble_pixels"]:
-        pixel_data, unshuffler = qdmpy.field.hamiltonian.shuffle_pixels(data)
+        pixel_data, unshuffler = qdmpy.field.hamiltonian.ham_shuffle_pixels(data)
     else:
         pixel_data = data
 
@@ -215,7 +215,7 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
                     ham_to_squares_wrapper,
                     repeat(hamiltonian.residuals_scipyfit),
                     repeat(roi_avg_params),
-                    qdmpy.field.hamiltonian.pixel_generator(pixel_data),
+                    qdmpy.field.hamiltonian.ham_pixel_generator(pixel_data),
                     repeat(fit_options),
                     chunksize=chunksize,
                 ),
@@ -230,7 +230,7 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
     # for the record
     options["ham_fit_time_(s)"] = timedelta(seconds=t1 - t0).total_seconds()
 
-    res, sigmas = qdmpy.field.hamiltonian.get_pixel_fitting_results(
+    res, sigmas = qdmpy.field.hamiltonian.ham_get_pixel_fitting_results(
         hamiltonian, ham_fit_results, pixel_data
     )
     if options["scramble_pixels"]:
@@ -243,7 +243,7 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
 # ==========================================================================
 
 
-def fit_hamiltonian_roi_avg_scipyfit(options, data, hamiltonian):
+def fit_hamiltonian_roi_avg_scipyfit(options, data, ham):
     """
     Fits each pixel ODMR result to hamiltonian and returns dictionary of
     param_name -> param_image.
@@ -254,7 +254,7 @@ def fit_hamiltonian_roi_avg_scipyfit(options, data, hamiltonian):
         Generic options dict holding all the user options.
     data : np array, 3D
         Normalised measurement array, shape: [idx, y, x]. E.g. bnvs or freqs
-    fit_model : `qdmpy.hamiltonian._hamiltonians.Hamiltonian`
+    ham : `qdmpy.hamiltonian.Hamiltonian`
         Model we're fitting to.
 
     Returns
@@ -271,14 +271,14 @@ def fit_hamiltonian_roi_avg_scipyfit(options, data, hamiltonian):
         warnings.simplefilter("ignore", category=RuntimeWarning)
         data_roi = np.nanmean(np.nanmean(data, axis=2), axis=1)
 
-    fit_options = prep_ham_scipyfit_options(options, hamiltonian)
+    fit_options = prep_ham_scipyfit_options(options, ham)
 
     init_param_guess, _ = gen_ham_scipyfit_init_guesses(
-        options, *qdmpy.field.hamiltinian.gen_init_guesses(options)
+        options, *qdmpy.field.hamiltonian.ham_gen_init_guesses(options)
     )
 
     ham_result = least_squares(
-        hamiltonian.residuals_scipyfit, init_param_guess, args=(data_roi,), **fit_options
+        ham.residuals_scipyfit, init_param_guess, args=(data_roi,), **fit_options
     )
     best_params = ham_result.x
 
@@ -288,7 +288,7 @@ def fit_hamiltonian_roi_avg_scipyfit(options, data, hamiltonian):
 # ==========================================================================
 
 
-def ham_to_squares_wrapper(fun, p0, shaped_data, **kwargs):
+def ham_to_squares_wrapper(fun, p0, shaped_data, fit_optns):
     """
     Simple wrapper of scipy.optimize.least_squares to allow us to keep track of which
     solution is which (or where).
@@ -300,9 +300,9 @@ def ham_to_squares_wrapper(fun, p0, shaped_data, **kwargs):
     p0 : np array
         Initial guess: array of parameters
     shaped_data : list (3 elements)
-        array returned by `qdmpy.hamiltonian._shared.pixel_generator`: [y, x, data[:, y, x]]
-    kwargs : dict
-        Other options (dict) passed to least_squares, i.e. fit_options
+        array returned by `qdmpy.hamiltonian.ham_pixel_generator`: [y, x, data[:, y, x]]
+    fit_optns : dict
+        Other options (dict) passed to least_squares
 
     Returns
     -------
@@ -313,5 +313,5 @@ def ham_to_squares_wrapper(fun, p0, shaped_data, **kwargs):
     """
     # shaped_data: [y, x, pl]
     # output: (y, x), result_params
-    res = least_squares(fun, p0, args=(shaped_data[2],), **kwargs)
+    res = least_squares(fun, p0, args=(shaped_data[2],), **fit_optns)
     return ((shaped_data[0], shaped_data[1]), res.x, res.jac)

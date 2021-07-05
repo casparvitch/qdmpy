@@ -80,7 +80,7 @@
         "option_choices":
             [
                 "field",
-                "pre_gslac",
+                "pre_gslac"
             ]
     },
 
@@ -546,9 +546,10 @@
                 false
             ]
     },
-    // Guess mag field (Bx, By, Bz) from auto_read_bias parameters (else use bias_mag etc.)
+    // Guess mag field (Bx, By, Bz) from auto_read_bias parameters/bias_mag etc.
+    // for hamiltonian fit. (else uses Bx_guess options etc.)
     "auto_guess_B": {
-        "option_default": false,
+        "option_default": true,
         "option_choices": 
             [
                 true,
@@ -574,7 +575,7 @@
             [-0.57735, -0.57735, 0.57735]
         ]
     },
-    // Field of bias field, used to automatically determine uNVs
+    // Field of bias field, used to automatically determine uNVs (and with auto_guess_B for ham.fit)
     "bias_mag": {
         "option_default": 80
     },
@@ -588,7 +589,8 @@
     },
 
     // ========== Bfield Fit Parameters ===========
-    // directly supply guesses and ranges for bxyz (in Gauss)
+    // directly supply guesses/ranges for bxyz (in Gauss), and D
+    // {note bias_mag etc. are used as guesses if auto_guess_B is true}
     "Bx_guess": {
         "option_default": 10
     },

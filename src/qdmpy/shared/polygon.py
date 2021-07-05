@@ -39,21 +39,21 @@ http://code.activestate.com/recipes/578381-a-point-in-polygon-program-sw-sloan-a
 
 Classes
 -------
- - `qdmpy.shared.polygon.Polygon_polygon.Polygon`
+ - `qdmpy.shared.polygon.Polygon`
 
 Functions
 ---------
- - `qdmpy.shared.polygon.Polygon_polygon.polygon_gui`
- - `qdmpy.shared.polygon.Polygon_polygon._tri_2area_det`
+ - `qdmpy.shared.polygon.polygon_gui`
+ - `qdmpy.shared.polygon._tri_2area_det`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.shared.polygon.Polygon_polygon.polygon_gui": True,
-    "qdmpy.shared.polygon.Polygon_polygon.Polygon": True,
-    "qdmpy.shared.polygon.Polygon_polygon._tri_2area_det": True,
+    "qdmpy.shared.polygon.polygon_gui": True,
+    "qdmpy.shared.polygon.Polygon": True,
+    "qdmpy.shared.polygon._tri_2area_det": True,
 }
 
 # ============================================================================
@@ -1265,7 +1265,7 @@ class PolygonSelector(_SelectorWidget):
             else:
                 self._xs[-1], self._ys[-1] = event.xdata, event.ydata
 
-        self._draw_polygon()
+        self.draw_polygon()
 
     def _on_key_press(self, event):
         """Key press event handler"""
@@ -1275,7 +1275,7 @@ class PolygonSelector(_SelectorWidget):
             "move_vertex" in self.state or "move_all" in self.state
         ):
             self._xs, self._ys = self._xs[:-1], self._ys[:-1]
-            self._draw_polygon()
+            self.draw_polygon()
         elif "finished" in self.state:
             # we're finished, move on from everything
             if self._polygon_completed:
@@ -1300,7 +1300,7 @@ class PolygonSelector(_SelectorWidget):
                 line["line_obj"].remove()
             self.lines = []
             self.artists = [self.current_line, self._polygon_handles.artist]
-            self._draw_polygon()
+            self.draw_polygon()
 
     def _on_key_release(self, event):
         """Key release event handler"""
@@ -1312,7 +1312,7 @@ class PolygonSelector(_SelectorWidget):
         ):
             self._xs.append(event.xdata)
             self._ys.append(event.ydata)
-            self._draw_polygon()
+            self.draw_polygon()
         # Reset the polygon if the released key is the 'clear' key.
         elif event.key == self.state_modifier_keys.get("clear"):
             event = self._clean_event(event)
@@ -1320,7 +1320,7 @@ class PolygonSelector(_SelectorWidget):
             self._polygon_completed = False
             self.set_visible(True)
 
-    def _draw_polygon(self):
+    def draw_polygon(self):
         """Redraw the polygon(s) based on the new vertex positions."""
         self.current_line.set_data(self._xs, self._ys)
 
@@ -1444,4 +1444,4 @@ class PolygonSelectionWidget:
             self.polys.artists.append(new_line)
             self.polys.lines.append(new_line_dict)  # list of line dicts
 
-        self.polys._draw_polygon()
+        self.polys.draw_polygon()

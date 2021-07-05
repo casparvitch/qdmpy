@@ -8,7 +8,7 @@ Functions
  - `qdmpy.pl.gpufit.get_gpufit_modelID`
  - `qdmpy.pl.gpufit.prep_gpufit_backend`
  - `qdmpy.pl.gpufit.gen_gpufit_init_guesses`
- - `qdmpy.pl.gpufit.fit_single_pixel_gpufit`
+ - `qdmpy.pl.gpufit.fit_single_pixel_pl_gpufit`
  - `qdmpy.pl.gpufit.fit_roi_avg_pl_gpufit`
  - `qdmpy.pl.gpufit.fit_aois_pl_gpufit`
  - `qdmpy.pl.gpufit.fit_pl_pixels_gpufit`
@@ -25,10 +25,10 @@ __pdoc__ = {
     "qdmpy.pl.gpufit.get_gpufit_modelID": True,
     "qdmpy.pl.gpufit.prep_gpufit_backend": True,
     "qdmpy.pl.gpufit.gen_gpufit_init_guesses": True,
-    "qdmpy.pl.gpufit.fit_single_pixel_gpufit": True,
+    "qdmpy.pl.gpufit.fit_single_pixel_pl_gpufit": True,
     "qdmpy.pl.gpufit.fit_roi_avg_pl_gpufit": True,
     "qdmpy.pl.gpufit.fit_aois_pl_gpufit": True,
-    "qdmpy.pl.gpufit.fit_pl_pixels_gpufit": True,
+    "qdmpy.pl.gpufit.fit_all_pixels_pl_gpufit": True,
     "qdmpy.pl.gpufit.gpufit_data_shape": True,
     "qdmpy.pl.gpufit.gpufit_reshape_result": True,
     "qdmpy.pl.gpufit.get_params_to_fit": True,
@@ -241,7 +241,7 @@ def gen_gpufit_init_guesses(options, init_guesses, init_bounds):
 # ============================================================================
 
 
-def fit_single_pixel_gpufit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result):
+def fit_single_pixel_pl_gpufit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result):
     """
     Fit Single pixel and return optimal fit parameters with gpufit backend
 
@@ -411,7 +411,7 @@ def fit_aois_pl_gpufit(
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
         init_guess_params = roi_avg_fit_result.best_params.copy()
 
-    single_pixel_fit_params = fit_single_pixel_gpufit(
+    single_pixel_fit_params = fit_single_pixel_pl_gpufit(
         options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result
     )
 
@@ -452,7 +452,7 @@ def fit_aois_pl_gpufit(
 # ============================================================================
 
 
-def fit_pl_pixels_gpufit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
+def fit_all_pixels_pl_gpufit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
     """
     Fits each pixel and returns dictionary of param_name -> param_image.
 

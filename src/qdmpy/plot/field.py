@@ -4,28 +4,28 @@ This module holds functions for plotting fields.
 
 Functions
 ---------
- - `qdmpy.plot.field.plot_bnvs_and_dshifts`
- - `qdmpy.plot.field.plot_bfield`
- - `qdmpy.plot.field.plot_dshift_fit`
- - `qdmpy.plot.field.plot_field_residual`
- - `qdmpy.plot.field.plot_field_param`
- - `qdmpy.plot.field.plot_field_param_flattened`
- - `qdmpy.plot.field.plot_bfield_consistency`
- - `qdmpy.plot.field.plot_bfield_theta_phi`
+ - `qdmpy.plot.field.bnvs_and_dshifts`
+ - `qdmpy.plot.field.bfield`
+ - `qdmpy.plot.field.dshift_fit`
+ - `qdmpy.plot.field.field_residual`
+ - `qdmpy.plot.field.field_param`
+ - `qdmpy.plot.field.field_param_flattened`
+ - `qdmpy.plot.field.bfield_consistency`
+ - `qdmpy.plot.field.bfield_theta_phi`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.plot.fields.plot_bnvs_and_dshifts": True,
-    "qdmpy.plot.fields.plot_bfield": True,
-    "qdmpy.plot.fields.plot_dshift_fit": True,
-    "qdmpy.plot.fields.plot_field_residual": True,
-    "qdmpy.plot.fields.plot_field_param": True,
-    "qdmpy.plot.fields.plot_field_param_flattened": True,
-    "qdmpy.plot.fields.plot_bfield_consistency": True,
-    "qdmpy.plot.fields.plot_bfield_theta_phi": True,
+    "qdmpy.plot.fields.bnvs_and_dshifts": True,
+    "qdmpy.plot.fields.bfield": True,
+    "qdmpy.plot.fields.dshift_fit": True,
+    "qdmpy.plot.fields.field_residual": True,
+    "qdmpy.plot.fields.field_param": True,
+    "qdmpy.plot.fields.field_param_flattened": True,
+    "qdmpy.plot.fields.bfield_consistency": True,
+    "qdmpy.plot.fields.bfield_theta_phi": True,
 }
 
 # ============================================================================
@@ -44,7 +44,7 @@ import qdmpy.field
 # ============================================================================
 
 
-def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
+def bnvs_and_dshifts(options, name, bnvs, dshifts):
     """
     Plots bnv arrays above dshift arrays.
 
@@ -132,7 +132,7 @@ def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
 # ============================================================================
 
 
-def plot_bfield(options, name, field_params):
+def bfield(options, name, field_params):
     """Plot Bxyz if available as keys in 'field_params'.
 
     Arguments
@@ -195,7 +195,7 @@ def plot_bfield(options, name, field_params):
 # ============================================================================
 
 
-def plot_dshift_fit(options, name, field_params):
+def dshift_fit(options, name, field_params):
     """Plot dshift (fit) if available as keys in 'field_params'.
 
     Arguments
@@ -240,7 +240,7 @@ def plot_dshift_fit(options, name, field_params):
 # ============================================================================
 
 
-def plot_field_residual(options, name, field_params):
+def field_residual(options, name, field_params):
     """Plot residual if available as keys in 'field_params' (as 'residual_field').
 
     Arguments
@@ -297,7 +297,7 @@ def plot_field_residual(options, name, field_params):
 # ============================================================================
 
 
-def plot_field_param(
+def field_param(
     options,
     name,  # i.e. "sig"/"ref" etc.
     param_name,  # "Bx" etc.
@@ -364,7 +364,7 @@ def plot_field_param(
 # ============================================================================
 
 
-def plot_field_param_flattened(
+def field_param_flattened(
     options,
     name,
     param_name,
@@ -532,21 +532,21 @@ def plot_field_param_flattened(
 # ============================================================================
 
 
-def plot_strain(options, name, field_params):
+def strain(options, name, field_params):
     raise NotImplementedError()
 
 
 # ============================================================================
 
 
-def plot_efield(options, name, field_params):
+def efield(options, name, field_params):
     raise NotImplementedError()
 
 
 # ============================================================================
 
 
-def plot_bfield_consistency(options, name, field_params):
+def bfield_consistency(options, name, field_params):
     """plot bfield vs bfield_recon
 
     Parameters
@@ -620,7 +620,7 @@ def plot_bfield_consistency(options, name, field_params):
 # ============================================================================
 
 
-def plot_bfield_theta_phi(
+def bfield_theta_phi(
     options,
     name,
     field_params,

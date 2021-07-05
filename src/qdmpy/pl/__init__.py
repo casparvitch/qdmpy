@@ -2,8 +2,8 @@
 """
 Sub-package for fitting widefield NV microscopy (photoluminescence) data.
 
-This (sub-) package exposes all of the concents of `qdmpy.pl.interface`, as well
-as qdmpy.pl.model (FitModel class etc.)
+This (sub-) package exposes all of the concents of `qdmpy.pl.interface,
+`qdmpy.pl.model` (FitModel class etc.) and `qdmpy.pl.io`
 """
 
 __author__ = "Sam Scholten"
@@ -19,3 +19,4 @@ __pdoc__ = {
 
 from qdmpy.pl.interface import *  # noqa: F401, F403
 from qdmpy.pl.model import *  # noqa: F401, F403
+from qdmpy.pl.io import *  # noqa: F401, F403

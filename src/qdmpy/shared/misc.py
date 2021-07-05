@@ -1,8 +1,6 @@
+# -*- coding: utf-8 -*-
 """
-TODO
-
 Shared methods that I couldn't find a nice place to put
-
 """
 
 # ============================================================================
@@ -39,8 +37,8 @@ def define_aois(options):
     while True:
         i += 1
         try:
-            start = options["aoi_" + str(i) + "_start"]
-            end = options["aoi_" + str(i) + "_end"]
+            start = options["AOI_" + str(i) + "_start"]
+            end = options["AOI_" + str(i) + "_end"]
 
             if start is None or end is None:
                 continue
@@ -73,9 +71,9 @@ def define_roi(options, full_size_h, full_size_w):
         E.g. sig_roi = sig[:, roi[0], roi[1]]
     """
 
-    if options["roi"] == "Full":
+    if options["ROI"] == "Full":
         roi = _define_area_roi(0, 0, full_size_w - 1, full_size_h - 1)
-    elif options["roi"] == "Rectangle":
+    elif options["ROI"] == "Rectangle":
         start_x, start_y = options["roi_start"]
         end_x, end_y = options["roi_end"]
         roi = _define_area_roi(start_x, start_y, end_x, end_y)

@@ -31,15 +31,6 @@
                 false
             ]
     },
-    // Guess mag field (Bx, By, Bz) from auto_read_bias parameters (else use bias_mag etc.)
-    "auto_guess_B": {
-        "option_default": false,
-        "option_choices": 
-            [
-                true,
-                false
-            ]
-    },
     // Field of bias field, used to automatically determine uNVs
     "bias_mag": {
         "option_default": 80

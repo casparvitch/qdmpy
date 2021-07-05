@@ -450,6 +450,8 @@ def ham_gen_init_guesses(options):
     if options["auto_guess_B"]:
         bias_x, bias_y, bias_z = options["bias_field_cartesian_gauss"]
         override_guesses = {"Bx": bias_x, "By": bias_y, "Bz": bias_z}
+    else:
+        override_guesses = {}
 
     ham = AVAILABLE_HAMILTONIANS[options["hamiltonian"]]
     for param_key in ham.param_defn:

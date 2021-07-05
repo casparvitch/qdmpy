@@ -4,17 +4,17 @@ json2dict; functions for loading json files to dicts and the inverse.
 
 Functions
 ---------
- - `qdmpy.io.json2dict.json_to_dict`
- - `qdmpy.io.json2dict.dict_to_json`
- - `qdmpy.io.json2dict.dict_to_json_str`
- - `qdmpy.io.json2dict._prettyjson`
- - `qdmpy.io.json2dict._getsubitems`
- - `qdmpy.io.json2dict._basictype2str`
- - `qdmpy.io.json2dict._indentitems`
- - `qdmpy.io.json2dict._json_remove_comments`
- - `qdmpy.io.json2dict.failfloat`
- - `qdmpy.io.json2dict._defaultdict_from_d`
- - `qdmpy.io.json2dict.recursive_dict_update`
+ - `qdmpy.shared.json2dict.json_to_dict`
+ - `qdmpy.shared.json2dict.dict_to_json`
+ - `qdmpy.shared.json2dict.dict_to_json_str`
+ - `qdmpy.shared.json2dict._prettyjson`
+ - `qdmpy.shared.json2dict._getsubitems`
+ - `qdmpy.shared.json2dict._basictype2str`
+ - `qdmpy.shared.json2dict._indentitems`
+ - `qdmpy.shared.json2dict._json_remove_comments`
+ - `qdmpy.shared.json2dict.failfloat`
+ - `qdmpy.shared.json2dict._defaultdict_from_d`
+ - `qdmpy.shared.json2dict.recursive_dict_update`
 """
 
 # ============================================================================
@@ -22,17 +22,17 @@ Functions
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.io.json2dict.json_to_dict": True,
-    "qdmpy.io.json2dict.dict_to_json": True,
-    "qdmpy.io.json2dict.dict_to_json_str": True,
-    "qdmpy.io.json2dict._prettyjson": True,
-    "qdmpy.io.json2dict._getsubitems": True,
-    "qdmpy.io.json2dict._basictype2str": True,
-    "qdmpy.io.json2dict._indentitems": True,
-    "qdmpy.io.json2dict._json_remove_comments": True,
-    "qdmpy.io.json2dict.failfloat": True,
-    "qdmpy.io.json2dict._defaultdict_from_d": True,
-    "qdmpy.io.json2dict.recursive_dict_update": True,
+    "qdmpy.shared.json2dict.json_to_dict": True,
+    "qdmpy.shared.json2dict.dict_to_json": True,
+    "qdmpy.shared.json2dict.dict_to_json_str": True,
+    "qdmpy.shared.json2dict._prettyjson": True,
+    "qdmpy.shared.json2dict._getsubitems": True,
+    "qdmpy.shared.json2dict._basictype2str": True,
+    "qdmpy.shared.json2dict._indentitems": True,
+    "qdmpy.shared.json2dict._json_remove_comments": True,
+    "qdmpy.shared.json2dict.failfloat": True,
+    "qdmpy.shared.json2dict._defaultdict_from_d": True,
+    "qdmpy.shared.json2dict.recursive_dict_update": True,
 }
 
 # ============================================================================
@@ -98,7 +98,7 @@ def dict_to_json(dictionary, filename, path_to_dir=None):
 
 
 def dict_to_json_str(obj, indent=4, maxlinelength=80):
-    """Copy of `qdmpy.io.json2dict._prettyjson`"""
+    """Copy of `qdmpy.shared.json2dict._prettyjson`"""
     return _prettyjson(obj, indent, maxlinelength)
 
 

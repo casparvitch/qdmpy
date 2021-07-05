@@ -213,7 +213,7 @@ class UniMelb(System):
     uni_defaults_path = _CONFIG_PATH / "unimelb_defaults.json"
 
     def __init__(self, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
+        # super().__init__(self, *args, **kwargs) # don't super init, it's a NotImplemented guard.
         # ensure all values default to None (at all levels of reading in json)
 
         # global defaults

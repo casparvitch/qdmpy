@@ -61,6 +61,7 @@ from rebin import rebin
 # ============================================================================
 
 import qdmpy.shared.misc
+import qdmpy.shared.json2dict
 import qdmpy.pl.funcs
 import qdmpy.pl.model
 
@@ -331,7 +332,7 @@ def _remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_nor
     rem_start = options["remove_start_sweep"]
     rem_end = options["remove_end_sweep"]
 
-    roi = qdmpy.shared.misc.define_ROI(options, *options["rebinned_image_shape"])
+    roi = qdmpy.shared.misc.define_roi(options, *options["rebinned_image_shape"])
 
     if rem_start < 0:
         warnings.warn("remove_start_sweep must be >=0, setting to zero now.")
@@ -421,7 +422,7 @@ def _check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_w
 def load_prev_pl_fit_results(options):
     """Load (all) parameter pl fits from previous processing."""
 
-    prev_options = qdmpy.io.fit.get_prev_options(options)
+    prev_options = get_prev_options(options)
 
     fit_param_res_dict = {}
 
@@ -440,7 +441,7 @@ def load_prev_pl_fit_results(options):
 def load_prev_pl_fit_sigmas(options):
     """Load (all) parameter pl fits from previous processing."""
 
-    prev_options = qdmpy.io.fit.get_prev_options(options)
+    prev_options = get_prev_options(options)
 
     sigmas = {}
 
@@ -526,7 +527,12 @@ def load_ref_exp_pl_fit_results(ref_options):
         Dictionary, key: param_keys, val: image (2D) of (fit) param values across FOV.
         If no reference experiment is given (i.e. ref_options and ref_options_dir are None) then
         returns None
+    fit_result_sigmas : OrderedDict
+        Dict as above, but fit sigmas
     """
+
+    if ref_options is None:
+        return None, None
 
     # ok now have ref_options dict, time to load params
     if ref_options["found_prev_result"]:
@@ -672,7 +678,7 @@ def options_compatible(options, prev_options):
                 return False, f"gpufit option different: {fit_opt_name}"
 
     # ok now the trickiest one, check parameter guesses & bounds
-    unique_params = set(qdmpy.pl.model.FitModel(options["fit_functions"])).get_param_defn()
+    unique_params = set(qdmpy.pl.model.FitModel(options["fit_functions"]).get_param_defn())
 
     for param_name in unique_params:
         if options[param_name + "_guess"] != prev_options[param_name + "_guess"]:
@@ -733,7 +739,7 @@ def _prev_pl_fits_exist(options):
 
 
 def _prev_pl_sigmas_exist(prev_options):
-    """ as `qdmpy.io.raw._prev_pl_fits_exist` but for sigmas """
+    """ as `qdmpy.pl.io._prev_pl_fits_exist` but for sigmas """
     # avoid cyclic imports
 
     for fn_type, num in prev_options["fit_functions"].items():
@@ -755,7 +761,7 @@ def get_prev_options(options):
     """
     Reads options file from previous fit result (.json), returns a dictionary.
     """
-    return qdmpy.json2dict.json_to_dict(options["output_dir"] / "saved_options.json")
+    return qdmpy.shared.json2dict.json_to_dict(options["output_dir"] / "saved_options.json")
 
 
 # ============================================================================

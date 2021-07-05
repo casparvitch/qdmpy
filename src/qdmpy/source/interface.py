@@ -203,19 +203,19 @@ def get_current_density(
                 polygons = options["polygons"]
             else:
                 polygons = None
-            jx_bground = qdmpy.shared.polygon.Polygonget_background(
+            jx_bground = qdmpy.shared.itool.get_background(
                 jx,
                 options["source_bground_method"],
                 polygons=polygons,
                 **options["source_bground_params"],
             )
-            jy_bground = qdmpy.shared.polygon.Polygonget_background(
+            jy_bground = qdmpy.shared.itool.get_background(
                 jy,
                 options["source_bground_method"],
                 polygons=polygons,
                 **options["source_bground_params"],
             )
-            jnorm_bground = qdmpy.shared.polygon.Polygonget_background(
+            jnorm_bground = qdmpy.shared.itool.get_background(
                 jnorm,
                 options["source_bground_method"],
                 polygons=polygons,
@@ -358,7 +358,7 @@ def get_magnetization(
                 polygons = options["polygons"]
             else:
                 polygons = None
-            m_bground = qdmpy.shared.polygon.Polygonget_background(
+            m_bground = qdmpy.shared.itool.get_background(
                 m,
                 options["source_bground_method"],
                 polygons=polygons,

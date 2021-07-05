@@ -4,22 +4,22 @@ This module holds functions for plotting source (fields).
 
 Functions
 ---------
- - `qdmpy.plot.source.plot_source_param`
- - `qdmpy.plot.source.plot_current`
- - `qdmpy.plot.source.plot_stream`
- - `qdmpy.plot.source.plot_magnetization`
- - `qdmpy.plot.source.plot_divperp_j`
+ - `qdmpy.plot.source.source_param`
+ - `qdmpy.plot.source.current`
+ - `qdmpy.plot.source.current_stream`
+ - `qdmpy.plot.source.magnetization`
+ - `qdmpy.plot.source.divperp_j`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.plot.source.plot_source_param": True,
-    "qdmpy.plot.source.plot_current": True,
-    "qdmpy.plot.source.plot_stream": True,
-    "qdmpy.plot.source.plot_magnetization": True,
-    "qdmpy.plot.source.plot_divperp_j": True,
+    "qdmpy.plot.source.source_param": True,
+    "qdmpy.plot.source.current": True,
+    "qdmpy.plot.source.current_stream": True,
+    "qdmpy.plot.source.magnetization": True,
+    "qdmpy.plot.source.divperp_j": True,
 }
 
 # ============================================================================
@@ -42,7 +42,7 @@ import qdmpy.plot.common
 # ============================================================================
 
 
-def plot_source_param(
+def source_param(
     options,
     param_name,  # "Jx_full_from_bnv" etc.
     source_params,
@@ -106,7 +106,7 @@ def plot_source_param(
 # ============================================================================
 
 
-def plot_current(options, source_params, plot_bgrounds=True):
+def current(options, source_params, plot_bgrounds=True):
     """Plots current (Jx, Jy, Jnorm). Optionally plot background subtracted.
 
     Arguments
@@ -205,7 +205,7 @@ def plot_current(options, source_params, plot_bgrounds=True):
 # ============================================================================
 
 
-def plot_stream(
+def current_stream(
     options,
     source_params,
     background_image=None,
@@ -259,13 +259,16 @@ def plot_stream(
         ax = axs if width == 1 else axs[m_idx]
 
         if background_image is not None:
-            ax.imshow(
-                background_image,
-                cmap="Greys_r",
-                vmin=np.nanmin(background_image),
-                vmax=np.nanmax(background_image),
-                alpha=options["streamplot_pl_alpha"],
-            )
+            with warnings.catch_warnings():
+                # ignore all-NaN slice encountered warning
+                warnings.simplefilter("ignore", category=RuntimeWarning)
+                ax.imshow(
+                    background_image,
+                    cmap="Greys_r",
+                    vmin=np.nanmin(background_image),
+                    vmax=np.nanmax(background_image),
+                    alpha=options["streamplot_pl_alpha"],
+                )
             if probe_image is not None:
                 my_cmap = copy.copy(cm.get_cmap("Reds"))  # doesn't matter _what_ the cmap imshow
                 my_cmap.set_under("k", alpha=0)
@@ -357,6 +360,8 @@ def plot_stream(
 
             ax.set_facecolor("w")
 
+        ax.set_aspect("equal")
+
     if options["save_plots"]:
         fig.savefig(options["source_dir"] / ("Jstream." + options["large_fig_save_type"]))
 
@@ -366,7 +371,7 @@ def plot_stream(
 # ============================================================================
 
 
-def plot_magnetization(options, source_params, plot_bgrounds=True):
+def magnetization(options, source_params, plot_bgrounds=True):
     """Plots magnetization. Optionally plot background subtracted.
 
     Arguments
@@ -455,7 +460,7 @@ def plot_magnetization(options, source_params, plot_bgrounds=True):
 # ============================================================================
 
 
-def plot_divperp_j(options, source_params):
+def divperp_j(options, source_params):
     """plot perpindicular divergence of J, i.e. in-plane divergence (dJ/dx + dJ/dy).
 
     Parameters

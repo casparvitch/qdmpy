@@ -4,15 +4,15 @@ This module holds functions for plotting initial processing images and fit resul
 
 Functions
 ---------
- - `qdmpy.plot.fit.plot_roi_pl_image`
- - `qdmpy.plot.fit.plot_aoi_pl_images`
- - `qdmpy.plot.fit.plot_roi_avg_fits`
- - `qdmpy.plot.fit.plot_aoi_spectra`
- - `qdmpy.plot.fit.plot_aoi_spectra_fit`
- - `qdmpy.plot.fit.plot_pl_param_image`
- - `qdmpy.plot.fit.plot_pl_param_images`
- - `qdmpy.plot.fit.plot_pl_params_flattened`
- - `qdmpy.plot.fit.plot_other_measurements`
+ - `qdmpy.plot.fit.roi_pl_image`
+ - `qdmpy.plot.fit.aoi_pl_images`
+ - `qdmpy.plot.fit.roi_avg_fits`
+ - `qdmpy.plot.fit.aoi_spectra`
+ - `qdmpy.plot.fit.aoi_spectra_fit`
+ - `qdmpy.plot.fit.pl_param_image`
+ - `qdmpy.plot.fit.pl_param_images`
+ - `qdmpy.plot.fit.pl_params_flattened`
+ - `qdmpy.plot.fit.other_measurements`
  - `qdmpy.plot.fit._add_patch_rect`
  - `qdmpy.plot.fit._annotate_roi_image`
  - `qdmpy.plot.fit._annotate_aoi_image`
@@ -22,15 +22,15 @@ Functions
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.plot.fit.plot_roi_pl_image": True,
-    "qdmpy.plot.fit.plot_aoi_pl_images": True,
-    "qdmpy.plot.fit.plot_roi_avg_fits": True,
-    "qdmpy.plot.fit.plot_aoi_spectra": True,
-    "qdmpy.plot.fit.plot_aoi_spectra_fit": True,
-    "qdmpy.plot.fit.plot_pl_param_image": True,
-    "qdmpy.plot.fit.plot_pl_param_images": True,
-    "qdmpy.plot.fit.plot_pl_params_flattened": True,
-    "qdmpy.plot.fit.plot_other_measurements": True,
+    "qdmpy.plot.fit.roi_pl_image": True,
+    "qdmpy.plot.fit.aoi_pl_images": True,
+    "qdmpy.plot.fit.roi_avg_fits": True,
+    "qdmpy.plot.fit.aoi_spectra": True,
+    "qdmpy.plot.fit.aoi_spectra_fit": True,
+    "qdmpy.plot.fit.pl_param_image": True,
+    "qdmpy.plot.fit.pl_param_images": True,
+    "qdmpy.plot.fit.pl_params_flattened": True,
+    "qdmpy.plot.fit.other_measurements": True,
     "qdmpy.plot.fit._add_patch_rect": True,
     "qdmpy.plot.fit._annotate_roi_image": True,
     "qdmpy.plot.fit._annotate_aoi_image": True,
@@ -56,7 +56,7 @@ import qdmpy.shared.misc
 # ===========================================================================
 
 
-def plot_roi_pl_image(options, pl_image):
+def roi_pl_image(options, pl_image):
     """
     Plots full pl image with ROI region annotated.
 
@@ -96,7 +96,7 @@ def plot_roi_pl_image(options, pl_image):
 # ============================================================================
 
 
-def plot_aoi_pl_images(options, pl_image_roi):
+def aoi_pl_images(options, pl_image_roi):
     """
     Plots pl image cut down to ROI, with annotated AOI regions.
 
@@ -134,7 +134,7 @@ def plot_aoi_pl_images(options, pl_image_roi):
 # ============================================================================
 
 
-def plot_roi_avg_fits(options, backend_roi_results_lst):
+def roi_avg_fits(options, backend_roi_results_lst):
     """
     Plots fit of spectrum averaged across ROI, as well as corresponding residual values.
 
@@ -288,7 +288,7 @@ def plot_roi_avg_fits(options, backend_roi_results_lst):
 # ============================================================================
 
 
-def plot_aoi_spectra(options, sig, ref, sweep_list):
+def aoi_spectra(options, sig, ref, sweep_list):
     """
     Plots spectra from each AOI, as well as subtraction and division norms.
 
@@ -311,7 +311,7 @@ def plot_aoi_spectra(options, sig, ref, sweep_list):
     -------
     fig : matplotlib Figure object
     """
-    aois = qdmpy.shared.misc.define_AOIs(options)
+    aois = qdmpy.shared.misc.define_aois(options)
 
     # pre-process data to plot
     sig_avgs = []
@@ -441,7 +441,7 @@ def plot_aoi_spectra(options, sig, ref, sweep_list):
 # ============================================================================
 
 
-def plot_aoi_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_lst, fit_model):
+def aoi_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_lst, fit_model):
     """
     Plots sig and ref spectra, sub and div normalisation and fit for the ROI average, a single
     pixel, and each of the AOIs. All stacked on top of each other for comparison. The ROI
@@ -481,7 +481,7 @@ def plot_aoi_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_ls
     # columns:
     # sig & ref, sub & div norm, fit -> compared to ROI {raw, fit, ROI_avg_fit}
 
-    aois = qdmpy.shared.misc.define_AOIs(options)
+    aois = qdmpy.shared.misc.define_aois(options)
 
     figsize = mpl.rcParams["figure.figsize"].copy()
     figsize[0] *= 3  # number of columns
@@ -698,7 +698,7 @@ def plot_aoi_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_ls
 # ============================================================================
 
 
-def plot_pl_param_image(
+def pl_param_image(
     options, fit_model, pixel_fit_params, param_name, param_number=0, errorplot=False
 ):
     """
@@ -779,7 +779,7 @@ def plot_pl_param_image(
 # ============================================================================
 
 
-def plot_pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=False):
+def pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=False):
     """
     Plots images for all independent versions of a single parameter type in pixel_fit_params.
 
@@ -805,7 +805,7 @@ def plot_pl_param_images(options, fit_model, pixel_fit_params, param_name, error
     # if no fit completed
     if pixel_fit_params is None:
         warnings.warn(
-            "'pixel_fit_params' arg to function 'plot_pl_param_images' is 'None'.\n"
+            "'pixel_fit_params' arg to function 'pl_param_images' is 'None'.\n"
             + "Probably no pixel fitting completed."  # noqa: W503
         )
         return None
@@ -836,7 +836,7 @@ def plot_pl_param_images(options, fit_model, pixel_fit_params, param_name, error
 
     if nk == 1:
         # just one image, so plot normally
-        fig = plot_pl_param_image(options, fit_model, pixel_fit_params, param_name, 0, errorplot)
+        fig = pl_param_image(options, fit_model, pixel_fit_params, param_name, 0, errorplot)
     else:
         if nk <= 8:
             num_columns = 4
@@ -924,7 +924,7 @@ def plot_pl_param_images(options, fit_model, pixel_fit_params, param_name, error
 # ============================================================================
 
 
-def plot_pl_params_flattened(
+def pl_params_flattened(
     options,
     fit_model,
     pixel_fit_params,
@@ -1124,7 +1124,7 @@ def plot_pl_params_flattened(
 # ============================================================================
 
 
-def plot_other_measurements(options, skip_first=0):
+def other_measurements(options, skip_first=0):
     """
     Plot any other tsv/csv datasets (at base_path + s for s in
     options["other_measurement_suffixes"]). Assumes first column is some form of ind. dataset

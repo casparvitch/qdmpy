@@ -77,7 +77,7 @@ def mask_polygons(image, polygons=None, invert_mask=False):
     image : 2D array-like
         Image array to mask.
     polygons : list, optional
-        List of `qdmpy.shared.polygon.Polygon_polygon.Polygon` objects.
+        List of `qdmpy.shared.polygon.Polygon` objects.
         (the default is None, where image is returned with no mask)
     invert_mask : bool, optional
         Invert mask such that background is masked, not polygons (i.e. polygons
@@ -167,7 +167,7 @@ def get_background(image, method, polygons=None, **method_params_dict):
         Key-value pairs passed onto each background backend. Required params
         given above.
     polygons : list, optional
-        list of `qdmpy.shared.polygon.Polygon_polygon.Polygon` objects.
+        list of `qdmpy.shared.polygon.Polygon` objects.
         (the default is None, in which case the polygon feature is not used)
 
     Returns
@@ -241,7 +241,7 @@ def mu_sigma_exclude_polygons(image, polygons=None):
 def get_im_filtered(image, filter_type, **kwargs):
     """Wrapped over other filters defined in `qdmpy.shared.polygon.Polygon_filter'.
     Current filters defined:
-        - filter_type = gaussian, `qdmpy.shared.polygon.Polygon_filter.get_im_filtered_gaussian`
+        - filter_type = gaussian, `qdmpy.shared.itool.get_im_filtered_gaussian`
     """
     if not isinstance(image, np.ma.core.MaskedArray):
         image = np.ma.masked_array(image)
@@ -465,7 +465,7 @@ def _interpolated_background(image, interp_method, polygons, sigma):
 
     bg_interp = griddata(pts, vals, (grid_y, grid_x), method=interp_method)
 
-    return qdmpy.shared.polygon.Polygon_filter.get_im_filtered(bg_interp, "_gaussian", sigma=sigma)
+    return get_im_filtered(bg_interp, "gaussian", sigma=sigma)
 
 
 # ============================================================================
@@ -473,7 +473,7 @@ def _interpolated_background(image, interp_method, polygons, sigma):
 
 def _filtered_background(image, filter_type, **kwargs):
     """Background defined by a filter_type-filtering of the image.
-    Passed to `qdmpy.shared.polygon.Polygon_filter.get_im_filtered`."""
+    Passed to `qdmpy.shared.itool.get_background"""
     return get_im_filtered(image, filter_type, **kwargs)
 
 

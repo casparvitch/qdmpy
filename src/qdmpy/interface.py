@@ -55,6 +55,7 @@ import qdmpy.shared.json2dict
 import qdmpy.plot
 import qdmpy.system
 import qdmpy.shared.polygon
+import qdmpy.pl
 
 # ============================================================================
 
@@ -186,7 +187,7 @@ def load_options(
 
     # don't always check for prev. results (so we can use this fn in other contexts)
     if check_for_prev_result or loading_ref:
-        qdmpy.io.fit.check_if_already_fit(options, loading_ref=loading_ref)
+        qdmpy.pl.check_if_already_fit(options, loading_ref=loading_ref)
     return options
 
 
@@ -234,14 +235,14 @@ def load_ref_options(options, ref_options=None, ref_options_dir=None):
         pathlib.Path(options["field_sig_dir"]).mkdir(exist_ok=True)
         pathlib.Path(options["field_ref_dir"]).mkdir(exist_ok=True)
         pathlib.Path(options["field_sig_sub_ref_dir"]).mkdir(exist_ok=True)
-        return None, None
+        return None
 
     if ref_options_dir is not None:
         ref_options_path = pathlib.Path(ref_options_dir) / "saved_options.json"
     else:
         ref_options_path = None
 
-    ref_options = qdmpy.io.raw.load_options(
+    ref_options = load_options(
         options_dict=ref_options,
         options_path=ref_options_path,
         check_for_prev_result=True,
@@ -471,7 +472,9 @@ def load_polygons(options):
     if options["polygon_nodes_path"]:
         options["polygon_nodes"] = [
             np.array(polygon)
-            for polygon in qdmpy.json2dict.json_to_dict(options["polygon_nodes_path"])["nodes"]
+            for polygon in qdmpy.shared.json2dict.json_to_dict(options["polygon_nodes_path"])[
+                "nodes"
+            ]
         ]
         options["polygons"] = [
             qdmpy.shared.polygon.Polygon(nodes[:, 0], nodes[:, 1])

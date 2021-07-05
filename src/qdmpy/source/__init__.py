@@ -4,3 +4,4 @@ Module for inverting fields to calculate their source (field).
 """
 
 from qdmpy.source.interface import *
+from qdmpy.source.io import *

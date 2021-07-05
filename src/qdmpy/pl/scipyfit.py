@@ -7,7 +7,7 @@ Functions
  - `qdmpy.pl.scipyfit.prep_scipyfit_options`
  - `qdmpy.pl.scipyfit.gen_scipyfit_init_guesses`
  - `qdmpy.pl.scipyfit.fit_roi_avg_pl_scipyfit`
- - `qdmpy.pl.scipyfit.fit_single_pixel_scipyfit`
+ - `qdmpy.pl.scipyfit.fit_single_pixel_pl_scipyfit`
  - `qdmpy.pl.scipyfit.fit_aois_pl_scipyfit`
  - `qdmpy.pl.scipyfit.limit_cpu`
  - `qdmpy.pl.scipyfit.to_squares_wrapper`
@@ -21,11 +21,11 @@ __pdoc__ = {
     "qdmpy.pl.scipyfit.prep_scipyfit_options": True,
     "qdmpy.pl.scipyfit.gen_scipyfit_init_guesses": True,
     "qdmpy.pl.scipyfit.fit_roi_avg_pl_scipyfit": True,
-    "qdmpy.pl.scipyfit.fit_single_pixel_scipyfit": True,
+    "qdmpy.pl.scipyfit.fit_single_pixel_pl_scipyfit": True,
     "qdmpy.pl.scipyfit.fit_aois_pl_scipyfit": True,
     "qdmpy.pl.scipyfit.limit_cpu": True,
     "qdmpy.pl.scipyfit.to_squares_wrapper": True,
-    "qdmpy.pl.scipyfit.fit_pl_pixels_scipyfit": True,
+    "qdmpy.pl.scipyfit.fit_all_pixels_pl_scipyfit": True,
 }
 
 # ==========================================================================
@@ -45,6 +45,7 @@ from datetime import timedelta
 # ============================================================================
 
 import qdmpy.pl.common
+import qdmpy.pl.funcs
 
 # ==========================================================================
 
@@ -137,7 +138,7 @@ def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
         # extract a guess/bounds for each of the copies of each fn_type (e.g. 8 lorentzians)
         for n in range(num):
 
-            for pos, key in enumerate(qdmpy.pl.common.AVAILABLE_FNS[fn_type].param_defn):
+            for pos, key in enumerate(qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn):
                 # this check is to handle the edge case of guesses/bounds
                 # options being provided as numbers rather than lists of numbers
                 try:
@@ -207,7 +208,7 @@ def fit_roi_avg_pl_scipyfit(options, sig_norm, sweep_list, fit_model):
 # ==========================================================================
 
 
-def fit_single_pixel_scipyfit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result):
+def fit_single_pixel_pl_scipyfit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result):
     """
     Fit Single pixel and return best_fit_result.x (i.e. the optimal fit parameters)
 
@@ -296,15 +297,15 @@ def fit_aois_pl_scipyfit(
         )
         guess_params = fit_param_ar.copy()
 
-    single_pixel_fit_params = fit_single_pixel_scipyfit(
+    single_pixel_fit_params = fit_single_pixel_pl_scipyfit(
         options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result
     )
 
     aoi_avg_best_fit_results_lst = []
 
     for a in aois:
-        sig_norm = sig_norm[:, a[0], a[1]]
-        avg = np.nanmean(np.nanmean(sig_norm, axis=2), axis=1)
+        this_aoi = sig_norm[:, a[0], a[1]]
+        avg = np.nanmean(np.nanmean(this_aoi, axis=2), axis=1)
 
         fitting_results = least_squares(
             fit_model.residuals_scipyfit, guess_params, args=(sweep_list, avg), **fit_opts
@@ -336,7 +337,7 @@ def limit_cpu():
 # ==========================================================================
 
 
-def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, **kwargs):
+def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, fit_optns):
     """
     Simple wrapper of scipy.optimize.least_squares to allow us to keep track of which
     solution is which (or where).
@@ -351,8 +352,8 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, **kwargs):
         Array (or I guess single value, anything iterable) of affine parameter (tau/freq)
     shaped_data : list (3 elements)
         array returned by `qdmpy.fit._shared.pixel_generator`: [y, x, sig_norm[:, y, x]]
-    kwargs : dict
-        Other options (dict) passed to least_squares, i.e. fit_options
+    fit_optns : dict
+        Other options (dict) passed to least_squares
 
     Returns
     -------
@@ -362,14 +363,14 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, **kwargs):
     """
     # shaped_data: [y, x, pl]
     # output: (y, x), result_params, jac
-    fitres = least_squares(fun, p0, args=(sweep_vec, shaped_data[2]), **kwargs)
+    fitres = least_squares(fun, p0, args=(sweep_vec, shaped_data[2]), **fit_optns)
     return ((shaped_data[0], shaped_data[1]), fitres.x, fitres.jac)
 
 
 # ==========================================================================
 
 
-def fit_pl_pixels_scipyfit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
+def fit_all_pixels_pl_scipyfit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
     """
     Fits each pixel and returns dictionary of param_name -> param_image.
 

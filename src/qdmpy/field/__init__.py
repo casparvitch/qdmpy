@@ -4,7 +4,7 @@
 Currently this is just DC fields, but AC fields could be added in the future (e.g. from
 T1 measurements).
 
-This (sub-) package exposes all of the concents of `qdmpy.field.interface`
+This (sub-) package exposes all of the concents of `qdmpy.field.interface` and `qdmpy.field.io`
 """
 __author__ = "Sam Scholten"
 __pdoc__ = {
@@ -15,3 +15,4 @@ __pdoc__ = {
 }
 
 from qdmpy.field.interface import *
+from qdmpy.field.io import *

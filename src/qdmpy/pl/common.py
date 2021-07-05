@@ -123,7 +123,10 @@ class ROIAvgFitResult:
         self.init_param_bounds = init_param_bounds
 
     def savejson(self, filename, directory):
-        """ Save all attributes as a json file in dir/filename, via `qdmpy.io.json2dict.dict_to_json` """
+        """
+        Save all attributes as a json file in dir/filename, via
+        `qdmpy.shared.json2dict.dict_to_json`
+        """
 
         output_dict = {
             "fit_backend": self.fit_backend,
