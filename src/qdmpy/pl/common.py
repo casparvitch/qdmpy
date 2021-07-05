@@ -93,6 +93,8 @@ class ROIAvgFitResult:
         fit_options : dict
             Options dictionary for this fit method, as will be passed to fitting function.
             E.g. scipy least_squares is handed various options as a dictionary.
+        fit_model : `qdmpy.pl.model.FitModel`
+            Fit model used. Can construct fit via res.fit_model(res.best_params, res.sweep_list).
         pl_roi : np array, 1D
             pl data summed over FOV, as fn of sweep_vec.
         sweep_list : np array, 1D

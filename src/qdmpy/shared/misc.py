@@ -74,8 +74,8 @@ def define_roi(options, full_size_h, full_size_w):
     if options["ROI"] == "Full":
         roi = _define_area_roi(0, 0, full_size_w - 1, full_size_h - 1)
     elif options["ROI"] == "Rectangle":
-        start_x, start_y = options["roi_start"]
-        end_x, end_y = options["roi_end"]
+        start_x, start_y = options["ROI_start"]
+        end_x, end_y = options["ROI_end"]
         roi = _define_area_roi(start_x, start_y, end_x, end_y)
 
     return roi
