@@ -4,7 +4,6 @@ Implement inversion of magnetic field to current density.
 
 Functions
 ---------
- - `qdmpy.source.current.define_current_transform`
  - `qdmpy.source.current.get_divperp_j`
  - `qdmpy.source.current.get_j_from_bxy`
  - `qdmpy.source.current.get_j_from_bz`
@@ -16,7 +15,6 @@ Functions
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.source.current.define_current_transform": True,
     "qdmpy.source.current.get_divperp_j": True,
     "qdmpy.source.current.get_j_from_bxy": True,
     "qdmpy.source.current.get_j_from_bz": True,
@@ -32,48 +30,7 @@ from copy import copy
 # ============================================================================
 
 import qdmpy.shared.fourier
-from qdmpy.shared.fourier import MU_0
-
-# ============================================================================
-
-
-def define_current_transform(u_proj, ky, kx, k, standoff=None):
-    """b => J fourier-space transformation.
-
-    Arguments
-    ---------
-    u_proj : array-like
-        Shape: 3, the direction the magnetic field was measured in (projected onto).
-    ky, kx, k : np arrays
-        Wavenumber meshgrids, k = sqrt( kx^2 + ky^2 )
-    standoff : float or None, default : None
-        Distance NV layer <-> sample
-
-    Returns
-    -------
-    b_to_jx, b_to_jy : np arrays (2D)
-
-    See D. A. Broadway, S. E. Lillie, S. C. Scholten, D. Rohner, N. Dontschuk, P. Maletinsky,
-        J.-P. Tetienne, and L. C. L. Hollenberg,
-        Improved Current Density and Magnetization Reconstruction Through Vector Magnetic Field
-        Measurements, Phys. Rev. Applied 14, 024076 (2020).
-        https://doi.org/10.1103/PhysRevApplied.14.024076
-        https://arxiv.org/abs/2005.06788
-    """
-
-    if standoff:
-        exp_factor = np.exp(1 * k * standoff)
-    else:
-        exp_factor = 1
-
-    alpha = 2 * exp_factor / MU_0
-
-    # sign on 1j's is opposite to Broadway paper due to different FT definition.
-    b_to_jx = -1 * (alpha * ky) / (u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k)
-    b_to_jy = (alpha * kx) / (u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k)
-
-    return b_to_jx, b_to_jy
-
+from qdmpy.shared.fourier import define_current_transform
 
 # ============================================================================
 
