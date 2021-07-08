@@ -366,11 +366,11 @@ def fit_roi_avg_pl(options, sig_norm, sweep_list, fit_model):
         Normalised measurement array, shape: [sweep_list, y, x].
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-    fit_model : `qdmpy.fit.model.FitModel` object.
+    fit_model : `qdmpy.pl.model.FitModel` object.
 
     Returns
     -------
-    `qdmpy.fit._shared.ROIAvgFitResult` object containing the fit result (see class specifics)
+    `qdmpy.pl.common.ROIAvgFitResult` object containing the fit result (see class specifics)
     """
 ```
 

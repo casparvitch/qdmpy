@@ -131,7 +131,7 @@ class FitModel:
     def get_param_defn(self):
         """
         Returns list of parameters in fit_model, note there will be duplicates, and they do
-        not have numbers e.g. 'pos_0'. Use `qdmpy.fit.model.get_param_odict` for that purpose.
+        not have numbers e.g. 'pos_0'. Use `qdmpy.pl.model.get_param_odict` for that purpose.
 
         Returns
         -------

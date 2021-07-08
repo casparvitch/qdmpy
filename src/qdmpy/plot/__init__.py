@@ -8,13 +8,13 @@ This (sub-) package exposes specific functions to the user:
     - `qdmpy.plot.common.plot_image`
     - `qdmpy.plot.common.plot_image_on_ax`
 - `qdmpy.plot.fit`:
-    - `qdmpy.plot.fit.plot_ROI_pl_image`
-    - `qdmpy.plot.fit.plot_AOI_pl_images`
-    - `qdmpy.plot.fit.plot_ROI_avg_fits`
-    - `qdmpy.plot.fit.plot_AOI_spectra`
-    - `qdmpy.plot.fit.plot_AOI_spectra_fit`
-    - `qdmpy.plot.fit.plot_param_image`
-    - `qdmpy.plot.fit.plot_param_images`
+    - `qdmpy.plot.pl.plot_ROI_pl_image`
+    - `qdmpy.plot.pl.plot_AOI_pl_images`
+    - `qdmpy.plot.pl.plot_ROI_avg_fits`
+    - `qdmpy.plot.pl.plot_AOI_spectra`
+    - `qdmpy.plot.pl.plot_AOI_spectra_fit`
+    - `qdmpy.plot.pl.plot_param_image`
+    - `qdmpy.plot.pl.plot_param_images`
 - `qdmpy.plot.field`, currently all contents
 - `qdmpy.plot.source`, currently all contents
 """

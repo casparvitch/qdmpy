@@ -4,36 +4,36 @@ This module holds functions for plotting initial processing images and fit resul
 
 Functions
 ---------
- - `qdmpy.plot.fit.roi_pl_image`
- - `qdmpy.plot.fit.aoi_pl_images`
- - `qdmpy.plot.fit.roi_avg_fits`
- - `qdmpy.plot.fit.aoi_spectra`
- - `qdmpy.plot.fit.aoi_spectra_fit`
- - `qdmpy.plot.fit.pl_param_image`
- - `qdmpy.plot.fit.pl_param_images`
- - `qdmpy.plot.fit.pl_params_flattened`
- - `qdmpy.plot.fit.other_measurements`
- - `qdmpy.plot.fit._add_patch_rect`
- - `qdmpy.plot.fit._annotate_roi_image`
- - `qdmpy.plot.fit._annotate_aoi_image`
+ - `qdmpy.plot.pl.roi_pl_image`
+ - `qdmpy.plot.pl.aoi_pl_image`
+ - `qdmpy.plot.pl.roi_avg_fits`
+ - `qdmpy.plot.pl.aoi_spectra`
+ - `qdmpy.plot.pl.aoi_spectra_fit`
+ - `qdmpy.plot.pl.pl_param_image`
+ - `qdmpy.plot.pl.pl_param_images`
+ - `qdmpy.plot.pl.pl_params_flattened`
+ - `qdmpy.plot.pl.other_measurements`
+ - `qdmpy.plot.pl._add_patch_rect`
+ - `qdmpy.plot.pl._annotate_roi_image`
+ - `qdmpy.plot.pl._annotate_aoi_image`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.plot.fit.roi_pl_image": True,
-    "qdmpy.plot.fit.aoi_pl_images": True,
-    "qdmpy.plot.fit.roi_avg_fits": True,
-    "qdmpy.plot.fit.aoi_spectra": True,
-    "qdmpy.plot.fit.aoi_spectra_fit": True,
-    "qdmpy.plot.fit.pl_param_image": True,
-    "qdmpy.plot.fit.pl_param_images": True,
-    "qdmpy.plot.fit.pl_params_flattened": True,
-    "qdmpy.plot.fit.other_measurements": True,
-    "qdmpy.plot.fit._add_patch_rect": True,
-    "qdmpy.plot.fit._annotate_roi_image": True,
-    "qdmpy.plot.fit._annotate_aoi_image": True,
+    "qdmpy.plot.pl.roi_pl_image": True,
+    "qdmpy.plot.pl.aoi_pl_image": True,
+    "qdmpy.plot.pl.roi_avg_fits": True,
+    "qdmpy.plot.pl.aoi_spectra": True,
+    "qdmpy.plot.pl.aoi_spectra_fit": True,
+    "qdmpy.plot.pl.pl_param_image": True,
+    "qdmpy.plot.pl.pl_param_images": True,
+    "qdmpy.plot.pl.pl_params_flattened": True,
+    "qdmpy.plot.pl.other_measurements": True,
+    "qdmpy.plot.pl._add_patch_rect": True,
+    "qdmpy.plot.pl._annotate_roi_image": True,
+    "qdmpy.plot.pl._annotate_aoi_image": True,
 }
 
 # ============================================================================
@@ -96,7 +96,7 @@ def roi_pl_image(options, pl_image):
 # ============================================================================
 
 
-def aoi_pl_images(options, pl_image_roi):
+def aoi_pl_image(options, pl_image_roi):
     """
     Plots pl image cut down to ROI, with annotated AOI regions.
 
@@ -164,7 +164,7 @@ def roi_avg_fits(options, backend_roi_results_lst):
 
     spectrum_frame.plot(
         backend_roi_results_lst[0].sweep_list,
-        backend_roi_results_lst[0].pl_ROI,
+        backend_roi_results_lst[0].pl_roi,
         label=f"raw data ({options['normalisation']})",
         ls=" ",
         marker="o",
@@ -231,7 +231,7 @@ def roi_avg_fits(options, backend_roi_results_lst):
         )
 
         residual_xdata = res.sweep_list
-        residual_ydata = res.fit_model(res.best_params, res.sweep_list) - res.pl_ROI
+        residual_ydata = res.fit_model(res.best_params, res.sweep_list) - res.pl_roi
 
         residual_frame.plot(
             residual_xdata,
@@ -466,9 +466,9 @@ def aoi_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_lst, fi
     sweep_list : list
         List of sweep parameter values (with removed unwanted sweeps at start/end)
     fit_result_collection_lst : list
-        List of `qdmpy.fit._shared.FitResultCollection` objects (one for each fit_backend)
+        List of `qdmpy.pl._shared.FitResultCollection` objects (one for each fit_backend)
         holding ROI, AOI fit results
-    fit_model : `qdmpy.fit.model.FitModel`
+    fit_model : `qdmpy.pl.model.FitModel`
         Model we're fitting to.
 
     Returns
@@ -708,7 +708,7 @@ def pl_param_image(
     ---------
     options : dict
         Generic options dict holding all the user options.
-    fit_model : `qdmpy.fit.model.FitModel`
+    fit_model : `qdmpy.pl.model.FitModel`
         Model we're fitting to.
     pixel_fit_params : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
@@ -787,7 +787,7 @@ def pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=
     ---------
     options : dict
         Generic options dict holding all the user options.
-    fit_model : `qdmpy.fit.model.FitModel`
+    fit_model : `qdmpy.pl.model.FitModel`
         Model we're fitting to.
     pixel_fit_params : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
@@ -942,7 +942,7 @@ def pl_params_flattened(
     ---------
     options : dict
         Generic options dict holding all the user options.
-    fit_model : `qdmpy.fit.model.FitModel`
+    fit_model : `qdmpy.pl.model.FitModel`
         Model we're fitting to.
     pixel_fit_params : dict
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
@@ -987,7 +987,7 @@ def pl_params_flattened(
             fit_model.residuals_scipyfit(
                 roi_avg_fit_result.init_param_guess,
                 roi_avg_fit_result.sweep_list,
-                roi_avg_fit_result.pl_ROI,
+                roi_avg_fit_result.pl_roi,
             ).sum()
         ]
 
@@ -995,7 +995,7 @@ def pl_params_flattened(
             fit_model.residuals_scipyfit(
                 roi_avg_fit_result.best_params,
                 roi_avg_fit_result.sweep_list,
-                roi_avg_fit_result.pl_ROI,
+                roi_avg_fit_result.pl_roi,
             ).sum()
         ]
     else:

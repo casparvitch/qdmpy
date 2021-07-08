@@ -43,7 +43,9 @@ Classes
 
 Functions
 ---------
+ - `qdmpy.shared.polygon.polygon_selector`
  - `qdmpy.shared.polygon.polygon_gui`
+ - `qdmpy.shared.polygon.Polygon`
  - `qdmpy.shared.polygon._tri_2area_det`
 """
 
@@ -58,6 +60,7 @@ __pdoc__ = {
 
 # ============================================================================
 
+
 import numpy as np
 import PySimpleGUI as sg  # noqa: N813
 import matplotlib.pyplot as plt
@@ -65,6 +68,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.lines import Line2D
 import copy
 from numbers import Integral
+import warnings
 
 # ============================================================================
 
@@ -441,29 +445,44 @@ def polygon_selector(
         Press 'enter' to continue in the program.
         Press the 'esc' key to reset the current polygon
         Hold 'shift' to move all of the vertices (from all polygons)
+        Hold 'r' and scroll to resize all of the polygons.
         'ctrl' to move a single vertex in the current polygon
         'alt' to start a new polygon (and finalise the current one)
         'del' to clear all lines from the graphic  (thus deleting all polygons).
+        'right click' on a vertex (of a finished polygon) to remove it.
         """
         )
         return []
 
     image = np.loadtxt(numpy_txt_file_path)
 
-    if json_input_path is not None:
-        polygon_nodes = json_to_dict(json_input_path)["nodes"]
+    if json_input_path is None:
+        polys = None
+        polygon_nodes = None
+    else:
+        polys = json_to_dict(json_input_path)
+        polygon_nodes = polys["nodes"]
+        if "image_shape" in polys:
+            shp = polys["image_shape"]
+            if shp[0] != image.shape[0] or shp[1] != image.shape[1]:
+                warnings.warn(
+                    "Image shape loaded polygons were defined on does not match current image."
+                )
 
     fig, ax = plt.subplots()
     minimum = np.nanmin(image)
     maximum = np.nanmax(image)
-    if strict_range is not None:
+    if (
+        strict_range is not None
+        and isinstance(strict_range, (list, np.ndarray, tuple))
+        and len(strict_range) == 2
+    ):
         vmin, vmax = strict_range
-    elif mean_plus_minus is not None:
+    elif mean_plus_minus is not None and isinstance(mean_plus_minus, (float, int)):
         mean = np.mean(image)
-        md = np.max([abs(maximum - mean), abs(minimum - mean)])
-        vmin, vmax = mean - md, mean + md
+        vmin, vmax = mean - mean_plus_minus, mean + mean_plus_minus
     else:
-        vmin = vmax = None
+        vmin = vmax = [minimum, maximum]
     img = ax.imshow(
         image,
         aspect="equal",
@@ -506,7 +525,7 @@ def polygon_selector(
 
     # exclude polygons with nodes < 3
     pgon_lst = [pgon.get_nodes() for pgon in pgons if np.shape(pgon.get_nodes())[0] > 2]
-    output_dict = {"nodes": pgon_lst}
+    output_dict = {"nodes": pgon_lst, "image_shape": image.shape}
 
     dict_to_json(output_dict, json_output_path)
 
@@ -594,9 +613,11 @@ def polygon_gui(image=None):
         [sg.Text("Press 'enter' to continue in the program.")],
         [sg.Text("Press the 'esc' key to reset the current polygon")],
         [sg.Text("Hold 'shift' to move all of the vertices (from all polygons)")],
+        [sg.Text("Hold 'r' and scroll to resize all of the polygons.")],
         [sg.Text("'ctrl' to move a single vertex in the current polygon")],
         [sg.Text("'alt' to start a new polygon (and finalise the current one)")],
         [sg.Text("'del' to clear all lines from the graphic  (thus deleting all polygons).")],
+        [sg.Text("'right click' on a vertex (of a closer polygon) to remove it.")],
     ]
     window = sg.Window("Polygon selection tool", layout, grab_anywhere=False)
     event, values = window.read()
@@ -629,7 +650,14 @@ def polygon_gui(image=None):
         image = np.loadtxt(values["image_path"])
 
     if values["do_load_polys"]:
-        polygon_nodes = json_to_dict(values["polygon_path"])["nodes"]
+        polys = json_to_dict(values["polygon_path"])
+        polygon_nodes = polys["nodes"]
+        if "image_shape" in polys:
+            shp = polys["image_shape"]
+            if shp[0] != image.shape[0] or shp[1] != image.shape[1]:
+                warnings.warn(
+                    "Image shape loaded polygons were defined on does not match current image."
+                )
     else:
         polygon_nodes = None
 
@@ -680,7 +708,7 @@ def polygon_gui(image=None):
 
     # exclude polygons with nodes < 3
     pgon_lst = [pgon.get_nodes() for pgon in pgons if np.shape(pgon.get_nodes())[0] > 2]
-    output_dict = {"nodes": pgon_lst}
+    output_dict = {"nodes": pgon_lst, "image_shape": image.shape}
 
     dict_to_json(output_dict, values["output_path"])
 
@@ -1121,6 +1149,7 @@ class PolygonSelector(_SelectorWidget):
         lineprops=None,
         markerprops=None,
         vertex_select_radius=15,
+        base_scale=1.05,
     ):
         # The state modifiers 'move', 'square', and 'center' are expected by
         # _SelectorWidget but are not supported by PolygonSelector
@@ -1138,6 +1167,7 @@ class PolygonSelector(_SelectorWidget):
             move="not-applicable",
             square="not-applicable",
             center="not-applicable",
+            rescale_all="r",
         )
         _SelectorWidget.__init__(
             self, ax, onselect, useblit=useblit, state_modifier_keys=state_modifier_keys
@@ -1168,6 +1198,33 @@ class PolygonSelector(_SelectorWidget):
         self.artists = [self.current_line, self._polygon_handles.artist]
         self.set_visible(True)
 
+        self.base_scale = base_scale
+
+    @property
+    def _nverts(self):
+        return len(self._xs)
+
+    def _remove_vertex(self, i):
+        """Remove vertex with index i."""
+        if self._nverts > 2 and self._polygon_completed and i in (0, self._nverts - 1):
+            # If selecting the first or final vertex, remove both first and
+            # last vertex as they are the same for a closed polygon
+            self._xs.pop(0)
+            self._ys.pop(0)
+            self._xs.pop(-1)
+            self._ys.pop(-1)
+            # Close the polygon again by appending the new first vertex to the
+            # end
+            self._xs.append(self._xs[0])
+            self._ys.append(self._ys[0])
+        else:
+            self._xs.pop(i)
+            self._ys.pop(i)
+        if self._nverts <= 2:
+            # If only one point left, return to incomplete state to let user
+            # start drawing again
+            self._polygon_completed = False
+
     def _press(self, event):
         """Button press event handler"""
 
@@ -1178,7 +1235,7 @@ class PolygonSelector(_SelectorWidget):
                 self._active_handle_idx = h_idx
 
         # Save the vertex positions at the time of the press event (needed to
-        # support the 'move_all' state modifier).
+        # support the 'move_all' state modifier). Also used for rescale_all
         self._xs_at_press, self._ys_at_press = self._xs[:], self._ys[:]
 
         for line in self.lines:
@@ -1190,6 +1247,9 @@ class PolygonSelector(_SelectorWidget):
 
         # Release active tool handle.
         if self._active_handle_idx >= 0:
+            if event.button == 3:
+                self._remove_vertex(self._active_handle_idx)
+                self._draw_polygon()
             self._active_handle_idx = -1
 
         # Complete the polygon.
@@ -1201,6 +1261,7 @@ class PolygonSelector(_SelectorWidget):
             not self._polygon_completed
             and "move_all" not in self.state
             and "move_vertex" not in self.state
+            and "rescale_all" not in self.state
         ):
             self._xs.insert(-1, event.xdata)
             self._ys.insert(-1, event.ydata)
@@ -1251,7 +1312,12 @@ class PolygonSelector(_SelectorWidget):
                 # line["line_obj"].set_data(new_xs, new_ys)
 
         # Do nothing if completed or waiting for a move.
-        elif self._polygon_completed or "move_vertex" in self.state or "move_all" in self.state:
+        elif (
+            self._polygon_completed
+            or "move_vertex" in self.state
+            or "move_all" in self.state
+            or "rescale_all" in self.state
+        ):
             return
 
         # Position pending vertex.
@@ -1272,7 +1338,7 @@ class PolygonSelector(_SelectorWidget):
         # Remove the pending vertex if entering the 'move_vertex' or
         # 'move_all' mode
         if not self._polygon_completed and (
-            "move_vertex" in self.state or "move_all" in self.state
+            "move_vertex" in self.state or "move_all" in self.state or "rescale_all" in self.state
         ):
             self._xs, self._ys = self._xs[:-1], self._ys[:-1]
             self.draw_polygon()
@@ -1309,6 +1375,7 @@ class PolygonSelector(_SelectorWidget):
         if not self._polygon_completed and (
             event.key == self.state_modifier_keys.get("move_vertex")
             or event.key == self.state_modifier_keys.get("move_all")
+            or event.key == self.state_modifier_keys.get("rescale_all")
         ):
             self._xs.append(event.xdata)
             self._ys.append(event.ydata)
@@ -1384,6 +1451,38 @@ class PolygonSelector(_SelectorWidget):
             polygons.append((x, y))
         return polygons
 
+    def _on_scroll(self, event):
+        if "rescale_all" in self.state:
+            if event.button == "up":
+                # zoom in
+                scale_factor = self.base_scale
+            elif event.button == "down":
+                # zoom out
+                scale_factor = 1 / self.base_scale
+            else:
+                scale_factor = 1
+
+            center_x, center_y = (np.mean(self._xs), np.mean(self._ys))
+            for k, _ in enumerate(self._xs):
+                self._xs[k] = (self._xs[k] - center_x) * scale_factor + center_x
+                self._ys[k] = (self._ys[k] - center_y) * scale_factor + center_y
+
+            # update past lines
+            for line in self.lines:
+                new_xs = []
+                new_ys = []
+                cx_line, cy_line = (np.mean(line["xs"]), np.mean(line["ys"]))
+                for k, _ in enumerate(line["xs"]):
+                    new_xs.append((line["xs"][k] - cx_line) * scale_factor + cx_line)
+                    new_ys.append((line["ys"][k] - cy_line) * scale_factor + cy_line)
+                line["xs"] = new_xs
+                line["ys"] = new_ys
+                line["line_obj"].set_data(new_xs, new_ys)
+        else:
+            return
+
+        self.draw_polygon()
+
 
 class PolygonSelectionWidget:
     """
@@ -1396,19 +1495,39 @@ class PolygonSelectionWidget:
 
     """
 
-    def __init__(self, ax, style=None):
+    def __init__(self, ax, style=None, base_scale=1.5):
         self.canvas = ax.figure.canvas
 
-        if style is None:
-            self.lp = dict(color="g", linestyle="-", linewidth=1, alpha=0.5)
-            self.mp = dict(marker="o", markersize=2, mec="g", mfc="g", alpha=0.5)
-        else:
-            self.lp = style["lineprops"]
-            self.mp = style["markerprops"]
+        dflt_style = {
+            "lineprops": {"color": "g", "linestyle": "-", "linewidth": 1.0, "alpha": 0.5},
+            "markerprops": {
+                "marker": "o",
+                "markersize": 2.0,
+                "mec": "g",
+                "mfc": "g",
+                "alpha": 0.5,
+            },
+        }
+
+        self.lp = dflt_style["lineprops"]
+        self.mp = dflt_style["markerprops"]
+        if style is not None:
+            if "lineprops" in style and isinstance(style["lineprops"], dict):
+                for key, item in style["lineprops"]:
+                    self.lp[key] = item
+            if "markerprops" in style and isinstance(style["markerprops"], dict):
+                for key, item in style["markerprops"]:
+                    self.mp[key] = item
+
         vsr = 7.5 * self.mp["markersize"]  # linear scaling on what our select radius is
         self.ax = ax
         self.polys = PolygonSelector(
-            ax, self.onselect, lineprops=self.lp, markerprops=self.mp, vertex_select_radius=vsr
+            ax,
+            self.onselect,
+            lineprops=self.lp,
+            markerprops=self.mp,
+            vertex_select_radius=vsr,
+            base_scale=base_scale,
         )
         self.pts = []  # unused?
 

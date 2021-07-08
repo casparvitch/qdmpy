@@ -258,11 +258,11 @@ def get_colormap_range(c_range_dict, image):
         Changing to 'min_max_symmetric_about_mean' c_range.""",
         "percentile": """Invalid c_range_dict['values'] encountered.
         For c_range type 'percentile', c_range_dict['values'] must be a list of length 2,
-         with elements (preferably ints) between 0 and 100.
+         with elements (preferably ints) in [0, 100].
          Changing to 'min_max_symmetric_about_mean' c_range.""",
         "percentile_symmetric_about_zero": """Invalid c_range_dict['values'] encountered.
-        For c_range type '_ercentile', c_range_dict['values'] must be a list of length 2,
-         with elements (preferably ints) between 0 and 100.
+        For c_range type 'percentile', c_range_dict['values'] must be a list of length 2,
+         with elements (preferably ints) in [0, 100].
          Changing to 'min_max_symmetric_about_mean' c_range.""",
     }
     try:
@@ -323,12 +323,12 @@ def get_colormap_range(c_range_dict, image):
 
     elif c_range_type.startswith("percentile"):
         if (
-            not isinstance(c_range_values, list)
+            not isinstance(c_range_values, (list, tuple))
             or len(c_range_values) != 2  # noqa: W503
             or not isinstance(c_range_values[0], (float, int))
             or not isinstance(c_range_values[1], (float, int))
-            or not 100 >= c_range_values[0] > 0
-            or not 100 >= c_range_values[1] > 0
+            or not 100 >= c_range_values[0] >= 0
+            or not 100 >= c_range_values[1] >= 0
         ):
             warnings.warn(warning_messages[c_range_type])
             return _min_max_sym_mean(image, c_range_values)

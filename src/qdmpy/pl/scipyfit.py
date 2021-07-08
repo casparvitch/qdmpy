@@ -59,7 +59,7 @@ def prep_scipyfit_options(options, fit_model):
     ---------
     options : dict
         Generic options dict holding all the user options.
-    fit_model : `qdmpy.fit.model.FitModel`
+    fit_model : `qdmpy.pl.model.FitModel`
         Fit model object.
 
     Returns
@@ -170,12 +170,12 @@ def fit_roi_avg_pl_scipyfit(options, sig_norm, sweep_list, fit_model):
         Normalised measurement array, shape: [sweep_list, y, x].
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-    fit_model : `qdmpy.fit.model.FitModel`
+    fit_model : `qdmpy.pl.model.FitModel`
         The fit model object.
 
     Returns
     -------
-    `qdmpy.fit._shared.ROIAvgFitResult` object containing the fit result (see class specifics)
+    `qdmpy.pl.common.ROIAvgFitResult` object containing the fit result (see class specifics)
     """
     # fit *all* pl data (i.e. summing over FOV)
     # collapse to just pl_ar (as function of sweep, 1D)
@@ -220,10 +220,10 @@ def fit_single_pixel_pl_scipyfit(options, pixel_pl_ar, sweep_list, fit_model, ro
         Normalised pl as function of sweep_list for a single pixel.
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-    fit_model : `qdmpy.fit.model.FitModel`
+    fit_model : `qdmpy.pl.model.FitModel`
         The fit model.
-    roi_avg_fit_result : `qdmpy.fit._shared.ROIAvgFitResult`
-        `qdmpy.fit._shared.ROIAvgFitResult` object, to pull fit_options from.
+    roi_avg_fit_result : `qdmpy.pl.common.ROIAvgFitResult`
+        `qdmpy.pl.common.ROIAvgFitResult` object, to pull fit_options from.
 
     Returns
     -------
@@ -270,18 +270,18 @@ def fit_aois_pl_scipyfit(
         Normalised measurement array, for chosen single pixel check.
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq).
-    fit_model : `qdmpy.fit.model.FitModel`
+    fit_model : `qdmpy.pl.model.FitModel`
         The model we're fitting to.
     aois : list
         List of AOI specifications - each a length-2 iterable that can be used to directly index
         into sig_norm to return that AOI region, e.g. sig_norm[:, AOI[0], AOI[1]].
-    roi_avg_fit_result : `qdmpy.fit._shared.ROIAvgFitResult`
-        `qdmpy.fit._shared.ROIAvgFitResult` object, to pull `qdmpy.fit._shared.ROIAvgFitResult.fit_options`
+    roi_avg_fit_result : `qdmpy.pl.common.ROIAvgFitResult`
+        `qdmpy.pl.common.ROIAvgFitResult` object, to pull `qdmpy.pl.common.ROIAvgFitResult.fit_options`
         from.
 
     Returns
     -------
-    fit_result_collection : `qdmpy.fit._shared.FitResultCollection`
+    fit_result_collection : `qdmpy.pl.common.FitResultCollection`
         Collection of ROI/AOI fit results for this fit backend.
     """
     fit_opts = {}
@@ -351,7 +351,7 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, fit_optns):
     sweep_vec : np array
         Array (or I guess single value, anything iterable) of affine parameter (tau/freq)
     shaped_data : list (3 elements)
-        array returned by `qdmpy.fit._shared.pixel_generator`: [y, x, sig_norm[:, y, x]]
+        array returned by `qdmpy.pl._shared.pixel_generator`: [y, x, sig_norm[:, y, x]]
     fit_optns : dict
         Other options (dict) passed to least_squares
 
@@ -382,10 +382,10 @@ def fit_all_pixels_pl_scipyfit(options, sig_norm, sweep_list, fit_model, roi_avg
         Normalised measurement array, shape: [sweep_list, y, x].
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
-    fit_model : `qdmpy.fit.model.FitModel`
+    fit_model : `qdmpy.pl.model.FitModel`
         The model we're fitting to.
-    roi_avg_fit_result : `qdmpy.fit._shared.ROIAvgFitResult`
-        `qdmpy.fit._shared.ROIAvgFitResult` object, to pull fit_options from.
+    roi_avg_fit_result : `qdmpy.pl._shared.ROIAvgFitResult`
+        `qdmpy.pl._shared.ROIAvgFitResult` object, to pull fit_options from.
 
     Returns
     -------

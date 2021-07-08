@@ -319,7 +319,7 @@ def load_prev_field_sigmas(options, name):
     sigma_params : dict
         Dictionary, key: param_keys, val: image (2D) of field sigma values across FOV.
     """
-    prev_options = qdmpy.pl.io.fit.get_prev_options(options)
+    prev_options = qdmpy.pl.io.get_prev_options(options)
 
     load_params = prev_options["field_params"]
     remove_these_params = [
@@ -524,7 +524,7 @@ def _prev_pixel_field_calcs_exist(options):
     reason : str
         Reason for the above decision
     """
-    prev_options = qdmpy.pl.io.fit.get_prev_options(options)
+    prev_options = qdmpy.pl.io.get_prev_options(options)
     if "field_params" not in prev_options or prev_options["field_params"] is None:
         return False, "no key 'field params' in prev_options"
     # skip 'ref' check, as it isn't always there!
@@ -558,7 +558,7 @@ def _field_options_compatible(options):
     reason : str
         Reason for the above decision
     """
-    prev_options = qdmpy.pl.io.fit.get_prev_options(options)
+    prev_options = qdmpy.pl.io.get_prev_options(options)
 
     prev_options["system"] = qdmpy.system.choose_system(prev_options["system_name"])
 
@@ -611,7 +611,7 @@ def _field_options_compatible(options):
         if options["hamiltonian"] != prev_options["hamiltonian"]:
             return False, "different hamiltonian selected."
 
-        guesser = qdmpy.field.hamiltonian.get_ham_guess_and_bounds
+        guesser = qdmpy.field.hamiltonian.ham_gen_init_guesses
         this_guess, this_bounds = guesser(options)
         prev_guess, prev_bounds = guesser(prev_options)
 

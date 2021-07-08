@@ -7,7 +7,6 @@ Functions
  - `qdmpy.field.hamiltonian.define_hamiltonian`
  - `qdmpy.field.hamiltonian._prep_fit_backends`
  - `qdmpy.field.hamiltonian.fit_hamiltonian_pixels`
- - `qdmpy.field.hamiltonian.get_ham_guess_and_bounds`
  - `qdmpy.field.hamiltonian.get_param_defn`
  - `qdmpy.field.hamiltonian.get_param_odict`
  - `qdmpy.field.hamiltonian.ham_gen_init_guesses`
@@ -32,7 +31,6 @@ __pdoc__ = {
     "qdmpy.field.hamiltonian.define_hamiltonian": True,
     "qdmpy.field.hamiltonian._prep_fit_backends": True,
     "qdmpy.field.hamiltonian.fit_hamiltonian_pixels": True,
-    "qdmpy.field.hamiltonian.get_ham_guess_and_bounds": True,
     "qdmpy.field.hamiltonian.Hamiltonian": True,
     "qdmpy.field.hamiltonian.ApproxBxyz": True,
     "qdmpy.field.hamiltonian.Bxyz": True,

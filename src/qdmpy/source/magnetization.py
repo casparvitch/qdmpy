@@ -15,7 +15,6 @@ Functions
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.shared.fourier.get_reconstructed_bfield": True,
     "qdmpy.source.magnetization.define_magnetization_transformation": True,
     "qdmpy.source.magnetization.get_m_from_bxy": True,
     "qdmpy.source.magnetization.get_m_from_bz": True,
@@ -70,7 +69,7 @@ def define_magnetization_transformation(ky, kx, k, standoff):
     """
 
     if standoff:
-        exp_factor = np.exp(1 * k * standoff)
+        exp_factor = np.exp(k * standoff)
     else:
         exp_factor = 1
 
@@ -409,7 +408,6 @@ def get_m_from_bnv(
         nv_thickness_correction = 1
 
     with np.errstate(all="ignore"):
-        # Get m_z from b_xyz
         fft_m = fft_bnv * hanning_filt * nv_thickness_correction / m_to_bnv
 
     # Replace troublesome pixels in fourier space

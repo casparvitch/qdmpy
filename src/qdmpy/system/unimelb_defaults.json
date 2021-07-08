@@ -744,7 +744,7 @@
     // ===========================================================================================
     // padding mode, see np.pad
     "fourier_pad_mode": {
-        "option_default": "mean",
+        "option_default": "constant",
         "option_choices": [
             "constant",
             "edge",
@@ -768,8 +768,9 @@
         "option_default": 1e-6
     },
     // use hanning filter in fourier space (for all transformations)
+    // unsure of how well the hanning filter works currently, so turning off.
     "fourier_do_hanning_filter": {
-        "option_default": true,
+        "option_default": false,
         "option_choices": [
             true, 
             false

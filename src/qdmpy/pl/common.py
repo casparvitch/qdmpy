@@ -117,7 +117,7 @@ class ROIAvgFitResult:
         """
         self.fit_model = fit_model
 
-        self.pl_ROI = pl_roi
+        self.pl_roi = pl_roi
         self.sweep_list = sweep_list
 
         self.best_params = best_params
@@ -132,7 +132,7 @@ class ROIAvgFitResult:
 
         output_dict = {
             "fit_backend": self.fit_backend,
-            "pl_ROI": self.pl_ROI,
+            "pl_roi": self.pl_roi,
             "sweep_list": self.sweep_list,
             "best_params": self.best_params,
             "init_param_guess": self.init_param_guess,
@@ -234,7 +234,7 @@ def pixel_generator(our_array):
     Simple generator to shape data as expected by to_squares_wrapper in scipy concurrent method.
 
     Also allows us to track *where* (i.e. which pixel location) each result corresponds to.
-    See also: `qdmpy.fit._scipyfit.to_squares_wrapper`, and corresponding gpufit method.
+    See also: `qdmpy.pl.scipyfit.to_squares_wrapper`, and corresponding gpufit method.
 
     Arguments
     ---------
@@ -367,10 +367,10 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
 
     Arguments
     ---------
-    fit_model : `qdmpy.fit.model.FitModel`
+    fit_model : `qdmpy.pl.model.FitModel`
         Model we're fitting to.
     fit_results : list of [(y, x), result, jac] objects
-        (see `qdmpy.fit._scipyfit.to_squares_wrapper`, or corresponding gpufit method)
+        (see `qdmpy.pl.scipyfit.to_squares_wrapper`, or corresponding gpufit method)
         A list of each pixel's parameter array, as well as position in image denoted by (y, x).
     pixel_data : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x]. i.e. sig_norm.

@@ -55,7 +55,7 @@ Measure x amps = x A
 """
 
 
-MU_0 = np.pi * 1e-7
+MU_0 = 1.25663706212 * 1e-6
 """
 Vacuum permeability
 """

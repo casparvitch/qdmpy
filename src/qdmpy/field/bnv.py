@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 This module holds tools for calculating the bnv from
-ODMR datasets (after they've been fit with the `qdmpy.fit.interface` tooling).
+ODMR datasets (after they've been fit with the `qdmpy.pl.interface` tooling).
 
 Functions
 ---------
@@ -66,27 +66,27 @@ for details of the g-factor anisotropy.
 
 def get_bnvs_and_dshifts(pixel_fit_params, bias_field_spherical_deg):
     """
-    pixel_fit_params -> bnvs, dshifts (both lists of np arrays, 2D)
+        pixel_fit_params -> bnvs, dshifts (both lists of np arrays, 2D)
 
-    Arguments
-    ---------
-    fit_result_dict : OrderedDict
-        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
-        Ordered by the order of functions in options["fit_functions"].
-        If None, returns ([], [])
-    bias_field_spherical_deg : tuple
-        Bias field in spherical polar degrees (and gauss).
-
-    Returns
-    -------
-    bnvs : list
-        List of np arrays (2D) giving B_NV for each NV family/orientation.
-        If num_peaks is odd, the bnv is given as the shift of that peak,
-        and the dshifts is left as np.nans.
-    dshifts : list
-        List of np arrays (2D) giving the D (~DFS) of each NV family/orientation.
-        If num_peaks is odd, the bnv is given as the shift of that peak,
-        and the dshifts is left as np.nans.
+        Arguments
+        ---------
+        fit_result_dict : OrderedDict
+            Dictionary, key: param_keys, val: image (2D) of param values across FOV.
+            Ordered by the order of functions in options["fit_functions"].
+            If None, returns ([], [])
+        bias_field_spherical_deg : tuple
+            Bias field in spherical polar degrees (and gauss).
+    `
+        Returns
+        -------
+        bnvs : list
+            List of np arrays (2D) giving B_NV for each NV family/orientation.
+            If num_peaks is odd, the bnv is given as the shift of that peak,
+            and the dshifts is left as np.nans.
+        dshifts : list
+            List of np arrays (2D) giving the D (~DFS) of each NV family/orientation.
+            If num_peaks is odd, the bnv is given as the shift of that peak,
+            and the dshifts is left as np.nans.
     """
     if pixel_fit_params is None:
         return [], []
@@ -273,7 +273,7 @@ def sub_bground_bnvs(options, bnvs, method, **method_settings):
         Method to use for background subtraction. See above for details.
     **method_settings : dict
         (i.e. keyword arguments).
-        Parameters passed to background subtraction algorithm. See above for details
+        Parameters passed to background subtraction algorithm. See above for details.
 
     Returns
     -------
