@@ -16,6 +16,9 @@ __pdoc__ = {
 
 import numpy as np
 import warnings
+import matplotlib.pyplot as plt
+from mpl_toolkits.axes_grid1 import make_axes_locatable
+from matplotlib.lines import Line2D
 
 # ============================================================================
 
@@ -51,11 +54,36 @@ class MagSim:
             self.template_polygon_nodes = qdmpy.shared.json2dict.json_to_dict(path)["nodes"]
 
     # load template polygons if they exist and allow user to rescale etc.
-    def fix_template(self, output_path=None):
+    def fix_template(self, output_path=None, **kwargs):
         # load template polygons (if they exist)
         # run gui etc. & save in output_path if specified
         # --> load result into self.polygon_nodes
-        pass
+
+        fig, ax = plt.subplots()
+        img = ax.imshow(self.base_image, aspect="equal", cmap="bwr")
+        ax.tick_params(
+            axis="x",  # changes apply to the x-axis
+            which="both",  # both major and minor ticks are affected
+            bottom=False,  # ticks along the bottom edge are off
+            top=False,  # ticks along the top edge are off
+            labelbottom=False,
+        )
+        ax.tick_params(
+            axis="y",  # changes apply to the y-axis
+            which="both",  # both major and minor ticks are affected
+            left=False,
+            right=False,
+            labelleft=False,
+        )
+        divider = make_axes_locatable(ax)
+        cax = divider.append_axes("right", size="5%", pad=0.05)
+        fig.colorbar(img, cax=cax)
+        ax.set_title("Select polygons to exclude from background fit")
+
+        psw = qdmpy.shared.polygon.PolygonSelectionWidget(ax, style=kwargs)
+
+        if self.template_polygon_nodes is not None:
+            psw.load_nodes(self.template_polygon_nodes)
 
     def specify_polygons(self, path=None, polys=None):
         """polys takes precedence."""
