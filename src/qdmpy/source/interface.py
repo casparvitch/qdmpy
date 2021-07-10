@@ -7,7 +7,7 @@ Functions
  - `qdmpy.source.interface.odmr_source_retrieval`
  - `qdmpy.source.interface.get_current_density`
  - `qdmpy.source.interface.get_magnetization`
- - `qdmpy.source.interface.add_div_j`
+ - `qdmpy.source.interface.add_divperp_j`
  - `qdmpy.source.interface.in_plane_mag_normalise`
 """
 
@@ -19,7 +19,7 @@ __pdoc__ = {
     "qdmpy.source.interface.odmr_source_retrieval": True,
     "qdmpy.source.interface.get_current_density": True,
     "qdmpy.source.interface.get_magnetization": True,
-    "qdmpy.source.interface.add_div_j": True,
+    "qdmpy.source.interface.add_divperp_j": True,
     "qdmpy.source.interface.in_plane_mag_normalise": True,
 }
 

@@ -11,7 +11,7 @@ Functions
  - `qdmpy.pl.scipyfit.fit_aois_pl_scipyfit`
  - `qdmpy.pl.scipyfit.limit_cpu`
  - `qdmpy.pl.scipyfit.to_squares_wrapper`
- - `qdmpy.pl.scipyfit.fit_pl_pixels_scipyfit`
+ - `qdmpy.pl.scipyfit.fit_all_pixels_pl_scipyfit`
 """
 
 # ============================================================================
@@ -351,7 +351,7 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, fit_optns):
     sweep_vec : np array
         Array (or I guess single value, anything iterable) of affine parameter (tau/freq)
     shaped_data : list (3 elements)
-        array returned by `qdmpy.pl._shared.pixel_generator`: [y, x, sig_norm[:, y, x]]
+        array returned by `qdmpy.pl.common.pixel_generator`: [y, x, sig_norm[:, y, x]]
     fit_optns : dict
         Other options (dict) passed to least_squares
 
@@ -384,8 +384,8 @@ def fit_all_pixels_pl_scipyfit(options, sig_norm, sweep_list, fit_model, roi_avg
         Affine parameter list (e.g. tau or freq)
     fit_model : `qdmpy.pl.model.FitModel`
         The model we're fitting to.
-    roi_avg_fit_result : `qdmpy.pl._shared.ROIAvgFitResult`
-        `qdmpy.pl._shared.ROIAvgFitResult` object, to pull fit_options from.
+    roi_avg_fit_result : `qdmpy.pl.common.ROIAvgFitResult`
+        `qdmpy.pl.common.ROIAvgFitResult` object, to pull fit_options from.
 
     Returns
     -------

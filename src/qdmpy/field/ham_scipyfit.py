@@ -100,7 +100,7 @@ def prep_ham_scipyfit_options(options, ham):
     ---------
     options : dict
         Generic options dict holding all the user options.
-    fit_model : `qdmpy.hamiltonian._hamiltonians.Hamiltonian`
+    fit_model : `qdmpy.field.hamiltonian.Hamiltonian`
         Hamiltonian object.
 
     Returns
@@ -173,7 +173,7 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
         Generic options dict holding all the user options.
     data : np array, 3D
         Normalised measurement array, shape: [idx, y, x]. E.g. bnvs or freqs
-    fit_model : `qdmpy.hamiltonian._hamiltonians.Hamiltonian`
+    fit_model : `qdmpy.field.hamiltonian.Hamiltonian`
         Model we're fitting to.
 
     Returns
@@ -254,7 +254,7 @@ def fit_hamiltonian_roi_avg_scipyfit(options, data, ham):
         Generic options dict holding all the user options.
     data : np array, 3D
         Normalised measurement array, shape: [idx, y, x]. E.g. bnvs or freqs
-    ham : `qdmpy.hamiltonian.Hamiltonian`
+    ham : `qdmpy.field.hamiltonian.Hamiltonian`
         Model we're fitting to.
 
     Returns
@@ -300,7 +300,7 @@ def ham_to_squares_wrapper(fun, p0, shaped_data, fit_optns):
     p0 : np array
         Initial guess: array of parameters
     shaped_data : list (3 elements)
-        array returned by `qdmpy.hamiltonian.ham_pixel_generator`: [y, x, data[:, y, x]]
+        array returned by `qdmpy.field.hamiltonian.ham_pixel_generator`: [y, x, data[:, y, x]]
     fit_optns : dict
         Other options (dict) passed to least_squares
 

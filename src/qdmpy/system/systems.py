@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-This module holds classes and functions to define different systems.
+This sub-package holds classes and functions to define different systems.
 
-This module allows users with different data saving/loading procedures to use
+This sub-package allows users with different data saving/loading procedures to use
 this package. Also defined are variables such as raw_pixel_size which may be
 different for different systems at the same institution.
 
@@ -10,14 +10,13 @@ Also defined are functions to handle the checking/cleaning of the json options
 file (and then dict) to ensure it is valid etc.
 
 _Make sure_ that any valid systems you define here are placed
-in the SYSTEMS defined in `qdmpy.constants`.
+in the _SYSTEMS dict at the bottom of the file.
 
 Classes
 -------
  - `qdmpy.system.systems.System`
  - `qdmpy.system.systems.UniMelb`
  - `qdmpy.system.systems.Zyla`
- - `qdmpy.system.systems.LiamsWidefield`
  - `qdmpy.system.systems.CryoWidefield`
 
 
@@ -42,7 +41,6 @@ __pdoc__ = {
     "qdmpy.system.systems.UniMelb": True,
     "qdmpy.system.systems.Zyla": True,
     "qdmpy.system.systems.cQDM": True,
-    "qdmpy.system.systems.LiamsWidefield": True,
     "qdmpy.system.systems.CryoWidefield": True,
     "qdmpy.system.systems._CONFIG_PATH": True,
     "qdmpy.system.systems._GLOBAL_DEFAULTS_PATH": True,

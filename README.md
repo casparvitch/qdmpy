@@ -525,7 +525,7 @@ To build documentation (html) using [pdoc](https://pdoc3.github.io/pdoc/doc/pdoc
 - single_unv_choice
     - If option 'prop_single_bnv' given for 'field_method' but number of frequencies fit is 2 or 3, this option resolves ambiguity in which bnv to utilize. This option is used like so: single_bnv = bnvs[single_unv_choice].Note that `freqs_to_use` must still be set (to use 2 freqs only).
 - diamond_ori
-    - Diamond crystal orientation -> see qdmpy.constants. Default: HPHT orientation. Format: `<top face orientation>_<edge face orientation>`.
+    - Diamond crystal orientation -> see qdmpy.shared.geom. Default: HPHT orientation. Format: `<top face orientation>_<edge face orientation>`.
 - auto_read_bias
     - Read magnetic field from options (i.e. if applied with vector electromagnet). --> system dependent option (i.e. Unimelb reads from metadata).
 - auto_guess_B

@@ -241,7 +241,7 @@ def mu_sigma_exclude_polygons(image, polygons=None):
 def get_im_filtered(image, filter_type, **kwargs):
     """Wrapped over other filters defined in `qdmpy.shared.polygon.Polygon_filter'.
     Current filters defined:
-        - filter_type = gaussian, `qdmpy.shared.itool.get_im_filtered_gaussian`
+        - filter_type = gaussian, `qdmpy.shared.itool._get_im_filtered_gaussian`
     """
     if not isinstance(image, np.ma.core.MaskedArray):
         image = np.ma.masked_array(image)

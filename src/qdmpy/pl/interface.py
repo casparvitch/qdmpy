@@ -11,7 +11,7 @@ Functions
  - `qdmpy.pl.interface.define_fit_model`
  - `qdmpy.pl.interface.fit_roi_avg_pl`
  - `qdmpy.pl.interface.fit_aois_pl`
- - `qdmpy.pl.interface.fit_pl_pixels`
+ - `qdmpy.pl.interface.fit_all_pixels_pl`
  - `qdmpy.pl.interface._prep_fit_backends`
  - `qdmpy.pl.interface.get_pl_fit_result`
 """
@@ -282,7 +282,7 @@ def fit_all_pixels_pl(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
         )
     else:
         raise RuntimeError(
-            f"No fit_pl_pixels fn defined for fit_backend = {options['fit_backend']}"
+            f"No fit_all_pixels_pl fn defined for fit_backend = {options['fit_backend']}"
         )
 
 
@@ -292,7 +292,7 @@ def fit_all_pixels_pl(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
 def get_pl_fit_result(options, sig_norm, sweep_list, fit_model, wanted_roi_result):
     """Fit all pixels in image with chosen fit backend (or loads previous fit result)
 
-    Wrapper for `qdmpy.pl.interface.fit_pl_pixels` with some options logic.
+    Wrapper for `qdmpy.pl.interface.fit_all_pixels_pl` with some options logic.
 
 
     Arguments
@@ -314,7 +314,7 @@ def get_pl_fit_result(options, sig_norm, sweep_list, fit_model, wanted_roi_resul
         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
         Also has 'residual' as a key.
         (or None if not fitting pixels, this stops plotting, e.g. via
-        `qdmpy.plot.pl.plot_param_images` from erroring)
+        `qdmpy.plot.pl.pl_param_images` from erroring)
     sigmas : dict
         As above, but standard deviation for each param
         (or None if not fitting pixels)
@@ -329,6 +329,6 @@ def get_pl_fit_result(options, sig_norm, sweep_list, fit_model, wanted_roi_resul
             options, sig_norm, sweep_list, fit_model, wanted_roi_result
         )
     else:
-        pixel_fit_params = None  # not fitting pixels, this stops plotting (e.g. via plot_param_images) from erroring
+        pixel_fit_params = None  # not fitting pixels, this stops plotting (e.g. via plot.pl.pl_param_images) from erroring
         sigmas = None
     return pixel_fit_params, sigmas

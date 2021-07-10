@@ -221,8 +221,8 @@ def define_magnetization_transformation(ky, kx, k, standoff):
         m_to_bnv = (
             unv[0] * d_matrix[2, 0, ::] + unv[1] * d_matrix[2, 1, ::] + unv[2] * d_matrix[2, 2, ::]
         )
-        -> First index '2' is for z magnitisation (see m_from_bxy for in-plane mag process), the
-        second index is for the measurement axis (0:x, 1:y, 2:z), and the last index iterates
+        -> First index '2' is for z magnetization (see m_from_bxy for in-plane mag process), the
+        second index is for the (bnv etc.) bfield axis (0:x, 1:y, 2:z), and the last index iterates
         through the k values/vectors.
 
 

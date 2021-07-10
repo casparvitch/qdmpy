@@ -8,9 +8,11 @@ This (sub-) package exposes all of the concents of `qdmpy.field.interface` and `
 """
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.field._bnv": True,
-    "qdmpy.field._bxyz": True,
-    "qdmpy.field._geom": True,
+    "qdmpy.field.bnv": True,
+    "qdmpy.field.bxyz": True,
+    "qdmpy.field.ham_scipyfit": True,
+    "qdmpy.field.hamiltonian": True,
+    "qdmpy.field.io": True,
     "qdmpy.field.interface": True,
 }
 
