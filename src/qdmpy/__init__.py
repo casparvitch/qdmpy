@@ -2,8 +2,11 @@
 
 'Super-package' that holds all of the others within.
 
-Structure of sub-packages:
 ```
+      =================================
+      Subpackage dependency graph (DAG)
+      =================================
+
                                                            +--------------------------+
                    +-----+                                 |  ===                     |
                    |qdmpy|                                 |  Key                     |

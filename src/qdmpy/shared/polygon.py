@@ -194,7 +194,8 @@ def _tri_2area_det(yvert, xvert):
     yvert = np.asfarray(yvert)
     x_prev = np.concatenate(([xvert[-1]], xvert[:-1]))
     y_prev = np.concatenate(([yvert[-1]], yvert[:-1]))
-    return np.sum(xvert * y_prev - yvert * x_prev, axis=0)
+    return np.sum(yvert * x_prev - xvert * y_prev, axis=0)  # good or no?
+    # return np.sum(xvert * y_prev - yvert * x_prev, axis=0)
 
 
 # ============================================================================
@@ -214,7 +215,6 @@ class Polygon:
     """
 
     def __init__(self, y, x):
-
         if len(y) != len(x):
             raise IndexError("y and x must be equally sized.")
         self.y = np.asfarray(y)
@@ -316,8 +316,7 @@ class Polygon:
             # infinite line
             t = -(x1p * x21 + y1p * y21) / (x21 ** 2 + y21 ** 2)
             tlt0 = t < 0
-            # tle1 = (0 <= t) & (t <= 1) # THIS LOOKS SILLY
-            tle1 = t >= 0  # changed from above on 2021-06-30, @sscholten
+            tle1 = (0 <= t) & (t <= 1)  # this looks silly but don't change it
             # Normal intersects side
             d[tle1] = (x1p[tle1] + t[tle1] * x21) ** 2 + (y1p[tle1] + t[tle1] * y21) ** 2
             # Normal does not intersects side
@@ -529,7 +528,7 @@ def polygon_selector(
 
     dict_to_json(output_dict, json_output_path)
 
-    return pgon_lst
+    return output_dict
 
 
 # ===============================================================================================
@@ -712,7 +711,7 @@ def polygon_gui(image=None):
 
     dict_to_json(output_dict, values["output_path"])
 
-    return pgon_lst
+    return output_dict
 
 
 # ================================================================================================ #

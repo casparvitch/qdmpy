@@ -27,11 +27,13 @@ __pdoc__ = {
 # ============================================================================
 
 import numpy as np
+import numpy.linalg as LA  # noqa: N812
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 import matplotlib.patches
 from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
 from collections import defaultdict as dd
+from copy import copy
 
 from pyfftw.interfaces import numpy_fft
 from scipy.ndimage import gaussian_filter
@@ -54,6 +56,7 @@ class MagSim:
     unit_vectors_lst = None
 
     def _load_polys(self, polys, check_size=False):
+        """ polys: either path to json, or dict containing 'nodes' key. """
         if polys is not None:
             if isinstance(polys, dict):
                 if check_size and "image_size" in polys:
@@ -62,9 +65,9 @@ class MagSim:
                             "Image size polygons were defined on as passed to add_polygons does "
                             + "not match this MagSim's mesh."
                         )
-                return polys["nodes"]
+                return np.array(polys["nodes"])
             elif isinstance(polys, str):
-                return qdmpy.shared.json2dict.json_to_dict(polys)["nodes"]
+                return np.array(qdmpy.shared.json2dict.json_to_dict(polys)["nodes"])
             else:
                 raise TypeError("polygons argument was not a dict or string?")
         return None
@@ -80,7 +83,7 @@ class MagSim:
         return None
 
     def _polygon_gui(self, polygon_nodes=None, mean_plus_minus=None, **kwargs):
-        fig, ax = plt.subplots(constrained_layout=True)
+        fig, ax = plt.subplots()
 
         if mean_plus_minus is not None and isinstance(mean_plus_minus, (float, int)):
             mean = np.mean(self.base_image)
@@ -132,6 +135,7 @@ class MagSim:
     def define_magnets(self, magnetizations, unit_vectors):
         """
         magnetizations: int/float if the same for all polygons, or an iterable of len(polygon_nodes)
+            -> in units of mu_b / nm^2 (or mu_b / PX^2 for SandboxMagSim)
         unit_vectors: 3-iterable if the same for all polygons (cartesian coords),
             or an iterable of len(polygon_nodes) each element a 3-iterable
         """
@@ -145,9 +149,13 @@ class MagSim:
 
         if isinstance(unit_vectors, (np.ndarray, list, tuple)):
             if len(unit_vectors) == 3:
-                self.unit_vectors_lst = [unit_vectors for m, _ in enumerate(self.polygon_nodes)]
+                uv_abs = LA.norm(unit_vectors)
+                self.unit_vectors_lst = [
+                    tuple(np.array(unit_vectors) / uv_abs)
+                    for m, _ in enumerate(self.polygon_nodes)
+                ]
             else:
-                self.unit_vectors_lst = [unit_vectors]
+                self.unit_vectors_lst = [tuple(np.array(uv) / LA.norm(uv)) for uv in unit_vectors]
         else:
             raise TypeError("unit_vectors wrong type :(")
 
@@ -159,7 +167,8 @@ class MagSim:
         grid_y, grid_x = np.meshgrid(range(self.ny), range(self.nx), indexing="ij")
 
         for i, p in enumerate(self.polygon_nodes):
-            in_or_out = p.is_inside(grid_y, grid_x)
+            polygon = qdmpy.shared.polygon.Polygon(p[:, 0], p[:, 1])
+            in_or_out = polygon.is_inside(grid_y, grid_x)
             self.mag[self.unit_vectors_lst[i]][in_or_out >= 0] = self.magnetizations_lst[i]
 
     def run(self, standoff, resolution=None, pad_mode="mean", pad_factor=2, k_vector_epsilon=1e-6):
@@ -168,16 +177,12 @@ class MagSim:
         # in future could be generalised to a range of standoffs
         # e.g. if we wanted to average over an nv-depth distribution that would be easy
 
-        # pretend to get shape (probably don't need to actually do the fft... eh whatever)
-        dummy_shape = numpy_fft.fftshift(
-            numpy_fft.fft2(
-                qdmpy.shared.fourier.pad_image(
-                    np.empty(self.mag[self.unit_vectors_lst[0]].shape), pad_mode, pad_factor
-                )
-            )
-        ).shape
+        # get shape so we can define kvecs
+        dummy_img, _ = qdmpy.shared.fourier.pad_image(
+            np.empty(np.shape(self.mag[self.unit_vectors_lst[0]])), pad_mode, pad_factor
+        )
         ky, kx, k = qdmpy.shared.fourier.define_k_vectors(
-            dummy_shape, self.pixel_size, k_vector_epsilon
+            dummy_img.shape, self.pixel_size, k_vector_epsilon
         )
 
         # opposite sign on the exponential/standoff as we're upward-propagating.
@@ -187,38 +192,56 @@ class MagSim:
 
         d_matrix = qdmpy.shared.fourier.set_naninf_to_zero(d_matrix)
 
-        # d_matrix is shape: (3, 3, len(k))
-        # this is not idea for matrix multiplication, want 'k' as first dimension
-        # (note what is returned is a view, so we copy it)
-        d = np.moveaxis(d_matrix, -1, 0).copy()  # now as shape: (len(k), 3, 3)
-        del d_matrix
-
         self.bfield = [
             np.zeros((self.ny, self.nx)),
             np.zeros((self.ny, self.nx)),
             np.zeros((self.ny, self.nx)),
         ]
+
+        m_scale = 1 / qdmpy.shared.fourier.MAG_UNIT_CONV
+        if self._get_dist_scaling() == 1:
+            m_scale *= 1e-18  # we're in units of pixels: need to rescale d_matrix appropriately
+            # FIXME??
+
         for uv in self.unit_vectors_lst:
-            # calculate vector field.
-            mx_pad, p = qdmpy.shared.fourier.pad_image(self.mag[uv] * uv[0], pad_mode, pad_factor)
-            my_pad, _ = qdmpy.shared.fourier.pad_image(self.mag[uv] * uv[1], pad_mode, pad_factor)
-            mz_pad, _ = qdmpy.shared.fourier.pad_image(self.mag[uv] * uv[2], pad_mode, pad_factor)
+            mx_pad, p = qdmpy.shared.fourier.pad_image(
+                self.mag[uv] * uv[0] * m_scale, pad_mode, pad_factor
+            )
+            my_pad, _ = qdmpy.shared.fourier.pad_image(
+                self.mag[uv] * uv[1] * m_scale, pad_mode, pad_factor
+            )
+            mz_pad, _ = qdmpy.shared.fourier.pad_image(
+                self.mag[uv] * uv[2] * m_scale, pad_mode, pad_factor
+            )
 
             fft_mx = numpy_fft.fftshift(numpy_fft.fft2(mx_pad))
             fft_my = numpy_fft.fftshift(numpy_fft.fft2(my_pad))
             fft_mz = numpy_fft.fftshift(numpy_fft.fft2(mz_pad))
 
-            fft_mag_vec = np.vstack((fft_mx, fft_my, fft_mz))
-            fft_b_vec = d @ fft_mag_vec  # matrix multiplication b = d * m
+            fft_mag_vec = np.stack((fft_mx, fft_my, fft_mz))
 
-            self.bfield[0] += qdmpy.shared.fourier.unpad_image(
-                numpy_fft.ifft2(numpy_fft.ifftshift(fft_b_vec[0])).real, p
+            fft_b_vec = np.einsum(
+                "ij...,j...->i...", d_matrix, fft_mag_vec
+            )  # matrix mul b = d * m (d and m are stacked in last 2 dimensions)
+
+            # take back to real space, unpad & convert bfield to Gauss (from Tesla)
+            self.bfield[0] += (
+                qdmpy.shared.fourier.unpad_image(
+                    numpy_fft.ifft2(numpy_fft.ifftshift(fft_b_vec[0])).real, p
+                )
+                * 1e4
             )
-            self.bfield[1] += qdmpy.shared.fourier.unpad_image(
-                numpy_fft.ifft2(numpy_fft.ifftshift(fft_b_vec[1])).real, p
+            self.bfield[1] += (
+                qdmpy.shared.fourier.unpad_image(
+                    numpy_fft.ifft2(numpy_fft.ifftshift(fft_b_vec[1])).real, p
+                )
+                * 1e4
             )
-            self.bfield[2] += qdmpy.shared.fourier.unpad_image(
-                numpy_fft.ifft2(numpy_fft.ifftshift(fft_b_vec[2])).real, p
+            self.bfield[2] += (
+                qdmpy.shared.fourier.unpad_image(
+                    numpy_fft.ifft2(numpy_fft.ifftshift(fft_b_vec[2])).real, p
+                )
+                * 1e4
             )
 
         # for resolution convolve with width=resolution gaussian?
@@ -251,8 +274,10 @@ class MagSim:
             raise AttributeError("magnetization not defined yet.")
         return self.mag[unit_vector]
 
-    def plot_magsim_magnetization(self, unit_vector, annotate_polygons=True):
-        fig, ax = plt.subplots(constrained_layout=True)
+    def plot_magsim_magnetization(
+        self, unit_vector, annotate_polygons=True, polygon_patch_params=None
+    ):
+        fig, ax = plt.subplots()
         mag_image = self.get_magnetization_im(unit_vector)
         mx = np.max(np.abs(mag_image))
         c_range = (-mx, mx)
@@ -269,12 +294,11 @@ class MagSim:
             c_range,
             r"M ($\mu_B$ nm$^{-2}$)",
             polygon_nodes=polys,
-            plot_colorbar=True,
-            polygon_patch_params=None,
+            polygon_patch_params=polygon_patch_params,
         )
         return fig, ax
 
-    def plot_magsim_magnetizations(self, annotate_polygons=True):
+    def plot_magsim_magnetizations(self, annotate_polygons=True, polygon_patch_params=None):
         # use single colorbar, different plots
         # https://matplotlib.org/stable/gallery/subplots_axes_and_figures/colorbar_placement.html
         # calculate c_range smartly.
@@ -286,30 +310,28 @@ class MagSim:
         ncols = 1
         figsize[0] *= nrows
 
-        fig, axs = plt.subplots(figsize=figsize, nrows=nrows, ncols=ncols, constrained_layout=True)
+        fig, axs = plt.subplots(figsize=figsize, nrows=nrows, ncols=ncols)
 
         mag_images = [self.get_magnetization_im(uv) for uv in self.unit_vectors_lst]
         mx = max([np.max(mag) for mag in mag_images])
         c_range = (-mx, mx)
 
-        for i, (mag, uv) in enumerate((mag_images, self.unit_vectors_lst)):
+        for i, (mag, uv) in enumerate(zip(mag_images, self.unit_vectors_lst)):
             if annotate_polygons:
                 polys = [self.polygon_nodes[i]]
             else:
                 polys = None
 
-            colorbar = i + 1 == len(self.unit_vectors_lst)  # only on last figure
             _plot_image_on_ax(
                 fig,
-                axs[i],
+                axs[i] if isinstance(axs, np.ndarray) else axs,
                 mag,
                 str(uv),
                 "PuOr",
                 c_range,
-                self._get_mag_unit(),
+                self._get_mag_unit_str(),
                 polygon_nodes=polys,
-                plot_colorbar=colorbar,
-                polygon_patch_params=None,
+                polygon_patch_params=polygon_patch_params,
             )
 
         return fig, axs
@@ -331,20 +353,20 @@ class MagSim:
         else:
             c_range = (np.nanmin(self.bfield), np.nanmax(self.bfield))
 
-        c_label_ = f"b . {projection}, (G)" if c_label is None else c_label
         polys = None if annotate_polygons is None else self.polygon_nodes
 
-        fig, ax = plt.subplots(constrained_layout=True)
+        fig, ax = plt.subplots()
+        proj_name = f"({projection[0]:.2f},{projection[1]:.2f},{projection[2]:.2f})"
+        c_label_ = f"B . {proj_name}, (G)" if c_label is None else c_label
         _plot_image_on_ax(
             fig,
             ax,
-            self.bfield,
-            f"b . {projection} at z = {self.standoff}",
+            self.get_bfield_im(projection),
+            f"B . {proj_name} at z = {self.standoff}",
             c_map,
             c_range,
             c_label_,
             polygon_nodes=polys,
-            plot_colorbar=True,
             polygon_patch_params=polygon_patch_params,
         )
         return fig, ax
@@ -379,8 +401,12 @@ class SandboxMagSim(MagSim):
             raise AttributeError("No template set.")
         self.polygon_nodes = self.template_polygon_nodes
 
-    def _get_mag_unit(self):
+    def _get_mag_unit_str_str(self):
         return r"M ($mu_B$ $PX^{-2}$)"
+
+    def _get_dist_scaling(self):
+        # Pixels = PX = 1
+        return 1
 
 
 # define FOV size (height, width), standoff height
@@ -388,6 +414,8 @@ class SandboxMagSim(MagSim):
 # -> user cannot scroll etc., define to match some other/bnv image
 # would be best if image is plane-subtracted
 class ComparisonMagSim(MagSim):
+    unscaled_polygon_nodes = None
+
     def __init__(
         self,
         image,  # array-like (image directly) or string (path to)
@@ -415,12 +443,20 @@ class ComparisonMagSim(MagSim):
             )
         self.pixel_size = pxl_y
 
-    def _get_mag_unit(self):
+    def _get_mag_unit_str(self):
         return r"M ($\mu_B$ nm$^{-2}$)"
+
+    def _get_dist_scaling(self):
+        # nm = 1e-9
+        return 1e-9
 
     def rescale(self, factor):
         if self.polygon_nodes is None:
             raise RuntimeError("Add/define polygon_nodes before rescaling.")
+
+        if self.unscaled_polygon_nodes is None:
+            self.unscaled_polygon_nodes = copy(self.polygon_nodes)
+
         self.ny *= factor
         self.nx *= factor
         self.pixel_size *= 1 / factor
@@ -437,7 +473,7 @@ class ComparisonMagSim(MagSim):
         )
         if output_path is not None:
             qdmpy.shared.json2dict.dict_to_json(pgon_dict, output_path)
-        self.polygon_nodes = pgon_dict["nodes"]
+        self.polygon_nodes = np.array(pgon_dict["nodes"])
 
     def plot_comparison(
         self,
@@ -460,20 +496,32 @@ class ComparisonMagSim(MagSim):
         if strict_range is not None:
             c_range = strict_range
         else:
-            mn = min((np.nanmin(self.bfield_proj), np.nanmin(self.base_image)))
-            mx = max((np.nanmax(self.bfield_proj), np.nanmax(self.base_image)))
+            mn = min((np.nanmin(bfield_proj), np.nanmin(self.base_image)))
+            mx = max((np.nanmax(bfield_proj), np.nanmax(self.base_image)))
             c_range = (mn, mx)
 
         c_label_meas_ = "B (G)" if c_label_meas is None else c_label_meas
-        c_label_sim_ = f"b . {projection}, (G)" if c_label_sim is None else c_label_sim
-        polys = None if annotate_polygons is None else self.polygon_nodes
+
+        proj_name = f"({projection[0]:.2f},{projection[1]:.2f},{projection[2]:.2f})"
+        c_label_sim_ = f"B . {proj_name}, (G)" if c_label_sim is None else c_label_sim
+
+        if annotate_polygons is None:
+            unscaled_polys = None
+            scaled_polys = None
+        else:
+            unscaled_polys = (
+                self.polygon_nodes
+                if self.unscaled_polygon_nodes is None
+                else self.unscaled_polygon_nodes
+            )
+            scaled_polys = self.polygon_nodes
 
         figsize = mpl.rcParams["figure.figsize"].copy()
-        nrows = 2
-        ncols = 1
+        nrows = 1
+        ncols = 2
         figsize[0] *= nrows
 
-        fig, axs = plt.subplots(figsize=figsize, nrows=nrows, ncols=ncols, constrained_layout=True)
+        fig, axs = plt.subplots(figsize=figsize, nrows=nrows, ncols=ncols)
 
         _plot_image_on_ax(
             fig,
@@ -483,8 +531,7 @@ class ComparisonMagSim(MagSim):
             "bwr",
             c_range,
             c_label_meas_,
-            polygon_nodes=polys,
-            plot_colorbar=False,
+            polygon_nodes=unscaled_polys,
             polygon_patch_params=None,
         )
         _plot_image_on_ax(
@@ -495,15 +542,14 @@ class ComparisonMagSim(MagSim):
             "bwr",
             c_range,
             c_label_sim_,
-            polygon_nodes=polys,
-            plot_colorbar=True,
+            polygon_nodes=scaled_polys,
             polygon_patch_params=None,
         )
 
         return fig, axs
 
 
-# below: copies of fns in qdmpy.plot.common.
+# below: adjusted versions of fns in qdmpy.plot.common.
 def _plot_image_on_ax(
     fig,
     ax,
@@ -513,19 +559,17 @@ def _plot_image_on_ax(
     c_range,
     c_label,
     polygon_nodes=None,
-    plot_colorbar=True,
     polygon_patch_params=None,
 ):
 
-    im = ax.imshow(image_data, cmap=c_map, vmin=c_range[0], vmax=c_range[1])
+    im = ax.imshow(image_data, cmap=c_map, vmin=c_range[0], vmax=c_range[1], aspect="equal")
 
     ax.set_title(title)
     ax.get_xaxis().set_ticks([])
     ax.get_yaxis().set_ticks([])
 
-    if plot_colorbar:
-        cbar = _add_cbar(im, fig, ax)
-        cbar.ax.set_ylabel(c_label, rotation=270)
+    cbar = _add_cbar(im, fig, ax)
+    cbar.ax.set_ylabel(c_label, rotation=270)
 
     if polygon_nodes is not None:
         if polygon_patch_params is None:
