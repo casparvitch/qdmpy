@@ -307,7 +307,7 @@ def _points_to_params(points):
     a_normal = np.cross(vec1_in_plane, vec2_in_plane)
 
     d = np.dot(pts[2], a_normal)
-    return *a_normal, d
+    return a_normal, d
 
 
 def _three_point_background(image, points):
