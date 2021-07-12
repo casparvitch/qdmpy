@@ -487,7 +487,8 @@ class ComparisonMagSim(MagSim):
         )
         if output_path is not None:
             qdmpy.shared.json2dict.dict_to_json(pgon_dict, output_path)
-        self.polygon_nodes = np.array(pgon_dict["nodes"])
+
+        self.polygon_nodes = [np.array(p) for p in pgon_dict["nodes"]]
 
     def plot_comparison(
         self,
