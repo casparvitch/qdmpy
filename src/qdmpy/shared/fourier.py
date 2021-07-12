@@ -43,7 +43,7 @@ MAG_UNIT_CONV = 1e-18 / 9.274010e-24
 """
 Convert unit for magnetization to something more helpful.
 
-SI unit measured: Amps: A
+SI unit measured: Amps: A [for 2D magnetization, A/m for 3D]
 
 More useful: Bohr magnetons per nanometre squared: mu_B nm^-2
 
@@ -51,9 +51,9 @@ mu_B -> 9.274 010 e-24 A m^+2 or J/T
 m^2 -> 1e+18 nm^2
 
 Measure x amps = x A
- def  mu_B = 9.2_        in units of A m^2
- => x A =  x (1 / 9.2_)  in units of mu_B/m^2
- => x A = (1e-18/9.2_)   in units of mu_B/nm^2
+ def  mu_B  =  9.2_      in units of A m^2
+ => x A = x (1 / 9.2_)   in units of mu_B/m^2
+ => x A = x (1e-18/9.2_) in units of mu_B/nm^2
 """
 
 

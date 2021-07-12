@@ -1321,14 +1321,15 @@ class PolygonSelector(_SelectorWidget):
 
         # Position pending vertex.
         else:
-            # Calculate distance to the start vertex.
-            x0, y0 = self.current_line.get_transform().transform((self._xs[0], self._ys[0]))
-            v0_dist = np.hypot(x0 - event.x, y0 - event.y)
-            # Lock on to the start vertex if near it and ready to complete.
-            if len(self._xs) > 3 and v0_dist < self.vertex_select_radius:
-                self._xs[-1], self._ys[-1] = self._xs[0], self._ys[0]
-            else:
-                self._xs[-1], self._ys[-1] = event.xdata, event.ydata
+            if self._xs:
+                # Calculate distance to the start vertex.
+                x0, y0 = self.current_line.get_transform().transform((self._xs[0], self._ys[0]))
+                v0_dist = np.hypot(x0 - event.x, y0 - event.y)
+                # Lock on to the start vertex if near it and ready to complete.
+                if len(self._xs) > 3 and v0_dist < self.vertex_select_radius:
+                    self._xs[-1], self._ys[-1] = self._xs[0], self._ys[0]
+                else:
+                    self._xs[-1], self._ys[-1] = event.xdata, event.ydata
 
         self.draw_polygon()
 
