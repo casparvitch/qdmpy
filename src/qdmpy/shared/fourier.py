@@ -28,6 +28,8 @@ __pdoc__ = {
     "qdmpy.shared.fourier.hanning_filter_kspace": True,
     "qdmpy.shared.fourier.MAG_UNIT_CONV": True,
     "qdmpy.shared.fourier.MU_0": True,
+    "qdmpy.shared.fourier.define_magnetization_transformation": True,
+    "qdmpy.shared.fourier.define_current_transform": True,
 }
 
 # ============================================================================
@@ -41,7 +43,7 @@ MAG_UNIT_CONV = 1e-18 / 9.274010e-24
 """
 Convert unit for magnetization to something more helpful.
 
-SI unit measured: Amps: A
+SI unit measured: Amps: A [for 2D magnetization, A/m for 3D]
 
 More useful: Bohr magnetons per nanometre squared: mu_B nm^-2
 
@@ -49,9 +51,9 @@ mu_B -> 9.274 010 e-24 A m^+2 or J/T
 m^2 -> 1e+18 nm^2
 
 Measure x amps = x A
- def  mu_B = 9.2_        in units of A m^2
- => x A =  x (1 / 9.2_)  in units of mu_B/m^2
- => x A = (1e-18/9.2_)   in units of mu_B/nm^2
+ def  mu_B  =  9.2_      in units of A m^2
+ => x A = x (1 / 9.2_)   in units of mu_B/m^2
+ => x A = x (1e-18/9.2_) in units of mu_B/nm^2
 """
 
 
@@ -195,6 +197,105 @@ def hanning_filter_kspace(k, do_filt, hanning_low_cutoff, hanning_high_cutoff, s
     else:
         img_filt = 1
     return img_filt
+
+
+# ============================================================================
+
+
+def define_magnetization_transformation(ky, kx, k, standoff):
+    """M => b fourier-space transformation.
+
+
+    Parameters
+    ----------
+    ky, kx, k : np array
+        Wavenumber meshgrids, k = sqrt( kx^2 + ky^2 )
+
+    standoff : float
+        Distance NV layer <-> Sample
+
+    Returns
+    -------
+    d_matrix : np array
+        Transformation such that B = d_matrix * m. E.g. for z magnetized sample:
+        m_to_bnv = (
+            unv[0] * d_matrix[2, 0, ::] + unv[1] * d_matrix[2, 1, ::] + unv[2] * d_matrix[2, 2, ::]
+        )
+        -> First index '2' is for z magnetization (see m_from_bxy for in-plane mag process), the
+        second index is for the (bnv etc.) bfield axis (0:x, 1:y, 2:z), and the last index iterates
+        through the k values/vectors.
+
+
+    See D. A. Broadway, S. E. Lillie, S. C. Scholten, D. Rohner, N. Dontschuk, P. Maletinsky,
+        J.-P. Tetienne, and L. C. L. Hollenberg,
+        Improved Current Density and Magnetization Reconstruction Through Vector Magnetic Field
+        Measurements, Phys. Rev. Applied 14, 024076 (2020).
+        https://doi.org/10.1103/PhysRevApplied.14.024076
+        https://arxiv.org/abs/2005.06788
+    """
+
+    if standoff:
+        exp_factor = np.exp(k * standoff)
+    else:
+        exp_factor = 1
+
+    alpha = 2 * exp_factor / MU_0
+
+    return (-1 / alpha) * np.array(
+        [
+            [kx ** 2 / k, (kx * ky) / k, 1j * kx],
+            [(kx * ky) / k, ky ** 2 / k, 1j * ky],
+            [1j * kx, 1j * ky, -k],
+        ]
+    )
+    # return (1 / alpha) * np.array(
+    #     [
+    #         [-(kx ** 2 + 2 * ky ** 2) / k, kx * ky / k, 1j * kx],
+    #         [kx * ky / k, -(2 * kx ** 2 + ky ** 2) / k, 1j * ky],
+    #         [-1j * kx, -1j * ky, -k],
+    #     ]
+    # )
+
+
+# ============================================================================
+
+
+def define_current_transform(u_proj, ky, kx, k, standoff=None):
+    """b => J fourier-space transformation.
+
+    Arguments
+    ---------
+    u_proj : array-like
+        Shape: 3, the direction the magnetic field was measured in (projected onto).
+    ky, kx, k : np arrays
+        Wavenumber meshgrids, k = sqrt( kx^2 + ky^2 )
+    standoff : float or None, default : None
+        Distance NV layer <-> sample
+
+    Returns
+    -------
+    b_to_jx, b_to_jy : np arrays (2D)
+
+    See D. A. Broadway, S. E. Lillie, S. C. Scholten, D. Rohner, N. Dontschuk, P. Maletinsky,
+        J.-P. Tetienne, and L. C. L. Hollenberg,
+        Improved Current Density and Magnetization Reconstruction Through Vector Magnetic Field
+        Measurements, Phys. Rev. Applied 14, 024076 (2020).
+        https://doi.org/10.1103/PhysRevApplied.14.024076
+        https://arxiv.org/abs/2005.06788
+    """
+
+    if standoff:
+        exp_factor = np.exp(1 * k * standoff)
+    else:
+        exp_factor = 1
+
+    alpha = 2 * exp_factor / MU_0
+
+    # sign on 1j's is opposite to Broadway paper due to different FT definition.
+    b_to_jx = -1 * (alpha * ky) / (u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k)
+    b_to_jy = (alpha * kx) / (u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k)
+
+    return b_to_jx, b_to_jy
 
 
 # ============================================================================

@@ -8,7 +8,7 @@ Ensure any fit functions you define are added to the AVAILABLE_FNS module variab
 Try not to have overlapping parameter names in the same fit.
 
 For ODMR peaks, ensure the frequency position of the peak is named something
-prefixed by 'pos'. (see `qdmpy.field._bnv.get_bnvs_and_dshifts` for the reasoning).
+prefixed by 'pos'. (see `qdmpy.field.bnv.get_bnvs_and_dshifts` for the reasoning).
 
 Classes
 -------
@@ -131,7 +131,7 @@ class FitModel:
     def get_param_defn(self):
         """
         Returns list of parameters in fit_model, note there will be duplicates, and they do
-        not have numbers e.g. 'pos_0'. Use `qdmpy.pl.model.get_param_odict` for that purpose.
+        not have numbers e.g. 'pos_0'. Use `qdmpy.pl.model.FitModel.get_param_odict` for that purpose.
 
         Returns
         -------

@@ -7,8 +7,6 @@ Functions
  - `qdmpy.field.hamiltonian.define_hamiltonian`
  - `qdmpy.field.hamiltonian._prep_fit_backends`
  - `qdmpy.field.hamiltonian.fit_hamiltonian_pixels`
- - `qdmpy.field.hamiltonian.get_param_defn`
- - `qdmpy.field.hamiltonian.get_param_odict`
  - `qdmpy.field.hamiltonian.ham_gen_init_guesses`
  - `qdmpy.field.hamiltonian.ham_bounds_from_range`
  - `qdmpy.field.hamiltonian.ham_pixel_generator`
@@ -34,8 +32,6 @@ __pdoc__ = {
     "qdmpy.field.hamiltonian.Hamiltonian": True,
     "qdmpy.field.hamiltonian.ApproxBxyz": True,
     "qdmpy.field.hamiltonian.Bxyz": True,
-    "qdmpy.field.hamiltonian.get_param_defn": True,
-    "qdmpy.field.hamiltonian.get_param_odict": True,
     "qdmpy.field.hamiltonian.ham_gen_init_guesses": True,
     "qdmpy.field.hamiltonian.ham_bounds_from_range": True,
     "qdmpy.field.hamiltonian.ham_pixel_generator": True,
@@ -112,7 +108,7 @@ def define_hamiltonian(options, chooser_obj, unv_frames):
     chooser_obj : `qdmpy.field.hamiltonian.Chooser`
         Chooser object
     unv_frames : array-like
-        NV reference frames in lab frame (see `qdmpy.constants`)
+        NV reference frames in lab frame (see `qdmpy.shared.geom`)
 
     Returns
     -------

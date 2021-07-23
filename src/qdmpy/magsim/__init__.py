@@ -3,5 +3,6 @@
 """
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.magsim.": True,
+    "qdmpy.magsim.interface": True,
 }
+from qdmpy.magsim.interface import *

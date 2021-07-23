@@ -7,9 +7,6 @@ Functions
  - `qdmpy.field.interface.odmr_field_retrieval`
  - `qdmpy.field.interface._odmr_with_field_ref`
  - `qdmpy.field.interface._odmr_with_pre_glac_ref`
- - `qdmpy.field.interface._odmr_with_inverted_bias_ref`
- - `qdmpy.field.interface.field_refsub`
- - `qdmpy.field.interface.field_sigma_add`
  - `qdmpy.field.interface.get_unvs`
  - `qdmpy.field.interface.add_bfield_reconstructed`
  - `qdmpy.field.interface.add_bfield_theta_phi`
@@ -23,9 +20,6 @@ __pdoc__ = {
     "qdmpy.field.interface.odmr_field_retrieval": True,
     "qdmpy.field.interface._odmr_with_field_ref": True,
     "qdmpy.field.interface._odmr_with_pre_glac_ref": True,
-    "qdmpy.field.interface._odmr_with_inverted_bias_ref": True,
-    "qdmpy.field.interface.field_refsub": True,
-    "qdmpy.field.interface.field_sigma_add": True,
     "qdmpy.field.interface.get_unvs": True,
     "qdmpy.field.interface.add_bfield_reconstructed": True,
     "qdmpy.field.interface.add_bfield_theta_phi": True,

@@ -136,7 +136,7 @@ def get_background(image, method, polygons=None, **method_params_dict):
             - background calculated from polynomial fit to image.
             - params required in method_params_dict:
                 - "order": an int, the 'order' polynomial to fit. (e.g. 1 = plane).
-        - "_gaussian"
+        - "gaussian"
             - background calculated from _gaussian fit to image.
             - no params required
         - "interpolate"
@@ -146,7 +146,7 @@ def get_background(image, method, polygons=None, **method_params_dict):
                 - "interp_method": nearest, linear, cubic.
                 - "sigma": sigma passed to _gaussian filter (see scipy.ndimage._gaussian_filter)
                     which is utilized on the background before interpolating
-        - "_gaussian_filter"
+        - "gaussian_filter"
             - background calculated from image filtered with a _gaussian filter.
             - params required in method_params_dict:
                 - "sigma": sigma passed to _gaussian filter (see scipy.ndimage._gaussian_filter)
@@ -183,18 +183,18 @@ def get_background(image, method, polygons=None, **method_params_dict):
         "three_point": ["points"],
         "mean": [],
         "poly": ["order"],
-        "_gaussian": [],
+        "gaussian": [],
         "interpolate": ["interp_method", "sigma"],
-        "_gaussian_filter": ["sigma"],
+        "gaussian_filter": ["sigma"],
     }
     method_fns = {
         "fix_zero": _zero_background,
         "three_point": _three_point_background,
         "mean": _mean_background,
         "poly": _poly_background,
-        "_gaussian": _gaussian_background,
+        "gaussian": _gaussian_background,
         "interpolate": _interpolated_background,
-        "_gaussian_filter": _filtered_background,
+        "gaussian_filter": _filtered_background,
     }
     image = np.array(image)
     if len(image.shape) != 2:
@@ -216,8 +216,8 @@ def get_background(image, method, polygons=None, **method_params_dict):
         # can't mask it for interpolate as we need that info!
         image = mask_polygons(image, polygons)
 
-    if method == "_gaussian_filter":
-        method_params_dict["filter_type"] = "_gaussian"
+    if method == "gaussian_filter":
+        method_params_dict["filter_type"] = "gaussian"
 
     if method == "interpolate":
         method_params_dict["polygons"] = polygons
@@ -241,7 +241,7 @@ def mu_sigma_exclude_polygons(image, polygons=None):
 def get_im_filtered(image, filter_type, **kwargs):
     """Wrapped over other filters defined in `qdmpy.shared.polygon.Polygon_filter'.
     Current filters defined:
-        - filter_type = gaussian, `qdmpy.shared.itool.get_im_filtered_gaussian`
+        - filter_type = gaussian, `qdmpy.shared.itool._get_im_filtered_gaussian`
     """
     if not isinstance(image, np.ma.core.MaskedArray):
         image = np.ma.masked_array(image)
@@ -307,7 +307,7 @@ def _points_to_params(points):
     a_normal = np.cross(vec1_in_plane, vec2_in_plane)
 
     d = np.dot(pts[2], a_normal)
-    return *a_normal, d
+    return a_normal, d
 
 
 def _three_point_background(image, points):

@@ -525,7 +525,7 @@
         "option_default": 0
     },
 
-    // Diamond crystal orientation -> see qdmpy.constants. Default: HPHT orientation
+    // Diamond crystal orientation -> see qdmpy.shared.geom. Default: HPHT orientation
     // format: <top face orientation>_<edge face orientation>
     // OR <111>, which only defines one unv (a convenience for single-bnv measurements)
     "diamond_ori": {

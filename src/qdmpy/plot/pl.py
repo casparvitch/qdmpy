@@ -466,7 +466,7 @@ def aoi_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_lst, fi
     sweep_list : list
         List of sweep parameter values (with removed unwanted sweeps at start/end)
     fit_result_collection_lst : list
-        List of `qdmpy.pl._shared.FitResultCollection` objects (one for each fit_backend)
+        List of `qdmpy.pl.common.FitResultCollection` objects (one for each fit_backend)
         holding ROI, AOI fit results
     fit_model : `qdmpy.pl.model.FitModel`
         Model we're fitting to.
