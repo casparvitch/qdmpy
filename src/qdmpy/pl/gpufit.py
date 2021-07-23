@@ -425,8 +425,8 @@ def fit_aois_pl_gpufit(
     init_guess_params = init_guess_params.astype(dtype=np.float32)
 
     for a in aois:
-        sig_norm = sig_norm[:, a[0], a[1]]
-        avg = np.nanmean(np.nanmean(sig_norm, axis=2), axis=1)
+        sn = sig_norm[:, a[0], a[1]]
+        avg = np.nanmean(np.nanmean(sn, axis=2), axis=1)
         avg_twice = np.repeat([avg], repeats=2, axis=0)
 
         fitting_results, _, _, _, _ = gf.fit_constrained(
