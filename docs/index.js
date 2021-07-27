@@ -2477,7 +2477,7 @@ INDEX=[
 "func":1
 },
 {
-"ref":"qdmpy.shared.itool.mu_sigma_exclude_polygons",
+"ref":"qdmpy.shared.itool.mu_sigma_inside_polygons",
 "url":33,
 "doc":"returns (mean, standard_deviation) for image, only _within_ polygon areas.",
 "func":1

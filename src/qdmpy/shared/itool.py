@@ -21,7 +21,7 @@ Functions
  - `qdmpy.shared.itool._interpolated_background`
  - `qdmpy.shared.itool._filtered_background`
  - `qdmpy.shared.itool.get_background`
- - `qdmpy.shared.itool.mu_sigma_exclude_polygons`
+ - `qdmpy.shared.itool.mu_sigma_inside_polygons`
 """
 
 # TODO add circle, elliptical mask -> not sure how to define though
@@ -50,7 +50,7 @@ __pdoc__ = {
     "qdmpy.shared.itool._interpolated_background": True,
     "qdmpy.shared.itool._filtered_background": True,
     "qdmpy.shared.itool.get_background": True,
-    "qdmpy.shared.itool.mu_sigma_exclude_polygons": True,
+    "qdmpy.shared.itool.mu_sigma_inside_polygons": True,
 }
 
 # ============================================================================
@@ -111,7 +111,7 @@ def mask_polygons(image, polygons=None, invert_mask=False):
         m = np.ma.masked_greater_equal(in_or_out, 0).mask
         masked_area = np.logical_and(masked_area, ~m)
 
-    msk = np.logical_not(masked_area) if invert_mask else masked_area
+    msk = np.logical_not(masked_area) if not invert_mask else masked_area
 
     return np.ma.masked_array(image, mask=msk)
 
@@ -150,6 +150,10 @@ def get_background(image, method, polygons=None, **method_params_dict):
             - background calculated from image filtered with a _gaussian filter.
             - params required in method_params_dict:
                 - "sigma": sigma passed to _gaussian filter (see scipy.ndimage._gaussian_filter)
+        - "gaussian_then_poly"
+            - runs gaussian then poly subtraction
+            - params required in method_params_dict:
+                - "order": an int, the 'order' polynomial to fit. (e.g. 1 = plane).
 
     polygon utilization:
         - if method is not interpolate, the image is masked where the polygons are
@@ -186,6 +190,7 @@ def get_background(image, method, polygons=None, **method_params_dict):
         "gaussian": [],
         "interpolate": ["interp_method", "sigma"],
         "gaussian_filter": ["sigma"],
+        "gaussian_then_poly": ["order"]
     }
     method_fns = {
         "fix_zero": _zero_background,
@@ -195,6 +200,7 @@ def get_background(image, method, polygons=None, **method_params_dict):
         "gaussian": _gaussian_background,
         "interpolate": _interpolated_background,
         "gaussian_filter": _filtered_background,
+        "gaussian_then_poly": _gaussian_then_poly
     }
     image = np.array(image)
     if len(image.shape) != 2:
@@ -228,7 +234,7 @@ def get_background(image, method, polygons=None, **method_params_dict):
 # ============================================================================
 
 
-def mu_sigma_exclude_polygons(image, polygons=None):
+def mu_sigma_inside_polygons(image, polygons=None):
     """returns (mean, standard_deviation) for image, only _within_ polygon areas."""
     image = mask_polygons(image, polygons, invert_mask=True)
     return np.mean(image), np.std(image)
@@ -280,7 +286,7 @@ def _zero_background(image, zero):
     if not isinstance(zero, (int, float)):
         return TypeError("'zero' must be an int or a float.")
     mn = zero
-    bg = np.empty(image)
+    bg = np.empty(image.shape)
     bg[:] = mn
     return bg
 
@@ -476,5 +482,13 @@ def _filtered_background(image, filter_type, **kwargs):
     Passed to `qdmpy.shared.itool.get_background"""
     return get_im_filtered(image, filter_type, **kwargs)
 
+
+# ============================================================================
+
+
+def _gaussian_then_poly(image, order):
+    """Background defines as: fit of a gaussian then a polynomial to image.""" 
+    gauss_back = _gaussian_background(image)
+    return _poly_background(image - gauss_back, order) + gauss_back
 
 # ============================================================================

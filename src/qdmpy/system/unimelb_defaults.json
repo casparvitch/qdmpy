@@ -874,6 +874,7 @@
     //  - interpolate: image gaussian filtered (key 'sigma'), with data interpolated over
     //     polygons (key 'interp_method')
     //  - gaussian_filter: image gaussian filtered (key 'sigma')
+    //  - gaussian_then_poly: gaussian fit then polynomial fit
 
     // for magnetic fields (bfields)
     "bfield_bground_method": {
@@ -890,14 +891,15 @@
     },
     // parameters for chosen bground method
     // required:
-    //  - fix_zero: 'zero', a number
-    //  - three_point: 'points' a length three iterable of [x, y] positions in image
-    //  - mean: none
-    //  - poly: key 'order', a natural number
-    //  - gaussian: none
+    //  - fix_zero: 'zero', a number.
+    //  - three_point: 'points' a length three iterable of [x, y] positions in image.
+    //  - mean: none.
+    //  - poly: key 'order', a natural number.
+    //  - gaussian: none.
     //  - interpolate: key 'interp_method' (interpolation method in scipy griddata: nearest, linear, cubic)
-    //     and key 'sigma'
-    //  - gaussian_filter: requires sigma.
+    //     and key 'sigma'.
+    //  - gaussian_filter: requires 'sigma'.
+    //  - gaussian_then_poly" requires 'order'.
     "bfield_bground_params": {
         "option_default": {}
     },
