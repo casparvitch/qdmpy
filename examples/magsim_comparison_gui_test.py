@@ -8,7 +8,8 @@ import matplotlib.pyplot as plt
 
 numpy_txt_file_path = "/home/samsc/ResearchData/test_images/mz_test/ODMR - Pulsed_10_Rectangle_bin_8/field/sig_sub_ref/sig_sub_ref_bnv_0.txt"
 json_output_path = "/home/samsc/ResearchData/test_images/mz_test/polys_mz_comparison_gui.json"
-json_input_path = "/home/samsc/ResearchData/test_images/mz_test/polys.json"
+# json_input_path = "/home/samsc/ResearchData/test_images/mz_test/polys.json"
+# json_input_path = "/home/samsc/ResearchData/test_images/mz_test/polys_mz_comparison_gui.json"
 mean_plus_minus = 0.25
 
 

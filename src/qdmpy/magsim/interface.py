@@ -205,7 +205,11 @@ class MagSim:
         # convert to A from mu_b / nm^2 magnetization units
         m_scale = 1 / qdmpy.shared.fourier.MAG_UNIT_CONV
 
-        for uv in self.unit_vectors_lst:
+        unique_uvs = dd(list)
+        for i, uv in enumerate(self.unit_vectors_lst):
+            unique_uvs[uv].append(i)
+
+        for uv in unique_uvs:
             mx, my, mz = (
                 self.mag[uv] * uv[0] * m_scale,
                 self.mag[uv] * uv[1] * m_scale,
@@ -258,10 +262,10 @@ class MagSim:
             gaussian_filter(self.bfield[1], sigma, output=self.bfield[1])
             gaussian_filter(self.bfield[2], sigma, output=self.bfield[2])
 
-    def _scale_for_fft(self, ars):
-        """Norm arrays so fft doesn't freak out"""
-        mx = np.max(np.abs(ars))
-        return [ar / mx for ar in ars], mx
+    # def _scale_for_fft(self, ars):
+    #     """Norm arrays so fft doesn't freak out. NB not used anymore"""
+    #     mx = np.max(np.abs(ars))
+    #     return [ar / mx for ar in ars], mx
 
     # image outputs: bfield and magnetization
     def get_bfield_im(self, projection=(0, 0, 1)):
@@ -334,7 +338,8 @@ class MagSim:
             else:
                 polys = None
 
-            title = ", ".join([str(self.unit_vectors_lst[uv]) for uv in unique_uvs[uvs]])
+            title = str(uvs)  # below is just copies of the same unv?
+            # title = ", ".join([str(self.unit_vectors_lst[uv]) for uv in unique_uvs[uvs]])
             _plot_image_on_ax(
                 fig,
                 axs[i] if isinstance(axs, np.ndarray) else axs,
@@ -498,10 +503,7 @@ class ComparisonMagSim(MagSim):
         c_label_meas=None,
         c_label_sim=None,
     ):
-        # show:
-        # - source image
-        # - simulated field
-        # (needs cmap/crange arguments/options, same for both images.)
+        # bug: still no annotations on measurement?
 
         if self.bfield is None:
             raise AttributeError("No bfield found: no simulation run.")
@@ -520,7 +522,7 @@ class ComparisonMagSim(MagSim):
         proj_name = f"({projection[0]:.2f},{projection[1]:.2f},{projection[2]:.2f})"
         c_label_sim_ = f"B . {proj_name}, (G)" if c_label_sim is None else c_label_sim
 
-        if annotate_polygons is None:
+        if annotate_polygons is False:
             unscaled_polys = None
             scaled_polys = None
         else:
