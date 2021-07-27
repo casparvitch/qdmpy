@@ -31,4 +31,4 @@ sim.plot_magsim_bfield_at_nvs(strict_range=(-0.25, 0.25), projection=unv)  # the
 sim.plot_comparison(
     strict_range=(-0.25, 0.25), projection=unv
 )  # so you could e.g. run: fig, _ = sim.plot_comparison(); fig.savefig(path)
-plt.show()
+cplt.show()
