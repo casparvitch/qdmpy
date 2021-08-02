@@ -1138,6 +1138,7 @@ def other_measurements(options, skip_first=0):
     for s, path in good_paths:
         datasets[s] = options["system"].get_headers_and_read_csv(options, path)
 
+    fig = None
     for s, (headers, dset) in datasets.items():
 
         num_series = len(headers) - 1  # 0th is 'time' array etc. (indep. vals)
@@ -1256,6 +1257,7 @@ def _annotate_aoi_image(options, ax):
     """
     Annotates AOI onto a given Axis object. Generally used on pl image.
     """
+    # NOTE I don't think a binning check is required.
     binning = options["additional_bins"]
     if binning == 0:
         binning = 1
