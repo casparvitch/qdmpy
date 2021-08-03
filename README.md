@@ -35,7 +35,49 @@ Best used in a jupyter notebook to avoid producing a million graphs. In future a
 
 Usage is best understood through the example notebooks.
 
-#### Flow diagram
+
+#### Module Heirarchy
+
+View in text editor if scrambled.
+
+```
+      =================================
+      Subpackage dependency graph (DAG)
+      =================================
+
+                                                           +--------------------------+
+                   +-----+                                 |  ===                     |
+                   |qdmpy|                                 |  Key                     |
+   +---------------+=====+------------+                    |  ===                     |
+   |               +-----+            |                    |                          |
+   |                                  |                    | +----+                   |
+   v                                  v                    | |name|  =  Package       |
++------+  +--+  +-----+  +------+  +----+  +------+        | |====|                   |
+|system|  |pl|  |field|  |source|  |plot|  |magsim|        | +----+                   |
+|======|  |==|  |=====|  |======|  |====|  |======|        |                          |
++--+---+  +-++  +--+--+  +--+---+  +-+--+  +--+---+        |  name   =  Module        |
+   |        |      |        |        |        |            |  ----                    |
+   |        |      |        |        |        |            |                          |
+   |        |      |        |        |        |            |                          |
+   |        v      v        v        |        |            |  --->   =  Dependency    |
+   |     +-------------------------+<+        |            |                          |
+   +---->|          shared         |          |            +--------------------------+
+         |          ======         |<---------+
+         |                         |
+         |                 itool   |
+         |       geom      -----   |
+         |       ----        |     |             CANNOT IMPORT FROM HIGHER IN HEIRARCHY
+         |                   v     |
+         | misc           polygon  |
+         | ----           -------  |
+         |                   |     |                
+         |      fourier      v     |
+         |      -------  json2dict |               
+         |               --------- |                
+         +-------------------------+
+```
+
+#### Flow diagram (out of date)
 
 View in text editor if scrambled.
 
