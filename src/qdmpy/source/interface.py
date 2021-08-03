@@ -6,8 +6,8 @@ Functions
 ---------
  - `qdmpy.source.interface.odmr_source_retrieval`
  - `qdmpy.source.interface.get_current_density`
- - `qdmpy.source.interface.get_magnetisation`
- - `qdmpy.source.interface.add_div_j`
+ - `qdmpy.source.interface.get_magnetization`
+ - `qdmpy.source.interface.add_divperp_j`
  - `qdmpy.source.interface.in_plane_mag_normalise`
 """
 
@@ -18,8 +18,8 @@ __author__ = "Sam Scholten"
 __pdoc__ = {
     "qdmpy.source.interface.odmr_source_retrieval": True,
     "qdmpy.source.interface.get_current_density": True,
-    "qdmpy.source.interface.get_magnetisation": True,
-    "qdmpy.source.interface.add_div_j": True,
+    "qdmpy.source.interface.get_magnetization": True,
+    "qdmpy.source.interface.add_divperp_j": True,
     "qdmpy.source.interface.in_plane_mag_normalise": True,
 }
 
@@ -30,10 +30,10 @@ import numpy as np
 
 # ============================================================================
 
-import qdmpy.fourier
-import qdmpy.field
-import qdmpy.io
-import qdmpy.itool
+import qdmpy.shared.geom
+import qdmpy.source.io
+import qdmpy.source.current
+import qdmpy.source.magnetization
 
 # ============================================================================
 
@@ -69,10 +69,10 @@ def odmr_source_retrieval(options, bnvs, field_params):
         return None
 
     # generate output directories
-    qdmpy.io.source.prep_output_directories(options)
+    qdmpy.source.io.prep_output_directories(options)
 
     # do what was asked
-    source_fns = {"current_density": get_current_density, "magnetisation": get_magnetisation}
+    source_fns = {"current_density": get_current_density, "magnetization": get_magnetization}
     source_params = source_fns[options["source_type"]](options, bnvs, field_params)
 
     if source_params is None:
@@ -89,7 +89,7 @@ def odmr_source_retrieval(options, bnvs, field_params):
             source_params[key] -= np.nanmean(source_params[key][y_min:y_max, x_min:x_max])
             source_params[key] -= np.nanmean(source_params[key][y_min:y_max, x_min:x_max])
 
-    options["source_params"] = [i for i in source_params.keys()]
+    options["source_params"] = list(source_params.keys())
     return source_params
 
 
@@ -159,7 +159,7 @@ def get_current_density(
         bx, by, bz = [field_params["B" + comp] for comp in components]
 
     if any([i in ["from_bnv"] for i in options["recon_methods"]]):
-        unvs = qdmpy.field.get_unvs(options)
+        unvs = qdmpy.shared.geom.get_unvs(options)
         unv_opt = options["recon_unv_index"]
         if unv_opt is not None:
             unv = unvs[unv_opt]
@@ -171,22 +171,26 @@ def get_current_density(
     source_params = {}
     for method in options["recon_methods"]:
         if method == "from_bxy":
-            jx, jy = qdmpy.fourier.get_j_from_bxy(
+            jx, jy = qdmpy.source.current.get_j_from_bxy(
                 [bx, by, bz],
                 *useful_opts,
-                NVs_above_sample=options["NVs_above_sample"],
+                nvs_above_sample=options["NVs_above_sample"],
             )
         elif method == "from_bz":
-            jx, jy = qdmpy.fourier.get_j_from_bz([bx, by, bz], *useful_opts)
+            jx, jy = qdmpy.source.current.get_j_from_bz([bx, by, bz], *useful_opts)
         elif method == "from_bnv":
-            jx, jy = qdmpy.fourier.get_j_from_bnv(
+            jx, jy = qdmpy.source.current.get_j_from_bnv(
                 bnv,
                 unv,
                 *useful_opts,
-                NVs_above_sample=options["NVs_above_sample"],
+                nvs_above_sample=options["NVs_above_sample"],
+            )
+        elif method == "from_bxyz_w_src":
+            jx, jy = qdmpy.source.current.get_j_from_bxyz_w_src(
+                [bx, by, bz], *useful_opts, sigma=options["src_sigma"]
             )
         else:
-            warnings.warn(f"recon_method option {method} not recognised.")
+            warnings.warn(f"recon_method '{method}' not recognised for j recon, skipping.")
             return None
 
         jnorm = np.sqrt(jx ** 2 + jy ** 2)
@@ -199,19 +203,19 @@ def get_current_density(
                 polygons = options["polygons"]
             else:
                 polygons = None
-            jx_bground = qdmpy.itool.get_background(
+            jx_bground = qdmpy.shared.itool.get_background(
                 jx,
                 options["source_bground_method"],
                 polygons=polygons,
                 **options["source_bground_params"],
             )
-            jy_bground = qdmpy.itool.get_background(
+            jy_bground = qdmpy.shared.itool.get_background(
                 jy,
                 options["source_bground_method"],
                 polygons=polygons,
                 **options["source_bground_params"],
             )
-            jnorm_bground = qdmpy.itool.get_background(
+            jnorm_bground = qdmpy.shared.itool.get_background(
                 jnorm,
                 options["source_bground_method"],
                 polygons=polygons,
@@ -245,13 +249,13 @@ def get_current_density(
 # ============================================================================
 
 
-def get_magnetisation(
+def get_magnetization(
     options,
     bnvs,
     field_params,
 ):
     """
-    Gets magnetisation from bnvs and field_params according to options in options.
+    Gets magnetization from bnvs and field_params according to options in options.
     Returned as a dict similar to fit_params/field_params etc.
 
     Arguments
@@ -276,7 +280,7 @@ def get_magnetisation(
         https://arxiv.org/abs/2005.06788
     """
     useful_opts = [
-        options["magnetisation_angle"],
+        options["magnetization_angle"],
         options["fourier_pad_mode"],
         options["fourier_pad_factor"],
         options["system"].get_raw_pixel_size(options) * options["total_bin"],
@@ -310,7 +314,7 @@ def get_magnetisation(
 
     if any([i in ["from_bnv"] for i in options["recon_methods"]]):
 
-        unvs = qdmpy.field.get_unvs(options)
+        unvs = qdmpy.shared.geom.get_unvs(options)
         unv_opt = options["recon_unv_index"]
         if unv_opt is not None:
             unv = unvs[unv_opt]
@@ -322,26 +326,28 @@ def get_magnetisation(
     source_params = {}
     for method in options["recon_methods"]:
         if method == "from_bxy":
-            m = qdmpy.fourier.get_m_from_bxy([bx, by, bz], *useful_opts)
+            m = qdmpy.source.magnetization.get_m_from_bxy([bx, by, bz], *useful_opts)
         elif method == "from_bz":
-            m = qdmpy.fourier.get_m_from_bz([bx, by, bz], *useful_opts)
+            m = qdmpy.source.magnetization.get_m_from_bz([bx, by, bz], *useful_opts)
         elif method == "from_bnv":
-            m = qdmpy.fourier.get_m_from_bnv(
+            m = qdmpy.source.magnetization.get_m_from_bnv(
                 bnv,
                 unv,
                 *useful_opts,
-                NVs_above_sample=options["NVs_above_sample"],
+                nvs_above_sample=options["NVs_above_sample"],
             )
         else:
-            warnings.warn("recon_method option not recognised.")
+            warnings.warn(
+                "recon_method '{method}' option not recognised for mag. recon, skipping."
+            )
             return None
 
         if (
-            options["magnetisation_angle"] is not None
+            options["magnetization_angle"] is not None
             and options["in_plane_mag_norm_number_pixels"]
         ):
             m = in_plane_mag_normalise(
-                m, options["magnetisation_angle"], options["in_plane_mag_norm_number_pixels"]
+                m, options["magnetization_angle"], options["in_plane_mag_norm_number_pixels"]
             )
 
         if options["source_bground_method"]:
@@ -352,14 +358,14 @@ def get_magnetisation(
                 polygons = options["polygons"]
             else:
                 polygons = None
-            m_bground = qdmpy.itool.get_background(
+            m_bground = qdmpy.shared.itool.get_background(
                 m,
                 options["source_bground_method"],
                 polygons=polygons,
                 **options["source_bground_params"],
             )
 
-        if options["magnetisation_angle"] is None:
+        if options["magnetization_angle"] is None:
             if options["source_bground_method"]:
                 source_params = {
                     **source_params,
@@ -430,7 +436,7 @@ def add_divperp_j(options, source_params):
 
     for method in methods:
         jx, jy = [source_params["J" + comp + "_" + method] for comp in components]
-        conserv_j = qdmpy.fourier.get_divperp_j(
+        conserv_j = qdmpy.source.current.get_divperp_j(
             [jx, jy],
             options["fourier_pad_mode"],
             options["fourier_pad_factor"],
@@ -447,22 +453,22 @@ def add_divperp_j(options, source_params):
 
 
 def in_plane_mag_normalise(mag_image, psi, edge_pixels_used):
-    """Normalise in-plane magnetisation by taking average of mag near edge of image per line @ psi.
+    """Normalise in-plane magnetization by taking average of mag near edge of image per line @ psi.
     The jist of this function was copied from D. Broadway's previous version of the code.
 
     Parameters
     ----------
     mag_image : np array
-        2D magnetisation array as directly calculated.
+        2D magnetization array as directly calculated.
     psi : float
-        Assumed in-plane magnetisation angle (deg)
+        Assumed in-plane magnetization angle (deg)
     edge_pixels_used : int
         Number of pixels to use at edge of image to calculate average to subtract.
 
     Returns
     -------
     mag_image : np array
-        in-plane magnetisation image with line artifacts substracted.
+        in-plane magnetization image with line artifacts substracted.
     """
     psi = np.deg2rad(psi)
     new_im = mag_image.copy()
@@ -483,7 +489,7 @@ def in_plane_mag_normalise(mag_image, psi, edge_pixels_used):
     ]  # y-idxs of line from bot. left @ psi
 
     offset = 0  # now look for parallel lines, at +- 'offset' in y
-    for idx in range(height):
+    for _ in range(height):
         above_y_idxs = []  # above origin line, i.e. lower y
         above_x_idxs = []  # corresponding x indices to above_y_idxs
         below_y_idxs = []

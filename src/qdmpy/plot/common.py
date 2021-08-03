@@ -12,7 +12,7 @@ Functions
  - `qdmpy.plot.common.plot_image`
  - `qdmpy.plot.common.plot_image_on_ax`
  - `qdmpy.plot.common._add_colorbar`
- - `qdmpy.plot.common._get_colormap_range`
+ - `qdmpy.plot.common.get_colormap_range`
  - `qdmpy.plot.common._min_max`
  - `qdmpy.plot.common._strict_range`
  - `qdmpy.plot.common._min_max_sym_mean`
@@ -29,7 +29,7 @@ __pdoc__ = {
     "qdmpy.plot.common.plot_image": True,
     "qdmpy.plot.common.plot_image_on_ax": True,
     "qdmpy.plot.common._add_colorbar": True,
-    "qdmpy.plot.common._get_colormap_range": True,
+    "qdmpy.plot.common.get_colormap_range": True,
     "qdmpy.plot.common._min_max": True,
     "qdmpy.plot.common._strict_range": True,
     "qdmpy.plot.common._min_max_sym_mean": True,
@@ -57,7 +57,7 @@ import warnings
 def set_mpl_rcparams(options):
     """Reads matplotlib-relevant parameters in options and used to define matplotlib rcParams"""
     for optn, val in options["mpl_rcparams"].items():
-        if type(val) == list:
+        if isinstance(val, (list, tuple)):
             val = tuple(val)
         try:
             mpl.rcParams[optn] = val
@@ -206,7 +206,7 @@ def _add_colorbar(im, fig, ax, aspect=20, pad_fraction=1, **kwargs):
 # ============================================================================
 
 
-def _get_colormap_range(c_range_dict, image):
+def get_colormap_range(c_range_dict, image):
     """
     Produce a colormap range to plot image from, using the options in c_range_dict.
 
@@ -258,11 +258,11 @@ def _get_colormap_range(c_range_dict, image):
         Changing to 'min_max_symmetric_about_mean' c_range.""",
         "percentile": """Invalid c_range_dict['values'] encountered.
         For c_range type 'percentile', c_range_dict['values'] must be a list of length 2,
-         with elements (preferably ints) between 0 and 100.
+         with elements (preferably ints) in [0, 100].
          Changing to 'min_max_symmetric_about_mean' c_range.""",
         "percentile_symmetric_about_zero": """Invalid c_range_dict['values'] encountered.
-        For c_range type '_ercentile', c_range_dict['values'] must be a list of length 2,
-         with elements (preferably ints) between 0 and 100.
+        For c_range type 'percentile', c_range_dict['values'] must be a list of length 2,
+         with elements (preferably ints) in [0, 100].
          Changing to 'min_max_symmetric_about_mean' c_range.""",
     }
     try:
@@ -300,21 +300,21 @@ def _get_colormap_range(c_range_dict, image):
 
     if c_range_type == "strict_range":
         if (
-            type(c_range_values) != list
+            not isinstance(c_range_values, (list, tuple))
             or len(c_range_values) != 2  # noqa: W503
-            or (type(c_range_values[0]) != float and type(c_range_values[0]) != int)  # noqa: W503
-            or (type(c_range_values[1]) != float and type(c_range_values[1]) != int)  # noqa: W503
+            or (not isinstance(c_range_values[0], (float, int)))  # noqa: W503
+            or (not isinstance(c_range_values[1], (float, int)))  # noqa: W503
             or c_range_values[0] > c_range_values[1]  # noqa: W503
         ):
             warnings.warn(warning_messages[c_range_type])
             return _min_max_sym_mean(image, c_range_values)
     elif c_range_type == "mean_plus_minus":
-        if type(c_range_values) != float and type(c_range_values) != int:
+        if not isinstance(c_range_values, (float, int)):
             warnings.warn(warning_messages[c_range_type])
             return _min_max_sym_mean(image, c_range_values)
     elif c_range_type == "deviation_from_mean":
         if (
-            (type(c_range_values) != float and type(c_range_values) != float)
+            not isinstance(c_range_values, (float, int))
             or c_range_values < 0  # noqa: W503
             or c_range_values > 1  # noqa: W503
         ):
@@ -323,14 +323,12 @@ def _get_colormap_range(c_range_dict, image):
 
     elif c_range_type.startswith("percentile"):
         if (
-            type(c_range_values) != list
+            not isinstance(c_range_values, (list, tuple))
             or len(c_range_values) != 2  # noqa: W503
-            or (type(c_range_values[0]) != float and type(c_range_values[0]) != int)  # noqa: W503
-            or (type(c_range_values[1]) != float and type(c_range_values[1]) != int)  # noqa: W503
-            or c_range_values[0] < 0  # noqa: W503
-            or c_range_values[0] >= 100  # noqa: W503
-            or c_range_values[1] < 0  # noqa: W503
-            or c_range_values[1] >= 100  # noqa: W503
+            or not isinstance(c_range_values[0], (float, int))
+            or not isinstance(c_range_values[1], (float, int))
+            or not 100 >= c_range_values[0] >= 0
+            or not 100 >= c_range_values[1] >= 0
         ):
             warnings.warn(warning_messages[c_range_type])
             return _min_max_sym_mean(image, c_range_values)
@@ -349,7 +347,7 @@ def _min_max(image, c_range_values):
     image : np array, 3D
         image data being shown as ax.imshow
     c_range_values : unknown (depends on user settings)
-        See `qdmpy.plot.common._get_colormap_range`
+        See `qdmpy.plot.common.get_colormap_range`
     """
     return [np.nanmin(image), np.nanmax(image)]
 
@@ -363,7 +361,7 @@ def _strict_range(image, c_range_values):
     image : np array, 3D
         image data being shown as ax.imshow
     c_range_values : unknown (depends on user settings)
-        See `qdmpy.plot.common._get_colormap_range`
+        See `qdmpy.plot.common.get_colormap_range`
     """
     return list(c_range_values)
 
@@ -377,7 +375,7 @@ def _min_max_sym_mean(image, c_range_values):
     image : np array, 3D
         image data being shown as ax.imshow
     c_range_values : unknown (depends on user settings)
-        See `qdmpy.plot.common._get_colormap_range`
+        See `qdmpy.plot.common.get_colormap_range`
     """
     minimum = np.nanmin(image)
     maximum = np.nanmax(image)
@@ -395,7 +393,7 @@ def _min_max_sym_zero(image, c_range_values):
     image : np array, 3D
         image data being shown as ax.imshow
     c_range_values : unknown (depends on user settings)
-        See `qdmpy.plot.common._get_colormap_range`
+        See `qdmpy.plot.common.get_colormap_range`
     """
     min_abs = np.abs(np.nanmin(image))
     max_abs = np.abs(np.nanmax(image))
@@ -412,7 +410,7 @@ def _deviation_from_mean(image, c_range_values):
     image : np array, 3D
         image data being shown as ax.imshow
     c_range_values : unknown (depends on user settings)
-        See `qdmpy.plot.common._get_colormap_range`
+        See `qdmpy.plot.common.get_colormap_range`
     """
     return [(1 - c_range_values) * np.mean(image), (1 + c_range_values) * np.mean(image)]
 
@@ -426,7 +424,7 @@ def _percentile(image, c_range_values):
     image : np array, 3D
         image data being shown as ax.imshow
     c_range_values : unknown (depends on user settings)
-        See `qdmpy.plot.common._get_colormap_range`
+        See `qdmpy.plot.common.get_colormap_range`
     """
     return np.nanpercentile(image, c_range_values)
 
@@ -440,7 +438,7 @@ def _percentile_sym_zero(image, c_range_values):
     image : np array, 3D
         image data being shown as ax.imshow
     c_range_values : unknown (depends on user settings)
-        See `qdmpy.plot.common._get_colormap_range`
+        See `qdmpy.plot.common.get_colormap_range`
     """
     plow, phigh = np.nanpercentile(image, c_range_values)  # e.g. [10, 90]
     val = max(abs(plow), abs(phigh))
@@ -456,7 +454,7 @@ def _mean_plus_minus(image, c_range_values):
     image : np array, 3D
         image data being shown as ax.imshow
     c_range_values : unknown (depends on user settings)
-        See `qdmpy.plot.common._get_colormap_range`
+        See `qdmpy.plot.common.get_colormap_range`
     """
     mean = np.mean(image)
     return [mean - c_range_values, mean + c_range_values]
