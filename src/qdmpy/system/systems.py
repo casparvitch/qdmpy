@@ -467,6 +467,16 @@ class CryoWidefield(UniMelb):
     name = "Cryo Widefield"
     config_path = _CONFIG_PATH / "cryo_widefield_config.json"
 
+
+class LegacyCryoWidefield(UniMelb):
+    """
+    Specific system details for cryogenic (Attocube) widefield QDM.
+    - Legacy binning version
+    """
+
+    name = "Legacy Cryo Widefield"
+    config_path = _CONFIG_PATH / "cryo_widefield_config.json"
+
     def determine_binning(self, options):
         # silly old binning convention -> change when labview updated to new binning
         bin_conversion = [1, 2, 3, 4, 8]
@@ -485,6 +495,7 @@ class CryoWidefield(UniMelb):
 _SYSTEMS = {
     "Zyla": Zyla,
     "Cryo_Widefield": CryoWidefield,
+    "Legacy_Cryo_Widefield": LegacyCryoWidefield,
     "cQDM": cQDM,
 }
 """Dictionary that defines systems available for use.
