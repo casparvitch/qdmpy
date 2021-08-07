@@ -524,7 +524,7 @@ def check_option(key, val, system):
     if key not in system.available_options():
         warnings.warn(f"Option {key} was not recognised by the {system.name} system.")
     elif system.option_choices(key) is not None and val not in system.option_choices(key):
-        OptionsError(key, val, system)
+        OptionsError(key, val, system)  # FIXME test this actually raises exception/warning...
 
 
 # ===============================

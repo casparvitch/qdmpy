@@ -1,4 +1,4 @@
-# run me as: python3 magsim_sandbox_test.py
+# run me as: python3 <name>.py
 import qdmpy
 import qdmpy.magsim
 import qdmpy.shared.json2dict

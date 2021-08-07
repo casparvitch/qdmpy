@@ -69,6 +69,7 @@ from matplotlib.lines import Line2D
 import copy
 from numbers import Integral
 import warnings
+from polylabel import polylabel
 
 # ============================================================================
 
@@ -232,6 +233,13 @@ class Polygon:
 
     # =============================================== #
 
+    def get_center(self):
+        """Get center point that is inside polygon."""
+        # polylabel uses opposite indexing convention, but it doesn't effect result!
+        return polylabel([self.get_nodes()])
+
+    # =============================================== #
+
     def get_nodes(self):
         return [[y, x] for y, x in zip(self.y, self.x)]
 
@@ -337,7 +345,7 @@ class Polygon:
 
         mindst **= 0.5
         # Point is closer to its nearest vertex than its nearest side, check if
-        # nearest vertex is concave.def polygon_gui(image=None):
+        # nearest vertex is concave
 
         # If the nearest vertex is concave then point is inside the polygon,
         # else the point is outside the polygon.
