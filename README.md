@@ -28,7 +28,6 @@ Quantum Diamond MicroscoPy
 
 If you're installing for the first time scroll down to 'Installing with pip on new system'.
 
-
 # Usage
 
 Best used in a jupyter notebook to avoid producing a million graphs. In future a command-line suitable hook will be defined.
