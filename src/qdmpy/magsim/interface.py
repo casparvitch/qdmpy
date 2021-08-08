@@ -545,11 +545,14 @@ class MagSim:
                 val for idx, val in enumerate(self.unit_vectors_lst) if idx in keep_idxs
             ]
 
-    def crop_polygons_gui(self, **kwargs):
-        n_og_polygons = len(self.polygon_nodes)
-        pgon_dict = self._polygon_gui(
-            polygon_nodes=self.polygon_nodes, prompt="Select crop polygon", **kwargs
-        )
+    def crop_polygons_gui(self, show_polygons=True, **kwargs):
+        if show_polygons:
+            pn = self.polygon_nodes
+            n_og_polygons = len(self.polygon_nodes)
+        else:
+            pn = None
+            n_og_polygons = 0
+        pgon_dict = self._polygon_gui(polygon_nodes=pn, prompt="Select crop polygon", **kwargs)
         new_pgons = [np.array(p) for p in pgon_dict["nodes"][n_og_polygons:]]
         self.crop_polygons(new_pgons)
 
@@ -671,7 +674,7 @@ class TilingMagSim(SandboxMagSim):
                 )
                 ax.add_patch(
                     matplotlib.patches.Polygon(
-                        np.dstack((nodes[:, 1], nodes[:, 0]))[0], **patch_params
+                        np.stack((nodes[:, 1], nodes[:, 0]), axis=-1), **patch_params
                     )
                 )
                 # label loc could be generated with tiling... oh well
@@ -699,7 +702,13 @@ class TilingMagSim(SandboxMagSim):
         scaled_width = int(image_width / scaling) + 1
         scaled_height = int(image_height / scaling) + 1
         output = []
-        for coords in generator(scaled_height, scaled_width):
+        for coords in tqdm(
+            generator(scaled_height, scaled_width),
+            ascii=True,
+            mininterval=1,
+            unit="polygons",
+            desc="generating tiling...",
+        ):
             output.append(np.array([(y * scaling, x * scaling) for (y, x) in coords]))
         return output
 
@@ -973,7 +982,7 @@ class VoronoiMagSim(SandboxMagSim):
                 )
                 ax.add_patch(
                     matplotlib.patches.Polygon(
-                        np.dstack((nodes[:, 1], nodes[:, 0]))[0], **patch_params
+                        np.stack((nodes[:, 1], nodes[:, 0]), axis=-1), **patch_params
                     )
                 )
                 ax.text(
@@ -1146,7 +1155,7 @@ def _plot_image_on_ax(
             )
             # polygons reversed to (x,y) indexing for patch
             ax.add_patch(
-                matplotlib.patches.Polygon(np.dstack((p[:, 1], p[:, 0]))[0], **patch_params)
+                matplotlib.patches.Polygon(np.stack((p[:, 1], p[:, 0]), axis=-1), **patch_params)
             )
 
     if pixel_size is not None:

@@ -70,6 +70,8 @@ import copy
 from numbers import Integral
 import warnings
 from polylabel import polylabel
+import numba
+from numba import jit
 
 # ============================================================================
 
@@ -165,38 +167,101 @@ CMAP_OPTIONS = [
 # ============================================================================
 
 
-def _tri_2area_det(yvert, xvert):
-    """
-    Compute twice the area of the triangle defined by points with using
-    determinant formula.
+# def _tri_2area_det(yvert, xvert):
+#     """
+#     Compute twice the area of the triangle defined by points with using
+#     determinant formula.
 
-    Arguments
-    ---------
+#     Arguments
+#     ---------
 
-    yvert : array-like
-        A vector of nodal x-coords (all unique).
+#     yvert : array-like
+#         A vector of nodal y-coords (all unique).
 
-    xvert : array-like
-        A vector of nodal y-coords (all unique).
+#     xvert : array-like
+#         A vector of nodal x-coords (all unique).
 
-    Returns
-    -------
-    Twice the area of the triangle defined by the points.
+#     Returns
+#     -------
+#     Twice the area of the triangle defined by the points.
 
-    Notes:asfarray
+#     Notes:asfarray
 
-    _tri_2area_det is positive if asfarraypoints define polygon in anticlockwise order.
-    _tri_2area_det is negative if asfarraypoints define polygon in clockwise order.
-    _tri_2area_det is zero if at least two of the points are coincident or if
-        all points are collinear.
+#     _tri_2area_det is positive if asfarraypoints define polygon in anticlockwise order.
+#     _tri_2area_det is negative if asfarraypoints define polygon in clockwise order.
+#     _tri_2area_det is zero if at least two of the points are coincident or if
+#         all points are collinear.
 
-    """
-    xvert = np.asfarray(xvert)
-    yvert = np.asfarray(yvert)
-    x_prev = np.concatenate(([xvert[-1]], xvert[:-1]))
-    y_prev = np.concatenate(([yvert[-1]], yvert[:-1]))
-    return np.sum(yvert * x_prev - xvert * y_prev, axis=0)  # good or no?
-    # return np.sum(xvert * y_prev - yvert * x_prev, axis=0)
+#     """
+#     xvert = np.asfarray(xvert)
+#     yvert = np.asfarray(yvert)
+#     x_prev = np.concatenate(([xvert[-1]], xvert[:-1]))
+#     y_prev = np.concatenate(([yvert[-1]], yvert[:-1]))
+#     return np.sum(yvert * x_prev - xvert * y_prev, axis=0)  # good or no?
+#     # return np.sum(xvert * y_prev - yvert * x_prev, axis=0)
+
+# ============================================================================
+
+
+@jit("int8(float64[:], float64[:,:])", nopython=True, cache=True)
+def is_inside_sm(point, polygon):
+    # https://github.com/sasamil/PointInPolygon_Py/blob/master/pointInside.py
+    # note this fn works in (x,y) coords (but if point/polygon is consistent all is g)
+    conv_map = {0: -1, 1: 1, 2: 0}
+    length = polygon.shape[0] - 1
+    dy2 = point[1] - polygon[0][1]
+    intersections = 0
+    ii = 0
+    jj = 1
+
+    while ii < length:
+        dy = dy2
+        dy2 = point[1] - polygon[jj][1]
+
+        # consider only lines which are not completely above/bellow/right from the point
+        if dy * dy2 <= 0.0 and (point[0] >= polygon[ii][0] or point[0] >= polygon[jj][0]):
+
+            # non-horizontal line
+            if dy < 0 or dy2 < 0:
+                F = dy * (polygon[jj][0] - polygon[ii][0]) / (dy - dy2) + polygon[ii][0]
+
+                if (
+                    point[0] > F
+                ):  # if line is left from the point - the ray moving towards left, will intersect it
+                    intersections += 1
+                elif point[0] == F:  # point on line
+                    return 2
+
+            # point on upper peak (dy2=dx2=0) or horizontal line (dy=dy2=0 and dx*dx2<=0)
+            elif dy2 == 0 and (
+                point[0] == polygon[jj][0]
+                or (dy == 0 and (point[0] - polygon[ii][0]) * (point[0] - polygon[jj][0]) <= 0)
+            ):
+                return 2
+
+        ii = jj
+        jj += 1
+
+    # print 'intersections =', intersections
+    return conv_map[intersections & 1]
+
+
+# ============================================================================
+
+
+@jit(nopython=True, parallel=True, cache=True)
+def is_inside_sm_parallel(points, polygon):
+    # https://stackoverflow.com/questions/36399381/ \
+    #   whats-the-fastest-way-of-checking-if-a-point-is-inside-a-polygon-in-python
+    # note this fn works in (x,y) coords (but if point/polygon is consistent all is g.)
+    p_ar = np.asfarray(points)
+    pts_shape = p_ar.shape[:-1]
+    p_ar_flat = p_ar.reshape(-1, 2)  # shape: (len_y * len_x, 2), i.e. long list of coords (y, x)
+    d = np.zeros(p_ar_flat.shape[0], dtype=numba.int8)
+    for i in numba.prange(p_ar_flat.shape[0]):
+        d[i] = is_inside_sm(p_ar_flat[i], polygon)
+    d = d.reshape(pts_shape)
+    return d
 
 
 # ============================================================================
@@ -226,10 +291,10 @@ class Polygon:
         if x1 != xn or y1 != yn:
             self.y = np.concatenate((self.y, [y1]))
             self.x = np.concatenate((self.x, [x1]))
-        # Anti-clockwise coordinates
-        if _tri_2area_det(self.y, self.x) < 0:
-            self.y = self.y[::-1]
-            self.x = self.x[::-1]
+        # # Anti-clockwise coordinates # irrelevant...?
+        # if _tri_2area_det(self.y, self.x) < 0:
+        #     self.y = self.y[::-1]
+        #     self.x = self.x[::-1]
 
     # =============================================== #
 
@@ -241,130 +306,152 @@ class Polygon:
     # =============================================== #
 
     def get_nodes(self):
+        # get nodes as a list [[y1,x1], [y2,x2]] etc.
         return [[y, x] for y, x in zip(self.y, self.x)]
 
     # =============================================== #
 
-    def is_inside(self, ypoint, xpoint, smalld=1e-12):
-        """
-        Check if point is inside a general polygon.
+    def get_yx(self):
+        return np.stack((self.y, self.x), axis=-1)
 
-        Arguments
-        ---------
+    # =============================================== #
 
-        ypoint : array-like
-            The y-coord of the point to be tested.
-        xpoint : array-like
-            The x-coords of the point to be tested.
-        smalld : float
-            A small float number.
-
-        ypoint and xpoint could be scalars or array-like sequences.
-
-        Returns
-        -------
-        mindst : scalar
-            The distance from the point to the nearest point of the
-            polygon.
-            If mindst < 0 then point is outside the polygon.
-            If mindst = 0 then point in on a side of the polygon.
-            If mindst > 0 then point is inside the polygon.
-
-        Notes
-        -----
-
-        An improved version of the algorithm of Nordbeck and Rydstedt.
-
-        REF: SLOAN, S.W. (1985): A point-in-polygon program. Adv. Eng.
-             Software, Vol 7, No. 1, pp 45-47.
-
-        """
-        xpoint = np.asfarray(xpoint)
-        ypoint = np.asfarray(ypoint)
-        # Scalar to array
-        if xpoint.shape is tuple():
-            xpoint = np.array([xpoint], dtype=float)
-            ypoint = np.array([ypoint], dtype=float)
-            scalar = True
-        else:
-            scalar = False
+    def is_inside(self, y, x):
+        # return value:
+        # <0 - the point is outside the polygon
+        # =0 - the point is one edge (boundary)
+        # >0 - the point is inside the polygon
+        xs = np.asfarray(x)
+        ys = np.asfarray(y)
         # Check consistency
-        if xpoint.shape != ypoint.shape:
+        if xs.shape != ys.shape:
             raise IndexError("x and y has different shapes")
-        # If snear = True: Dist to nearest side < nearest vertex
-        # If snear = False: Dist to nearest vertex < nearest side
-        snear = np.ma.masked_all(xpoint.shape, dtype=bool)
-        # Initialize arrays
-        mindst = np.ones_like(ypoint, dtype=float) * np.inf
-        j = np.ma.masked_all(ypoint.shape, dtype=int)
-        x = self.x
-        y = self.y
-        n = len(y) - 1  # Number of sides/vertices defining the polygon
+        # check if single point
+        if xs.shape is tuple():
+            return is_inside_sm((y, x), self.get_yx())
+        else:
+            return is_inside_sm_parallel(np.stack((ys, xs), axis=-1), self.get_yx())
 
-        # Loop over each side defining polygon
-        for i in range(n):
-            d = np.ones_like(ypoint, dtype=float) * np.inf
-            # Start of side has coords (y1, x1)
-            # End of side has coords (y2, x2)
-            # Point has coords (xpoint, ypoint)
-            x1 = x[i]
-            y1 = y[i]
-            x21 = x[i + 1] - x1
-            y21 = y[i + 1] - y1
-            x1p = x1 - xpoint
-            y1p = y1 - ypoint
+    # def is_inside(self, ypoint, xpoint, smalld=1e-12):
+    #     """
+    #     Check if point is inside a general polygon.
 
-            # Points on infinite line defined by
-            #     y = y1 + t * (y1 - y2)
-            #     x = x1 + t * (x1 - x2)
-            # where
-            #     t = 0    at (y1, x1)
-            #     t = 1    at (y2, x2)
-            # Find where normal passing through (xpoint, ypoint) intersects
-            # infinite line
-            t = -(x1p * x21 + y1p * y21) / (x21 ** 2 + y21 ** 2)
-            tlt0 = t < 0
-            tle1 = (0 <= t) & (t <= 1)  # this looks silly but don't change it
-            # Normal intersects side
-            d[tle1] = (x1p[tle1] + t[tle1] * x21) ** 2 + (y1p[tle1] + t[tle1] * y21) ** 2
-            # Normal does not intersects side
-            # Point is closest to vertex (y1, x1)
-            # Compute square of distance to this vertex
-            d[tlt0] = x1p[tlt0] ** 2 + y1p[tlt0] ** 2
-            # Store distances
-            mask = d < mindst
-            mindst[mask] = d[mask]
-            j[mask] = i
-            # Point is closer to (y1, x1) than any other vertex or side
-            snear[mask & tlt0] = False
-            # Point is closer to this side than to any other side or vertex
-            snear[mask & tle1] = True
+    #     Arguments
+    #     ---------
 
-        if np.ma.count(snear) != snear.size:
-            raise IndexError("Error computing distances")
+    #     ypoint : array-like
+    #         The y-coord of the point to be tested.
+    #     xpoint : array-like
+    #         The x-coords of the point to be tested.
+    #     smalld : float
+    #         A small float number.
 
-        mindst **= 0.5
-        # Point is closer to its nearest vertex than its nearest side, check if
-        # nearest vertex is concave
+    #     ypoint and xpoint could be scalars or array-like sequences.
 
-        # If the nearest vertex is concave then point is inside the polygon,
-        # else the point is outside the polygon.
-        jo = j.copy()
-        jo[j == 0] -= 1
-        area = _tri_2area_det([y[j + 1], y[j], y[jo - 1]], [x[j + 1], x[j], x[jo - 1]])
-        mindst[~snear] = np.copysign(mindst, area)[~snear]
-        # Point is closer to its nearest side than to its nearest vertex, check
-        # if point is to left or right of this side.
-        # If point is to left of side it is inside polygon, else point is
-        # outside polygon.
-        area = _tri_2area_det([y[j], y[j + 1], ypoint], [x[j], x[j + 1], xpoint])
-        mindst[snear] = np.copysign(mindst, area)[snear]
-        # Point is on side of polygon
-        mindst[np.fabs(mindst) < smalld] = 0
-        # If input values were scalar then the output should be too
-        if scalar:
-            mindst = float(mindst)
-        return mindst
+    #     Returns
+    #     -------
+    #     mindst : scalar
+    #         The distance from the point to the nearest point of the
+    #         polygon.
+    #         If mindst < 0 then point is outside the polygon.
+    #         If mindst = 0 then point in on a side of the polygon.
+    #         If mindst > 0 then point is inside the polygon.
+
+    #     Notes
+    #     -----
+
+    #     An improved version of the algorithm of Nordbeck and Rydstedt.
+
+    #     REF: SLOAN, S.W. (1985): A point-in-polygon program. Adv. Eng.
+    #          Software, Vol 7, No. 1, pp 45-47.
+
+    #     """
+    #     xpoint = np.asfarray(xpoint)
+    #     ypoint = np.asfarray(ypoint)
+    #     # Scalar to array
+    #     if xpoint.shape is tuple():
+    #         xpoint = np.array([xpoint], dtype=float)
+    #         ypoint = np.array([ypoint], dtype=float)
+    #         scalar = True
+    #     else:
+    #         scalar = False
+    #     # Check consistency
+    #     if xpoint.shape != ypoint.shape:
+    #         raise IndexError("x and y has different shapes")
+    #     # If snear = True: Dist to nearest side < nearest vertex
+    #     # If snear = False: Dist to nearest vertex < nearest side
+    #     snear = np.ma.masked_all(xpoint.shape, dtype=bool)
+    #     # Initialize arrays
+    #     mindst = np.ones_like(ypoint, dtype=float) * np.inf
+    #     j = np.ma.masked_all(ypoint.shape, dtype=int)
+    #     x = self.x
+    #     y = self.y
+    #     n = len(y) - 1  # Number of sides/vertices defining the polygon
+
+    #     # Loop over each side defining polygon
+    #     for i in range(n):
+    #         d = np.ones_like(ypoint, dtype=float) * np.inf
+    #         # Start of side has coords (y1, x1)
+    #         # End of side has coords (y2, x2)
+    #         # Point has coords (xpoint, ypoint)
+    #         x1 = x[i]
+    #         y1 = y[i]
+    #         x21 = x[i + 1] - x1
+    #         y21 = y[i + 1] - y1
+    #         x1p = x1 - xpoint
+    #         y1p = y1 - ypoint
+
+    #         # Points on infinite line defined by
+    #         #     y = y1 + t * (y1 - y2)
+    #         #     x = x1 + t * (x1 - x2)
+    #         # where
+    #         #     t = 0    at (y1, x1)
+    #         #     t = 1    at (y2, x2)
+    #         # Find where normal passing through (xpoint, ypoint) intersects
+    #         # infinite line
+    #         t = -(x1p * x21 + y1p * y21) / (x21 ** 2 + y21 ** 2)
+    #         tlt0 = t < 0
+    #         tle1 = (0 <= t) & (t <= 1)  # this looks silly but don't change it
+    #         # Normal intersects side
+    #         d[tle1] = (x1p[tle1] + t[tle1] * x21) ** 2 + (y1p[tle1] + t[tle1] * y21) ** 2
+    #         # Normal does not intersects side
+    #         # Point is closest to vertex (y1, x1)
+    #         # Compute square of distance to this vertex
+    #         d[tlt0] = x1p[tlt0] ** 2 + y1p[tlt0] ** 2
+    #         # Store distances
+    #         mask = d < mindst
+    #         mindst[mask] = d[mask]
+    #         j[mask] = i
+    #         # Point is closer to (y1, x1) than any other vertex or side
+    #         snear[mask & tlt0] = False
+    #         # Point is closer to this side than to any other side or vertex
+    #         snear[mask & tle1] = True
+
+    #     if np.ma.count(snear) != snear.size:
+    #         raise IndexError("Error computing distances")
+
+    #     mindst **= 0.5
+    #     # Point is closer to its nearest vertex than its nearest side, check if
+    #     # nearest vertex is concave
+
+    #     # If the nearest vertex is concave then point is inside the polygon,
+    #     # else the point is outside the polygon.
+    #     jo = j.copy()
+    #     jo[j == 0] -= 1
+    #     area = _tri_2area_det([y[j + 1], y[j], y[jo - 1]], [x[j + 1], x[j], x[jo - 1]])
+    #     mindst[~snear] = np.copysign(mindst, area)[~snear]
+    #     # Point is closer to its nearest side than to its nearest vertex, check
+    #     # if point is to left or right of this side.
+    #     # If point is to left of side it is inside polygon, else point is
+    #     # outside polygon.
+    #     area = _tri_2area_det([y[j], y[j + 1], ypoint], [x[j], x[j + 1], xpoint])
+    #     mindst[snear] = np.copysign(mindst, area)[snear]
+    #     # Point is on side of polygon
+    #     mindst[np.fabs(mindst) < smalld] = 0
+    #     # If input values were scalar then the output should be too
+    #     if scalar:
+    #         mindst = float(mindst)
+    #     return mindst
 
 
 # ============================================================================
@@ -377,7 +464,7 @@ def polygon_selector(
     mean_plus_minus=None,
     strict_range=None,
     print_help=False,
-    **kwargs
+    **kwargs,
 ):
     """
     Generates mpl (qt) gui for selecting a polygon.
