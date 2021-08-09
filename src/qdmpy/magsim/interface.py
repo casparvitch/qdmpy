@@ -2,6 +2,7 @@
 """Interface to mag simulations.
 
 # FIXME needs better documentation eh!
+# TODO add NV layer thickness sinh correction
 
 Functions
 ---------
@@ -49,6 +50,7 @@ from scipy.ndimage import gaussian_filter
 
 # ============================================================================
 
+import qdmpy.shared.fourier
 import qdmpy.shared.polygon
 import qdmpy.shared.json2dict
 
