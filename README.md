@@ -101,7 +101,7 @@ View in text editor if scrambled.
 +---------------------------------------------------------------------------------------+                                                                                 
 | Methods are qdmpy.{what is listed here}                                               |                                                                                 
 |---------------------------------------------------------------------------------------|                                                                                 
-| Functions                         Variables: type         Plotting                    |                                                                                 
+| Functions                         Variables: type          Plotting                   |                                                                                 
 |---------------------------------------------------------------------------------------|                                                                                 
 |                                   options = {                                         |                                                                                 
 | initialize                           ...                                              |                                                                                 
@@ -117,8 +117,8 @@ View in text editor if scrambled.
 | pl.load_ref_exp_pl_fit_results    ref_sigmas: dict                                    |                                                                                 
 |                                                                                       |                                                                                 
 | pl.define_fit_model               fit_model: FitModel                                 |                                                                                 
-| pl.fit_roi_avg_pl                                           plot.roi_avg_fits         |                                                                                 
-| pl.fit_aois_pl                                              plot.aoi_spectra_fit      |                                                                                 
+| pl.fit_roi_avg_pl                                          plot.roi_avg_fits          |                                                                                 
+| pl.fit_aois_pl                                             plot.aoi_spectra_fit       |                                                                                 
 |                                                                                       |                                                                                 
 | pl.get_pl_fit_result              pixel_fit_params: dict   plot.pl_param_images       |                                                                                 
 |                                   sigmas: dict             plot.pl_param_sigmas       |                                                                                 
@@ -213,7 +213,7 @@ pip3 uninstall qdmpy -y && python3 setup.py bdist_wheel && pip3 install ./dist/q
 
 Install [nodejs](https://nodejs.org/en/) and [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/user_install.html#installing-the-jupyterlab-extension).
 
-For help, see [here](see: https://stackoverflow.com/questions/49542417/how-to-get-ipywidgets-working-in-jupyter-lab).
+For help, see [here](https://stackoverflow.com/questions/49542417/how-to-get-ipywidgets-working-in-jupyter-lab).
 
 <a id="saving-widget-state"></a>
 ## Saving widget state
@@ -256,19 +256,19 @@ Once that's decided you will be prompted to input a password. To skip press Ente
 To clip the public key to your clipboard for pasting, in Git Bash:
 
 ```Bash
-cat \~/.ssh/id_ed25519.pub | clip
+cat ~/.ssh/id_ed25519.pub | clip
 ```
 
 macOS:
 
 ```Bash
-pbcopy < \~/.ssh/id_ed25519.pub
+pbcopy < ~/.ssh/id_ed25519.pub
 ```
 
 WSL/GNU/Linux (you may need to install xclip but it will give you instructions):
 
 ```Bash
-xclip -sel clip < \~/.ssh/id_ed25519.pub
+xclip -sel clip < ~/.ssh/id_ed25519.pub
 ```
 
 Now we can check whether that worked correctly:
