@@ -203,6 +203,7 @@ def _getsubitems(obj, itemkey, islast, maxlinelength):
         if strobj != "":
             strobj += ": "
         strobj += _basictype2str(obj)
+        print(strobj)
         if not islast:
             strobj += ","
         items.append(strobj)
@@ -221,6 +222,8 @@ def _basictype2str(obj):
         strobj = "null"
     elif isinstance(obj, type(None)):
         strobj = "null"  # seems to fail sometimes?
+    elif isinstance(obj, float) and np.isnan(obj):
+        strobj = '"' + str(obj) + '"'  # handle nan float objects
     elif isinstance(obj, str):
         strobj = '"' + str(obj) + '"'
     elif isinstance(obj, bool):

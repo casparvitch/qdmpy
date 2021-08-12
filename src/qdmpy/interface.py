@@ -348,7 +348,7 @@ def _get_bias_field(options, spherical_deg=False):
 def _spherical_deg_to_cart(b_mag_gauss, b_theta_deg, b_phi_deg):
     """Field vector in spherical polar degrees -> cartesian (gauss)
 
-    Parameters
+    Para    ers
     ----------
     b_ag_gauss, b_theta_deg, b_phi_deg : float
         Field components in spherical polar (degrees)
