@@ -17,6 +17,7 @@ Classes
  - `qdmpy.system.systems.System`
  - `qdmpy.system.systems.UniMelb`
  - `qdmpy.system.systems.Zyla`
+ - `qdmpy.system.systems.cQDM`
  - `qdmpy.system.systems.CryoWidefield`
 
 
@@ -43,7 +44,6 @@ __pdoc__ = {
     "qdmpy.system.systems.cQDM": True,
     "qdmpy.system.systems.CryoWidefield": True,
     "qdmpy.system.systems._CONFIG_PATH": True,
-    "qdmpy.system.systems._GLOBAL_DEFAULTS_PATH": True,
     "qdmpy.system.systems._SYSTEMS": True,
     "qdmpy.system.systems.choose_system": True,
 }
