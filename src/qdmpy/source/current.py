@@ -23,7 +23,6 @@ __pdoc__ = {
 
 # ============================================================================
 
-import numpy as np
 from pyfftw.interfaces import numpy_fft
 from copy import copy
 
@@ -174,21 +173,11 @@ def get_j_from_bxy(
     by_to_jx, _ = define_current_transform([0, sign, 0], ky, kx, k, standoff)
 
     hanning_filt = qdmpy.shared.fourier.hanning_filter_kspace(
-        k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff, standoff
+        k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff, standoff, nv_layer_thickness
     )
 
-    if nv_layer_thickness and standoff:
-        arg = k * nv_layer_thickness / 2
-        nv_thickness_correction = np.sinh(arg) / arg
-    else:
-        nv_thickness_correction = 1
-
-    bx_to_jy = qdmpy.shared.fourier.set_naninf_to_zero(
-        hanning_filt * nv_thickness_correction * bx_to_jy
-    )
-    by_to_jx = qdmpy.shared.fourier.set_naninf_to_zero(
-        hanning_filt * nv_thickness_correction * by_to_jx
-    )
+    bx_to_jy = qdmpy.shared.fourier.set_naninf_to_zero(hanning_filt * bx_to_jy)
+    by_to_jx = qdmpy.shared.fourier.set_naninf_to_zero(hanning_filt * by_to_jx)
 
     fft_jx = fft_by * by_to_jx
     fft_jy = fft_bx * bx_to_jy
@@ -268,24 +257,16 @@ def get_j_from_bz(
     ky, kx, k = qdmpy.shared.fourier.define_k_vectors(fft_bz.shape, pixel_size, k_vector_epsilon)
 
     # define transformation
-    bz_to_jx, bz_to_jy = define_current_transform([0, 0, 1], ky, kx, k, standoff)
+    bz_to_jx, bz_to_jy = define_current_transform(
+        [0, 0, 1], ky, kx, k, standoff, nv_layer_thickness
+    )
 
     hanning_filt = qdmpy.shared.fourier.hanning_filter_kspace(
         k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff, standoff
     )
 
-    if nv_layer_thickness and standoff:
-        arg = k * nv_layer_thickness / 2
-        nv_thickness_correction = np.sinh(arg) / arg
-    else:
-        nv_thickness_correction = 1
-
-    bz_to_jx = qdmpy.shared.fourier.set_naninf_to_zero(
-        hanning_filt * nv_thickness_correction * bz_to_jx
-    )
-    bz_to_jy = qdmpy.shared.fourier.set_naninf_to_zero(
-        hanning_filt * nv_thickness_correction * bz_to_jy
-    )
+    bz_to_jx = qdmpy.shared.fourier.set_naninf_to_zero(hanning_filt * bz_to_jx)
+    bz_to_jy = qdmpy.shared.fourier.set_naninf_to_zero(hanning_filt * bz_to_jy)
 
     fft_jx = bz_to_jx * fft_bz
     fft_jy = bz_to_jy * fft_bz
@@ -503,24 +484,16 @@ def get_j_from_bnv(
         unv_cpy = [-unv[0], -unv[1], unv[2]]
 
     # define transform
-    bnv_to_jx, bnv_to_jy = define_current_transform(unv_cpy, ky, kx, k, standoff)
+    bnv_to_jx, bnv_to_jy = define_current_transform(
+        unv_cpy, ky, kx, k, standoff, nv_layer_thickness
+    )
 
     hanning_filt = qdmpy.shared.fourier.hanning_filter_kspace(
-        k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff, standoff
+        k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff, standoff, nv_layer_thickness
     )
 
-    if nv_layer_thickness and standoff:
-        arg = k * nv_layer_thickness / 2
-        nv_thickness_correction = np.sinh(arg) / arg
-    else:
-        nv_thickness_correction = 1
-
-    bnv_to_jx = qdmpy.shared.fourier.set_naninf_to_zero(
-        hanning_filt * nv_thickness_correction * bnv_to_jx
-    )
-    bnv_to_jy = qdmpy.shared.fourier.set_naninf_to_zero(
-        hanning_filt * nv_thickness_correction * bnv_to_jy
-    )
+    bnv_to_jx = qdmpy.shared.fourier.set_naninf_to_zero(hanning_filt * bnv_to_jx)
+    bnv_to_jy = qdmpy.shared.fourier.set_naninf_to_zero(hanning_filt * bnv_to_jy)
 
     fft_jx = bnv_to_jx * fft_bnv
     fft_jy = bnv_to_jy * fft_bnv

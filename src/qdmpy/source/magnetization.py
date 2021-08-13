@@ -103,7 +103,7 @@ def get_m_from_bxy(
     ky, kx, k = qdmpy.shared.fourier.define_k_vectors(fft_bx.shape, pixel_size, k_vector_epsilon)
 
     # define transform
-    d_matrix = define_magnetization_transformation(ky, kx, k, standoff)
+    d_matrix = define_magnetization_transformation(ky, kx, k, standoff, nv_layer_thickness)
 
     if mag_angle is None:
         m_to_bx = d_matrix[2, 0, ::]  # z magnetized
@@ -117,15 +117,9 @@ def get_m_from_bxy(
         k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff, standoff
     )
 
-    if nv_layer_thickness and standoff:
-        arg = k * nv_layer_thickness / 2
-        nv_thickness_correction = np.sinh(arg) / arg
-    else:
-        nv_thickness_correction = 1
-
     with np.errstate(all="ignore"):
-        fft_m_bx = fft_bx * hanning_filt * nv_thickness_correction / m_to_bx
-        fft_m_by = fft_by * hanning_filt * nv_thickness_correction / m_to_by
+        fft_m_bx = fft_bx * hanning_filt / m_to_bx
+        fft_m_by = fft_by * hanning_filt / m_to_by
         fft_m = (fft_m_bx + fft_m_by) / 2
 
     fft_m = qdmpy.shared.fourier.set_naninf_to_zero(fft_m)
@@ -206,7 +200,7 @@ def get_m_from_bz(
     ky, kx, k = qdmpy.shared.fourier.define_k_vectors(fft_bz.shape, pixel_size, k_vector_epsilon)
 
     # define transform
-    d_matrix = define_magnetization_transformation(ky, kx, k, standoff)
+    d_matrix = define_magnetization_transformation(ky, kx, k, standoff, nv_layer_thickness)
 
     if mag_angle is None:
         m_to_bz = d_matrix[2, 2, ::]  # z magnetized
@@ -218,14 +212,8 @@ def get_m_from_bz(
         k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff, standoff
     )
 
-    if nv_layer_thickness and standoff:
-        arg = k * nv_layer_thickness / 2
-        nv_thickness_correction = np.sinh(arg) / arg
-    else:
-        nv_thickness_correction = 1
-
     with np.errstate(all="ignore"):
-        fft_m = fft_bz * hanning_filt * nv_thickness_correction / m_to_bz
+        fft_m = fft_bz * hanning_filt / m_to_bz
 
     # Replace troublesome pixels in fourier space
     fft_m = qdmpy.shared.fourier.set_naninf_to_zero(fft_m)
@@ -311,7 +299,7 @@ def get_m_from_bnv(
     ky, kx, k = qdmpy.shared.fourier.define_k_vectors(fft_bnv.shape, pixel_size, k_vector_epsilon)
 
     # define transform
-    d_matrix = define_magnetization_transformation(ky, kx, k, standoff)
+    d_matrix = define_magnetization_transformation(ky, kx, k, standoff, nv_layer_thickness)
 
     if nvs_above_sample:
         unv_cpy = copy(unv)
@@ -340,14 +328,8 @@ def get_m_from_bnv(
         k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff, standoff
     )
 
-    if nv_layer_thickness and standoff:
-        arg = k * nv_layer_thickness / 2
-        nv_thickness_correction = np.sinh(arg) / arg
-    else:
-        nv_thickness_correction = 1
-
     with np.errstate(all="ignore"):
-        fft_m = fft_bnv * hanning_filt * nv_thickness_correction / m_to_bnv
+        fft_m = fft_bnv * hanning_filt / m_to_bnv
 
     # Replace troublesome pixels in fourier space
     fft_m = qdmpy.shared.fourier.set_naninf_to_zero(fft_m)

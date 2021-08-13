@@ -202,7 +202,7 @@ def hanning_filter_kspace(k, do_filt, hanning_low_cutoff, hanning_high_cutoff, s
 # ============================================================================
 
 
-def define_magnetization_transformation(ky, kx, k, standoff):
+def define_magnetization_transformation(ky, kx, k, standoff=None, nv_layer_thickness=None):
     """M => b fourier-space transformation.
 
 
@@ -210,9 +210,10 @@ def define_magnetization_transformation(ky, kx, k, standoff):
     ----------
     ky, kx, k : np array
         Wavenumber meshgrids, k = sqrt( kx^2 + ky^2 )
-
     standoff : float
         Distance NV layer <-> Sample
+    nv_layer_thickness : float or None, default : None
+        Thickness of NV layer (in metres)
 
     Returns
     -------
@@ -236,6 +237,13 @@ def define_magnetization_transformation(ky, kx, k, standoff):
 
     if standoff:
         exp_factor = np.exp(k * standoff)
+        if nv_layer_thickness:
+            # integrate exp factor exp(-k z) across
+            # z = [standoff - nv_thickness / 2, standoff + nv_thickness / 2]
+            # get exp(-k z) * sinh(k nv_thickness / 2) / (k / 2)
+            # (inverted here)
+            arg = k / 2
+            exp_factor *= arg / np.sinh(arg * nv_layer_thickness)
     else:
         exp_factor = 1
 
@@ -260,7 +268,7 @@ def define_magnetization_transformation(ky, kx, k, standoff):
 # ============================================================================
 
 
-def define_current_transform(u_proj, ky, kx, k, standoff=None):
+def define_current_transform(u_proj, ky, kx, k, standoff=None, nv_layer_thickness=None):
     """b => J fourier-space transformation.
 
     Arguments
@@ -271,6 +279,8 @@ def define_current_transform(u_proj, ky, kx, k, standoff=None):
         Wavenumber meshgrids, k = sqrt( kx^2 + ky^2 )
     standoff : float or None, default : None
         Distance NV layer <-> sample
+    nv_layer_thickness : float or None, default : None
+        Thickness of NV layer (in metres)
 
     Returns
     -------
@@ -283,9 +293,15 @@ def define_current_transform(u_proj, ky, kx, k, standoff=None):
         https://doi.org/10.1103/PhysRevApplied.14.024076
         https://arxiv.org/abs/2005.06788
     """
-
     if standoff:
-        exp_factor = np.exp(1 * k * standoff)
+        exp_factor = np.exp(k * standoff)
+        if nv_layer_thickness:
+            # integrate exp factor exp(-k z) across
+            # z = [standoff - nv_thickness / 2, standoff + nv_thickness / 2]
+            # get exp(-k z) * sinh(k nv_thickness / 2) / (k / 2)
+            # (inverted here)
+            arg = k / 2
+            exp_factor *= arg / np.sinh(arg * nv_layer_thickness)
     else:
         exp_factor = 1
 

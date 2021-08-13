@@ -1,4 +1,5 @@
 <!-- Required extensions: pymdownx.betterem, pymdownx.tilde, pymdownx.emoji, pymdownx.tasklist, pymdownx.superfences -->
+<!-- Don't edit these comments: 'Required extensions' is for ReText editing, 'MarkdownTOC' for sublime text  auto-generated table of contents-->
 
 Quantum Diamond MicroscoPy
 ==========================
@@ -12,6 +13,7 @@ Quantum Diamond MicroscoPy
     - [Module Hierarchy](#module-hierarchy)
     - [Order of operations](#order-of-operations)
     - [Ok but how do I actually use qdmpy Sam?](#ok-but-how-do-i-actually-use-qdmpy-sam)
+    - [Magsim usage](#magsim-usage)
 - [Updating your qdmpy version](#updating-your-qdmpy-version)
 - [Installation](#installation)
     - [Installing with pip on new system](#installing-with-pip-on-new-system)
@@ -162,6 +164,11 @@ jupyter-lab
 ```
 
 ... then click on the relevant notebook in your browser. I hope I don't need to spell it out much more :)
+
+<a id="magsim-usage"></a>
+## Magsim usage
+
+TODO. Code still in state of flux.
 
 <a id="updating-your-qdmpy-version"></a>
 # Updating your qdmpy version

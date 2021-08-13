@@ -24,8 +24,8 @@ res = 700e-9
 fov_size = 30e-6
 
 sim = qdmpy.magsim.SandboxMagSim((mesh_size, mesh_size), (fov_size, fov_size))
-sim.select_polygons(output_path=overlapping_path)
-# sim.add_polygons(overlapping_path)
+# sim.select_polygons(output_path=overlapping_path)
+sim.add_polygons(overlapping_path)
 
 sim.define_magnets((5, 2), (0, 0, 1))  # mag unit: mu_b/nm^2
 sim.plot_magsim_magnetizations(annotate_polygons=True, polygon_patch_params=pgon_patch)

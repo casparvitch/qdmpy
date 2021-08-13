@@ -269,8 +269,16 @@ class MagSim:
         self.unit_vectors_lst = in_dict["unit_vectors_lst"]
         self.magnetizations_lst = in_dict["magnetizations_lst"]
 
-    def run(self, standoff, resolution=None, pad_mode="mean", pad_factor=2, k_vector_epsilon=1e-6):
-        """standoff: units of pixels for sandbox, units of m for comparison."""
+    def run(
+        self,
+        standoff,
+        resolution=None,
+        pad_mode="mean",
+        pad_factor=2,
+        k_vector_epsilon=1e-6,
+        nv_layer_thickness=None,
+    ):
+        """Everything units of metres."""
         self.standoff = standoff
         # in future could be generalised to a range of standoffs
         # e.g. if we wanted to average over an nv-depth distribution that would be easy
@@ -283,10 +291,9 @@ class MagSim:
             dummy_img.shape, self.pixel_size, k_vector_epsilon
         )
 
-        # opposite sign on the exponential/standoff as we're upward-propagating.
-        d_matrix = np.exp(
-            -1 * k * standoff
-        ) * qdmpy.shared.fourier.define_magnetization_transformation(ky, kx, k, standoff=False)
+        d_matrix = qdmpy.shared.fourier.define_magnetization_transformation(
+            ky, kx, k, standoff=standoff, nv_layer_thickness=nv_layer_thickness
+        )
 
         d_matrix = qdmpy.shared.fourier.set_naninf_to_zero(d_matrix)
 
@@ -330,6 +337,15 @@ class MagSim:
             fft_b_vec = np.einsum(
                 "ij...,j...->i...", d_matrix, fft_mag_vec
             )  # matrix mul b = d * m (d and m are stacked in last 2 dimensions)
+
+            if nv_layer_thickness is not None and standoff:
+                # integrate exp factor exp(-k z) across
+                # z = [standoff - nv_thickness / 2, standoff + nv_thickness / 2]
+                # get exp(-k z) * sinh(k nv_thickness / 2) / (k / 2)
+                arg = k / 2
+                nv_thickness_correction = np.sinh(arg * nv_layer_thickness) / arg
+                for vec in fft_b_vec:
+                    vec *= nv_thickness_correction
 
             # take back to real space, unpad & convert bfield to Gauss (from Tesla)
             self.bfield[0] += (
