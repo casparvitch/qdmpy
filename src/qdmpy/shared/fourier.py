@@ -238,12 +238,12 @@ def define_magnetization_transformation(ky, kx, k, standoff=None, nv_layer_thick
     if standoff:
         exp_factor = np.exp(k * standoff)
         if nv_layer_thickness:
-            # integrate exp factor exp(-k z) across
+            # average exp factor exp(-k z) across
             # z = [standoff - nv_thickness / 2, standoff + nv_thickness / 2]
-            # get exp(-k z) * sinh(k nv_thickness / 2) / (k / 2)
+            # get exp(-k z) * sinh(k nv_thickness / 2) / (k nv_thickness / 2)
             # (inverted here)
-            arg = k / 2
-            exp_factor *= arg / np.sinh(arg * nv_layer_thickness)
+            arg = k * nv_layer_thickness / 2
+            exp_factor *= 1 / (arg / np.sinh(arg))
     else:
         exp_factor = 1
 
@@ -296,12 +296,12 @@ def define_current_transform(u_proj, ky, kx, k, standoff=None, nv_layer_thicknes
     if standoff:
         exp_factor = np.exp(k * standoff)
         if nv_layer_thickness:
-            # integrate exp factor exp(-k z) across
+            # average exp factor exp(-k z) across
             # z = [standoff - nv_thickness / 2, standoff + nv_thickness / 2]
-            # get exp(-k z) * sinh(k nv_thickness / 2) / (k / 2)
+            # get exp(-k z) * sinh(k nv_thickness / 2) / (k nv_thickness / 2)
             # (inverted here)
-            arg = k / 2
-            exp_factor *= arg / np.sinh(arg * nv_layer_thickness)
+            arg = k * nv_layer_thickness / 2
+            exp_factor *= arg / np.sinh(arg)
     else:
         exp_factor = 1
 
