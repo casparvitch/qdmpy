@@ -169,11 +169,11 @@ def get_j_from_bxy(
     sign = 1 if nvs_above_sample else -1
 
     # define transform
-    _, bx_to_jy = define_current_transform([sign, 0, 0], ky, kx, k, standoff)
-    by_to_jx, _ = define_current_transform([0, sign, 0], ky, kx, k, standoff)
+    _, bx_to_jy = define_current_transform([sign, 0, 0], ky, kx, k, standoff, nv_layer_thickness)
+    by_to_jx, _ = define_current_transform([0, sign, 0], ky, kx, k, standoff, nv_layer_thickness)
 
     hanning_filt = qdmpy.shared.fourier.hanning_filter_kspace(
-        k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff, standoff, nv_layer_thickness
+        k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff, standoff
     )
 
     bx_to_jy = qdmpy.shared.fourier.set_naninf_to_zero(hanning_filt * bx_to_jy)
