@@ -488,7 +488,7 @@ def divperp_j(options, source_params):
         if f"divperp_J_{method}" not in source_params:
             warnings.warn("missing recon_method '{method}', skipping.")
             continue
-        ax = axs if width == 1 else axis[m_idx]
+        ax = axs if width == 1 else axs[m_idx]
         data = source_params[f"divperp_J_{method}"]
         title = f"Div perp ( J_{method} )"
         c_range = qdmpy.plot.common.get_colormap_range(
@@ -496,7 +496,7 @@ def divperp_j(options, source_params):
         )
         c_map = options["colormaps"]["current_div_images"]
         qdmpy.plot.common.plot_image_on_ax(
-            fig, axs[m_idx], options, data, title, c_map, c_range, "Div perp J (A/m^2)"
+            fig, ax, options, data, title, c_map, c_range, "Div perp J (A/m^2)"
         )
 
     if options["save_plots"]:
