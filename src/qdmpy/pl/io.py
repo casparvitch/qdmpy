@@ -654,7 +654,7 @@ def options_compatible(options, prev_options):
     # check relevant ROI params
     if options["ROI"] == "Rectangle" and (
         options["ROI_start"] != prev_options["ROI_start"]
-        and options["ROI_end"] != prev_options["ROI_end"]
+        or options["ROI_end"] != prev_options["ROI_end"]
     ):
         return False, "different ROI rectangle bounds"
 
