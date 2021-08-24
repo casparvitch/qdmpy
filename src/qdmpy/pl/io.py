@@ -407,10 +407,16 @@ def _check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_w
         start_y = 0
 
     if end_x >= full_size_w:
-        warnings.warn(f"{name} Rectangle too big in x, cropping to image.")
+        warnings.warn(
+            f"{name} Rectangle too big in x, cropping to image.\n"
+            + f"Image dimensions (x,y): ({full_size_w},{full_size_h})"
+        )
         end_x = full_size_w - 1
     if end_y >= full_size_h:
-        warnings.warn(f"{name} Rectangle too big in y, cropping to image.")
+        warnings.warn(
+            f"{name} Rectangle too big in y, cropping to image.\n"
+            + f"Image dimensions (x,y): ({full_size_w},{full_size_h})"
+        )
         end_y = full_size_h - 1
 
     return (start_x, start_y), (end_x, end_y)
