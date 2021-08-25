@@ -350,11 +350,14 @@ def _three_point_background(image, points, sample_size):
             """sample 'image' centered on 'yx' out to pixels 'sample_size' in both x & y."""
             for y in range(yx[0] - sample_size, yx[0] + sample_size + 1):
                 for x in range(yx[1] - sample_size, yx[1] + sample_size + 1):
-                    yield image[y, x]
+                    try:
+                        yield image[y, x]
+                    except IndexError:
+                        continue
 
         return np.mean([sample for sample in _sample_generator(image, sample_size, yx)])
 
-    points = np.array([np.append(p, _mean_sample(image, sample_size, p)) for p in points])
+    points = np.array([np.append(p, _mean_sample(image, sample_size, (p[1], p[0]))) for p in points])
     Y, X = np.indices(image.shape)  # noqa: N806
     return _equation_plane(_points_to_params(points), Y, X)
 
@@ -388,6 +391,8 @@ def _residual_poly(params, y, x, z, order):
 
 def _poly_background(image, order):
     """Background defined by a polynomial fit up to order 'order'."""
+    if order == 1:
+        return np.nanmean(image)
 
     init_params = np.zeros((order + 1, order + 1))
     init_params[0, 0] = np.nanmean(image)  # set zeroth term to be mean to get it started
