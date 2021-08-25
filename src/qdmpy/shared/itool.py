@@ -190,7 +190,7 @@ def get_background(image, method, polygons=None, **method_params_dict):
         "gaussian": [],
         "interpolate": ["interp_method", "sigma"],
         "gaussian_filter": ["sigma"],
-        "gaussian_then_poly": ["order"]
+        "gaussian_then_poly": ["order"],
     }
     method_fns = {
         "fix_zero": _zero_background,
@@ -200,7 +200,7 @@ def get_background(image, method, polygons=None, **method_params_dict):
         "gaussian": _gaussian_background,
         "interpolate": _interpolated_background,
         "gaussian_filter": _filtered_background,
-        "gaussian_then_poly": _gaussian_then_poly
+        "gaussian_then_poly": _gaussian_then_poly,
     }
     image = np.array(image)
     if len(image.shape) != 2:
@@ -227,6 +227,9 @@ def get_background(image, method, polygons=None, **method_params_dict):
 
     if method == "interpolate":
         method_params_dict["polygons"] = polygons
+
+    if method == "three_point" and "sample_size" not in method_params_dict:
+        method_params_dict["sample_size"] = 0
 
     return method_fns[method](image, **method_params_dict)
 
@@ -302,7 +305,7 @@ def _equation_plane(params, y, x):
 
 def _points_to_params(points):
     """
-    http://pi.math.cornell.edu/~froh/231f08e1a.pdf
+    http://pi.math.cornell.edz/~froh/231f08e1a.pdf
     points: iterable of 3 iterables: [x, y, z]
     returns a,b,c,d parameters (see _equation_plane)
     """
@@ -316,14 +319,17 @@ def _points_to_params(points):
     return a_normal, d
 
 
-def _three_point_background(image, points):
+def _three_point_background(image, points, sample_size):
     """points: len 3 iterable of len 2 iterables: [[x1, y1], [x2, y2], [x3, y3]]
+    sample_size: integer
     https://stackoverflow.com/questions/20699821/find-and-draw-regression-plane-to-a-set-of-points
     https://www.geeksforgeeks.org/program-to-find-equation-of-a-plane-passing-through-3-points/
     """
 
     if len(points) != 3:
         raise ValueError("points needs to be len 3 of format: [x, y] (int or floats).")
+    if not isinstance(sample_size, int) or sample_size < 0:
+        raise TypeError("sample_size must be an integer >= 0")
     for p in points:
         if len(p) != 2:
             raise ValueError("points needs to be len 3 of format: [x, y] (int or floats).")
@@ -337,7 +343,18 @@ def _three_point_background(image, points):
             )
             return _poly_background(image, order=1)
 
-    points = np.array([np.append(p, image[p[1], p[0]]) for p in points])
+    def _mean_sample(image, sample_size, yx):
+        """mean of samples of 'image' centered on 'yx' out to pixels 'sample_size' in both x & y."""
+
+        def _sample_generator(image, sample_size, yx):
+            """sample 'image' centered on 'yx' out to pixels 'sample_size' in both x & y."""
+            for y in range(yx[0] - sample_size, yx[0] + sample_size + 1):
+                for x in range(yx[1] - sample_size, yx[1] + sample_size + 1):
+                    yield image[y, x]
+
+        return np.mean([sample for sample in _sample_generator(image, sample_size, yx)])
+
+    points = np.array([np.append(p, _mean_sample(image, sample_size, p)) for p in points])
     Y, X = np.indices(image.shape)  # noqa: N806
     return _equation_plane(_points_to_params(points), Y, X)
 
@@ -487,8 +504,9 @@ def _filtered_background(image, filter_type, **kwargs):
 
 
 def _gaussian_then_poly(image, order):
-    """Background defines as: fit of a gaussian then a polynomial to image.""" 
+    """Background defines as: fit of a gaussian then a polynomial to image."""
     gauss_back = _gaussian_background(image)
     return _poly_background(image - gauss_back, order) + gauss_back
+
 
 # ============================================================================

@@ -139,8 +139,6 @@ def plot_image_on_ax(fig, ax, options, image_data, title, c_map, c_range, c_labe
     im = ax.imshow(image_data, cmap=c_map, vmin=c_range[0], vmax=c_range[1])
 
     ax.set_title(title)
-    ax.get_xaxis().set_ticks([])
-    ax.get_yaxis().set_ticks([])
 
     cbar = _add_colorbar(im, fig, ax)
     cbar.ax.set_ylabel(c_label, rotation=270)
@@ -158,6 +156,10 @@ def plot_image_on_ax(fig, ax, options, image_data, title, c_map, c_range, c_labe
                     np.dstack((p[:, 1], p[:, 0]))[0], **options["polygon_patch_params"]
                 )
             )
+
+    if not options["show_tick_marks"]:
+        ax.get_xaxis().set_ticks([])
+        ax.get_yaxis().set_ticks([])
 
     return fig, ax
 

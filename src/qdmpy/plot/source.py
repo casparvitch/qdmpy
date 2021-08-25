@@ -340,8 +340,6 @@ def current_stream(
         cbar.ax.linewidth = 0.5
         cbar.ax.tick_params(direction="in", labelsize=10, size=2)
 
-        ax.get_xaxis().set_ticks([])
-        ax.get_yaxis().set_ticks([])
         cbar.ax.set_ylabel("Jnorm (A/m)", rotation=270)
         cbar.outline.set_linewidth(0.5)
 
@@ -359,6 +357,10 @@ def current_stream(
                 )
 
             ax.set_facecolor("w")
+
+        if not options["show_tick_marks"]:
+            ax.get_xaxis().set_ticks([])
+            ax.get_yaxis().set_ticks([])
 
         ax.set_aspect("equal")
 

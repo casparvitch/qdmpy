@@ -867,7 +867,7 @@
     // Descriptions
     // ------------
     //  - fix_zero: constant offset, set zero to chosen value (key 'zero' in bfield_bground_params)
-    //  - three_point: plane background, calculated from three points (key 'points')
+    //  - three_point: plane background, calculated from three points/regions (key 'points')
     //  - mean: constant offset of mean of image
     //  - poly: key 'order' polynomial fit to image
     //  - gaussian: gaussian fit to image
@@ -892,7 +892,10 @@
     // parameters for chosen bground method
     // required:
     //  - fix_zero: 'zero', a number.
-    //  - three_point: 'points' a length three iterable of [x, y] positions in image.
+    //  - three_point: 'points' a length three iterable of [x, y] positions in image. Optionally
+    //     provide 'sample_size' which will average the z value around positions 'points'. I.e.
+    //     instead of grabbing the raw value at [x,y] it will average a region centered on [x,y]
+    //     out to a width/height (square): 2 * sample_size + 1.
     //  - mean: none.
     //  - poly: key 'order', a natural number.
     //  - gaussian: none.
@@ -952,6 +955,14 @@
     "show_scalebar": {
         "option_default": true,
         "option_choices":
+            [
+                true,
+                false
+            ]
+    },
+    "show_tick_marks": {
+        "option_default": false,
+        "option_choices": 
             [
                 true,
                 false

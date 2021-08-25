@@ -4,7 +4,7 @@ required = [
     "setuptools-git",
     "numpy",
     "matplotlib>=3.4.0",
-    "scipy",
+    "scipy>=1.7",  # requires scipy.stats.qmc for magsim
     "numba",
     "psutil",
     "matplotlib-scalebar>=0.7.2",
