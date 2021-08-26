@@ -391,8 +391,8 @@ def _residual_poly(params, y, x, z, order):
 
 def _poly_background(image, order):
     """Background defined by a polynomial fit up to order 'order'."""
-    if order == 1:
-        return np.nanmean(image)
+    if order == 0:
+        return _mean_background(image)
 
     init_params = np.zeros((order + 1, order + 1))
     init_params[0, 0] = np.nanmean(image)  # set zeroth term to be mean to get it started
