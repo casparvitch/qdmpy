@@ -185,9 +185,13 @@ def get_current_density(
                 *useful_opts,
                 nvs_above_sample=options["NVs_above_sample"],
             )
-        elif method == "from_bxyz_w_src":
-            jx, jy = qdmpy.source.current.get_j_from_bxyz_w_src(
-                [bx, by, bz], *useful_opts, sigma=options["src_sigma"]
+        # elif method == "from_bxyz_w_src":
+        #     jx, jy = qdmpy.source.current.get_j_from_bxyz_w_src(
+        #         [bx, by, bz], *useful_opts, sigma=options["src_sigma"]
+        # )
+        elif method == "without_ft":
+            jx, jy = qdmpy.source.current.get_j_without_ft(
+                [bx, by, bz], scaling=options["recon_without_ft_scaling"]
             )
         else:
             warnings.warn(f"recon_method '{method}' not recognised for j recon, skipping.")
