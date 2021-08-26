@@ -25,6 +25,7 @@ __pdoc__ = {
 
 from pyfftw.interfaces import numpy_fft
 from copy import copy
+import numpy as np
 
 # ============================================================================
 
@@ -284,6 +285,30 @@ def get_j_from_bz(
 # ============================================================================
 
 
+def get_j_without_ft(bfield, scaling=1.0):
+    r"""Bxy measured -> (pseudo-)Jxy *without* fourier methods.
+
+    Arguments
+    ---------
+    bfield : list
+        List of magnetic field components, e.g [bx_image, by_image, bz_image]
+    scaling : float, default=1.0
+        Rescale such that max(|J|) = scaling. Optional. (options["recon_without_ft_scaling"])
+
+    Returns
+    -------
+    jx, jy : np arrays (2D)
+        The calculated current density images, in A/m.
+
+    Get Jx, Jy approximation, without any fourier propogation. Simply rescale
+    -By & Bx (respectively) s.t. max(|J|) = 1.
+    """
+    # cap jnorm to +- 1
+    jnorm = np.sqrt(bfield[1] ** 2 + bfield[0] ** 2)
+    mx = np.nanmax(jnorm) / scaling
+    return -bfield[1] / mx, bfield[0] / mx
+
+
 # didn't really work: if include add 'src_sigma' option
 # def get_j_from_bxyz_w_src(
 #     bfield,
@@ -489,7 +514,7 @@ def get_j_from_bnv(
     )
 
     hanning_filt = qdmpy.shared.fourier.hanning_filter_kspace(
-        k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff, standoff, nv_layer_thickness
+        k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff, standoff
     )
 
     bnv_to_jx = qdmpy.shared.fourier.set_naninf_to_zero(hanning_filt * bnv_to_jx)
