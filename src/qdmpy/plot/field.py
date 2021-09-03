@@ -81,7 +81,7 @@ def bnvs_and_dshifts(options, name, bnvs, dshifts):
     # figsize[0] *= 3 / 4  # (usually 4 images wide not 3...)
     # figsize[1] *= 3 / 4
 
-    fig, axs = plt.subplots(height, width, figsize=figsize, constrained_layout=True)
+    fig, axs = plt.subplots(height, width, figsize=figsize)
 
     c_map = options["colormaps"]["bnv_images"]
     # axs index: axs[row, col]
@@ -170,7 +170,7 @@ def bfield(options, name, field_params):
     height = 1  # number of rows
     figsize[0] *= width  # number of columns
 
-    fig, ax = plt.subplots(height, width, figsize=figsize, constrained_layout=True)
+    fig, ax = plt.subplots(height, width, figsize=figsize)
 
     c_map = options["colormaps"]["bfield_images"]
 
@@ -220,7 +220,7 @@ def dshift_fit(options, name, field_params):
     elif field_params["D"] is None:
         return None
 
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots()
 
     c_map = options["colormaps"]["dshift_images"]
     c_range = qdmpy.plot.common.get_colormap_range(
@@ -268,7 +268,7 @@ def field_residual(options, name, field_params):
     elif field_params["residual_field"] is None:
         return None
 
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots()
 
     c_range = qdmpy.plot.common.get_colormap_range(
         options["colormap_range_dicts"]["residual_images"], field_params["residual_field"]
@@ -341,7 +341,7 @@ def field_param(
         warnings.warn(f"No param (key) called {param_name} in field_params.")
         return None
 
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots()
 
     if c_map is None:
         c_range = qdmpy.plot.common.get_colormap_range(
@@ -418,7 +418,7 @@ def field_param_flattened(
     figsize = mpl.rcParams["figure.figsize"].copy()
     figsize[0] *= 2  # make some extra space in width...
 
-    fig, ax = plt.subplots(figsize=figsize, constrained_layout=True)
+    fig, ax = plt.subplots(figsize=figsize)
 
     # get guesses and bounds
     if param_name.startswith("residual"):
@@ -590,7 +590,7 @@ def bfield_consistency(options, name, field_params):
     figsize[0] *= width  # number of columns
     figsize[1] *= height
 
-    fig, ax = plt.subplots(height, width, figsize=figsize, constrained_layout=True)
+    fig, ax = plt.subplots(height, width, figsize=figsize)
 
     c_map = options["colormaps"]["bfield_images"]
 
@@ -665,7 +665,7 @@ def bfield_theta_phi(
     b = field_params["B_theta_phi"]
     theta, phi = options["bfield_proj_angles_(deg)"]
 
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots()
 
     if c_map is None:
         c_range = qdmpy.plot.common.get_colormap_range(

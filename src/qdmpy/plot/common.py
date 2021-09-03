@@ -93,7 +93,7 @@ def plot_image(options, image_data, title, c_map, c_range, c_label):
     ax : matplotlib Axis object
     """
 
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots()
 
     fig, ax = plot_image_on_ax(fig, ax, options, image_data, title, c_map, c_range, c_label)
 

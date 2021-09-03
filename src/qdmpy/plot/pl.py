@@ -78,7 +78,7 @@ def roi_pl_image(options, pl_image):
         options["colormap_range_dicts"]["pl_images"], pl_image
     )
 
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots()
 
     fig, ax = qdmpy.plot.common.plot_image_on_ax(
         fig, ax, options, pl_image, "pl - Full & Rebinned", c_map, c_range, "Counts"
@@ -112,7 +112,7 @@ def aoi_pl_image(options, pl_image_roi):
     -------
     fig : matplotlib Figure object
     """
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots()
     c_map = options["colormaps"]["pl_images"]
     c_range = qdmpy.plot.common.get_colormap_range(
         options["colormap_range_dicts"]["pl_images"], pl_image_roi
@@ -327,7 +327,7 @@ def aoi_spectra(options, sig, ref, sweep_list):
     figsize[0] *= num_wide
     figsize[1] *= 2
     fig, axs = plt.subplots(
-        2, num_wide, figsize=figsize, sharex=True, sharey=False, constrained_layout=True
+        2, num_wide, figsize=figsize, sharex=True, sharey=False
     )
 
     for i, aoi in enumerate(aois):
@@ -488,7 +488,7 @@ def aoi_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_lst, fi
     figsize[1] *= 2 + len(aois)  # number of rows
 
     fig, axs = plt.subplots(
-        2 + len(aois), 3, figsize=figsize, sharex=True, sharey=False, constrained_layout=True
+        2 + len(aois), 3, figsize=figsize, sharex=True, sharey=False
     )
 
     #  pre-process raw data to plot -> note some are not averaged yet (will check for this below)
@@ -756,7 +756,7 @@ def pl_param_image(
     else:
         c_label = fit_model.get_param_unit(param_name, param_number)
 
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots()
 
     fig, ax = qdmpy.plot.common.plot_image_on_ax(
         fig, ax, options, image, param_name + "_" + str(param_number), c_map, c_range, c_label
@@ -859,7 +859,6 @@ def pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=
             figsize=figsize,
             sharex=False,
             sharey=False,
-            constrained_layout=True,
         )
         # plot 8-lorentzian peaks in a more helpful way
         if nk <= 8 and any([f.startswith("lorentzian") for f in options["fit_functions"]]):
@@ -977,7 +976,7 @@ def pl_params_flattened(
     figsize[0] *= 2  # make some extra space...
     figsize[1] = figsize[1] * height / 2 if height > 1 else figsize[1]
 
-    fig, axs = plt.subplots(height, width, sharex=True, figsize=figsize, constrained_layout=True)
+    fig, axs = plt.subplots(height, width, sharex=True, figsize=figsize)
     # axs indexed: axs[row, col] (n_cols = 1 here, so index linearly)
     if not isinstance(axs, np.ndarray):
         axs = np.array([axs])
@@ -1147,7 +1146,7 @@ def other_measurements(options, skip_first=0):
         figsize[1] *= num_series  # extra height
 
         fig, axs = plt.subplots(
-            num_series, 1, figsize=figsize, constrained_layout=True, sharex=True
+            num_series, 1, figsize=figsize, sharex=True
         )
         for i, header in enumerate(headers[1:]):
             axs[i].plot(

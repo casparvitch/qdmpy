@@ -822,17 +822,12 @@
     // see e.g. Broadway 2020 http://dx.doi.org/10.1103/PhysRevApplied.14.024076
     // bz better for magnetization, bxy better for currents
     // bnv if you have no choice
-    // without_ft just uses (jx, jy) = (-by, bx), rescaled s.t. max(|J|) = 1. No Fourier involved. 
-    //   alternatively use 'recon_without_ft_scaling' to max(|J|) = some_number
+    // without_ft just uses (jx, jy) = (-by, bx), rescaled to J units. No Fourier involved. 
     // choices: from_bxy, from_bz, from_bnv, without_ft
     // must be an array of method you would like to run (even if only 1 choice)
     // from_bnv uses the 'single_unv_choice' option.
     "recon_methods": {
         "option_default": ["from_bxy", "from_bz", "from_bnv", "without_ft"]
-    },
-    // see above
-    "recon_without_ft_scaling": {
-        "option_default": 1
     },
     // If using from_bnv, set the index in bnvs (and unvs) to use for current recon. If null, uses 0
     // (i.e. outermost peaks).
@@ -1106,6 +1101,7 @@
     // extra parameters sent to matplotlib to define plotting stylesheet 
     "mpl_rcparams": {
         "option_default": {
+            "figure.constrained_layout.use": true,
             "figure.figsize": [6.4, 4.8],
             "figure.dpi": 80,
             "figure.max_open_warning": 30,
@@ -1193,6 +1189,10 @@
             "high_cutoff": 1.0,
             "dynamic_range": 1000
         }
+    },
+    // TODO
+    "quiverplot_options": {
+        "option_default": {}
     },
     // ===========================================================================================
     // Things set internally, allow to be anything
