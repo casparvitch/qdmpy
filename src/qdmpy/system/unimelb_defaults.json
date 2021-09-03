@@ -989,7 +989,8 @@
             [
                 "png",
                 "svg",
-                "pdf"
+                "pdf",
+                "eps"
             ]
     },
     // some figs are huge as svgs (currently just jstream) so this allows them to be set differently
@@ -999,7 +1000,8 @@
             [
                 "png",
                 "svg",
-                "pdf"
+                "pdf",
+                "eps"
             ]
     },
     // choose colormap used for each 'type' of image

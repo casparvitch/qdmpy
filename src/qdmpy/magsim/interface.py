@@ -384,7 +384,6 @@ class MagSim:
     #     mx = np.max(np.abs(ars))
     #     return [ar / mx for ar in ars], mx
 
-    # image outputs: bfield and magnetization
     def get_bfield_im(self, projection=(0, 0, 1)):
         if self.bfield is None:
             raise AttributeError("simulation not run yet.")
