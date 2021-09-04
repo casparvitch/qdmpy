@@ -20,3 +20,6 @@ bandit:
 
 mccabe:
   run: false
+
+# run (from dir with .git) via: 
+# `prospector --profile qdmpy.prospector.yaml -o grouped:prospector.log`

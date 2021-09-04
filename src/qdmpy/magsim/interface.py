@@ -99,7 +99,7 @@ class MagSim:
         if not isinstance(path, (str, pathlib.PurePath)):
             raise ValueError("path was not a str/pathlib.PurePath object.")
         elif path.endswith("json"):
-            return qdmpy.shared.json2dict.dict_to_json(dictionary, path)
+            qdmpy.shared.json2dict.dict_to_json(dictionary, path)
         elif path.endswith("pickle"):
             with open(path, "wb") as f:
                 pickle.dump(dictionary, f, pickle.HIGHEST_PROTOCOL)

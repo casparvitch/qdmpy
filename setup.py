@@ -1,4 +1,10 @@
-import setuptools, pathlib
+import setuptools
+import pathlib
+import site
+import sys
+
+# odd bug with develop (editable) installs, see: https://github.com/pypa/pip/issues/7953
+site.ENABLE_USER_SITE = "--user" in sys.argv[1:]
 
 required = [
     "setuptools-git",
