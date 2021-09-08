@@ -92,7 +92,8 @@ def get_divperp_j(
 
     # only return non-padded region
     divperp_j_reg = qdmpy.shared.fourier.unpad_image(divperp_j, padder)
-    return divperp_j_reg
+    mx = max(np.abs([np.nanmax(divperp_j_reg), np.nanmin(divperp_j_reg)]))
+    return divperp_j_reg / mx
 
 
 # ============================================================================

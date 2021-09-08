@@ -38,6 +38,7 @@ import copy
 # ============================================================================
 
 import qdmpy.plot.common
+import qdmpy.shared.itool
 
 # ============================================================================
 
@@ -735,7 +736,7 @@ def magnetization(options, source_params, plot_bgrounds=True):
 # ============================================================================
 
 
-def divperp_j(options, source_params):
+def divperp_j(options, source_params, sigma=5):
     """plot perpindicular divergence of J, i.e. in-plane divergence (dJ/dx + dJ/dy).
 
     Parameters
@@ -744,6 +745,8 @@ def divperp_j(options, source_params):
         Generic options dict holding all the user options.
     source_params : dict
         Dictionary, key: param_keys, val: image (2D) of source field values across FOV.
+    sigma : int
+        Gaussian smoothing width. Ignored if less than or equal to 1.
 
     Returns
     -------
@@ -769,13 +772,15 @@ def divperp_j(options, source_params):
             continue
         ax = axs if width == 1 else axs[m_idx]
         data = source_params[f"divperp_J_{method}"]
+        if sigma > 1:
+            data = qdmpy.shared.itool.get_im_filtered(data, "gaussian", sigma=sigma)
         title = f"Div perp ( J_{method} )"
         c_range = qdmpy.plot.common.get_colormap_range(
             options["colormap_range_dicts"]["current_div_images"], data
         )
         c_map = options["colormaps"]["current_div_images"]
         qdmpy.plot.common.plot_image_on_ax(
-            fig, ax, options, data, title, c_map, c_range, "Div perp J (A/m^2)"
+            fig, ax, options, data, title, c_map, c_range, "Div perp J (a.u.)"
         )
 
     if options["save_plots"]:
