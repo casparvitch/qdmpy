@@ -86,13 +86,13 @@ View in text editor if scrambled.
          |                   |     |             CANNOT IMPORT FROM HIGHER IN HEIRARCHY
          | fourier           v     |
          | +-----+        polygon  |
-         |                ++---++  |
-         | linecut         |   |   |
-         | +-+---+         |   |   |
-         |   |             |   |   |
-         |   +---+---------+   |   |
-         |       |             |   |
-         |       v             v   |
+         |                +--+--+  |
+         | linecut           |     |
+         | +-+---+           |     |
+         |   |               |     |
+         |   +---+--------+--+     |
+         |       |        |        |
+         |       v        v        |
          |    widget    json2dict  |
          |    +----+    +-------+  |
          +-------------------------+

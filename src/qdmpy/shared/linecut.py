@@ -19,6 +19,7 @@ from scipy import integrate
 # ============================================================================
 
 import qdmpy.shared.widget
+import qdmpy.shared.json2dict
 
 # ============================================================================
 
@@ -135,10 +136,17 @@ class BulkLinecutWidget:
         self.pts = verts  # list of vertices `[(Ax1, Ay1), (Ax2, Ay2)]`
         self.canvas.draw_idle()
 
-    def disconnect(self):
+    def disconnect(self, path=None):
+        if path is not None:
+            output_dict = {
+                "xlabels": self.xlabels,
+                "integrals": self.integrals,
+                "profile_x": np.transpose([prof.get_xdata() for prof in self.profiles]).tolist(),
+                "profile_y": np.transpose([prof.get_ydata() for prof in self.profiles]).tolist(),
+            }
+        qdmpy.shared.json2dict.dict_to_json(output_dict, path)
         self.line_selector.disconnect_events()
         self.canvas.draw_idle()
-        # possibility: export to text file?
 
 
 class LinecutSelectionWidget:
