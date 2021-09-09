@@ -7,7 +7,7 @@ import sys
 site.ENABLE_USER_SITE = "--user" in sys.argv[1:]
 
 required = [
-    "setuptools-git",
+    "setuptools-git",  # see link at bottom: allows to specify package data to keep/upload/etc.
     "numpy",
     "matplotlib>=3.4.0",
     "scipy>=1.7",  # requires scipy.stats.qmc for magsim
@@ -16,13 +16,14 @@ required = [
     "matplotlib-scalebar>=0.7.2",
     "tqdm",
     "simplejson",
-    "pandas",
+    "pandas",  # could be replaced with lighter csv reader
     "rebin",
     "pyfftw",
-    "PySimpleGUI",
-    "foronoi",
-    "python-polylabel",
-    "dill",
+    "PySimpleGUI",  # magsim
+    "foronoi",  # magsim
+    "python-polylabel",  # magism
+    "dill",  # for magsim
+    "astropy",  # remove if remove sigma_clip background sub
 ]
 
 here = pathlib.Path(__file__).parent.resolve()

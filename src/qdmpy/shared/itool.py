@@ -246,6 +246,8 @@ def get_background(
         method_params_dict["sample_size"] = 0
 
     if sigma_clip:
+        from astropy.stats import sigma_clip  # FIXME move this up aye
+
         clipped = sigma_clip(image, sigma=sigma_clip_sigma, maxiters=None)
         bground = method_fns[method](clipped, **method_params_dict)
         # only use the clipping if it's helpful (reduces median away from features)
