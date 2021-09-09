@@ -15,11 +15,68 @@ __pdoc__ = {"qdmpy.shared.": True}
 import numpy as np
 from matplotlib.image import AxesImage
 from scipy import integrate
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
 
 # ============================================================================
 
 import qdmpy.shared.widget
 import qdmpy.shared.json2dict
+import qdmpy.shared.itool
+
+# ============================================================================
+
+
+def vert_linecut_vs_position(
+    input_path, output_path, middle_idx, averaging_width=1, alpha=0.5, sigma=1
+):
+    if not isinstance(averaging_width, int) or not (averaging_width % 2):
+        raise TypeError("averaging_width must be an odd int.")
+    avg_steps = averaging_width - 1 // 2
+
+    fig, axs = plt.subplots(ncols=3, figsize=(16, 8))
+
+    data = np.loadtxt(input_path)
+    data = qdmpy.shared.itool.get_im_filtered(data, "gaussian", sigma=sigma)
+
+    height, width = data.shape
+
+    if middle_idx > width:
+        raise ValueError(f"start_idx too large for shape: ({width, height}).")
+
+    furthest = max([np.nanmin(data), np.nanmax(data)])
+    axs[0].imshow(data, cmap="bwr", vmin=-furthest, vmax=furthest)
+    axs[0].axvline(middle_idx, color="k", ls="--", lw=2)
+
+    cols = list(range(avg_steps, width - avg_steps))
+    col_labels = [col_idx - middle_idx for col_idx in cols]
+
+    profiles = []
+    for centre_col in cols:
+        prof = np.zeros(height)
+        for col in range(centre_col - avg_steps, centre_col + avg_steps + 1):
+            prof += data[:, col]
+        prof /= averaging_width
+        profiles.append(prof)
+
+    integrals = [integrate.simpson(prof) for prof in profiles]
+    profiles = np.transpose(profiles)  # shape for plotting
+
+    colors = cm.cool(np.linspace(0, 1, len(cols)))
+    axs[1].set_prop_cycle("color", colors)
+    axs[1].plot(profiles, "--", alpha=alpha, label=cols)
+
+    handles, _ = axs[1].get_legend_handles_labels()
+    tot_num = len(handles)
+    interval = tot_num // 5
+    new_handles = [handles[i] for i in range(0, tot_num, interval)]
+    new_labels = [cols[i] for i in range(0, tot_num, interval)]
+    axs[1].legend(new_handles, new_labels, title="x position")
+
+    axs[2].scatter(col_labels, integrals)
+    axs[2].axvline(0, color="k", zorder=0)
+    axs[2].axhline(0, color="k", zorder=0)
+
 
 # ============================================================================
 
@@ -28,7 +85,21 @@ class BulkLinecutWidget:
     """
     How to use
     ----------
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from qdmpy.shared.linecut import BulkLinecutWidget
 
+    path = "<WHATEVER>"
+    times = [0.325, 1, 5, 10, 20, 21, 22, 25, 30, 40]
+    paths = [f"{path}/{t}.txt" for t in times]
+    images = [np.loadtxt(p) for p in paths]
+    selector_image = images[4]
+
+    fig, axs = plt.subplots(ncols=3, figsize=(12, 6))
+    axs[0].imshow(selector_image)  # (data can be nans if you want an empty selector)
+    selector = BulkLinecutWidget(*axs, images, times)
+    plt.show()
+    selector.disconnect(path="/home/samsc/share/result.json")
     """
 
     def __init__(self, imax, profax, resax, images, xlabels, style=None, useblit=False):

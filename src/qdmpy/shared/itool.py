@@ -116,7 +116,15 @@ def mask_polygons(image, polygons=None, invert_mask=False):
     return np.ma.masked_array(image, mask=msk)
 
 
-def get_background(image, method, polygons=None, **method_params_dict):
+def get_background(
+    image,
+    method,
+    polygons=None,
+    sigma_clip=False,
+    sigma_clip_sigma=3,
+    no_bground_if_clip_fails=False,
+    **method_params_dict,
+):
     """Returns a background for given image, via chosen method.
 
     Methods available:
@@ -173,6 +181,12 @@ def get_background(image, method, polygons=None, **method_params_dict):
     polygons : list, optional
         list of `qdmpy.shared.polygon.Polygon` objects.
         (the default is None, in which case the polygon feature is not used)
+    sigma_clip : bool
+        Don't use this yet... please. FIXME
+    sigma_clip_sigma : float
+        Please don't use this yet either! FIXME
+    no_bground_if_clip_fails : bool
+        You get it.
 
     Returns
     -------
@@ -231,6 +245,14 @@ def get_background(image, method, polygons=None, **method_params_dict):
     if method == "three_point" and "sample_size" not in method_params_dict:
         method_params_dict["sample_size"] = 0
 
+    if sigma_clip:
+        clipped = sigma_clip(image, sigma=sigma_clip_sigma, maxiters=None)
+        bground = method_fns[method](clipped, **method_params_dict)
+        # only use the clipping if it's helpful (reduces median away from features)
+        if abs(np.nanmedian(image - bground)) - abs(np.nanmedian(image)) < 0:
+            return bground
+        elif no_bground_if_clip_fails:
+            return np.zeros(image.shape)
     return method_fns[method](image, **method_params_dict)
 
 
@@ -357,7 +379,9 @@ def _three_point_background(image, points, sample_size):
 
         return np.mean([sample for sample in _sample_generator(image, sample_size, yx)])
 
-    points = np.array([np.append(p, _mean_sample(image, sample_size, (p[1], p[0]))) for p in points])
+    points = np.array(
+        [np.append(p, _mean_sample(image, sample_size, (p[1], p[0]))) for p in points]
+    )
     Y, X = np.indices(image.shape)  # noqa: N806
     return _equation_plane(_points_to_params(points), Y, X)
 
