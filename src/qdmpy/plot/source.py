@@ -39,6 +39,7 @@ import copy
 
 import qdmpy.plot.common
 import qdmpy.shared.itool
+from qdmpy.shared.misc import warn
 
 # ============================================================================
 
@@ -81,7 +82,7 @@ def source_param(
     if source_params is None:
         return None
     if param_name not in source_params:
-        warnings.warn(f"No param (key) called {param_name} in source_params.")
+        warn(f"No param (key) called {param_name} in source_params.")
         return None
 
     fig, ax = plt.subplots()
@@ -156,10 +157,10 @@ def current(options, source_params, plot_bgrounds=True):
                     name = "J" + comp + suffix + "_" + method
 
                     if name not in source_params:
-                        warnings.warn(f"source param {name} missing from source_params.")
+                        warn(f"source param {name} missing from source_params.")
                         continue
                     elif source_params[name] is None:
-                        warnings.warn(f"source_param[{name}] was None?")
+                        warn(f"source_param[{name}] was None?")
                         continue
 
                     jmap = source_params[name]
@@ -184,10 +185,10 @@ def current(options, source_params, plot_bgrounds=True):
                 name = "J" + comp + "_" + method
 
                 if name not in source_params:
-                    warnings.warn(f"source param {name} missing from source_params.")
+                    warn(f"source param {name} missing from source_params.")
                     continue
                 elif source_params[name] is None:
-                    warnings.warn(f"source_param[{name}] was None?")
+                    warn(f"source_param[{name}] was None?")
                     continue
 
                 jmap = source_params[name]
@@ -230,7 +231,7 @@ def current_quiver(options, source_params, clean=False, stepper=np.index_exp[::5
         flag = False
         for p in ["J" + comp + "_" + method for comp in components]:
             if p not in source_params:
-                warnings.warn(f"param '{p}'' missing from source_params, skipping stream plot.")
+                warn(f"param '{p}'' missing from source_params, skipping stream plot.")
                 flag = True
                 break
             elif source_params[p] is None:
@@ -349,7 +350,7 @@ def current_hyperstream(options, source_params, vary_lws=True, clean=False, low_
         flag = False
         for p in ["J" + comp + "_" + method for comp in components]:
             if p not in source_params:
-                warnings.warn(f"param '{p}'' missing from source_params, skipping stream plot.")
+                warn(f"param '{p}'' missing from source_params, skipping stream plot.")
                 flag = True
                 break
             elif source_params[p] is None:
@@ -482,7 +483,7 @@ def current_stream(
         flag = False
         for p in ["J" + comp + "_" + method for comp in components]:
             if p not in source_params:
-                warnings.warn(f"param '{p}'' missing from source_params, skipping stream plot.")
+                warn(f"param '{p}'' missing from source_params, skipping stream plot.")
                 flag = True
                 break
             elif source_params[p] is None:
@@ -650,10 +651,10 @@ def magnetization(options, source_params, plot_bgrounds=True):
             name = root_name + "_" + method
 
             if name not in source_params:
-                warnings.warn(f"source param {name} missing from source_params.")
+                warn(f"source param {name} missing from source_params.")
                 continue
             elif source_params[name] is None:
-                warnings.warn(f"source_param[{name}] was None?")
+                warn(f"source_param[{name}] was None?")
                 continue
 
             data = source_params[name]
@@ -674,10 +675,10 @@ def magnetization(options, source_params, plot_bgrounds=True):
                 name = root_name + "_" + method + suf
 
                 if name not in source_params:
-                    warnings.warn(f"source param {name} missing from source_params.")
+                    warn(f"source param {name} missing from source_params.")
                     continue
                 elif source_params[name] is None:
-                    warnings.warn(f"source_param[{name}] was None?")
+                    warn(f"source_param[{name}] was None?")
                     continue
 
                 data = source_params[name]
@@ -738,7 +739,7 @@ def divperp_j(options, source_params, sigma=5):
 
     for m_idx, method in enumerate(options["recon_methods"]):  # # m_idx: each doublet of rows
         if f"divperp_J_{method}" not in source_params:
-            warnings.warn("missing recon_method '{method}', skipping.")
+            warn("missing recon_method '{method}', skipping.")
             continue
         ax = axs if width == 1 else axs[m_idx]
         data = source_params[f"divperp_J_{method}"]

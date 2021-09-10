@@ -1,4 +1,4 @@
-import warnings
+from warnings import warn
 from . import _minpack
 
 import numpy as np
@@ -200,7 +200,7 @@ def fsolve(
         elif status == 1:
             pass
         elif status in [2, 3, 4, 5]:
-            warnings.warn(msg, RuntimeWarning)
+            warn(msg, RuntimeWarning)
         else:
             raise TypeError(msg)
         return res["x"]
@@ -539,7 +539,7 @@ def leastsq(
         return (retval[0], cov_x) + retval[1:-1] + (errors[info][0], info)
     else:
         if info in LEASTSQ_FAILURE:
-            warnings.warn(errors[info][0], RuntimeWarning)
+            warn(errors[info][0], RuntimeWarning)
         elif info == 0:
             raise errors[info][1](errors[info][0])
         return retval[0], info
@@ -913,7 +913,7 @@ def curve_fit(
             warn_cov = True
 
     if warn_cov:
-        warnings.warn(
+        warn(
             "Covariance of the parameters could not be estimated", category=OptimizeWarning
         )
 

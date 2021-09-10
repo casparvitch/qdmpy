@@ -39,6 +39,7 @@ from datetime import timedelta
 # ============================================================================
 
 import qdmpy.field.hamiltonian
+from qdmpy.shared.misc import warn
 
 # ============================================================================
 
@@ -154,9 +155,9 @@ def ham_limit_cpu():
     elif platform.startswith("win32"):  # windows
         p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
     elif platform.startswith("darwin"):  # macOS
-        warnings.warn("Not sure what to use for macOS... skipping cpu limitting")
+        warn("Not sure what to use for macOS... skipping cpu limitting")
     else:  # 'freebsd', 'aix', 'cygwin'...
-        warnings.warn(f"Not sure what to use for your OS: {platform}... skipping cpu limitting")
+        warn(f"Not sure what to use for your OS: {platform}... skipping cpu limitting")
 
 
 # ==========================================================================
@@ -193,7 +194,7 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
     chunksize = int(num_pixels / (threads * 10))
 
     if not chunksize:
-        warnings.warn("chunksize was 0, setting to 1")
+        warn("chunksize was 0, setting to 1")
         chunksize = 1
 
     # randomize order of fitting pixels (will un-scramble later) so ETA is more correct

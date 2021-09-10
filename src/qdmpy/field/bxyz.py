@@ -29,7 +29,6 @@ import numpy as np
 import numpy.linalg as LA  # noqa: N812
 from pyfftw.interfaces import numpy_fft
 from copy import copy
-import warnings
 
 # ============================================================================
 
@@ -38,6 +37,7 @@ import qdmpy.field.hamiltonian
 import qdmpy.shared.geom
 import qdmpy.shared.itool
 import qdmpy.shared.fourier
+from qdmpy.shared.misc import warn
 
 # ============================================================================
 
@@ -361,7 +361,7 @@ def sub_bground_bxyz(options, field_params, field_sigmas, method, **method_setti
 
     for b in ["Bx", "By", "Bz"]:
         if b not in field_params:
-            warnings.warn("no B params found in field_params? Doing nothing.")
+            warn("no B params found in field_params? Doing nothing.")
             return field_params, field_sigmas
 
     if "polygons" in options and (options["mask_polygons_bground"] or method == "interpolate"):

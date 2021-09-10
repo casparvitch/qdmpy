@@ -47,9 +47,10 @@ import numpy as np
 from matplotlib_scalebar.scalebar import ScaleBar
 from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
 import matplotlib.patches
-import warnings
 
 # ===========================================================================
+
+from qdmpy.shared.misc import warn
 
 # ===========================================================================
 
@@ -62,7 +63,7 @@ def set_mpl_rcparams(options):
         try:
             mpl.rcParams[optn] = val
         except KeyError:
-            warnings.warn(f"mpl rcparams key '{optn}' not recognised as a valid rc parameter.")
+            warn(f"mpl rcparams key '{optn}' not recognised as a valid rc parameter.")
 
 
 # ===========================================================================
@@ -308,11 +309,11 @@ def get_colormap_range(c_range_dict, image):
             or (not isinstance(c_range_values[1], (float, int)))  # noqa: W503
             or c_range_values[0] > c_range_values[1]  # noqa: W503
         ):
-            warnings.warn(warning_messages[c_range_type])
+            warn(warning_messages[c_range_type])
             return _min_max_sym_mean(image, c_range_values)
     elif c_range_type == "mean_plus_minus":
         if not isinstance(c_range_values, (float, int)):
-            warnings.warn(warning_messages[c_range_type])
+            warn(warning_messages[c_range_type])
             return _min_max_sym_mean(image, c_range_values)
     elif c_range_type == "deviation_from_mean":
         if (
@@ -320,7 +321,7 @@ def get_colormap_range(c_range_dict, image):
             or c_range_values < 0  # noqa: W503
             or c_range_values > 1  # noqa: W503
         ):
-            warnings.warn(warning_messages[c_range_type])
+            warn(warning_messages[c_range_type])
             return _min_max_sym_mean(image, c_range_values)
 
     elif c_range_type.startswith("percentile"):
@@ -332,7 +333,7 @@ def get_colormap_range(c_range_dict, image):
             or not 100 >= c_range_values[0] >= 0
             or not 100 >= c_range_values[1] >= 0
         ):
-            warnings.warn(warning_messages[c_range_type])
+            warn(warning_messages[c_range_type])
             return _min_max_sym_mean(image, c_range_values)
     return range_calculator_dict[c_range_type](image, c_range_values)
 

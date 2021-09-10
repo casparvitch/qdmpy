@@ -44,7 +44,6 @@ from matplotlib.lines import Line2D
 import numpy as np
 import matplotlib.patches as patches
 import math
-import warnings
 from pathlib import Path
 
 # ============================================================================
@@ -52,6 +51,7 @@ from pathlib import Path
 import qdmpy.plot.common
 import qdmpy.shared.json2dict
 import qdmpy.shared.misc
+from qdmpy.shared.misc import warn
 
 # ===========================================================================
 
@@ -326,9 +326,7 @@ def aoi_spectra(options, sig, ref, sweep_list):
     num_wide = 2 if len(aois) < 2 else len(aois)
     figsize[0] *= num_wide
     figsize[1] *= 2
-    fig, axs = plt.subplots(
-        2, num_wide, figsize=figsize, sharex=True, sharey=False
-    )
+    fig, axs = plt.subplots(2, num_wide, figsize=figsize, sharex=True, sharey=False)
 
     for i, aoi in enumerate(aois):
 
@@ -487,9 +485,7 @@ def aoi_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_lst, fi
     figsize[0] *= 3  # number of columns
     figsize[1] *= 2 + len(aois)  # number of rows
 
-    fig, axs = plt.subplots(
-        2 + len(aois), 3, figsize=figsize, sharex=True, sharey=False
-    )
+    fig, axs = plt.subplots(2 + len(aois), 3, figsize=figsize, sharex=True, sharey=False)
 
     #  pre-process raw data to plot -> note some are not averaged yet (will check for this below)
     sigs = []
@@ -748,7 +744,7 @@ def pl_param_image(
         c_map = options["colormaps"]["param_images"]
 
     if param_name == "residual" and errorplot:
-        warnings.warn("residual doesn't have an error, can't plot residual sigma (ret. None).")
+        warn("residual doesn't have an error, can't plot residual sigma (ret. None).")
         return None
 
     if errorplot:
@@ -804,14 +800,14 @@ def pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=
 
     # if no fit completed
     if pixel_fit_params is None:
-        warnings.warn(
+        warn(
             "'pixel_fit_params' arg to function 'pl_param_images' is 'None'.\n"
             + "Probably no pixel fitting completed."  # noqa: W503
         )
         return None
 
     if param_name == "residual" and errorplot:
-        warnings.warn("residual doesn't have an error, can't plot residual sigma (ret. None).")
+        warn("residual doesn't have an error, can't plot residual sigma (ret. None).")
         return None
 
     # plot 2 columns wide, as many rows as required
@@ -1145,9 +1141,7 @@ def other_measurements(options, skip_first=0):
         figsize[0] *= 2
         figsize[1] *= num_series  # extra height
 
-        fig, axs = plt.subplots(
-            num_series, 1, figsize=figsize, sharex=True
-        )
+        fig, axs = plt.subplots(num_series, 1, figsize=figsize, sharex=True)
         for i, header in enumerate(headers[1:]):
             axs[i].plot(
                 dset[skip_first:, 0],

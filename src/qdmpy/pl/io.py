@@ -54,7 +54,6 @@ __pdoc__ = {
 # ============================================================================
 
 import numpy as np
-import warnings
 import pathlib
 from rebin import rebin
 
@@ -64,6 +63,7 @@ import qdmpy.shared.misc
 import qdmpy.shared.json2dict
 import qdmpy.pl.funcs
 import qdmpy.pl.model
+from qdmpy.shared.misc import warn
 
 # ============================================================================
 
@@ -181,7 +181,7 @@ def reshape_dataset(options, image, sweep_list):
             :, options["single_pixel_check"][1], options["single_pixel_check"][0]
         ]
     except IndexError as e:
-        warnings.warn(
+        warn(
             f"Avoiding IndexError for single_pixel_check (setting pixel check to centre of image):\n{e}"
         )
         single_pixel_pl = sig_norm[:, sig_norm.shape[1] // 2, sig_norm.shape[2] // 2]
@@ -335,10 +335,10 @@ def _remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_nor
     roi = qdmpy.shared.misc.define_roi(options, *options["rebinned_image_shape"])
 
     if rem_start < 0:
-        warnings.warn("remove_start_sweep must be >=0, setting to zero now.")
+        warn("remove_start_sweep must be >=0, setting to zero now.")
         rem_start = 0
     if rem_end < 0:
-        warnings.warn("remove_end_sweep must be >=0, setting to zero now.")
+        warn("remove_end_sweep must be >=0, setting to zero now.")
         rem_end = 0
 
     pl_image = np.sum(image_rebinned, axis=0)
@@ -387,33 +387,33 @@ def _check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_w
     """
 
     if start_x >= end_x:
-        warnings.warn(f"{name} Rectangle ends before it starts (in x), swapping them")
+        warn(f"{name} Rectangle ends before it starts (in x), swapping them")
         start_x, end_x = end_x, start_x
     if start_y >= end_y:
-        warnings.warn(f"{name} Rectangle ends before it starts (in y), swapping them")
+        warn(f"{name} Rectangle ends before it starts (in y), swapping them")
         start_y, end_y = end_y, start_y
     if start_x >= full_size_w:
-        warnings.warn(f"{name} Rectangle starts outside image (too large in x), setting to zero.")
+        warn(f"{name} Rectangle starts outside image (too large in x), setting to zero.")
         start_x = 0
     elif start_x < 0:
-        warnings.warn(f"{name} Rectangle starts outside image (negative in x), setting to zero..")
+        warn(f"{name} Rectangle starts outside image (negative in x), setting to zero..")
         start_x = 0
 
     if start_y >= full_size_h:
-        warnings.warn(f"{name} Rectangle starts outside image (too large in y), setting to zero.")
+        warn(f"{name} Rectangle starts outside image (too large in y), setting to zero.")
         start_y = 0
     elif start_y < 0:
-        warnings.warn(f"{name}  Rectangle starts outside image (negative in y), setting to zero.")
+        warn(f"{name}  Rectangle starts outside image (negative in y), setting to zero.")
         start_y = 0
 
     if end_x >= full_size_w:
-        warnings.warn(
+        warn(
             f"{name} Rectangle too big in x, cropping to image.\n"
             + f"Image dimensions (x,y): ({full_size_w},{full_size_h})"
         )
         end_x = full_size_w - 1
     if end_y >= full_size_h:
-        warnings.warn(
+        warn(
             f"{name} Rectangle too big in y, cropping to image.\n"
             + f"Image dimensions (x,y): ({full_size_w},{full_size_h})"
         )
@@ -546,7 +546,7 @@ def load_ref_exp_pl_fit_results(ref_options):
         ref_sigmas = load_prev_pl_fit_sigmas(ref_options)
         return ref_fit_result_dict, ref_sigmas
     else:
-        warnings.warn(
+        warn(
             "Didn't find reference experiment fit results? Reason: "
             + ref_options["found_prev_result_reason"]
         )

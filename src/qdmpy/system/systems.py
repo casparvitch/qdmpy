@@ -54,7 +54,6 @@ import numpy as np
 import pandas as pd
 import os
 import re
-import warnings
 import pathlib
 from multiprocessing import cpu_count
 from math import radians
@@ -63,6 +62,7 @@ from importlib.metadata import version
 # ============================================================================
 
 import qdmpy.shared.json2dict
+from qdmpy.shared.misc import warn
 
 # ============================================================================
 
@@ -309,7 +309,7 @@ class UniMelb(System):
             if not found:
                 return False, None
         if len(bias_field) != 3:
-            warnings.warn(
+            warn(
                 f"Found {len(bias_field)} bias field params in metadata, "
                 + "this shouldn't happen (expected 3)."
             )

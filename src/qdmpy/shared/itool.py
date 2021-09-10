@@ -60,11 +60,11 @@ from numpy.polynomial.polynomial import polyval2d
 from scipy.optimize import least_squares
 from scipy.interpolate import griddata
 import scipy.ndimage
-import warnings
 
 # ============================================================================
 
 import qdmpy.shared.polygon
+from qdmpy.shared.misc import warn
 
 # ============================================================================
 
@@ -363,7 +363,7 @@ def _three_point_background(image, points, sample_size):
             if not isinstance(c, (int, float)):
                 raise ValueError("points needs to be len 3 of format: [x, y] (int or floats).")
         if image.mask[p[1], p[0]]:
-            warnings.warn(
+            warn(
                 "One of the input points was masked (inside a polygon?), "
                 + "falling back on polyfit, order 1"
             )

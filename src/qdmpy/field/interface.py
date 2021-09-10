@@ -28,7 +28,6 @@ __pdoc__ = {
 }
 # ============================================================================
 
-import warnings
 import numpy as np
 
 # ============================================================================
@@ -37,6 +36,7 @@ import qdmpy.field.bnv
 import qdmpy.field.bxyz
 import qdmpy.field.io
 import qdmpy.shared.geom
+from qdmpy.shared.misc import warn
 
 # ===========================================================================
 
@@ -121,7 +121,7 @@ def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
     qdmpy.field.io.choose_field_method(options)
 
     if options["calc_field_pixels"] and options["found_prev_field_calc"]:
-        warnings.warn("Using previous field calculation.")
+        warn("Using previous field calculation.")
 
         bnv_lst, dshift_lst, params_lst, sigmas_lst = qdmpy.field.io.load_prev_field_calcs(options)
 
@@ -307,7 +307,7 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
                 "with exp_reference_type = 'pre_gslac' you must define a reference."
             )
         else:
-            warnings.warn("Using pre_gslac reference. Assuming unv is same for sig & ref.")
+            warn("Using pre_gslac reference. Assuming unv is same for sig & ref.")
             # must match expected pattern
             num_freqs_sig = len(list(filter(lambda x: x.startswith("pos"), sig_fit_params)))
             num_freqs_ref = len(list(filter(lambda x: x.startswith("pos"), ref_fit_params)))
@@ -503,7 +503,7 @@ def add_bfield_reconstructed(options, field_params):
 
     for p in ["B" + comp for comp in components]:
         if p not in field_params:
-            warnings.warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
+            warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
             return None
         elif field_params[p] is None:
             return None
@@ -559,7 +559,7 @@ def add_bfield_theta_phi(options, field_params, theta, phi):
 
     for p in ["B" + comp for comp in components]:
         if p not in field_params:
-            warnings.warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
+            warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
             return None
         elif field_params[p] is None:
             return None

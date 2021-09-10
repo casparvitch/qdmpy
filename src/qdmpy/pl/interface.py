@@ -30,12 +30,11 @@ __pdoc__ = {
 
 # ============================================================================
 
-import warnings
-
 # ============================================================================
 
 import qdmpy.pl.model
 import qdmpy.shared.misc
+from qdmpy.shared.misc import warn
 import qdmpy.pl.io
 
 # ============================================================================
@@ -103,7 +102,7 @@ def _prep_fit_backends(options, fit_model):
     """
     # ensure backend we want to use for pixel fittings is in comparison!
     if options["fit_backend"] not in options["fit_backend_comparison"]:
-        warnings.warn(
+        warn(
             "Your chosen fit backend wasn't in the fit backend comparison list, so it has been added for you."
         )
         options["fit_backend_comparison"].append(options["fit_backend"])
@@ -323,7 +322,7 @@ def get_pl_fit_result(options, sig_norm, sweep_list, fit_model, wanted_roi_resul
     if options["found_prev_result"]:
         pixel_fit_params = qdmpy.pl.io.load_prev_pl_fit_results(options)
         sigmas = qdmpy.pl.io.load_prev_pl_fit_sigmas(options)
-        warnings.warn("Using previous fit results.")
+        warn("Using previous fit results.")
     elif options["fit_pl_pixels"]:
         pixel_fit_params, sigmas = fit_all_pixels_pl(
             options, sig_norm, sweep_list, fit_model, wanted_roi_result
