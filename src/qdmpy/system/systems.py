@@ -58,6 +58,7 @@ import warnings
 import pathlib
 from multiprocessing import cpu_count
 from math import radians
+from importlib.metadata import version
 
 # ============================================================================
 
@@ -219,6 +220,8 @@ class UniMelb(System):
         # system specific options, then recursively update
         sys_spec_opts = qdmpy.shared.json2dict.json_to_dict(self.config_path, hook="dd")
         qdmpy.shared.json2dict.recursive_dict_update(self.options_dict, sys_spec_opts)
+        # in case we want this info in future, set the qdmpy version currently running
+        self.options_dict["qdmpy_version"] = version('qdmpy')
 
     def get_raw_pixel_size(self, options):
         if "pixel_size" in options and options["pixel_size"]:
@@ -279,7 +282,10 @@ class UniMelb(System):
     def get_default_options(self):
         ret = {}
         for key, val in self.options_dict.items():
-            ret[key] = val["option_default"]
+            try:
+                ret[key] = val["option_default"]
+            except:
+                print(key, val)
         return ret
 
     def option_choices(self, option_name):

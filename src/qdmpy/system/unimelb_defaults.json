@@ -1192,7 +1192,7 @@
             "dynamic_range": 1000
         }
     },
-    // TODO
+    // FIXME add docs when interface is stable
     "quiverplot_options": {
         "option_default": {}
     },
@@ -1260,5 +1260,9 @@
     "bias_field_cartesian_gauss": {},
     "bias_field_spherical_deg_gauss": {},
     "ref_bias_field_cartesian_gauss": {},
-    "ref_bias_field_spherical_deg_gauss": {}
+    "ref_bias_field_spherical_deg_gauss": {},
+    // store qdmpy version string when code was run, might be useful in future as api changes to
+    //  load old settings (haven't implemented that yet. May be useful for a v1 -> v2 transition).
+    //  i.e. 'backwards compatibility'
+    "qdmpy_version": {}
 }

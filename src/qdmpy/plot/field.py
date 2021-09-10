@@ -153,8 +153,10 @@ def bfield(options, name, field_params):
 
     components = ["x", "y", "z"]
 
-    if name == "bground":
-        components = [i + "_bground" for i in components]
+    other_selectors = ["bground", "full", "mask"]
+
+    if name in other_selectors:
+        components = [i + "_" + name for i in components]
 
     for p in ["B" + comp for comp in components]:
         if p not in field_params:
@@ -172,13 +174,17 @@ def bfield(options, name, field_params):
 
     fig, ax = plt.subplots(height, width, figsize=figsize)
 
-    c_map = options["colormaps"]["bfield_images"]
+    c_map = "Greys" if name == "mask" else options["colormaps"]["bfield_images"]
 
     for i, bcomponent in enumerate(bfields):
-        c_range = qdmpy.plot.common.get_colormap_range(
-            options["colormap_range_dicts"]["bfield_images"], bcomponent
+        c_range = (
+            [0, 1]
+            if name == "mask"
+            else qdmpy.plot.common.get_colormap_range(
+                options["colormap_range_dicts"]["bfield_images"], bcomponent
+            )
         )
-        if name != "bground":
+        if name not in other_selectors:
             title = f"{name} B" + components[i]
         else:
             title = "B" + components[i]

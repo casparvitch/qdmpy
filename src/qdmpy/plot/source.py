@@ -99,9 +99,7 @@ def source_param(
     )
 
     if options["save_plots"]:
-        fig.savefig(
-            options["source_dir"] / (f"{param_name}." + options["save_fig_type"])
-        )
+        fig.savefig(options["source_dir"] / (f"{param_name}." + options["save_fig_type"]))
 
     return fig
 
@@ -119,7 +117,7 @@ def current(options, source_params, plot_bgrounds=True):
     source_params : dict
         Dictionary, key: param_keys, val: image (2D) of (source field) param values across FOV.
     plot_bgrounds : {bool}, default: True
-        Plot background images
+        Plot background images (and masking)
 
     Returns
     -------
@@ -133,7 +131,7 @@ def current(options, source_params, plot_bgrounds=True):
     figsize = mpl.rcParams["figure.figsize"].copy()
     width = 3
     height = len(options["recon_methods"])  # number of rows
-    height *= 3 if plot_bgrounds else 1
+    height *= 4 if plot_bgrounds else 1
     figsize[0] *= width  # number of columns
     figsize[1] *= height
     fig, axs = plt.subplots(height, width, figsize=figsize)
@@ -146,7 +144,7 @@ def current(options, source_params, plot_bgrounds=True):
 
     if plot_bgrounds:
         for m_idx, method in enumerate(options["recon_methods"]):
-            for row, suffix in enumerate(["_full", "_bground", ""]):
+            for row, suffix in enumerate(["_full", "_bground", "_mask", ""]):
                 for col, comp in enumerate(components.keys()):
                     ax = (
                         axs[row, col]
@@ -158,9 +156,7 @@ def current(options, source_params, plot_bgrounds=True):
                     name = "J" + comp + suffix + "_" + method
 
                     if name not in source_params:
-                        warnings.warn(
-                            f"source param {name} missing from source_params."
-                        )
+                        warnings.warn(f"source param {name} missing from source_params.")
                         continue
                     elif source_params[name] is None:
                         warnings.warn(f"source_param[{name}] was None?")
@@ -168,10 +164,14 @@ def current(options, source_params, plot_bgrounds=True):
 
                     jmap = source_params[name]
 
-                    c_range = qdmpy.plot.common.get_colormap_range(
-                        options["colormap_range_dicts"][ckey], jmap
+                    c_range = (
+                        [0, 1]
+                        if suffix == "_mask"
+                        else qdmpy.plot.common.get_colormap_range(
+                            options["colormap_range_dicts"][ckey], jmap
+                        )
                     )
-                    c_map = options["colormaps"][ckey]
+                    c_map = "Greys" if suffix == "_mask" else options["colormaps"][ckey]
                     qdmpy.plot.common.plot_image_on_ax(
                         fig, ax, options, jmap, name, c_map, c_range, "J (A/m)"
                     )
@@ -221,9 +221,7 @@ def current_quiver(options, source_params, clean=False, stepper=np.index_exp[::5
     figsize[0] *= width
     fig, axs = plt.subplots(height, width, figsize=figsize)
 
-    if not isinstance(stepper, tuple) or not all(
-        [isinstance(i, slice) for i in stepper]
-    ):
+    if not isinstance(stepper, tuple) or not all([isinstance(i, slice) for i in stepper]):
         raise TypeError(
             f"stepper must be a tuple of slice objects.\nType found: {type(stepper)}, str: {stepper}"
         )
@@ -232,9 +230,7 @@ def current_quiver(options, source_params, clean=False, stepper=np.index_exp[::5
         flag = False
         for p in ["J" + comp + "_" + method for comp in components]:
             if p not in source_params:
-                warnings.warn(
-                    f"param '{p}'' missing from source_params, skipping stream plot."
-                )
+                warnings.warn(f"param '{p}'' missing from source_params, skipping stream plot.")
                 flag = True
                 break
             elif source_params[p] is None:
@@ -296,18 +292,14 @@ def current_quiver(options, source_params, clean=False, stepper=np.index_exp[::5
             ax.set_title("J " + method.replace("_", " "))
 
         if options["show_scalebar"]:
-            pixel_size = (
-                options["system"].get_raw_pixel_size(options) * options["total_bin"]
-            )
+            pixel_size = options["system"].get_raw_pixel_size(options) * options["total_bin"]
             scalebar = ScaleBar(pixel_size)
             ax.add_artist(scalebar)
 
         if options["polygon_nodes"] and options["annotate_polygons"]:
             for p in options["polygon_nodes"]:
                 ax.add_patch(
-                    matplotlib.patches.Polygon(
-                        np.array(p), **options["polygon_patch_params"]
-                    )
+                    matplotlib.patches.Polygon(np.array(p), **options["polygon_patch_params"])
                 )
 
             ax.set_facecolor("w")
@@ -319,9 +311,7 @@ def current_quiver(options, source_params, clean=False, stepper=np.index_exp[::5
         ax.set_aspect("equal")
 
     if options["save_plots"]:
-        fig.savefig(
-            options["source_dir"] / ("Jquiver." + options["large_fig_save_type"])
-        )
+        fig.savefig(options["source_dir"] / ("Jquiver." + options["large_fig_save_type"]))
 
     return fig
 
@@ -359,9 +349,7 @@ def current_hyperstream(options, source_params, vary_lws=True, clean=False, low_
         flag = False
         for p in ["J" + comp + "_" + method for comp in components]:
             if p not in source_params:
-                warnings.warn(
-                    f"param '{p}'' missing from source_params, skipping stream plot."
-                )
+                warnings.warn(f"param '{p}'' missing from source_params, skipping stream plot.")
                 flag = True
                 break
             elif source_params[p] is None:
@@ -393,7 +381,7 @@ def current_hyperstream(options, source_params, vary_lws=True, clean=False, low_
         if "color" not in options["streamplot_options"]:
             options["streamplot_options"]["color"] = "w"
 
-        Jx = source_params["Jx_" + method] 
+        Jx = source_params["Jx_" + method]
         Jy = -source_params["Jy_" + method]
         if low_cutoff is not None:
             mask = np.zeros(Jx.shape, dtype=bool)
@@ -430,18 +418,14 @@ def current_hyperstream(options, source_params, vary_lws=True, clean=False, low_
             cbar.outline.set_linewidth(0.5)
 
         if options["show_scalebar"]:
-            pixel_size = (
-                options["system"].get_raw_pixel_size(options) * options["total_bin"]
-            )
+            pixel_size = options["system"].get_raw_pixel_size(options) * options["total_bin"]
             scalebar = ScaleBar(pixel_size)
             ax.add_artist(scalebar)
 
         if options["polygon_nodes"] and options["annotate_polygons"]:
             for p in options["polygon_nodes"]:
                 ax.add_patch(
-                    matplotlib.patches.Polygon(
-                        np.array(p), **options["polygon_patch_params"]
-                    )
+                    matplotlib.patches.Polygon(np.array(p), **options["polygon_patch_params"])
                 )
 
             ax.set_facecolor("w")
@@ -453,9 +437,7 @@ def current_hyperstream(options, source_params, vary_lws=True, clean=False, low_
         ax.set_aspect("equal")
 
     if options["save_plots"]:
-        fig.savefig(
-            options["source_dir"] / ("Jhyperstream." + options["large_fig_save_type"])
-        )
+        fig.savefig(options["source_dir"] / ("Jhyperstream." + options["large_fig_save_type"]))
 
     return fig
 
@@ -500,9 +482,7 @@ def current_stream(
         flag = False
         for p in ["J" + comp + "_" + method for comp in components]:
             if p not in source_params:
-                warnings.warn(
-                    f"param '{p}'' missing from source_params, skipping stream plot."
-                )
+                warnings.warn(f"param '{p}'' missing from source_params, skipping stream plot.")
                 flag = True
                 break
             elif source_params[p] is None:
@@ -525,9 +505,7 @@ def current_stream(
                     alpha=options["streamplot_pl_alpha"],
                 )
             if probe_image is not None:
-                my_cmap = copy.copy(
-                    cm.get_cmap("Reds")
-                )  # doesn't matter _what_ the cmap imshow
+                my_cmap = copy.copy(cm.get_cmap("Reds"))  # doesn't matter _what_ the cmap imshow
                 my_cmap.set_under("k", alpha=0)
                 my_cmap.set_over(probe_color, alpha=probe_alpha)
                 ax.imshow(
@@ -556,9 +534,7 @@ def current_stream(
         u = options["streamplot_cbar_options"]["alpha_ramp_factor"]
         h = options["streamplot_cbar_options"]["low_cutoff"]
         f = options["streamplot_cbar_options"]["high_cutoff"]
-        base_cmap = cm.get_cmap(
-            options["colormaps"]["current_norm_images"], cbar_drange
-        )
+        base_cmap = cm.get_cmap(options["colormaps"]["current_norm_images"], cbar_drange)
 
         new_colors = base_cmap(np.linspace(0, 1, cbar_drange))
 
@@ -605,18 +581,14 @@ def current_stream(
         ax.set_title("J " + method.replace("_", " "))
 
         if options["show_scalebar"]:
-            pixel_size = (
-                options["system"].get_raw_pixel_size(options) * options["total_bin"]
-            )
+            pixel_size = options["system"].get_raw_pixel_size(options) * options["total_bin"]
             scalebar = ScaleBar(pixel_size)
             ax.add_artist(scalebar)
 
         if options["polygon_nodes"] and options["annotate_polygons"]:
             for p in options["polygon_nodes"]:
                 ax.add_patch(
-                    matplotlib.patches.Polygon(
-                        np.array(p), **options["polygon_patch_params"]
-                    )
+                    matplotlib.patches.Polygon(np.array(p), **options["polygon_patch_params"])
                 )
 
             ax.set_facecolor("w")
@@ -628,9 +600,7 @@ def current_stream(
         ax.set_aspect("equal")
 
     if options["save_plots"]:
-        fig.savefig(
-            options["source_dir"] / ("Jstream." + options["large_fig_save_type"])
-        )
+        fig.savefig(options["source_dir"] / ("Jstream." + options["large_fig_save_type"]))
 
     return fig
 
@@ -648,7 +618,7 @@ def magnetization(options, source_params, plot_bgrounds=True):
     source_params : dict
         Dictionary, key: param_keys, val: image (2D) of (source field) param values across FOV.
     plot_bgrounds : {bool}, default: True
-        Plot background images
+        Plot background images (and mask)
 
     Returns
     -------
@@ -666,8 +636,8 @@ def magnetization(options, source_params, plot_bgrounds=True):
         root_name = "Mpsi"
 
     figsize = mpl.rcParams["figure.figsize"].copy()
-    c_map = options["colormaps"]["magnetization_images"]
-    width = 3 if plot_bgrounds else 1
+
+    width = 4 if plot_bgrounds else 1
     height = len(options["recon_methods"])  # number of rows
     figsize[0] *= width  # number of columns
     figsize[1] *= height
@@ -697,11 +667,11 @@ def magnetization(options, source_params, plot_bgrounds=True):
     else:
         for m_idx, method in enumerate(options["recon_methods"]):
 
-            comps = ["_full", "_bground", ""]
-            for i, comp in enumerate(comps):
+            suffix = ["_full", "_bground", "_mask", ""]
+            for i, suf in enumerate(suffix):
                 ax = axs[i] if len(options["recon_methods"]) == 1 else axs[m_idx, i]
 
-                name = root_name + "_" + method + comp
+                name = root_name + "_" + method + suf
 
                 if name not in source_params:
                     warnings.warn(f"source param {name} missing from source_params.")
@@ -711,9 +681,15 @@ def magnetization(options, source_params, plot_bgrounds=True):
                     continue
 
                 data = source_params[name]
-                c_range = qdmpy.plot.common.get_colormap_range(
-                    options["colormap_range_dicts"]["magnetization_images"], data
+                c_range = (
+                    [0, 1]
+                    if suf == "_mask"
+                    else qdmpy.plot.common.get_colormap_range(
+                        options["colormap_range_dicts"]["magnetization_images"], data
+                    )
                 )
+                c_map = "Greys" if suf == "_mask" else options["colormaps"]["magnetization_images"]
+
                 qdmpy.plot.common.plot_image_on_ax(
                     fig,
                     ax,
@@ -726,9 +702,7 @@ def magnetization(options, source_params, plot_bgrounds=True):
                 )
 
     if options["save_plots"]:
-        fig.savefig(
-            options["source_dir"] / (root_name + "." + options["save_fig_type"])
-        )
+        fig.savefig(options["source_dir"] / (root_name + "." + options["save_fig_type"]))
 
     return fig
 
@@ -757,16 +731,12 @@ def divperp_j(options, source_params, sigma=5):
         return None
 
     figsize = mpl.rcParams["figure.figsize"].copy()
-    width = len(
-        options["recon_methods"]
-    )  # * 2  # number of rows (methods + direct/recon)
+    width = len(options["recon_methods"])  # * 2  # number of rows (methods + direct/recon)
     figsize[0] *= width
     height = 1
     fig, axs = plt.subplots(height, width, figsize=figsize)
 
-    for m_idx, method in enumerate(
-        options["recon_methods"]
-    ):  # # m_idx: each doublet of rows
+    for m_idx, method in enumerate(options["recon_methods"]):  # # m_idx: each doublet of rows
         if f"divperp_J_{method}" not in source_params:
             warnings.warn("missing recon_method '{method}', skipping.")
             continue

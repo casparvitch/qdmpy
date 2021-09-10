@@ -89,12 +89,8 @@ def odmr_source_retrieval(options, bnvs, field_params):
         y_min = norm_region[0][1]
         y_max = norm_region[1][1]
         for key in source_params.keys():
-            source_params[key] -= np.nanmean(
-                source_params[key][y_min:y_max, x_min:x_max]
-            )
-            source_params[key] -= np.nanmean(
-                source_params[key][y_min:y_max, x_min:x_max]
-            )
+            source_params[key] -= np.nanmean(source_params[key][y_min:y_max, x_min:x_max])
+            source_params[key] -= np.nanmean(source_params[key][y_min:y_max, x_min:x_max])
 
     options["source_params"] = list(source_params.keys())
     return source_params
@@ -145,9 +141,7 @@ def get_current_density(
         options["nv_layer_thickness"],
     ]
 
-    if any(
-        [i in ["from_bxy", "from_bz", "without_ft"] for i in options["recon_methods"]]
-    ):
+    if any([i in ["from_bxy", "from_bz", "without_ft"] for i in options["recon_methods"]]):
 
         # first check if Bx, By, Bz in fit_params
         # extract them
@@ -201,9 +195,7 @@ def get_current_density(
         elif method == "without_ft":
             jx, jy = qdmpy.source.current.get_j_without_ft([bx, by, bz])
         else:
-            warnings.warn(
-                f"recon_method '{method}' not recognised for j recon, skipping."
-            )
+            warnings.warn(f"recon_method '{method}' not recognised for j recon, skipping.")
             return None
 
         jnorm = np.sqrt(jx ** 2 + jy ** 2)
@@ -216,19 +208,19 @@ def get_current_density(
                 polygons = options["polygons"]
             else:
                 polygons = None
-            jx_bground = qdmpy.shared.itool.get_background(
+            jx_bground, jx_mask = qdmpy.shared.itool.get_background(
                 jx,
                 options["source_bground_method"],
                 polygons=polygons,
                 **options["source_bground_params"],
             )
-            jy_bground = qdmpy.shared.itool.get_background(
+            jy_bground, jy_mask = qdmpy.shared.itool.get_background(
                 jy,
                 options["source_bground_method"],
                 polygons=polygons,
                 **options["source_bground_params"],
             )
-            jnorm_bground = qdmpy.shared.itool.get_background(
+            jnorm_bground, jnorm_mask = qdmpy.shared.itool.get_background(
                 jnorm,
                 options["source_bground_method"],
                 polygons=polygons,
@@ -246,6 +238,9 @@ def get_current_density(
                     "Jx_" + method: jx - jx_bground,
                     "Jy_" + method: jy - jy_bground,
                     "Jnorm_" + method: jnorm - jnorm_bground,
+                    "Jx_" + method + "_mask": jx_mask,
+                    "Jy_" + method + "_mask": jy_mask,
+                    "Jnorm_" + method + "_mask": jnorm_mask,
                 },
             }
         else:
@@ -373,7 +368,7 @@ def get_magnetization(
                 polygons = options["polygons"]
             else:
                 polygons = None
-            m_bground = qdmpy.shared.itool.get_background(
+            m_bground, m_mask = qdmpy.shared.itool.get_background(
                 m,
                 options["source_bground_method"],
                 polygons=polygons,
@@ -388,6 +383,7 @@ def get_magnetization(
                         "Mz_" + method + "_full": m,
                         "Mz_" + method + "_bground": m_bground,
                         "Mz_" + method: m - m_bground,
+                        "Mz_" + method + "_mask": m_mask,
                     },
                 }
             else:
@@ -400,6 +396,7 @@ def get_magnetization(
                         "Mpsi_" + method + "_full": m,
                         "Mpsi_" + method + "_bground": m_bground,
                         "Mpsi_" + method: m - m_bground,
+                        "Mpsi_" + method + "_mask": m_mask,
                     },
                 }
             else:
@@ -444,9 +441,7 @@ def add_divperp_j(options, source_params):
     for method in methods:
         for p in ["J" + comp + "_" + method for comp in components]:
             if p not in source_params:
-                warnings.warn(
-                    f"source param '{p}' missing from source_params, skipping j recon."
-                )
+                warnings.warn(f"source param '{p}' missing from source_params, skipping j recon.")
                 return None
             elif source_params[p] is None:
                 return None
@@ -500,9 +495,7 @@ def in_plane_mag_normalise(mag_image, psi, edge_pixels_used):
     max_y_idx = height - 1
 
     # first get indices of a line from origin at bottom left at psi (from +x to +y)
-    origin_line_y = max_y_idx - np.tan(psi) * range(
-        width
-    )  # y = y_max - x*tan(psi) (y downwards)
+    origin_line_y = max_y_idx - np.tan(psi) * range(width)  # y = y_max - x*tan(psi) (y downwards)
     origin_line_y_ints = [
         round(y) for y in origin_line_y.tolist()
     ]  # y-idxs of line from bot. left @ psi
@@ -525,10 +518,7 @@ def in_plane_mag_normalise(mag_image, psi, edge_pixels_used):
         for coords in [(above_y_idxs, above_x_idxs), (below_y_idxs, below_x_idxs)]:
             im_cut = mag_image[coords]
             new_im[coords] = im_cut - (
-                np.mean(
-                    im_cut[0:edge_pixels_used] + np.mean(im_cut[-edge_pixels_used:])
-                )
-                / 2
+                np.mean(im_cut[0:edge_pixels_used] + np.mean(im_cut[-edge_pixels_used:])) / 2
             )
 
         offset += 1

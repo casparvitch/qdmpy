@@ -192,6 +192,8 @@ def get_background(
     -------
     im_bground : ndarray
         2D numpy array, representing the 'background' of image.
+    mask : ndarray
+        Mask (True pixels were not used to calculate background).
     """
     # Discuss masking -> if polygons provided, background is calculated but with
     # polygon regions masked -> background calculated without these.
@@ -216,7 +218,7 @@ def get_background(
         "gaussian_filter": _filtered_background,
         "gaussian_then_poly": _gaussian_then_poly,
     }
-    image = np.array(image)
+    image = np.ma.array(image, mask=np.zeros(image.shape))
     if len(image.shape) != 2:
         raise ValueError("image is not a 2D array")
     if not isinstance(method, str):
@@ -246,16 +248,16 @@ def get_background(
         method_params_dict["sample_size"] = 0
 
     if sigma_clip:
-        from astropy.stats import sigma_clip  # FIXME move this up aye
+        from astropy.stats import sigma_clip  # FIXME move this up top when happy with API
 
         clipped = sigma_clip(image, sigma=sigma_clip_sigma, maxiters=None)
         bground = method_fns[method](clipped, **method_params_dict)
         # only use the clipping if it's helpful (reduces median away from features)
         if abs(np.nanmedian(image - bground)) - abs(np.nanmedian(image)) < 0:
-            return bground
+            return bground, clipped.mask.astype(int)
         elif no_bground_if_clip_fails:
-            return np.zeros(image.shape)
-    return method_fns[method](image, **method_params_dict)
+            return np.zeros(image.shape), np.zeros(image.shape)
+    return method_fns[method](image, **method_params_dict), image.mask.astype(int)
 
 
 # ============================================================================

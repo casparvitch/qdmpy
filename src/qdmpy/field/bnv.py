@@ -286,7 +286,7 @@ def sub_bground_bnvs(options, bnvs, method, **method_settings):
         polygons = None
     output_bnvs = []
     for bnv in bnvs:
-        bground = qdmpy.shared.itool.get_background(
+        bground, _ = qdmpy.shared.itool.get_background(
             bnv, method, polygons=polygons, **method_settings
         )
         output_bnvs.append(bnv - bground)

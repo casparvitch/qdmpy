@@ -368,19 +368,23 @@ def sub_bground_bxyz(options, field_params, field_sigmas, method, **method_setti
         polygons = options["polygons"]
     else:
         polygons = None
-    x_bground = qdmpy.shared.itool.get_background(
+    x_bground, x_mask = qdmpy.shared.itool.get_background(
         field_params["Bx"], method, polygons=polygons, **method_settings
     )
-    y_bground = qdmpy.shared.itool.get_background(
+    y_bground, y_mask = qdmpy.shared.itool.get_background(
         field_params["By"], method, polygons=polygons, **method_settings
     )
-    z_bground = qdmpy.shared.itool.get_background(
+    z_bground, z_mask = qdmpy.shared.itool.get_background(
         field_params["Bz"], method, polygons=polygons, **method_settings
     )
 
     field_params["Bx_bground"] = x_bground
     field_params["By_bground"] = y_bground
     field_params["Bz_bground"] = z_bground
+
+    field_params["Bx_mask"] = x_mask
+    field_params["By_mask"] = y_mask
+    field_params["Bz_mask"] = z_mask
 
     field_params["Bx_full"] = field_params["Bx"]
     field_params["By_full"] = field_params["By"]
