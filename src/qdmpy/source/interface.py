@@ -25,7 +25,6 @@ __pdoc__ = {
 
 # ============================================================================
 
-import warnings
 import numpy as np
 
 # ============================================================================
@@ -34,6 +33,7 @@ import qdmpy.shared.geom
 import qdmpy.source.io
 import qdmpy.source.current
 import qdmpy.source.magnetization
+from qdmpy.shared.misc import warn
 
 # ============================================================================
 
@@ -152,7 +152,7 @@ def get_current_density(
 
         for p in ["B" + comp for comp in components]:
             if p not in field_params:
-                warnings.warn(
+                warn(
                     f"bfield param '{p}' missing from field_params, skipping current calculation."
                 )
                 return None
@@ -195,7 +195,7 @@ def get_current_density(
         elif method == "without_ft":
             jx, jy = qdmpy.source.current.get_j_without_ft([bx, by, bz])
         else:
-            warnings.warn(f"recon_method '{method}' not recognised for j recon, skipping.")
+            warn(f"recon_method '{method}' not recognised for j recon, skipping.")
             return None
 
         jnorm = np.sqrt(jx ** 2 + jy ** 2)
@@ -311,9 +311,7 @@ def get_magnetization(
 
         for p in ["B" + comp for comp in components]:
             if p not in field_params:
-                warnings.warn(
-                    f"bfield param '{p}' missing from field_params, skipping mag calculation."
-                )
+                warn(f"bfield param '{p}' missing from field_params, skipping mag calculation.")
                 return None
             elif field_params[p] is None:
                 return None
@@ -345,9 +343,7 @@ def get_magnetization(
                 nvs_above_sample=options["NVs_above_sample"],
             )
         else:
-            warnings.warn(
-                "recon_method '{method}' option not recognised for mag. recon, skipping."
-            )
+            warn("recon_method '{method}' option not recognised for mag. recon, skipping.")
             return None
 
         if (
@@ -441,7 +437,7 @@ def add_divperp_j(options, source_params):
     for method in methods:
         for p in ["J" + comp + "_" + method for comp in components]:
             if p not in source_params:
-                warnings.warn(f"source param '{p}' missing from source_params, skipping j recon.")
+                warn(f"source param '{p}' missing from source_params, skipping j recon.")
                 return None
             elif source_params[p] is None:
                 return None

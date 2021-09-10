@@ -37,7 +37,6 @@ import psutil
 import os
 import concurrent.futures
 from itertools import repeat
-import warnings
 from sys import platform
 from timeit import default_timer as timer
 from datetime import timedelta
@@ -46,6 +45,7 @@ from datetime import timedelta
 
 import qdmpy.pl.common
 import qdmpy.pl.funcs
+from qdmpy.shared.misc import warn
 
 # ==========================================================================
 
@@ -329,9 +329,9 @@ def limit_cpu():
     elif platform.startswith("win32"):  # windows
         p.nice(psutil.BELOW_NORMAL_PRIORITY_CLASS)
     elif platform.startswith("darwin"):  # macOS
-        warnings.warn("Not sure what to use for macOS... skipping cpu limitting")
+        warn("Not sure what to use for macOS... skipping cpu limitting")
     else:  # 'freebsd', 'aix', 'cygwin'...
-        warnings.warn(f"Not sure what to use for your OS: {platform}... skipping cpu limitting")
+        warn(f"Not sure what to use for your OS: {platform}... skipping cpu limitting")
 
 
 # ==========================================================================
@@ -407,7 +407,7 @@ def fit_all_pixels_pl_scipyfit(options, sig_norm, sweep_list, fit_model, roi_avg
         pixel_data = sig_norm
 
     if not chunksize:
-        warnings.warn("chunksize was 0, setting to 1")
+        warn("chunksize was 0, setting to 1")
         chunksize = 1
 
     if options["use_ROI_avg_fit_res_for_all_pixels"]:

@@ -64,7 +64,6 @@ import PySimpleGUI as sg  # noqa: N813
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from matplotlib.lines import Line2D
-import warnings
 from polylabel import polylabel
 import numba
 from numba import jit
@@ -73,6 +72,7 @@ from numba import jit
 
 from qdmpy.shared.json2dict import json_to_dict, dict_to_json
 import qdmpy.shared.widget
+from qdmpy.shared.misc import warn
 
 # ============================================================================
 
@@ -558,9 +558,7 @@ def polygon_selector(
         if "image_shape" in polys:
             shp = polys["image_shape"]
             if shp[0] != image.shape[0] or shp[1] != image.shape[1]:
-                warnings.warn(
-                    "Image shape loaded polygons were defined on does not match current image."
-                )
+                warn("Image shape loaded polygons were defined on does not match current image.")
 
     fig, ax = plt.subplots()
     minimum = np.nanmin(image)
@@ -748,9 +746,7 @@ def polygon_gui(image=None):
         if "image_shape" in polys:
             shp = polys["image_shape"]
             if shp[0] != image.shape[0] or shp[1] != image.shape[1]:
-                warnings.warn(
-                    "Image shape loaded polygons were defined on does not match current image."
-                )
+                warn("Image shape loaded polygons were defined on does not match current image.")
     else:
         polygon_nodes = None
 

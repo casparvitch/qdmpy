@@ -44,7 +44,6 @@ __pdoc__ = {
 # ============================================================================
 
 import numpy as np
-import warnings
 from collections import OrderedDict  # insertion order is guaranteed for py3.7+, but to be safe!
 import pathlib
 import re
@@ -52,6 +51,7 @@ import re
 # ============================================================================
 
 import qdmpy.shared.json2dict
+from qdmpy.shared.misc import warn
 import qdmpy.plot
 import qdmpy.system
 import qdmpy.shared.polygon
@@ -223,9 +223,7 @@ def load_ref_options(options, ref_options=None, ref_options_dir=None):
     if not ref_options_dir or options["exp_reference_type"] is None:
         ref_options_dir = None
     if ref_options is None and ref_options_dir is None:
-        warnings.warn(
-            "Continuing without reference. (No reference chosen or exp_referece_type was 'None')"
-        )
+        warn("Continuing without reference. (No reference chosen or exp_referece_type was 'None')")
         options["field_dir"] = options["output_dir"].joinpath("field")
         options["field_sig_dir"] = options["field_dir"].joinpath("sig")
         options["field_ref_dir"] = options["field_dir"].joinpath("ref_nothing")
@@ -435,7 +433,7 @@ def _interpolate_option_str(interp_str, options):
         try:
             option_lst.append(str(options[option_name]))
         except KeyError as e:
-            warnings.warn(
+            warn(
                 "\n"
                 + "KeyError caught interpolating custom output_dir.\n"
                 + f"You gave: {option_name}.\n"
@@ -522,7 +520,7 @@ class OptionsError(Exception):
 
 def check_option(key, val, system):
     if key not in system.available_options():
-        warnings.warn(f"Option {key} was not recognised by the {system.name} system.")
+        warn(f"Option {key} was not recognised by the {system.name} system.")
     elif system.option_choices(key) is not None and val not in system.option_choices(key):
         OptionsError(key, val, system)  # FIXME test this actually raises exception/warning...
 

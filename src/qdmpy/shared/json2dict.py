@@ -38,11 +38,14 @@ __pdoc__ = {
 # ============================================================================
 
 import os
-import warnings
 from collections import OrderedDict, defaultdict, abc
 import re
 import simplejson as json
 import numpy as np
+
+# ============================================================================
+
+from qdmpy.shared.misc import warn
 
 # ============================================================================
 
@@ -51,7 +54,7 @@ def json_to_dict(filepath, hook="od"):
     """ read the json file at filepath into a dict """
     _, pattern = os.path.splitext(filepath)
     if pattern != ".json":
-        warnings.warn("input options file did not have a json pattern/suffix")
+        warn("input options file did not have a json pattern/suffix")
 
     with open(filepath, "r", encoding="utf-8") as fp:
         if hook == "od":
@@ -74,7 +77,7 @@ def dict_to_json(dictionary, filename, path_to_dir=None):
     # ensure json pattern
     root, pattern = os.path.splitext(filename)
     if pattern != ".json":
-        warnings.warn("reformatted save filename to '.json' pattern")
+        warn("reformatted save filename to '.json' pattern")
         pattern = ".json"
     filename = root + pattern
     # get cwd
@@ -82,7 +85,7 @@ def dict_to_json(dictionary, filename, path_to_dir=None):
     if path_to_dir is None:
         filepath = os.path.join(cwd, filename)
     elif not os.path.isdir(path_to_dir):
-        warnings.warn(
+        warn(
             "path_to_dir was not a valid directory, instead "
             + "saving to current working directory"
         )

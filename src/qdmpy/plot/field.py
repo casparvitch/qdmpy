@@ -34,12 +34,12 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
-import warnings
 
 # ============================================================================
 
 import qdmpy.plot.common
 import qdmpy.field
+from qdmpy.shared.misc import warn
 
 # ============================================================================
 
@@ -160,7 +160,7 @@ def bfield(options, name, field_params):
 
     for p in ["B" + comp for comp in components]:
         if p not in field_params:
-            warnings.warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
+            warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
             return None
         elif field_params[p] is None:
             return None
@@ -221,7 +221,7 @@ def dshift_fit(options, name, field_params):
         return None
 
     if "D" not in field_params:
-        warnings.warn("'D' param missing from field_params, skipping Dshift_fit plot.")
+        warn("'D' param missing from field_params, skipping Dshift_fit plot.")
         return None
     elif field_params["D"] is None:
         return None
@@ -267,9 +267,7 @@ def field_residual(options, name, field_params):
         return None
 
     if "residual_field" not in field_params:
-        warnings.warn(
-            "'residual_field' param missing from field_params, skipping field residual plot."
-        )
+        warn("'residual_field' param missing from field_params, skipping field residual plot.")
         return None
     elif field_params["residual_field"] is None:
         return None
@@ -344,7 +342,7 @@ def field_param(
     if field_params is None:
         return None
     if param_name not in field_params:
-        warnings.warn(f"No param (key) called {param_name} in field_params.")
+        warn(f"No param (key) called {param_name} in field_params.")
         return None
 
     fig, ax = plt.subplots()
@@ -416,7 +414,7 @@ def field_param_flattened(
     if field_params is None:
         return None
     if param_name not in field_params:
-        warnings.warn(f"Couldn't find {param_name} in field_params.")
+        warn(f"Couldn't find {param_name} in field_params.")
         return None
     if not sigmas or param_name not in sigmas:
         plot_sigmas = False
@@ -458,7 +456,7 @@ def field_param_flattened(
         yerr = np.ma.filled(sigmas[param_name], fill_value=np.nan).flatten()
         if np.all(np.isnan(yerr)):
             yerr = None
-            warnings.warn("All sigmas were nans.")
+            warn("All sigmas were nans.")
         ax.errorbar(
             xvals,
             yvals,
@@ -576,13 +574,13 @@ def bfield_consistency(options, name, field_params):
 
     for p in ["B" + comp for comp in components]:
         if p not in field_params:
-            warnings.warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
+            warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
             return None
         elif field_params[p] is None:
             return None
     for p in ["B" + comp + "_recon" for comp in components]:
         if p not in field_params:
-            warnings.warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
+            warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
             return None
         elif field_params[p] is None:
             return None
@@ -665,7 +663,7 @@ def bfield_theta_phi(
         return None
 
     if "B_theta_phi" not in field_params:
-        warnings.warn("Couldn't find 'B_theta_phi' in field_params.")
+        warn("Couldn't find 'B_theta_phi' in field_params.")
         return None
 
     b = field_params["B_theta_phi"]
