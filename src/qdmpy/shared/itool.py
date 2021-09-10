@@ -232,7 +232,9 @@ def get_background(
         )
     for setting in method_required_settings[method]:
         if setting not in method_params_dict:
-            raise ValueError(f"{setting} key missing from method_params_dict for method: {method}")
+            raise ValueError(
+                f"{setting} key missing from method_params_dict for method: {method}"
+            )
 
     if method != "interpolate":
         # can't mask it for interpolate as we need that info!
@@ -248,16 +250,20 @@ def get_background(
         method_params_dict["sample_size"] = 0
 
     if sigma_clip:
-        from astropy.stats import sigma_clip  # FIXME move this up top when happy with API
+        from astropy.stats import (
+            sigma_clip,
+        )  # FIXME move this up top when happy with API
 
         clipped = sigma_clip(image, sigma=sigma_clip_sigma, maxiters=None)
         bground = method_fns[method](clipped, **method_params_dict)
         # only use the clipping if it's helpful (reduces median away from features)
-        if abs(np.nanmedian(image - bground)) - abs(np.nanmedian(image)) < 0:
-            return bground, clipped.mask.astype(int)
+        if abs(np.nanmedian(np.ma.getdata(image) - bground)) - abs(np.nanmedian(image)) < 0:
+            return bground, np.ma.getmaskarray(clipped).astype(int)
         elif no_bground_if_clip_fails:
             return np.zeros(image.shape), np.zeros(image.shape)
-    return method_fns[method](image, **method_params_dict), image.mask.astype(int)
+    return method_fns[method](image, **method_params_dict), np.ma.getmaskarray(image).astype(
+        int
+    )
 
 
 # ============================================================================
@@ -358,10 +364,14 @@ def _three_point_background(image, points, sample_size):
         raise TypeError("sample_size must be an integer >= 0")
     for p in points:
         if len(p) != 2:
-            raise ValueError("points needs to be len 3 of format: [x, y] (int or floats).")
+            raise ValueError(
+                "points needs to be len 3 of format: [x, y] (int or floats)."
+            )
         for c in p:
             if not isinstance(c, (int, float)):
-                raise ValueError("points needs to be len 3 of format: [x, y] (int or floats).")
+                raise ValueError(
+                    "points needs to be len 3 of format: [x, y] (int or floats)."
+                )
         if image.mask[p[1], p[0]]:
             warnings.warn(
                 "One of the input points was masked (inside a polygon?), "
@@ -423,17 +433,23 @@ def _poly_background(image, order):
         return _mean_background(image)
 
     init_params = np.zeros((order + 1, order + 1))
-    init_params[0, 0] = np.nanmean(image)  # set zeroth term to be mean to get it started
+    init_params[0, 0] = np.nanmean(
+        image
+    )  # set zeroth term to be mean to get it started
     Y, X = np.indices(image.shape)  # noqa: N806
     good_vals = np.logical_and(~np.isnan(image), ~image.mask)
     y = Y[good_vals]
     x = X[good_vals]
 
     data = image[good_vals]  # flattened
-    best_c = least_squares(_residual_poly, init_params.flatten()[:-1], args=(y, x, data, order)).x
+    best_c = least_squares(
+        _residual_poly, init_params.flatten()[:-1], args=(y, x, data, order)
+    ).x
     best_c = np.append(best_c, 0)
     c = best_c.reshape((order + 1, order + 1))
-    return polyval2d(Y.flatten(), X.flatten(), c).reshape(image.shape)  # eval over full image
+    return polyval2d(Y.flatten(), X.flatten(), c).reshape(
+        image.shape
+    )  # eval over full image
 
 
 # ============================================================================
@@ -461,8 +477,12 @@ def _moments(image):
 
     col = image[int(center_y), :]
     row = image[:, int(center_x)]
-    width_x = np.nansum(np.sqrt(abs((np.arange(col.size) - center_y) ** 2 * col)) / np.nansum(col))
-    width_y = np.nansum(np.sqrt(abs((np.arange(row.size) - center_x) ** 2 * row)) / np.nansum(row))
+    width_x = np.nansum(
+        np.sqrt(abs((np.arange(col.size) - center_y) ** 2 * col)) / np.nansum(col)
+    )
+    width_y = np.nansum(
+        np.sqrt(abs((np.arange(row.size) - center_x) ** 2 * row)) / np.nansum(row)
+    )
     height = np.nanmax(image)
     return height, center_y, center_x, width_y, width_x
 
@@ -507,8 +527,12 @@ def _interpolated_background(image, interp_method, polygons, sigma):
     for p in polygons:
         in_or_out = p.is_inside(grid_y, grid_x)
         # mask all vals that are not background
-        is_this_poly = np.ma.masked_greater_equal(in_or_out, 0).mask  # >= 0 => inside/on poly
-        isnt_poly = np.logical_and(isnt_poly, ~is_this_poly)  # prev isnt_poly and isnt this poly
+        is_this_poly = np.ma.masked_greater_equal(
+            in_or_out, 0
+        ).mask  # >= 0 => inside/on poly
+        isnt_poly = np.logical_and(
+            isnt_poly, ~is_this_poly
+        )  # prev isnt_poly and isnt this poly
 
     # now we want to send all of the values in indexes that is_bg is True to griddata
     pts = []
