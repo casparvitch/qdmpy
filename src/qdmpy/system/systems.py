@@ -221,7 +221,7 @@ class UniMelb(System):
         sys_spec_opts = qdmpy.shared.json2dict.json_to_dict(self.config_path, hook="dd")
         qdmpy.shared.json2dict.recursive_dict_update(self.options_dict, sys_spec_opts)
         # in case we want this info in future, set the qdmpy version currently running
-        self.options_dict["qdmpy_version"] = version('qdmpy')
+        self.options_dict["qdmpy_version"] = {"option_default": version('qdmpy'), "option_choices": None}
 
     def get_raw_pixel_size(self, options):
         if "pixel_size" in options and options["pixel_size"]:
@@ -282,10 +282,7 @@ class UniMelb(System):
     def get_default_options(self):
         ret = {}
         for key, val in self.options_dict.items():
-            try:
-                ret[key] = val["option_default"]
-            except:
-                print(key, val)
+            ret[key] = val["option_default"]
         return ret
 
     def option_choices(self, option_name):

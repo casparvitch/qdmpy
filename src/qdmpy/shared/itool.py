@@ -257,7 +257,8 @@ def get_background(
         clipped = sigma_clip(image, sigma=sigma_clip_sigma, maxiters=None)
         bground = method_fns[method](clipped, **method_params_dict)
         # only use the clipping if it's helpful (reduces median away from features)
-        if abs(np.nanmedian(np.ma.getdata(image) - bground)) - abs(np.nanmedian(image)) < 0:
+        tmp_img = np.ma.getdata(image)
+        if abs(np.nanmedian(tmp_img - bground)) - abs(np.nanmedian(tmp_img)) < 0:
             return bground, np.ma.getmaskarray(clipped).astype(int)
         elif no_bground_if_clip_fails:
             return np.zeros(image.shape), np.zeros(image.shape)
