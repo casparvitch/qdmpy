@@ -17,6 +17,7 @@ from matplotlib.image import AxesImage
 from scipy import integrate
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import pathlib
 
 # ============================================================================
 
@@ -27,8 +28,75 @@ import qdmpy.shared.itool
 # ============================================================================
 
 
+def bulk_vert_linecut_vs_position(
+    image_to_show, images, times, middle_idx, averaging_width=1, sigma=1
+):
+    if not isinstance(averaging_width, int) or not (averaging_width % 2):
+        raise TypeError("averaging_width must be an odd int.")
+    avg_steps = averaging_width - 1 // 2
+    fig, axs = plt.subplots(ncols=2, figsize=(12, 8))
+
+    imgsf = [
+        qdmpy.shared.itool.get_im_filtered(image, "gaussian", sigma=sigma)
+        for image in images
+    ]
+    height, width = image_to_show.shape
+
+    if middle_idx > width:
+        raise ValueError(f"start_idx too large for shape: ({width, height}).")
+
+    furthest = max([np.nanmin(image_to_show), np.nanmax(image_to_show)])
+    axs[0].imshow(image_to_show, cmap="bwr", vmin=-furthest, vmax=furthest)
+    axs[0].axvline(middle_idx, color="k", ls="--", lw=2)
+
+    cols = list(range(avg_steps, width - avg_steps))
+    col_labels = [col_idx - middle_idx for col_idx in cols]
+    x_pos = [col_labels for _ in times]
+    x_pos = np.transpose(x_pos)
+
+    img_profiles = []
+    for data in imgsf:
+        profiles = []
+        for centre_col in cols:
+            prof = np.zeros(height)
+            for col in range(centre_col - avg_steps, centre_col + avg_steps + 1):
+                prof += data[:, col]
+            prof /= averaging_width
+            profiles.append(prof)
+        img_profiles.append(profiles)
+
+    img_integrals = []
+    for img in img_profiles:
+        integrals = [integrate.simpson(prof) for prof in img]
+        img_integrals.append(integrals)
+
+    integral_series = np.transpose(img_integrals)  # shape for plotting
+
+    colors = cm.plasma(np.linspace(0.1, 0.9, len(times)))
+    axs[1].set_prop_cycle("color", colors)
+
+    axs[1].plot(x_pos, integral_series, "o--", ms=2.5, label=times)
+    axs[1].axvline(0, color="k", zorder=0)
+    axs[1].axhline(0, color="k", zorder=0)
+
+    handles, _ = axs[1].get_legend_handles_labels()
+    # tot_num = len(handles)
+    # interval = tot_num // 5
+    # new_handles = [handles[i] for i in range(0, tot_num, interval)]
+    # new_labels = [cols[i] for i in range(0, tot_num, interval)]
+    # axs[1].legend(handles, new_labels, title="x position")
+    axs[1].legend(title="time (us)")
+    axs[1].set_xlabel("Position in x (PX)")
+    axs[1].set_ylabel("I_x (prop. to A)")
+
+    return integral_series
+
+
+# ============================================================================
+
+
 def vert_linecut_vs_position(
-    input_path, output_path, middle_idx, averaging_width=1, alpha=0.5, sigma=1
+    inpt, output_path, middle_idx, averaging_width=1, alpha=0.5, sigma=1
 ):
     if not isinstance(averaging_width, int) or not (averaging_width % 2):
         raise TypeError("averaging_width must be an odd int.")
@@ -36,7 +104,7 @@ def vert_linecut_vs_position(
 
     fig, axs = plt.subplots(ncols=3, figsize=(16, 8))
 
-    data = np.loadtxt(input_path)
+    data = np.loadtxt(inpt) if isinstance(inpt, (str, pathlib.PurePath)) else inpt
     data = qdmpy.shared.itool.get_im_filtered(data, "gaussian", sigma=sigma)
 
     height, width = data.shape
@@ -76,6 +144,8 @@ def vert_linecut_vs_position(
     axs[2].scatter(col_labels, integrals)
     axs[2].axvline(0, color="k", zorder=0)
     axs[2].axhline(0, color="k", zorder=0)
+
+    np.savetxt
 
 
 # ============================================================================
@@ -135,7 +205,9 @@ class BulkLinecutWidget:
 
         dummy_x = np.zeros((5, len(xlabels)))
         dummy_y = np.zeros((5, len(xlabels)))
-        self.profiles = self.profax.plot(dummy_x, dummy_y, marker="o", ls="-", label=xlabels)
+        self.profiles = self.profax.plot(
+            dummy_x, dummy_y, marker="o", ls="-", label=xlabels
+        )
         # handles, _ = self.profax.get_legend_handles_labels()
         # self.profax.legend(handles, self.xlabels, loc="upper left")
         self.profax.legend()
@@ -180,13 +252,18 @@ class BulkLinecutWidget:
                 if not (i_ar.ndim and i_ar.size):
                     continue
                 pxl_ar.extend(
-                    (pxl_ar[-1] + np.sqrt((i_ar - i_ar[0]) ** 2 + (j_ar - j_ar[0]) ** 2)).tolist()
+                    (
+                        pxl_ar[-1]
+                        + np.sqrt((i_ar - i_ar[0]) ** 2 + (j_ar - j_ar[0]) ** 2)
+                    ).tolist()
                 )
 
             for p, prof in enumerate(self.profiles):
                 z = self.images[p][j_lst, i_lst]
                 if z.ndim and z.size:  # ensure no empty array
-                    prof.set_xdata(pxl_ar[1:])  # get rid of initial 0 on pxl_ar (bit hacky)
+                    prof.set_xdata(
+                        pxl_ar[1:]
+                    )  # get rid of initial 0 on pxl_ar (bit hacky)
                     prof.set_ydata(list(z))
                     self.integrals[p] = integrate.simpson(z, pxl_ar[1:])
                 else:
@@ -212,8 +289,12 @@ class BulkLinecutWidget:
             output_dict = {
                 "xlabels": self.xlabels,
                 "integrals": self.integrals,
-                "profile_x": np.transpose([prof.get_xdata() for prof in self.profiles]).tolist(),
-                "profile_y": np.transpose([prof.get_ydata() for prof in self.profiles]).tolist(),
+                "profile_x": np.transpose(
+                    [prof.get_xdata() for prof in self.profiles]
+                ).tolist(),
+                "profile_y": np.transpose(
+                    [prof.get_ydata() for prof in self.profiles]
+                ).tolist(),
             }
         qdmpy.shared.json2dict.dict_to_json(output_dict, path)
         self.line_selector.disconnect_events()
@@ -245,7 +326,12 @@ class LinecutSelectionWidget:
         self.canvas = self.imax.figure.canvas
 
         dflt_style = {
-            "lineprops": {"color": "k", "linestyle": "-", "linewidth": 1.0, "alpha": 0.5},
+            "lineprops": {
+                "color": "k",
+                "linestyle": "-",
+                "linewidth": 1.0,
+                "alpha": 0.5,
+            },
             "markerprops": {
                 "marker": "o",
                 "markersize": 2.0,
@@ -318,12 +404,17 @@ class LinecutSelectionWidget:
                 if not (i_ar.ndim and i_ar.size):
                     continue
                 t_ar.extend(
-                    (t_ar[-1] + np.sqrt((i_ar - i_ar[0]) ** 2 + (j_ar - j_ar[0]) ** 2)).tolist()
+                    (
+                        t_ar[-1]
+                        + np.sqrt((i_ar - i_ar[0]) ** 2 + (j_ar - j_ar[0]) ** 2)
+                    ).tolist()
                 )
 
             z = self.data[j_lst, i_lst]
             if z.ndim and z.size:  # ensure no empty array
-                self.profile.set_xdata(t_ar[1:])  # get rid of initial 0 on t_ar (bit hacky)
+                self.profile.set_xdata(
+                    t_ar[1:]
+                )  # get rid of initial 0 on t_ar (bit hacky)
                 self.profile.set_ydata(list(z))
                 self.integral = integrate.simpson(z, t_ar[1:])
                 self.lineax.title.set_text(f"Integral: {self.integral:.6e}")
