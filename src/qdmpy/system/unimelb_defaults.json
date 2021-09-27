@@ -769,8 +769,9 @@
     },
     // use hanning filter in fourier space (for all transformations)
     // unsure of how well the hanning filter works currently, so turning off.
+    // seems to work well now, so turning back on by default.
     "fourier_do_hanning_filter": {
-        "option_default": false,
+        "option_default": true,
         "option_choices": [
             true, 
             false
@@ -814,6 +815,7 @@
         "option_default": null
     },
     // thickness in metres of NV layer. Not used if standoff is null.
+    // rename to NV_layer_thickness, as capitals used for NVs_above_sample?
     "nv_layer_thickness": {
         "option_default": null
     },
