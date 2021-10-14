@@ -78,7 +78,8 @@ def get_bnvs_and_dshifts(pixel_fit_params, bias_field_spherical_deg):
     if num_peaks == 1:
         sign = -1 if np.mean(peak_posns[0]) < 2870 else +1  # det. if L/R resonance (rel to bias)
         if bias_mag > qdmpy.constants.GSLAC:
-            sign *= -1
+            #sign *= -1
+            sign = 1
         bnvs = [sign * peak_posns[0] / qdmpy.constants.GAMMA]
         dshifts = [np.empty(bnvs[0].shape)]
         dshifts[0].fill(np.nan)

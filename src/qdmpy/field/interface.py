@@ -339,7 +339,7 @@ def _odmr_with_dshift_ref(options, sig_fit_params, ref_fit_params):
             ref_dshift = ref_dshifts[0] / GAMMA
 
             sig_sub_ref_bnv = (
-                sig_bnv + ref_dshift if sig_bias_mag > GSLAC else sig_bnv - ref_dshift
+                sig_bnv + ref_dshift #if sig_bias_mag > GSLAC else sig_bnv - ref_dshift
             )
 
             other_opts = [
