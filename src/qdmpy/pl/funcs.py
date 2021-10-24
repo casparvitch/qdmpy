@@ -159,7 +159,7 @@ class Linear(FitFunc):
         Compute the grad of the residual, excluding pl as a param
         {output shape: (len(x), 2)}
         """
-        c, m = fit_params
+        # c, m = fit_params
         j = np.empty((x.shape[0], 2))
         j[:, 0] = 1
         j[:, 1] = x
