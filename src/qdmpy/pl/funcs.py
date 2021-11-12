@@ -197,7 +197,7 @@ class Circular(FitFunc):
         """
         # Lorentzian: a*g^2/ ((x-c)^2 + g^2)
         circ_freq, pos, amp = fit_params
-        j = np.empty((x.shape[0], 3), dtype=np.float32)
+        j = np.empty((x.shape[0], 3), dtype=np.float64)
         j[:, 0] = (
             2 * np.pi * amp * (x - pos) * np.cos(2 * np.pi * circ_freq * (x - pos))
         )
@@ -332,7 +332,7 @@ class Lorentzian(FitFunc):
         """
         # Lorentzian: a*g^2/ ((x-c)^2 + g^2)
         fwhm, pos, amp = fit_params
-        j = np.empty((x.shape[0], 3), dtype=np.float32)
+        j = np.empty((x.shape[0], 3), dtype=np.float64)
         g = fwhm / 2
         c = pos
         a = amp
@@ -454,15 +454,15 @@ class LorentzianhBN(FitFunc):
 
     # A15 para = 47MHz
     @staticmethod
-    @njit(fastmath=True)
+    @njit
     def eval(x, *fit_params):
         pos = fit_params[0]
         amps = fit_params[1:8]
         fwhms = fit_params[8:]
-        hwhmsqrs = [fwhm ** 2 / 4 for fwhm in fwhms]
-        ret = 0
-        for amp, hwhm2 in zip(amps, hwhmsqrs):
-            ret += amp * hwhm2 / ((x - pos - 23.5) ** 2 + hwhm2)
+        hwhmsqrs = [fwhm ** 2 / 4.0 for fwhm in fwhms]
+        ret = np.zeros(x.shape, dtype=np.float64)
+        for i, (amp, hwhm2) in enumerate(zip(amps, hwhmsqrs)):
+            ret += amp * hwhm2 / ((x - pos + (47 * 3) - 47 * i) ** 2 + hwhm2)
         return ret
 
 
@@ -498,7 +498,7 @@ class StretchedExponential(FitFunc):
         {output shape: (len(x), 3)}
         """
         charac_exp_t, amp_exp, power_exp = fit_params
-        j = np.empty((x.shape[0], 3), dtype=np.float32)
+        j = np.empty((x.shape[0], 3), dtype=np.float64)
         # stretched exponential = a * e ^ (-(x / t) ^ p)
         # (a p e^(-(x/t)^p) (x/t)^p)/t
         j[:, 0] = (1 / charac_exp_t) * (
@@ -548,7 +548,7 @@ class DampedRabi(FitFunc):
         {output shape: (len(x), 4)}
         """
         omega, pos, amp, tau = fit_params
-        j = np.empty((x.shape[0], 4), dtype=np.float32)
+        j = np.empty((x.shape[0], 4), dtype=np.float64)
         j[:, 0] = (
             amp * (pos - x) * np.sin(omega * (x - pos)) * np.exp(-x / tau)
         )  # wrt omega
@@ -576,7 +576,7 @@ AVAILABLE_FNS = {
     "circular": Circular,
     "stretched_exponential": StretchedExponential,
     "damped_rabi": DampedRabi,
-    "loretnzian_hBN": LorentzianhBN,
+    "lorentzian_hBN": LorentzianhBN,
 }
 """Dictionary that defines fit functions available for use.
 

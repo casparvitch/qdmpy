@@ -453,6 +453,10 @@
     "pos_hBN_guess": {
         "option_default": null
     },
+    "pos_hBN_range": {
+        "option_default": null
+    },
+
     "amp_hBN_hyp_1_guess": {
         "option_default": null
     },
@@ -474,6 +478,29 @@
     "amp_hBN_hyp_7_guess": {
         "option_default": null
     },
+
+    "amp_hBN_hyp_1_bounds": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_2_bounds": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_3_bounds": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_4_bounds": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_5_bounds": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_6_bounds": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_7_bounds": {
+        "option_default": null
+    },
+
     "fwhm_hBN_hyp_1_guess": {
         "option_default": null
     },
@@ -495,7 +522,26 @@
     "fwhm_hBN_hyp_7_guess": {
         "option_default": null
     },
-    "fwhm_hBN_hyp_1_guess": {
+
+    "fwhm_hBN_hyp_1_bounds": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_2_bounds": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_3_bounds": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_4_bounds": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_5_bounds": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_6_bounds": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_7_bounds": {
         "option_default": null
     },
 
