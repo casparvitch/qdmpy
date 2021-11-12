@@ -7,6 +7,8 @@ Functions
  - `qdmpy.plot.source.source_param`
  - `qdmpy.plot.source.current`
  - `qdmpy.plot.source.current_stream`
+ - `qdmpy.plot.source.current_hyperstream`
+ - `qdmpy.plot.source.current_quiver`
  - `qdmpy.plot.source.magnetization`
  - `qdmpy.plot.source.divperp_j`
 """
@@ -18,6 +20,8 @@ __pdoc__ = {
     "qdmpy.plot.source.source_param": True,
     "qdmpy.plot.source.current": True,
     "qdmpy.plot.source.current_stream": True,
+    "qdmpy.plot.source.current_hyperstream": True,
+    "qdmpy.plot.source.current_quiver": True,
     "qdmpy.plot.source.magnetization": True,
     "qdmpy.plot.source.divperp_j": True,
 }
@@ -318,7 +322,7 @@ def current_quiver(options, source_params, clean=False, stepper=np.index_exp[::5
 
 
 def current_hyperstream(options, source_params, vary_lws=True, clean=False, low_cutoff=None):
-    """Plot current density as stream_col streams on Jnorm background.
+    """Plot current density as white streams on Jnorm background.
 
     Arguments
     ---------

@@ -450,6 +450,55 @@
         "option_default": [-0.001, -0.2]
     },
 
+    "pos_hBN_guess": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_1_guess": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_2_guess": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_3_guess": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_4_guess": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_5_guess": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_6_guess": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_7_guess": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_1_guess": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_2_guess": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_3_guess": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_4_guess": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_5_guess": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_6_guess": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_7_guess": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_1_guess": {
+        "option_default": null
+    },
+
     // ========== Hamiltonian / field retrieval parameters ==========
     // Note: it is assumed the reference experiment is run under the same
     // measurement parameters, except for some single parameter changed
@@ -769,8 +818,9 @@
     },
     // use hanning filter in fourier space (for all transformations)
     // unsure of how well the hanning filter works currently, so turning off.
+    // seems to work well now, so turning back on by default.
     "fourier_do_hanning_filter": {
-        "option_default": false,
+        "option_default": true,
         "option_choices": [
             true, 
             false
@@ -814,6 +864,7 @@
         "option_default": null
     },
     // thickness in metres of NV layer. Not used if standoff is null.
+    // rename to NV_layer_thickness, as capitals used for NVs_above_sample?
     "nv_layer_thickness": {
         "option_default": null
     },

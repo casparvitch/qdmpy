@@ -385,6 +385,57 @@ class LorentzianHyperfine15(FitFunc):
         ) + amp_2_hyp * hwhmsqr2 / ((x - pos + 1.515) ** 2 + hwhmsqr2)
 
 
+class LorentzianhBN(FitFunc):
+
+    param_defn = [
+        "pos_hBN",
+        "amp_hBN_hyp_1",
+        "amp_hBN_hyp_2",
+        "amp_hBN_hyp_3",
+        "amp_hBN_hyp_4",
+        "amp_hBN_hyp_5",
+        "amp_hBN_hyp_6",
+        "amp_hBN_hyp_7",
+        "fwhm_hBN_hyp_1",
+        "fwhm_hBN_hyp_2",
+        "fwhm_hBN_hyp_3",
+        "fwhm_hBN_hyp_4",
+        "fwhm_hBN_hyp_5",
+        "fwhm_hBN_hyp_6",
+        "fwhm_hBN_hyp_7",
+    ]
+    param_units = {
+        "pos_hBN": "Frequency (MHz)",
+        "amp_hBN_hyp_1": "Amplitude (a.u.)",
+        "amp_hBN_hyp_2": "Amplitude (a.u.)",
+        "amp_hBN_hyp_3": "Amplitude (a.u.)",
+        "amp_hBN_hyp_4": "Amplitude (a.u.)",
+        "amp_hBN_hyp_5": "Amplitude (a.u.)",
+        "amp_hBN_hyp_6": "Amplitude (a.u.)",
+        "amp_hBN_hyp_7": "Amplitude (a.u.)",
+        "fwhm_hBN_hyp_1": "Frequency (MHz)",
+        "fwhm_hBN_hyp_2": "Frequency (MHz)",
+        "fwhm_hBN_hyp_3": "Frequency (MHz)",
+        "fwhm_hBN_hyp_4": "Frequency (MHz)",
+        "fwhm_hBN_hyp_5": "Frequency (MHz)",
+        "fwhm_hBN_hyp_6": "Frequency (MHz)",
+        "fwhm_hBN_hyp_7": "Frequency (MHz)",
+    }
+
+    # A15 para = 47MHz
+    @staticmethod
+    @njit(fastmath=True)
+    def eval(x, *fit_params):
+        pos = fit_params[0]
+        amps = fit_params[1:8]
+        fwhms = fit_params[8:]
+        hwhmsqrs = [fwhm ** 2 / 4 for fwhm in fwhms]
+        ret = 0
+        for amp, hwhm2 in zip(amps, hwhmsqrs):
+            ret += amp * hwhm2 / ((x - pos - 23.5) ** 2 + hwhm2)
+        return ret
+
+
 # ==========================================================================
 # Exponential fit functions
 # ==========================================================================
@@ -489,6 +540,7 @@ AVAILABLE_FNS = {
     "circular": Circular,
     "stretched_exponential": StretchedExponential,
     "damped_rabi": DampedRabi,
+    "loretnzian_hBN": LorentzianhBN,
 }
 """Dictionary that defines fit functions available for use.
 
