@@ -79,7 +79,7 @@ class FitFunc:
 
     @staticmethod
     def grad_fn(x, *fit_params):
-        """ if you want to use a grad_fn override this in the subclass """
+        """if you want to use a grad_fn override this in the subclass"""
         return None
 
 
@@ -108,7 +108,7 @@ class Constant(FitFunc):
     @staticmethod
     @njit(fastmath=True)
     def eval(x, *fit_params):
-        """ speed tested multiple methods, this was the fastest """
+        """speed tested multiple methods, this was the fastest"""
         c = fit_params[0]
         ret = np.empty(np.shape(x))
         ret.fill(c)
@@ -177,7 +177,11 @@ class Circular(FitFunc):
     """
 
     param_defn = ["circ_freq", "t0_circ", "amp_circ"]
-    param_units = {"circ_freq": "Nu (Hz)", "t0_circ": "Tau (s)", "amp_circ": "Amp (a.u.)"}
+    param_units = {
+        "circ_freq": "Nu (Hz)",
+        "t0_circ": "Tau (s)",
+        "amp_circ": "Amp (a.u.)",
+    }
 
     @staticmethod
     @njit
@@ -194,8 +198,12 @@ class Circular(FitFunc):
         # Lorentzian: a*g^2/ ((x-c)^2 + g^2)
         circ_freq, pos, amp = fit_params
         j = np.empty((x.shape[0], 3), dtype=np.float32)
-        j[:, 0] = 2 * np.pi * amp * (x - pos) * np.cos(2 * np.pi * circ_freq * (x - pos))
-        j[:, 1] = -2 * np.pi * circ_freq * amp * np.cos(2 * np.pi * circ_freq * (x - pos))
+        j[:, 0] = (
+            2 * np.pi * amp * (x - pos) * np.cos(2 * np.pi * circ_freq * (x - pos))
+        )
+        j[:, 1] = (
+            -2 * np.pi * circ_freq * amp * np.cos(2 * np.pi * circ_freq * (x - pos))
+        )
         j[:, 2] = np.sin(2 * np.pi * circ_freq * (x - pos))
         return j
 
@@ -250,7 +258,15 @@ class GaussianHyperfine14(FitFunc):
     @staticmethod
     @njit(fastmath=True)
     def eval(x, *fit_params):
-        pos, amp_1_hyp, amp_2_hyp, amp_3_hyp, fwhm_1_hyp, fwhm_2_hyp, fwhm_3_hyp = fit_params
+        (
+            pos,
+            amp_1_hyp,
+            amp_2_hyp,
+            amp_3_hyp,
+            fwhm_1_hyp,
+            fwhm_2_hyp,
+            fwhm_3_hyp,
+        ) = fit_params
         return (
             amp_1_hyp * np.exp(-SCALE_SIGMA * (x - pos - 2.14) ** 2 / fwhm_1_hyp ** 2)
             + amp_2_hyp * np.exp(-SCALE_SIGMA * (x - pos) ** 2 / fwhm_2_hyp ** 2)
@@ -351,7 +367,15 @@ class LorentzianHyperfine14(FitFunc):
     @staticmethod
     @njit(fastmath=True)
     def eval(x, *fit_params):
-        pos, amp_1_hyp, amp_2_hyp, amp_3_hyp, fwhm_1_hyp, fwhm_2_hyp, fwhm_3_hyp = fit_params
+        (
+            pos,
+            amp_1_hyp,
+            amp_2_hyp,
+            amp_3_hyp,
+            fwhm_1_hyp,
+            fwhm_2_hyp,
+            fwhm_3_hyp,
+        ) = fit_params
         hwhmsqr1 = (fwhm_1_hyp ** 2) / 4
         hwhmsqr2 = (fwhm_2_hyp ** 2) / 4
         hwhmsqr3 = (fwhm_3_hyp ** 2) / 4
@@ -364,7 +388,13 @@ class LorentzianHyperfine14(FitFunc):
 
 class LorentzianHyperfine15(FitFunc):
 
-    param_defn = ["pos_h15", "amp_h15_hyp_1", "amp_h15_hyp_2", "fwhm_h15_hyp_1", "fwhm_h15_hyp_2"]
+    param_defn = [
+        "pos_h15",
+        "amp_h15_hyp_1",
+        "amp_h15_hyp_2",
+        "fwhm_h15_hyp_1",
+        "fwhm_h15_hyp_2",
+    ]
     param_units = {
         "pos_h15": "Frequency (MHz)",
         "amp_h15_hyp_1": "Amplitude (a.u.)",
@@ -469,8 +499,8 @@ class StretchedExponential(FitFunc):
         """
         charac_exp_t, amp_exp, power_exp = fit_params
         j = np.empty((x.shape[0], 3), dtype=np.float32)
-        # stretched exponential = a * e ^ ((x / t) ^ p)
-        # -(a p e^((x/t)^p) (x/t)^p)/t
+        # stretched exponential = a * e ^ (-(x / t) ^ p)
+        # (a p e^(-(x/t)^p) (x/t)^p)/t
         j[:, 0] = (1 / charac_exp_t) * (
             amp_exp
             * power_exp
@@ -479,7 +509,7 @@ class StretchedExponential(FitFunc):
         )
         # just lose the 'a'
         j[:, 1] = np.exp(-((x / charac_exp_t) ** power_exp))
-        # a e^((x/t)^p) (x/t)^p log(x/t)
+        # a e^(-(x/t)^p) (x/t)^p log(x/t)
         j[:, 2] = (
             -amp_exp
             * np.exp(-((x / charac_exp_t) ** power_exp))
@@ -519,10 +549,16 @@ class DampedRabi(FitFunc):
         """
         omega, pos, amp, tau = fit_params
         j = np.empty((x.shape[0], 4), dtype=np.float32)
-        j[:, 0] = amp * (pos - x) * np.sin(omega * (x - pos)) * np.exp(-x / tau)  # wrt omega
-        j[:, 1] = (amp * omega * np.sin(omega * (x - pos))) * np.exp(-x / tau)  # wrt pos
+        j[:, 0] = (
+            amp * (pos - x) * np.sin(omega * (x - pos)) * np.exp(-x / tau)
+        )  # wrt omega
+        j[:, 1] = (amp * omega * np.sin(omega * (x - pos))) * np.exp(
+            -x / tau
+        )  # wrt pos
         j[:, 2] = np.exp(-x / tau) * np.cos(omega * (x - pos))  # wrt amp
-        j[:, 3] = (amp * x * np.cos(omega * (x - pos))) / (np.exp(x / tau) * tau ^ 2)  # wrt tau
+        j[:, 3] = (amp * x * np.cos(omega * (x - pos))) / (
+            np.exp(x / tau) * tau ^ 2
+        )  # wrt tau
         return j
 
 
