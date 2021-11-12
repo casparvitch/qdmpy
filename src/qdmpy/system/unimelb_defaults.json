@@ -450,6 +450,55 @@
         "option_default": [-0.001, -0.2]
     },
 
+    "pos_hBN_guess": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_1_guess": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_2_guess": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_3_guess": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_4_guess": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_5_guess": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_6_guess": {
+        "option_default": null
+    },
+    "amp_hBN_hyp_7_guess": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_1_guess": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_2_guess": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_3_guess": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_4_guess": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_5_guess": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_6_guess": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_7_guess": {
+        "option_default": null
+    },
+    "fwhm_hBN_hyp_1_guess": {
+        "option_default": null
+    },
+
     // ========== Hamiltonian / field retrieval parameters ==========
     // Note: it is assumed the reference experiment is run under the same
     // measurement parameters, except for some single parameter changed
