@@ -443,11 +443,11 @@
     },
 
     "amp_exp_guess": {
-        "option_default": -0.07
+        "option_default": 1e-3
 
     },
     "amp_exp_bounds": {
-        "option_default": [-0.001, -0.2]
+        "option_default": [-1, 1]
     },
 
     // ========== Hamiltonian / field retrieval parameters ==========
