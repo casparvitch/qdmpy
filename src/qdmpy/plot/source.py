@@ -104,7 +104,9 @@ def source_param(
     )
 
     if options["save_plots"]:
-        fig.savefig(options["source_dir"] / (f"{param_name}." + options["save_fig_type"]))
+        fig.savefig(
+            options["source_dir"] / (f"{param_name}." + options["save_fig_type"])
+        )
 
     return fig
 
@@ -226,9 +228,12 @@ def current_quiver(options, source_params, clean=False, stepper=np.index_exp[::5
     figsize[0] *= width
     fig, axs = plt.subplots(height, width, figsize=figsize)
 
-    if not isinstance(stepper, tuple) or not all([isinstance(i, slice) for i in stepper]):
+    if not isinstance(stepper, tuple) or not all(
+        [isinstance(i, slice) for i in stepper]
+    ):
         raise TypeError(
-            f"stepper must be a tuple of slice objects.\nType found: {type(stepper)}, str: {stepper}"
+            f"stepper must be a tuple of slice objects.\nType found: {type(stepper)},"
+            f" str: {stepper}"
         )
 
     for m_idx, method in enumerate(options["recon_methods"]):
@@ -297,14 +302,18 @@ def current_quiver(options, source_params, clean=False, stepper=np.index_exp[::5
             ax.set_title("J " + method.replace("_", " "))
 
         if options["show_scalebar"]:
-            pixel_size = options["system"].get_raw_pixel_size(options) * options["total_bin"]
+            pixel_size = (
+                options["system"].get_raw_pixel_size(options) * options["total_bin"]
+            )
             scalebar = ScaleBar(pixel_size)
             ax.add_artist(scalebar)
 
         if options["polygon_nodes"] and options["annotate_polygons"]:
             for p in options["polygon_nodes"]:
                 ax.add_patch(
-                    matplotlib.patches.Polygon(np.array(p), **options["polygon_patch_params"])
+                    matplotlib.patches.Polygon(
+                        np.array(p), **options["polygon_patch_params"]
+                    )
                 )
 
             ax.set_facecolor("w")
@@ -316,12 +325,16 @@ def current_quiver(options, source_params, clean=False, stepper=np.index_exp[::5
         ax.set_aspect("equal")
 
     if options["save_plots"]:
-        fig.savefig(options["source_dir"] / ("Jquiver." + options["large_fig_save_type"]))
+        fig.savefig(
+            options["source_dir"] / ("Jquiver." + options["large_fig_save_type"])
+        )
 
     return fig
 
 
-def current_hyperstream(options, source_params, vary_lws=True, clean=False, low_cutoff=None):
+def current_hyperstream(
+    options, source_params, vary_lws=True, clean=False, low_cutoff=None
+):
     """Plot current density as white streams on Jnorm background.
 
     Arguments
@@ -423,14 +436,18 @@ def current_hyperstream(options, source_params, vary_lws=True, clean=False, low_
             cbar.outline.set_linewidth(0.5)
 
         if options["show_scalebar"]:
-            pixel_size = options["system"].get_raw_pixel_size(options) * options["total_bin"]
+            pixel_size = (
+                options["system"].get_raw_pixel_size(options) * options["total_bin"]
+            )
             scalebar = ScaleBar(pixel_size)
             ax.add_artist(scalebar)
 
         if options["polygon_nodes"] and options["annotate_polygons"]:
             for p in options["polygon_nodes"]:
                 ax.add_patch(
-                    matplotlib.patches.Polygon(np.array(p), **options["polygon_patch_params"])
+                    matplotlib.patches.Polygon(
+                        np.array(p), **options["polygon_patch_params"]
+                    )
                 )
 
             ax.set_facecolor("w")
@@ -442,7 +459,9 @@ def current_hyperstream(options, source_params, vary_lws=True, clean=False, low_
         ax.set_aspect("equal")
 
     if options["save_plots"]:
-        fig.savefig(options["source_dir"] / ("Jhyperstream." + options["large_fig_save_type"]))
+        fig.savefig(
+            options["source_dir"] / ("Jhyperstream." + options["large_fig_save_type"])
+        )
 
     return fig
 
@@ -510,7 +529,9 @@ def current_stream(
                     alpha=options["streamplot_pl_alpha"],
                 )
             if probe_image is not None:
-                my_cmap = copy.copy(cm.get_cmap("Reds"))  # doesn't matter _what_ the cmap imshow
+                my_cmap = copy.copy(
+                    cm.get_cmap("Reds")
+                )  # doesn't matter _what_ the cmap imshow
                 my_cmap.set_under("k", alpha=0)
                 my_cmap.set_over(probe_color, alpha=probe_alpha)
                 ax.imshow(
@@ -539,7 +560,9 @@ def current_stream(
         u = options["streamplot_cbar_options"]["alpha_ramp_factor"]
         h = options["streamplot_cbar_options"]["low_cutoff"]
         f = options["streamplot_cbar_options"]["high_cutoff"]
-        base_cmap = cm.get_cmap(options["colormaps"]["current_norm_images"], cbar_drange)
+        base_cmap = cm.get_cmap(
+            options["colormaps"]["current_norm_images"], cbar_drange
+        )
 
         new_colors = base_cmap(np.linspace(0, 1, cbar_drange))
 
@@ -586,14 +609,18 @@ def current_stream(
         ax.set_title("J " + method.replace("_", " "))
 
         if options["show_scalebar"]:
-            pixel_size = options["system"].get_raw_pixel_size(options) * options["total_bin"]
+            pixel_size = (
+                options["system"].get_raw_pixel_size(options) * options["total_bin"]
+            )
             scalebar = ScaleBar(pixel_size)
             ax.add_artist(scalebar)
 
         if options["polygon_nodes"] and options["annotate_polygons"]:
             for p in options["polygon_nodes"]:
                 ax.add_patch(
-                    matplotlib.patches.Polygon(np.array(p), **options["polygon_patch_params"])
+                    matplotlib.patches.Polygon(
+                        np.array(p), **options["polygon_patch_params"]
+                    )
                 )
 
             ax.set_facecolor("w")
@@ -605,7 +632,9 @@ def current_stream(
         ax.set_aspect("equal")
 
     if options["save_plots"]:
-        fig.savefig(options["source_dir"] / ("Jstream." + options["large_fig_save_type"]))
+        fig.savefig(
+            options["source_dir"] / ("Jstream." + options["large_fig_save_type"])
+        )
 
     return fig
 
@@ -693,7 +722,11 @@ def magnetization(options, source_params, plot_bgrounds=True):
                         options["colormap_range_dicts"]["magnetization_images"], data
                     )
                 )
-                c_map = "Greys" if suf == "_mask" else options["colormaps"]["magnetization_images"]
+                c_map = (
+                    "Greys"
+                    if suf == "_mask"
+                    else options["colormaps"]["magnetization_images"]
+                )
 
                 qdmpy.plot.common.plot_image_on_ax(
                     fig,
@@ -707,7 +740,9 @@ def magnetization(options, source_params, plot_bgrounds=True):
                 )
 
     if options["save_plots"]:
-        fig.savefig(options["source_dir"] / (root_name + "." + options["save_fig_type"]))
+        fig.savefig(
+            options["source_dir"] / (root_name + "." + options["save_fig_type"])
+        )
 
     return fig
 
@@ -736,12 +771,16 @@ def divperp_j(options, source_params, sigma=5):
         return None
 
     figsize = mpl.rcParams["figure.figsize"].copy()
-    width = len(options["recon_methods"])  # * 2  # number of rows (methods + direct/recon)
+    width = len(
+        options["recon_methods"]
+    )  # * 2  # number of rows (methods + direct/recon)
     figsize[0] *= width
     height = 1
     fig, axs = plt.subplots(height, width, figsize=figsize)
 
-    for m_idx, method in enumerate(options["recon_methods"]):  # # m_idx: each doublet of rows
+    for m_idx, method in enumerate(
+        options["recon_methods"]
+    ):  # # m_idx: each doublet of rows
         if f"divperp_J_{method}" not in source_params:
             warn("missing recon_method '{method}', skipping.")
             continue

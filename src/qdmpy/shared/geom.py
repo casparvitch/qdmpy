@@ -134,7 +134,9 @@ def get_unvs(options):
     if options["use_unvs"]:
         unvs = np.array(options["unvs"])
         if unvs.shape != (4, 3):
-            raise ValueError("Incorrect unvs format passed to Hamiltonian. Expected shape: (4,3).")
+            raise ValueError(
+                "Incorrect unvs format passed to Hamiltonian. Expected shape: (4,3)."
+            )
     else:
         if options["diamond_ori"] == "<100>_<100>":
             nv_axes = NV_AXES_100_100

@@ -449,7 +449,7 @@ Untested in our lab, follow: [https://gpufit.readthedocs.io/en/latest/installati
         - `pipx install pipenv`
 
  - install git
-    - [git install link](gitforwindows.org)
+    - [git install link](https://gitforwindows.org)
     - connect to gitlab -> follow notes in version control section
     - connecting git to sublime merge (in particular for gitlab)
         - **ensure you are using ssh links not https!**

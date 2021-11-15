@@ -40,7 +40,8 @@ def bulk_vert_linecut_vs_position(
     fig, axs = plt.subplots(ncols=2, figsize=(12, 8))
 
     imgsf = [
-        qdmpy.shared.itool.get_im_filtered(image, "gaussian", sigma=sigma) for image in images
+        qdmpy.shared.itool.get_im_filtered(image, "gaussian", sigma=sigma)
+        for image in images
     ]
     height, width = image_to_show.shape
 
@@ -234,7 +235,9 @@ class BulkLinecutWidget:
 
         dummy_x = np.zeros((5, len(xlabels)))
         dummy_y = np.zeros((5, len(xlabels)))
-        self.profiles = self.profax.plot(dummy_x, dummy_y, marker="o", ls="-", label=xlabels)
+        self.profiles = self.profax.plot(
+            dummy_x, dummy_y, marker="o", ls="-", label=xlabels
+        )
         # handles, _ = self.profax.get_legend_handles_labels()
         # self.profax.legend(handles, self.xlabels, loc="upper left")
         self.profax.legend()
@@ -279,13 +282,18 @@ class BulkLinecutWidget:
                 if not (i_ar.ndim and i_ar.size):
                     continue
                 pxl_ar.extend(
-                    (pxl_ar[-1] + np.sqrt((i_ar - i_ar[0]) ** 2 + (j_ar - j_ar[0]) ** 2)).tolist()
+                    (
+                        pxl_ar[-1]
+                        + np.sqrt((i_ar - i_ar[0]) ** 2 + (j_ar - j_ar[0]) ** 2)
+                    ).tolist()
                 )
 
             for p, prof in enumerate(self.profiles):
                 z = self.images[p][j_lst, i_lst]
                 if z.ndim and z.size:  # ensure no empty array
-                    prof.set_xdata(pxl_ar[1:])  # get rid of initial 0 on pxl_ar (bit hacky)
+                    prof.set_xdata(
+                        pxl_ar[1:]
+                    )  # get rid of initial 0 on pxl_ar (bit hacky)
                     prof.set_ydata(list(z))
                     self.integrals[p] = integrate.simpson(z, pxl_ar[1:])
                 else:
@@ -311,8 +319,12 @@ class BulkLinecutWidget:
             output_dict = {
                 "xlabels": self.xlabels,
                 "integrals": self.integrals,
-                "profile_x": np.transpose([prof.get_xdata() for prof in self.profiles]).tolist(),
-                "profile_y": np.transpose([prof.get_ydata() for prof in self.profiles]).tolist(),
+                "profile_x": np.transpose(
+                    [prof.get_xdata() for prof in self.profiles]
+                ).tolist(),
+                "profile_y": np.transpose(
+                    [prof.get_ydata() for prof in self.profiles]
+                ).tolist(),
             }
         qdmpy.shared.json2dict.dict_to_json(output_dict, path)
         self.line_selector.disconnect_events()
@@ -422,12 +434,17 @@ class LinecutSelectionWidget:
                 if not (i_ar.ndim and i_ar.size):
                     continue
                 t_ar.extend(
-                    (t_ar[-1] + np.sqrt((i_ar - i_ar[0]) ** 2 + (j_ar - j_ar[0]) ** 2)).tolist()
+                    (
+                        t_ar[-1]
+                        + np.sqrt((i_ar - i_ar[0]) ** 2 + (j_ar - j_ar[0]) ** 2)
+                    ).tolist()
                 )
 
             z = self.data[j_lst, i_lst]
             if z.ndim and z.size:  # ensure no empty array
-                self.profile.set_xdata(t_ar[1:])  # get rid of initial 0 on t_ar (bit hacky)
+                self.profile.set_xdata(
+                    t_ar[1:]
+                )  # get rid of initial 0 on t_ar (bit hacky)
                 self.profile.set_ydata(list(z))
                 self.integral = integrate.simpson(z, t_ar[1:])
                 self.lineax.title.set_text(f"Integral: {self.integral:.6e}")

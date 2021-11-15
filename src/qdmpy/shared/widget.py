@@ -50,7 +50,9 @@ class Widget:
 
     # set_active is overridden by SelectorWidgets.
     active = property(
-        get_active, lambda self, active: self.set_active(active), doc="Is the widget active?"
+        get_active,
+        lambda self, active: self.set_active(active),
+        doc="Is the widget active?",
     )
 
     def ignore(self, event):
@@ -112,7 +114,9 @@ class AxesWidget(Widget):
 
 
 class _SelectorWidget(AxesWidget):
-    def __init__(self, ax, onselect, useblit=False, button=None, state_modifier_keys=None):
+    def __init__(
+        self, ax, onselect, useblit=False, button=None, state_modifier_keys=None
+    ):
         AxesWidget.__init__(self, ax)
 
         self.visible = True
@@ -120,7 +124,9 @@ class _SelectorWidget(AxesWidget):
         self.useblit = useblit and self.canvas.supports_blit
         self.connect_default_events()
 
-        self.state_modifier_keys = dict(move=" ", clear="escape", square="shift", center="control")
+        self.state_modifier_keys = dict(
+            move=" ", clear="escape", square="shift", center="control"
+        )
         self.state_modifier_keys.update(state_modifier_keys or {})
 
         self.background = None
@@ -494,7 +500,11 @@ class PolygonSelector(_SelectorWidget):
         else:
             self.markerprops = markerprops
         self._polygon_handles = ToolHandles(
-            self.ax, self._xs, self._ys, useblit=self.useblit, marker_props=self.markerprops
+            self.ax,
+            self._xs,
+            self._ys,
+            useblit=self.useblit,
+            marker_props=self.markerprops,
         )
 
         self._active_handle_idx = -1
@@ -534,7 +544,9 @@ class PolygonSelector(_SelectorWidget):
         """Button press event handler"""
 
         # Check for selection of a tool handle on current polygon
-        if (self._polygon_completed or "move_vertex" in self.state) and len(self._xs) > 0:
+        if (self._polygon_completed or "move_vertex" in self.state) and len(
+            self._xs
+        ) > 0:
             h_idx, h_dist = self._polygon_handles.closest(event.x, event.y)
             if h_dist < self.vertex_select_radius:
                 self._active_handle_idx = h_idx
@@ -558,7 +570,11 @@ class PolygonSelector(_SelectorWidget):
             self._active_handle_idx = -1
 
         # Complete the polygon.
-        elif len(self._xs) > 3 and self._xs[-1] == self._xs[0] and self._ys[-1] == self._ys[0]:
+        elif (
+            len(self._xs) > 3
+            and self._xs[-1] == self._xs[0]
+            and self._ys[-1] == self._ys[0]
+        ):
             self._polygon_completed = True
 
         # Place new vertex.
@@ -629,7 +645,9 @@ class PolygonSelector(_SelectorWidget):
         else:
             if self._xs:
                 # Calculate distance to the start vertex.
-                x0, y0 = self.current_line.get_transform().transform((self._xs[0], self._ys[0]))
+                x0, y0 = self.current_line.get_transform().transform(
+                    (self._xs[0], self._ys[0])
+                )
                 v0_dist = np.hypot(x0 - event.x, y0 - event.y)
                 # Lock on to the start vertex if near it and ready to complete.
                 if len(self._xs) > 3 and v0_dist < self.vertex_select_radius:
@@ -644,7 +662,9 @@ class PolygonSelector(_SelectorWidget):
         # Remove the pending vertex if entering the 'move_vertex' or
         # 'move_all' mode
         if not self._polygon_completed and (
-            "move_vertex" in self.state or "move_all" in self.state or "rescale_all" in self.state
+            "move_vertex" in self.state
+            or "move_all" in self.state
+            or "rescale_all" in self.state
         ):
             self._xs, self._ys = self._xs[:-1], self._ys[:-1]
             self.draw_polygon()
@@ -703,7 +723,9 @@ class PolygonSelector(_SelectorWidget):
         # if the polygon is completed or the user is locked on to the start
         # vertex.
         if self._polygon_completed or (
-            len(self._xs) > 3 and self._xs[-1] == self._xs[0] and self._ys[-1] == self._ys[0]
+            len(self._xs) > 3
+            and self._xs[-1] == self._xs[0]
+            and self._ys[-1] == self._ys[0]
         ):
             self._polygon_handles.set_data(self._xs[:-1], self._ys[:-1])
         else:
@@ -848,7 +870,11 @@ class LineSelector(_SelectorWidget):
         else:
             self.markerprops = markerprops
         self._line_handles = ToolHandles(
-            self.ax, self._xs, self._ys, useblit=self.useblit, marker_props=self.markerprops
+            self.ax,
+            self._xs,
+            self._ys,
+            useblit=self.useblit,
+            marker_props=self.markerprops,
         )
 
         self._active_handle_idx = -1
@@ -856,7 +882,9 @@ class LineSelector(_SelectorWidget):
 
         self.artists = [self.current_line, self._line_handles.artist]
         self.set_visible(True)
-        self.ondraw = ondraw  # fn that takes single arg (verts) and does whatever with it.
+        self.ondraw = (
+            ondraw  # fn that takes single arg (verts) and does whatever with it.
+        )
 
     @property
     def _nverts(self):
@@ -944,7 +972,11 @@ class LineSelector(_SelectorWidget):
                 self.finished_line["ys"] = new_ys
 
         # Do nothing if completed or waiting for a move.
-        elif self._line_completed or "move_vertex" in self.state or "move_all" in self.state:
+        elif (
+            self._line_completed
+            or "move_vertex" in self.state
+            or "move_all" in self.state
+        ):
             return
         else:
             if self._xs:
@@ -956,7 +988,9 @@ class LineSelector(_SelectorWidget):
         """Key press event handler"""
         # Remove the pending vertex if entering the 'move_vertex' or
         # 'move_all' mode
-        if not self._line_completed and ("move_vertex" in self.state or "move_all" in self.state):
+        if not self._line_completed and (
+            "move_vertex" in self.state or "move_all" in self.state
+        ):
             self._xs, self._ys = self._xs[:-1], self._ys[:-1]
             self.draw_line()
         elif "finished" in self.state:
@@ -1018,7 +1052,9 @@ class LineSelector(_SelectorWidget):
         # if the line is completed or the user is locked on to the start
         # vertex. --> seems irrelevant here?
         if self._line_completed or (
-            len(self._xs) > 3 and self._xs[-1] == self._xs[0] and self._ys[-1] == self._ys[0]
+            len(self._xs) > 3
+            and self._xs[-1] == self._xs[0]
+            and self._ys[-1] == self._ys[0]
         ):
             self._line_handles.set_data(self._xs[:-1], self._ys[:-1])
         else:

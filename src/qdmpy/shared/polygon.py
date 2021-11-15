@@ -184,7 +184,8 @@ CMAP_OPTIONS = [
 
 #     Notes:asfarray
 
-#     _tri_2area_det is positive if asfarraypoints define polygon in anticlockwise order.
+#     _tri_2area_det is positive if asfarraypoints define polygon in anticlockwise
+#           order.
 #     _tri_2area_det is negative if asfarraypoints define polygon in clockwise order.
 #     _tri_2area_det is zero if at least two of the points are coincident or if
 #         all points are collinear.
@@ -224,14 +225,14 @@ def _is_inside_sm(point, polygon):
                     dy * (polygon[jj][0] - polygon[ii][0]) / (dy - dy2) + polygon[ii][0]
                 )  # noqa: N806
 
-                if (
-                    point[0] > F
-                ):  # if line is left from the point - the ray moving towards left, will intersect it
+                if point[0] > F:  # if line is left from the point - the ray moving towards left,
+                    #  will intersect it
                     intersections += 1
                 elif point[0] == F:  # point on line
                     return 2
 
-            # point on upper peak (dy2=dx2=0) or horizontal line (dy=dy2=0 and dx*dx2<=0)
+            # point on upper peak (dy2=dx2=0) or horizontal line
+            # (dy=dy2=0 and dx*dx2<=0)
             elif dy2 == 0 and (
                 point[0] == polygon[jj][0]
                 or (dy == 0 and (point[0] - polygon[ii][0]) * (point[0] - polygon[jj][0]) <= 0)
@@ -251,7 +252,7 @@ def _is_inside_sm(point, polygon):
 @jit(nopython=True, parallel=True, cache=True)
 def _is_inside_sm_parallel(points, polygon):
     # https://stackoverflow.com/questions/36399381/ \
-    #   whats-the-fastest-way-of-checking-if-a-point-is-inside-a-polygon-in-python
+    #
     # note this fn works in (x,y) coords (but if point/polygon is consistent all is g.)
     p_ar = np.asfarray(points)
     pts_shape = p_ar.shape[:-1]
@@ -412,7 +413,9 @@ class Polygon:
     #         tlt0 = t < 0
     #         tle1 = (0 <= t) & (t <= 1)  # this looks silly but don't change it
     #         # Normal intersects side
-    #         d[tle1] = (x1p[tle1] + t[tle1] * x21) ** 2 + (y1p[tle1] + t[tle1] * y21) ** 2
+    #         d[tle1] = (
+    #               (x1p[tle1] + t[tle1] * x21) ** 2 + (y1p[tle1] + t[tle1] * y21) ** 2
+    #         )
     #         # Normal does not intersects side
     #         # Point is closest to vertex (y1, x1)
     #         # Compute square of distance to this vertex
@@ -437,7 +440,8 @@ class Polygon:
     #     # else the point is outside the polygon.
     #     jo = j.copy()
     #     jo[j == 0] -= 1
-    #     area = _tri_2area_det([y[j + 1], y[j], y[jo - 1]], [x[j + 1], x[j], x[jo - 1]])
+    #     area = _tri_2area_det(
+    #           [y[j + 1], y[j], y[jo - 1]], [x[j + 1], x[j], x[jo - 1]])
     #     mindst[~snear] = np.copysign(mindst, area)[~snear]
     #     # Point is closer to its nearest side than to its nearest vertex, check
     #     # if point is to left or right of this side.
@@ -558,7 +562,9 @@ def polygon_selector(
         if "image_shape" in polys:
             shp = polys["image_shape"]
             if shp[0] != image.shape[0] or shp[1] != image.shape[1]:
-                warn("Image shape loaded polygons were defined on does not match current image.")
+                warn(
+                    "Image shape loaded polygons were defined on does not match current" " image."
+                )
 
     fig, ax = plt.subplots()
     minimum = np.nanmin(image)
@@ -707,7 +713,7 @@ def polygon_gui(image=None):
         [sg.Text("Hold 'r' and scroll to resize all of the polygons.")],
         [sg.Text("'ctrl' to move a single vertex in the current polygon")],
         [sg.Text("'alt' to start a new polygon (and finalise the current one)")],
-        [sg.Text("'del' to clear all lines from the graphic  (thus deleting all polygons).")],
+        [sg.Text("'del' to clear all lines from the graphic  (thus deleting all" " polygons).")],
         [sg.Text("'right click' on a vertex (of a closer polygon) to remove it.")],
     ]
     window = sg.Window("Polygon selection tool", layout, grab_anywhere=False)
@@ -746,7 +752,9 @@ def polygon_gui(image=None):
         if "image_shape" in polys:
             shp = polys["image_shape"]
             if shp[0] != image.shape[0] or shp[1] != image.shape[1]:
-                warn("Image shape loaded polygons were defined on does not match current image.")
+                warn(
+                    "Image shape loaded polygons were defined on does not match current" " image."
+                )
     else:
         polygon_nodes = None
 
@@ -822,7 +830,12 @@ class PolygonSelectionWidget:
         self.canvas = ax.figure.canvas
 
         dflt_style = {
-            "lineprops": {"color": "g", "linestyle": "-", "linewidth": 1.0, "alpha": 0.5},
+            "lineprops": {
+                "color": "g",
+                "linestyle": "-",
+                "linewidth": 1.0,
+                "alpha": 0.5,
+            },
             "markerprops": {
                 "marker": "o",
                 "markersize": 2.0,

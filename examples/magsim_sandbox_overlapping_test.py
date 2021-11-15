@@ -30,7 +30,9 @@ sim.add_polygons(overlapping_path)
 sim.define_magnets((5, 2), (0, 0, 1))  # mag unit: mu_b/nm^2
 sim.plot_magsim_magnetizations(annotate_polygons=True, polygon_patch_params=pgon_patch)
 
-sim.run(height, pad_mode="constant", resolution=res)  # height: 'PX' equivalent in z, res the same
+sim.run(
+    height, pad_mode="constant", resolution=res
+)  # height: 'PX' equivalent in z, res the same
 
 unv = [np.sqrt(1 / 3), np.sqrt(1 / 3), np.sqrt(1 / 3)]
 sim.plot_magsim_bfield_at_nvs(strict_range=(-0.25, 0.25), projection=unv)

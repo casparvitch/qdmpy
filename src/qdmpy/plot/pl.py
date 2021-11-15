@@ -88,7 +88,9 @@ def roi_pl_image(options, pl_image):
         _annotate_roi_image(options, ax)
 
     if options["save_plots"]:
-        fig.savefig(options["output_dir"] / ("pl_full_rebinned." + options["save_fig_type"]))
+        fig.savefig(
+            options["output_dir"] / ("pl_full_rebinned." + options["save_fig_type"])
+        )
 
     return fig
 
@@ -126,7 +128,9 @@ def aoi_pl_image(options, pl_image_roi):
         _annotate_aoi_image(options, ax)
 
     if options["save_plots"]:
-        fig.savefig(options["output_dir"] / ("pl_ROI_rebinned." + options["save_fig_type"]))
+        fig.savefig(
+            options["output_dir"] / ("pl_ROI_rebinned." + options["save_fig_type"])
+        )
 
     return fig
 
@@ -252,7 +256,9 @@ def roi_avg_fits(options, backend_roi_results_lst):
                 c=options["fit_backend_colors"][res.fit_backend]["residual_linecolor"],
                 marker="o",
                 mfc="w",
-                mec=options["fit_backend_colors"][res.fit_backend]["residual_linecolor"],
+                mec=options["fit_backend_colors"][res.fit_backend][
+                    "residual_linecolor"
+                ],
             )
         )
 
@@ -280,7 +286,9 @@ def roi_avg_fits(options, backend_roi_results_lst):
     # spectrum_frame.legend()
 
     if options["save_plots"]:
-        fig.savefig(options["output_dir"] / ("ROI_avg_fits." + options["save_fig_type"]))
+        fig.savefig(
+            options["output_dir"] / ("ROI_avg_fits." + options["save_fig_type"])
+        )
 
     return fig
 
@@ -355,7 +363,9 @@ def aoi_spectra(options, sig, ref, sweep_list):
 
         axs[0, i].legend()
         axs[0, i].grid(True)
-        axs[0, i].set_title("AOI " + str(i + 1), fontdict={"color": options["AOI_colors"][i + 1]})
+        axs[0, i].set_title(
+            "AOI " + str(i + 1), fontdict={"color": options["AOI_colors"][i + 1]}
+        )
         axs[0, i].set_ylabel("pl (a.u.)")
 
     linestyles = [
@@ -388,7 +398,8 @@ def aoi_spectra(options, sig, ref, sweep_list):
         axs[1, 0].legend()
         axs[1, 0].grid(True)
         axs[1, 0].set_title(
-            "Subtraction Normalisation (Michelson contrast, 1 + (sig - ref / sig + ref) )"
+            "Subtraction Normalisation (Michelson contrast, 1 + (sig - ref / sig +"
+            " ref) )"
         )
         axs[1, 0].set_xlabel("Sweep parameter")
         axs[1, 0].set_ylabel("pl (a.u.)")
@@ -429,7 +440,9 @@ def aoi_spectra(options, sig, ref, sweep_list):
         output_dict["AOI_sig_avg" + "_" + str(i + 1)] = sig_avgs[i]
         output_dict["AOI_ref_avg" + "_" + str(i + 1)] = ref_avgs[i]
 
-    qdmpy.shared.json2dict.dict_to_json(output_dict, "AOI_spectra.json", options["data_dir"])
+    qdmpy.shared.json2dict.dict_to_json(
+        output_dict, "AOI_spectra.json", options["data_dir"]
+    )
 
     if options["save_plots"]:
         fig.savefig(options["output_dir"] / ("AOI_spectra." + options["save_fig_type"]))
@@ -439,7 +452,9 @@ def aoi_spectra(options, sig, ref, sweep_list):
 # ============================================================================
 
 
-def aoi_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_lst, fit_model):
+def aoi_spectra_fit(
+    options, sig, ref, sweep_list, fit_result_collection_lst, fit_model
+):
     """
     Plots sig and ref spectra, sub and div normalisation and fit for the ROI average, a single
     pixel, and each of the AOIs. All stacked on top of each other for comparison. The ROI
@@ -485,7 +500,9 @@ def aoi_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_lst, fi
     figsize[0] *= 3  # number of columns
     figsize[1] *= 2 + len(aois)  # number of rows
 
-    fig, axs = plt.subplots(2 + len(aois), 3, figsize=figsize, sharex=True, sharey=False)
+    fig, axs = plt.subplots(
+        2 + len(aois), 3, figsize=figsize, sharex=True, sharey=False
+    )
 
     #  pre-process raw data to plot -> note some are not averaged yet (will check for this below)
     sigs = []
@@ -493,8 +510,12 @@ def aoi_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_lst, fi
     sigs.append(sig)
     refs.append(ref)
     # add single pixel check
-    pixel_sig = sig[:, options["single_pixel_check"][1], options["single_pixel_check"][0]]
-    pixel_ref = ref[:, options["single_pixel_check"][1], options["single_pixel_check"][0]]
+    pixel_sig = sig[
+        :, options["single_pixel_check"][1], options["single_pixel_check"][0]
+    ]
+    pixel_ref = ref[
+        :, options["single_pixel_check"][1], options["single_pixel_check"][0]
+    ]
     sigs.append(pixel_sig)
     refs.append(pixel_ref)
     # add AOI data
@@ -540,10 +561,13 @@ def aoi_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_lst, fi
         if not i:
             axs[i, 0].set_title("ROI avg")
         elif i == 1:
-            axs[i, 0].set_title("Single Pixel Check", fontdict={"color": options["AOI_colors"][0]})
+            axs[i, 0].set_title(
+                "Single Pixel Check", fontdict={"color": options["AOI_colors"][0]}
+            )
         else:
             axs[i, 0].set_title(
-                "AOI " + str(i - 1) + " avg", fontdict={"color": options["AOI_colors"][i - 1]}
+                "AOI " + str(i - 1) + " avg",
+                fontdict={"color": options["AOI_colors"][i - 1]},
             )
         axs[i, 0].set_ylabel("pl (a.u.)")
     axs[-1, 0].set_xlabel("Sweep parameter")
@@ -587,7 +611,8 @@ def aoi_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_lst, fi
             axs[i, 1].set_title("ROI avg - Normalisation")
         elif i == 1:
             axs[i, 1].set_title(
-                "Single Pixel Check - Normalisation", fontdict={"color": options["AOI_colors"][0]}
+                "Single Pixel Check - Normalisation",
+                fontdict={"color": options["AOI_colors"][0]},
             )
         else:
             axs[i, 1].set_title(
@@ -606,7 +631,9 @@ def aoi_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_lst, fi
     )
 
     # loop of fit backends first
-    for fit_backend_number, fit_backend_fit_result in enumerate(fit_result_collection_lst):
+    for fit_backend_number, fit_backend_fit_result in enumerate(
+        fit_result_collection_lst
+    ):
         fit_backend_name = fit_backend_fit_result.fit_backend
 
         fit_params_lst = [
@@ -652,7 +679,8 @@ def aoi_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_lst, fi
                     axs[i, 2].set_title("ROI avg - Fit")
                 elif i == 1:
                     axs[i, 2].set_title(
-                        "Single Pixel Check - Fit", fontdict={"color": options["AOI_colors"][0]}
+                        "Single Pixel Check - Fit",
+                        fontdict={"color": options["AOI_colors"][0]},
                     )
                 else:
                     axs[i, 2].set_title(
@@ -666,7 +694,9 @@ def aoi_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_lst, fi
                     roi_fit_ydata,
                     label=f"ROI avg fit - {fit_backend_name}",
                     ls="dashed",
-                    c=options["fit_backend_colors"][fit_backend_name]["AOI_ROI_fit_linecolor"],
+                    c=options["fit_backend_colors"][fit_backend_name][
+                        "AOI_ROI_fit_linecolor"
+                    ],
                 )
             # best fit
             axs[i, 2].plot(
@@ -674,19 +704,25 @@ def aoi_spectra_fit(options, sig, ref, sweep_list, fit_result_collection_lst, fi
                 best_fit_ydata,
                 label=f"fit - {fit_backend_name}",
                 ls="dashed",
-                c=options["fit_backend_colors"][fit_backend_name]["AOI_best_fit_linecolor"],
+                c=options["fit_backend_colors"][fit_backend_name][
+                    "AOI_best_fit_linecolor"
+                ],
             )
 
             axs[i, 2].legend()
             axs[i, 2].grid(True)
             axs[i, 2].set_ylabel("pl (a.u.)")
 
-    axs[-1, 2].set_xlabel("Sweep parameter")  # this is meant to be less indented than line above
+    axs[-1, 2].set_xlabel(
+        "Sweep parameter"
+    )  # this is meant to be less indented than line above
 
     # currently not saving any of the data from this plot (not sure what the user would ever want)
 
     if options["save_plots"]:
-        fig.savefig(options["output_dir"] / ("AOI_spectra_fits." + options["save_fig_type"]))
+        fig.savefig(
+            options["output_dir"] / ("AOI_spectra_fits." + options["save_fig_type"])
+        )
 
     return fig
 
@@ -755,13 +791,24 @@ def pl_param_image(
     fig, ax = plt.subplots()
 
     fig, ax = qdmpy.plot.common.plot_image_on_ax(
-        fig, ax, options, image, param_name + "_" + str(param_number), c_map, c_range, c_label
+        fig,
+        ax,
+        options,
+        image,
+        param_name + "_" + str(param_number),
+        c_map,
+        c_range,
+        c_label,
     )
 
     if options["save_plots"]:
         if errorplot:
             path = options["output_dir"] / (
-                param_name + "_" + str(param_number) + "_sigma." + options["save_fig_type"]
+                param_name
+                + "_"
+                + str(param_number)
+                + "_sigma."
+                + options["save_fig_type"]
             )
         else:
             path = options["output_dir"] / (
@@ -832,7 +879,9 @@ def pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=
 
     if nk == 1:
         # just one image, so plot normally
-        fig = pl_param_image(options, fit_model, pixel_fit_params, param_name, 0, errorplot)
+        fig = pl_param_image(
+            options, fit_model, pixel_fit_params, param_name, 0, errorplot
+        )
     else:
         if nk <= 8:
             num_columns = 4
@@ -857,15 +906,21 @@ def pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=
             sharey=False,
         )
         # plot 8-lorentzian peaks in a more helpful way
-        if nk <= 8 and any([f.startswith("lorentzian") for f in options["fit_functions"]]):
+        if nk <= 8 and any(
+            [f.startswith("lorentzian") for f in options["fit_functions"]]
+        ):
             param_nums = []  # [0, 1, 2, 3, 7, 6, 5, 4] etc.
             param_nums.extend(list(range(nk // 2)))
             if nk % 2:
                 param_nums.append(nk // 2 + 1)
             if len(param_nums) < 4:
                 param_nums.extend([-1 for _ in range(4 - len(param_nums))])  # dummies
-            param_nums.extend(list(range(nk - 1, (nk - 1) // 2, -1)))  # range(start, stop, step)
-            param_nums.extend([-1 for _ in range(8 - len(param_nums))])  # add on dummies
+            param_nums.extend(
+                list(range(nk - 1, (nk - 1) // 2, -1))
+            )  # range(start, stop, step)
+            param_nums.extend(
+                [-1 for _ in range(8 - len(param_nums))]
+            )  # add on dummies
             param_axis_iterator = zip(param_nums, axs.flatten())
         # otherwise plot in a more conventional order
         else:
@@ -908,9 +963,13 @@ def pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=
 
         if options["save_plots"]:
             if errorplot:
-                path = options["output_dir"] / (param_name + "_sigma." + options["save_fig_type"])
+                path = options["output_dir"] / (
+                    param_name + "_sigma." + options["save_fig_type"]
+                )
             else:
-                path = options["output_dir"] / (param_name + "." + options["save_fig_type"])
+                path = options["output_dir"] / (
+                    param_name + "." + options["save_fig_type"]
+                )
             fig.savefig(path)
 
     return fig
@@ -1006,7 +1065,9 @@ def pl_params_flattened(
                         ]
                     )
                     param_roi_fits.append(
-                        roi_avg_fit_result.best_params[fn_obj.this_fn_param_indices[param_num]]
+                        roi_avg_fit_result.best_params[
+                            fn_obj.this_fn_param_indices[param_num]
+                        ]
                     )
                     param_bounds.append(
                         roi_avg_fit_result.init_param_bounds[
@@ -1026,16 +1087,42 @@ def pl_params_flattened(
     if param_name != "residual" and plot_bounds:
         legend_names = ["Fit bounds", "Initial guesses", "ROI fits"]
         custom_lines = [
-            Line2D([0], [0], color="k", ls=(0, (2, 1)), lw=mpl.rcParams["lines.linewidth"]),
-            Line2D([0], [0], color="k", ls=(0, (1, 1)), lw=mpl.rcParams["lines.linewidth"] * 2),
-            Line2D([0], [0], color="k", ls=(0, (5, 1)), lw=mpl.rcParams["lines.linewidth"] * 2),
+            Line2D(
+                [0], [0], color="k", ls=(0, (2, 1)), lw=mpl.rcParams["lines.linewidth"]
+            ),
+            Line2D(
+                [0],
+                [0],
+                color="k",
+                ls=(0, (1, 1)),
+                lw=mpl.rcParams["lines.linewidth"] * 2,
+            ),
+            Line2D(
+                [0],
+                [0],
+                color="k",
+                ls=(0, (5, 1)),
+                lw=mpl.rcParams["lines.linewidth"] * 2,
+            ),
         ]
     else:
         legend_names = ["Initial guesses", "ROI fits"]
         # https://matplotlib.org/3.2.1/gallery/lines_bars_and_markers/linestyles.html
         custom_lines = [
-            Line2D([0], [0], color="k", ls=(0, (1, 1)), lw=mpl.rcParams["lines.linewidth"] * 2),
-            Line2D([0], [0], color="k", ls=(0, (5, 1)), lw=mpl.rcParams["lines.linewidth"] * 2),
+            Line2D(
+                [0],
+                [0],
+                color="k",
+                ls=(0, (1, 1)),
+                lw=mpl.rcParams["lines.linewidth"] * 2,
+            ),
+            Line2D(
+                [0],
+                [0],
+                color="k",
+                ls=(0, (5, 1)),
+                lw=mpl.rcParams["lines.linewidth"] * 2,
+            ),
         ]
 
     if param_name != "residual" and plot_bounds:
@@ -1045,12 +1132,20 @@ def pl_params_flattened(
 
     for i, guess in enumerate(param_guesses):
         axs[i].axhline(
-            guess, ls=(0, (1, 1)), c="k", zorder=10, lw=mpl.rcParams["lines.linewidth"] * 2
+            guess,
+            ls=(0, (1, 1)),
+            c="k",
+            zorder=10,
+            lw=mpl.rcParams["lines.linewidth"] * 2,
         )
 
     for i, roi_fit in enumerate(param_roi_fits):
         axs[i].axhline(
-            roi_fit, ls=(0, (5, 1)), lw=mpl.rcParams["lines.linewidth"] * 2, c="k", zorder=5
+            roi_fit,
+            ls=(0, (5, 1)),
+            lw=mpl.rcParams["lines.linewidth"] * 2,
+            c="k",
+            zorder=5,
         )
 
     for i, (param_key, color) in enumerate(zip(param_keys, colors)):
@@ -1110,7 +1205,8 @@ def pl_params_flattened(
 
     if options["save_plots"]:
         fig.savefig(
-            options["output_dir"] / (f"{param_name}_fit_flattened." + options["save_fig_type"])
+            options["output_dir"]
+            / (f"{param_name}_fit_flattened." + options["save_fig_type"])
         )
 
     return fig
@@ -1161,7 +1257,8 @@ def other_measurements(options, skip_first=0):
 
         if options["save_plots"]:
             fig.savefig(
-                options["output_dir"] / (f"other-meas-{Path(s).stem}." + options["save_fig_type"])
+                options["output_dir"]
+                / (f"other-meas-{Path(s).stem}." + options["save_fig_type"])
             )
     return fig
 
@@ -1169,7 +1266,9 @@ def other_measurements(options, skip_first=0):
 # ============================================================================
 
 
-def _add_patch_rect(ax, rect_corner_x, rect_corner_y, size_x, size_y, label=None, edgecolor="b"):
+def _add_patch_rect(
+    ax, rect_corner_x, rect_corner_y, size_x, size_y, label=None, edgecolor="b"
+):
     """
     Adds a rectangular annotation onto ax.
 
@@ -1239,7 +1338,10 @@ def _annotate_roi_image(options, ax):
         )
     else:
         raise qdmpy.system.OptionsError(
-            "ROI", options["ROI"], options["system"], custom_msg="Unknown ROI encountered."
+            "ROI",
+            options["ROI"],
+            options["system"],
+            custom_msg="Unknown ROI encountered.",
         )
 
 
@@ -1260,7 +1362,13 @@ def _annotate_aoi_image(options, ax):
     corner_y = options["single_pixel_check"][1]
     size = 1
     _add_patch_rect(
-        ax, corner_x, corner_y, size, size, label="PX check", edgecolor=options["AOI_colors"][0]
+        ax,
+        corner_x,
+        corner_y,
+        size,
+        size,
+        label="PX check",
+        edgecolor=options["AOI_colors"][0],
     )
 
     i = 0

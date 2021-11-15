@@ -76,20 +76,31 @@ def from_single_bnv(options, bnvs):
             """
         )
     if len(bnvs) > 1 and sum(chosen_freqs) != 2:
-        raise ValueError("Only 2 freqs should be chosen for the 'prop_single_bnv' method.")
+        raise ValueError(
+            "Only 2 freqs should be chosen for the 'prop_single_bnv' method."
+        )
     elif len(bnvs) == 1 and sum(chosen_freqs) not in [1, 2]:
-        raise ValueError("Too many freqs chosen ('freqs_to_use'), with only 1 bnv found.")
+        raise ValueError(
+            "Too many freqs chosen ('freqs_to_use'), with only 1 bnv found."
+        )
     elif (
         len(bnvs) == 1
         and sum(chosen_freqs) == 2
         and not list(reversed(chosen_freqs[4:])) == chosen_freqs[:4]
     ):
-        raise ValueError("Chosen freqs ('freqs_to_use') must be symmetric for prop_single_bnv.")
+        raise ValueError(
+            "Chosen freqs ('freqs_to_use') must be symmetric for prop_single_bnv."
+        )
 
     unvs = qdmpy.shared.geom.get_unvs(options)
     if len(bnvs) == 1:  # just use the first one (i.e. the only one...)
         single_bnv = bnvs[0]
-        if chosen_freqs[:4] == [0, 0, 0, 0]:  # only single freq used, R transition rel to bias
+        if chosen_freqs[:4] == [
+            0,
+            0,
+            0,
+            0,
+        ]:  # only single freq used, R transition rel to bias
             idx = np.argwhere(np.array(list(reversed(chosen_freqs[4:]))) == 1)[0][0]
         else:
             idx = np.argwhere(np.array(chosen_freqs[:4]) == 1)[0][0]
@@ -162,7 +173,8 @@ def from_unv_inversion(options, bnvs):
 
     if not len(bnvs) >= 3:
         raise ValueError(
-            "'field_method' was 'invert_unvs' but there were not 3 or 4 bnvs in the dataset."
+            "'field_method' was 'invert_unvs' but there were not 3 or 4 bnvs in the"
+            " dataset."
         )
 
     unvs = qdmpy.shared.geom.get_unvs(
@@ -192,13 +204,17 @@ def from_unv_inversion(options, bnvs):
     bnvs_reshaped = np.stack(bnvs_to_use, axis=-1)
 
     # unv_inv * [bnv_1, bnv_2, bnv_3] for pxl in image -> VERY fast. (applied over last axis)
-    bxyzs = np.apply_along_axis(lambda bnv_vec: np.matmul(unv_inv, bnv_vec), -1, bnvs_reshaped)
+    bxyzs = np.apply_along_axis(
+        lambda bnv_vec: np.matmul(unv_inv, bnv_vec), -1, bnvs_reshaped
+    )
 
     return {
         "Bx": bxyzs[:, :, 0],
         "By": bxyzs[:, :, 1],
         "Bz": bxyzs[:, :, 2],
-        "residual_field": np.zeros((bxyzs[:, :, 2]).shape),  # no residual as there's no fit
+        "residual_field": np.zeros(
+            (bxyzs[:, :, 2]).shape
+        ),  # no residual as there's no fit
     }
 
 
@@ -235,9 +251,13 @@ def from_hamiltonian_fitting(options, fit_params, bias_field_spherical_deg_gauss
     use_bnvs = options["hamiltonian"] in ["approx_bxyz"]
 
     if use_bnvs:
-        if not list(reversed(options["freqs_to_use"][4:])) == options["freqs_to_use"][:4]:
+        if (
+            not list(reversed(options["freqs_to_use"][4:]))
+            == options["freqs_to_use"][:4]
+        ):
             raise ValueError(
-                "'hamiltonian' option used bnvs, but chosen frequencies are not symmetric."
+                "'hamiltonian' option used bnvs, but chosen frequencies are not"
+                " symmetric."
             )
         chooser_ar = options["freqs_to_use"][:4]  # i.e. bnv chooser
     else:
@@ -364,7 +384,9 @@ def sub_bground_bxyz(options, field_params, field_sigmas, method, **method_setti
             warn("no B params found in field_params? Doing nothing.")
             return field_params, field_sigmas
 
-    if "polygons" in options and (options["mask_polygons_bground"] or method == "interpolate"):
+    if "polygons" in options and (
+        options["mask_polygons_bground"] or method == "interpolate"
+    ):
         polygons = options["polygons"]
     else:
         polygons = None
@@ -589,7 +611,9 @@ def get_reconstructed_bfield(
     fft_by = qdmpy.shared.fourier.set_naninf_to_zero(fft_by)
     fft_bz = qdmpy.shared.fourier.set_naninf_to_zero(fft_bz)
 
-    ky, kx, k = qdmpy.shared.fourier.define_k_vectors(fft_bx.shape, pixel_size, k_vector_epsilon)
+    ky, kx, k = qdmpy.shared.fourier.define_k_vectors(
+        fft_bx.shape, pixel_size, k_vector_epsilon
+    )
 
     sign = 1 if nvs_above_sample else -1
 

@@ -49,7 +49,9 @@ import qdmpy.pl.funcs
 class FitResultCollection:
     """Object to hold AOI average fit results, and a place to define their names."""
 
-    def __init__(self, fit_backend, roi_avg_fit_result, single_pixel_result, aoi_fit_results_lst):
+    def __init__(
+        self, fit_backend, roi_avg_fit_result, single_pixel_result, aoi_fit_results_lst
+    ):
         """
         Arguments
         ---------
@@ -290,13 +292,17 @@ def gen_init_guesses(options):
                 # assumes bounds are passed in with correct formatatting
                 bounds = options[param_key + "_bounds"]
             else:
-                raise RuntimeError(f"Provide bounds for the {fn_type}.{param_key} param.")
+                raise RuntimeError(
+                    f"Provide bounds for the {fn_type}.{param_key} param."
+                )
 
             if guess is not None:
                 init_guesses[param_key] = guess
                 init_bounds[param_key] = np.array(bounds)
             else:
-                raise RuntimeError(f"Not sure why your guess for {fn_type}.{param_key} is None?")
+                raise RuntimeError(
+                    f"Not sure why your guess for {fn_type}.{param_key} is None?"
+                )
 
     return init_guesses, init_bounds
 
@@ -429,7 +435,9 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
                     key = param_name + "_" + str(filled_params[param_name])
                     filled_params[param_name] += 1
 
-                fit_image_results[key][y, x] = result[fn.this_fn_param_indices[param_num]]
+                fit_image_results[key][y, x] = result[
+                    fn.this_fn_param_indices[param_num]
+                ]
                 sigmas[key][y, x] = perr[fn.this_fn_param_indices[param_num]]
 
     return fit_image_results, sigmas

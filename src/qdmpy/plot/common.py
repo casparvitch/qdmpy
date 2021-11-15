@@ -96,7 +96,9 @@ def plot_image(options, image_data, title, c_map, c_range, c_label):
 
     fig, ax = plt.subplots()
 
-    fig, ax = plot_image_on_ax(fig, ax, options, image_data, title, c_map, c_range, c_label)
+    fig, ax = plot_image_on_ax(
+        fig, ax, options, image_data, title, c_map, c_range, c_label
+    )
 
     np.savetxt(options["data_dir"] / f"{title}.txt", image_data)
     if options["save_plots"]:
@@ -145,7 +147,9 @@ def plot_image_on_ax(fig, ax, options, image_data, title, c_map, c_range, c_labe
     cbar.ax.set_ylabel(c_label, rotation=270)
 
     if options["show_scalebar"]:
-        pixel_size = options["system"].get_raw_pixel_size(options) * options["total_bin"]
+        pixel_size = (
+            options["system"].get_raw_pixel_size(options) * options["total_bin"]
+        )
         scalebar = ScaleBar(pixel_size)
         ax.add_artist(scalebar)
 
@@ -415,7 +419,10 @@ def _deviation_from_mean(image, c_range_values):
     c_range_values : unknown (depends on user settings)
         See `qdmpy.plot.common.get_colormap_range`
     """
-    return [(1 - c_range_values) * np.mean(image), (1 + c_range_values) * np.mean(image)]
+    return [
+        (1 - c_range_values) * np.mean(image),
+        (1 + c_range_values) * np.mean(image),
+    ]
 
 
 def _percentile(image, c_range_values):

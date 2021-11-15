@@ -65,7 +65,9 @@ class FitModel:
             for _ in range(num_fns):
                 next_fn = qdmpy.pl.funcs.AVAILABLE_FNS[fn_type]
                 next_fn_param_len = len(next_fn.param_defn)
-                next_fn_param_indices = [all_param_len + i for i in range(next_fn_param_len)]
+                next_fn_param_indices = [
+                    all_param_len + i for i in range(next_fn_param_len)
+                ]
                 all_param_len += next_fn_param_len
                 fn_chain.append(next_fn(next_fn_param_indices))
 

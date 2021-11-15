@@ -172,7 +172,9 @@ def save_field_sigmas(options, name, sigmas):
         for param_key, sigma in sigmas.items():
             if sigma is not None:
                 if name in ["sig", "ref", "sig_sub_ref"]:
-                    path = options[f"field_{name}_dir"] / f"{name}_{param_key}_sigma.txt"
+                    path = (
+                        options[f"field_{name}_dir"] / f"{name}_{param_key}_sigma.txt"
+                    )
                 else:
                     path = options["field_dir"] / f"{name}_{param_key}_sigma.txt"
                 np.savetxt(path, sigma)
@@ -214,7 +216,9 @@ def load_prev_field_calcs(options):
     # sig_sub_ref_bnvs, _ = load_prev_bnvs_and_dshifts(options, "sig_sub_ref")
     sig_sub_ref_params = qdmpy.field.bxyz.field_refsub(options, sig_params, ref_params)
     # sig_sub_ref_params = load_prev_field_params(options, "sig_sub_ref")
-    sig_sub_ref_sigmas = qdmpy.field.bxyz.field_sigma_add(options, sig_sigmas, ref_sigmas)
+    sig_sub_ref_sigmas = qdmpy.field.bxyz.field_sigma_add(
+        options, sig_sigmas, ref_sigmas
+    )
     # sig_sub_ref_sigmas = load_prev_field_sigmas(options, "sig_sub_ref")
 
     return (
@@ -435,7 +439,9 @@ def choose_field_method(options):
         # check how many peaks we want to use, and how many are available -> ensure compatible
         # FIXME doesn't take pos h14/h15 etc...
         num_peaks_fit = (
-            len(options["pos_guess"]) if isinstance(options["pos_guess"], (list, tuple)) else 1
+            len(options["pos_guess"])
+            if isinstance(options["pos_guess"], (list, tuple))
+            else 1
         )
         num_peaks_wanted = sum(options["freqs_to_use"])
         if num_peaks_wanted > num_peaks_fit:
@@ -443,7 +449,8 @@ def choose_field_method(options):
                 f"Number of freqs wanted in option 'freqs_to_use' ({num_peaks_wanted})"
                 + f"is greater than number fit ({num_peaks_fit}).\n"
                 + " We need to identify which NVs each resonance corresponds to "
-                + "for our algorithm to work, so please define this in the options dict/json."
+                + "for our algorithm to work, so please define this in the options"
+                " dict/json."
             )
         # check that freqs_to_use is symmetric (necessary for bnvs retrieval methods)
         symmetric_freqs = (
@@ -464,11 +471,18 @@ def choose_field_method(options):
                     meth = "invert_unvs"
                 else:
                     meth = "hamiltonian_fitting"
-            elif num_peaks_wanted in [3, 4, 5, 7, 8]:  # not sure how many of these will be useful
+            elif num_peaks_wanted in [
+                3,
+                4,
+                5,
+                7,
+                8,
+            ]:  # not sure how many of these will be useful
                 meth = "hamiltonian_fitting"
             else:
                 raise RuntimeError(
-                    "Number of true values in option 'freqs_to_use' is not between 1 and 8."
+                    "Number of true values in option 'freqs_to_use' is not between 1"
+                    " and 8."
                 )
 
         options["field_method_used"] = meth
@@ -487,7 +501,9 @@ def check_for_prev_field_calc(options):
         if not qdmpy.pl.io.prev_options_exist(options):
             options["found_prev_field_calc"] = False
             options["found_prev_field_calc_reason"] = "couldn't find previous options"
-        elif not qdmpy.pl.io.options_compatible(options, qdmpy.pl.io.get_prev_options(options)):
+        elif not qdmpy.pl.io.options_compatible(
+            options, qdmpy.pl.io.get_prev_options(options)
+        ):
             options["found_prev_field_calc"] = False
             options["found_prev_field_calc_reason"] = "incompatible fit options"
         elif not (res := _field_options_compatible(options))[0]:
@@ -563,11 +579,20 @@ def _field_options_compatible(options):
     prev_options["system"] = qdmpy.system.choose_system(prev_options["system_name"])
 
     # can't load dshift (etc.) reference types
-    if options["exp_reference_type"] != "field" or prev_options["exp_reference_type"] != "field":
-        return False, "exp_reference_type was not field in either current or prev options."
+    if (
+        options["exp_reference_type"] != "field"
+        or prev_options["exp_reference_type"] != "field"
+    ):
+        return (
+            False,
+            "exp_reference_type was not field in either current or prev options.",
+        )
 
     if options["field_method_used"] != prev_options["field_method_used"]:
-        return False, "method was different to that selected (or auto-selected) presently."
+        return (
+            False,
+            "method was different to that selected (or auto-selected) presently.",
+        )
 
     if options["freqs_to_use"] != prev_options["freqs_to_use"]:
         return False, "different freqs_to_use option."
@@ -596,11 +621,14 @@ def _field_options_compatible(options):
     # if options["bfield_bground_params"] != prev_options["bfield_bground_params"]:
     #     return False, "different bfield_bground_params"
 
-    if (qdmpy.shared.geom.get_unvs(options) != qdmpy.shared.geom.get_unvs(prev_options)).all():
+    if (
+        qdmpy.shared.geom.get_unvs(options) != qdmpy.shared.geom.get_unvs(prev_options)
+    ).all():
         return False, "different unvs calculated"
 
     if (
-        qdmpy.shared.geom.get_unv_frames(options) != qdmpy.shared.geom.get_unv_frames(prev_options)
+        qdmpy.shared.geom.get_unv_frames(options)
+        != qdmpy.shared.geom.get_unv_frames(prev_options)
     ).all():
         return False, "different unv frames"
 

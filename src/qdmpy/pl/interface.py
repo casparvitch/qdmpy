@@ -103,7 +103,8 @@ def _prep_fit_backends(options, fit_model):
     # ensure backend we want to use for pixel fittings is in comparison!
     if options["fit_backend"] not in options["fit_backend_comparison"]:
         warn(
-            "Your chosen fit backend wasn't in the fit backend comparison list, so it has been added for you."
+            "Your chosen fit backend wasn't in the fit backend comparison list, so it"
+            " has been added for you."
         )
         options["fit_backend_comparison"].append(options["fit_backend"])
 
@@ -124,7 +125,8 @@ def _prep_fit_backends(options, fit_model):
             fit_gpufit.prep_gpufit_backend(options, fit_model)
         else:
             raise RuntimeError(
-                f"No backend preparation defined for fit_backend = {options['fit_backend']}"
+                "No backend preparation defined for fit_backend ="
+                f" {options['fit_backend']}"
             )
 
 
@@ -161,16 +163,21 @@ def fit_roi_avg_pl(options, sig_norm, sweep_list, fit_model):
     for fit_backend in options["fit_backend_comparison"]:
         if fit_backend == "scipyfit":
             backend_roi_results_lst.append(
-                fit_scipyfit.fit_roi_avg_pl_scipyfit(options, sig_norm, sweep_list, fit_model)
+                fit_scipyfit.fit_roi_avg_pl_scipyfit(
+                    options, sig_norm, sweep_list, fit_model
+                )
             )
         elif fit_backend == "gpufit":
 
             backend_roi_results_lst.append(
-                fit_gpufit.fit_roi_avg_pl_gpufit(options, sig_norm, sweep_list, fit_model)
+                fit_gpufit.fit_roi_avg_pl_gpufit(
+                    options, sig_norm, sweep_list, fit_model
+                )
             )
         else:
             raise RuntimeError(
-                f"No fit_roi_avg_pl fn defined for fit_backend = {options['fit_backend']}"
+                "No fit_roi_avg_pl fn defined for fit_backend ="
+                f" {options['fit_backend']}"
             )
     return backend_roi_results_lst
 
@@ -281,7 +288,8 @@ def fit_all_pixels_pl(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
         )
     else:
         raise RuntimeError(
-            f"No fit_all_pixels_pl fn defined for fit_backend = {options['fit_backend']}"
+            "No fit_all_pixels_pl fn defined for fit_backend ="
+            f" {options['fit_backend']}"
         )
 
 

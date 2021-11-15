@@ -75,8 +75,8 @@ def prep_gpufit_fit_options(options):
         gpufit_fit_options["estimator_id"] = gf.EstimatorID.MLE
     else:
         raise RuntimeError(
-            f"Didn't know what to do with 'gpfit_estimator_id' = {options['gpufit_estimator_id']}"
-            + " available options: 'LSE', 'MLE'"
+            "Didn't know what to do with 'gpfit_estimator_id' ="
+            f" {options['gpufit_estimator_id']}" + " available options: 'LSE', 'MLE'"
         )
     return gpufit_fit_options
 
@@ -163,7 +163,10 @@ def prep_gpufit_backend(options, fit_model):
     if not gf.cuda_available():
         raise RuntimeError(f"CUDA error:\n{gf.get_last_error()}")
 
-    options["CUDA_version_runtime"], options["CUDA_version_driver"] = gf.get_cuda_version()
+    (
+        options["CUDA_version_runtime"],
+        options["CUDA_version_driver"],
+    ) = gf.get_cuda_version()
 
     options["ModelID"] = get_gpufit_modelID(options, fit_model)
 
@@ -213,7 +216,9 @@ def gen_gpufit_init_guesses(options, init_guesses, init_bounds):
         for n in range(num_fns_required):
 
             if n < num:
-                for pos, key in enumerate(qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn):
+                for pos, key in enumerate(
+                    qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn
+                ):
                     # these checks here are to handling the edge case of guesses/bounds
                     # options being provided as numbers rather than lists of numbers
                     try:
@@ -228,7 +233,9 @@ def gen_gpufit_init_guesses(options, init_guesses, init_bounds):
                         bound_lst.append(init_bounds[key][1])
             else:
                 # insert guesses and bounds for params we won't fit. (gpufit requires full array)
-                for pos, key in enumerate(qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn):
+                for pos, key in enumerate(
+                    qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn
+                ):
                     param_lst.append(0)
                     bound_lst.append(0)
                     bound_lst.append(1)
@@ -241,7 +248,9 @@ def gen_gpufit_init_guesses(options, init_guesses, init_bounds):
 # ============================================================================
 
 
-def fit_single_pixel_pl_gpufit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result):
+def fit_single_pixel_pl_gpufit(
+    options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result
+):
     """
     Fit Single pixel and return optimal fit parameters with gpufit backend
 
@@ -282,14 +291,21 @@ def fit_single_pixel_pl_gpufit(options, pixel_pl_ar, sweep_list, fit_model, roi_
 
     pixel_pl_ar_doubled = np.repeat([pixel_pl_ar], repeats=2, axis=0)
 
-    parameters, states, chi_squares, number_iterations, execution_time = gf.fit_constrained(
+    (
+        parameters,
+        states,
+        chi_squares,
+        number_iterations,
+        execution_time,
+    ) = gf.fit_constrained(
         pixel_pl_ar_doubled.astype(np.float32),
         None,
         options["ModelID"],
         init_guess_params,
         constraints=init_bounds.astype(np.float32),
         constraint_types=np.array(
-            [gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))], dtype=np.int32
+            [gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))],
+            dtype=np.int32,
         ),
         user_info=np.array(sweep_list, dtype=np.float32),
         parameters_to_fit=params_to_fit,
@@ -343,14 +359,21 @@ def fit_roi_avg_pl_gpufit(options, sig_norm, sweep_list, fit_model):
     init_guess_params = np.repeat([init_guess_params], repeats=2, axis=0)
     init_guess_params = init_guess_params.astype(dtype=np.float32)
 
-    best_params, states, chi_squares, number_iterations, execution_time = gf.fit_constrained(
+    (
+        best_params,
+        states,
+        chi_squares,
+        number_iterations,
+        execution_time,
+    ) = gf.fit_constrained(
         pl_roi_twice.astype(np.float32),
         None,
         options["ModelID"],
         init_guess_params,
         constraints=np.array(init_bounds, dtype=np.float32),
         constraint_types=np.array(
-            [gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))], dtype=np.int32
+            [gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))],
+            dtype=np.int32,
         ),
         user_info=np.array(sweep_list, dtype=np.float32),
         parameters_to_fit=params_to_fit,
@@ -384,7 +407,7 @@ def fit_aois_pl_gpufit(
         Generic options dict holding all the user options.
     sig_norm : np array, 3D
         Normalised measurement array, shape: [sweep_list, y, x].
-    single_pixel_pl : np array, 1D
+    pixel_pl_ar : np array, 1D
         Normalised measurement array, for chosen single pixel check.
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq).
@@ -445,14 +468,19 @@ def fit_aois_pl_gpufit(
         aoi_avg_best_fit_results_lst.append(fitting_results[0, :])
 
     return qdmpy.pl.common.FitResultCollection(
-        "gpufit", roi_avg_fit_result, single_pixel_fit_params, aoi_avg_best_fit_results_lst
+        "gpufit",
+        roi_avg_fit_result,
+        single_pixel_fit_params,
+        aoi_avg_best_fit_results_lst,
     )
 
 
 # ============================================================================
 
 
-def fit_all_pixels_pl_gpufit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
+def fit_all_pixels_pl_gpufit(
+    options, sig_norm, sweep_list, fit_model, roi_avg_fit_result
+):
     """
     Fits each pixel and returns dictionary of param_name -> param_image.
 
@@ -511,7 +539,8 @@ def fit_all_pixels_pl_gpufit(options, sig_norm, sweep_list, fit_model, roi_avg_f
         init_guess_params_reshaped,
         constraints=np.array(init_bounds, dtype=np.float32),
         constraint_types=np.array(
-            [gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))], dtype=np.int32
+            [gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))],
+            dtype=np.int32,
         ),
         user_info=np.array(sweep_list, dtype=np.float32),
         parameters_to_fit=np.array(params_to_fit, dtype=np.int32),
@@ -520,7 +549,10 @@ def fit_all_pixels_pl_gpufit(options, sig_norm, sweep_list, fit_model, roi_avg_f
     options["fit_time_(s)"] = execution_time
 
     # calculate jacobians via scipy as gpufit doesn't return them at soln
-    jacs = [fit_model.jacobian_scipyfit(param_ar, sweep_ar, None) for param_ar in fitting_results]
+    jacs = [
+        fit_model.jacobian_scipyfit(param_ar, sweep_ar, None)
+        for param_ar in fitting_results
+    ]
 
     fit_results = gpufit_reshape_result(fitting_results, pixel_posns, jacs)
 

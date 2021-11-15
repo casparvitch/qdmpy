@@ -188,7 +188,10 @@ def fit_roi_avg_pl_scipyfit(options, sig_norm, sweep_list, fit_model):
     )
 
     fitting_results = least_squares(
-        fit_model.residuals_scipyfit, init_param_guess, args=(sweep_list, pl_roi), **fit_options
+        fit_model.residuals_scipyfit,
+        init_param_guess,
+        args=(sweep_list, pl_roi),
+        **fit_options,
     )
 
     best_params = fitting_results.x
@@ -208,7 +211,9 @@ def fit_roi_avg_pl_scipyfit(options, sig_norm, sweep_list, fit_model):
 # ==========================================================================
 
 
-def fit_single_pixel_pl_scipyfit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result):
+def fit_single_pixel_pl_scipyfit(
+    options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result
+):
     """
     Fit Single pixel and return best_fit_result.x (i.e. the optimal fit parameters)
 
@@ -245,7 +250,10 @@ def fit_single_pixel_pl_scipyfit(options, pixel_pl_ar, sweep_list, fit_model, ro
         init_guess_params = fit_param_ar.copy()
 
     fitting_results = least_squares(
-        fit_model.residuals_scipyfit, init_guess_params, args=(sweep_list, pixel_pl_ar), **fit_opts
+        fit_model.residuals_scipyfit,
+        init_guess_params,
+        args=(sweep_list, pixel_pl_ar),
+        **fit_opts,
     )
     return fitting_results.x
 
@@ -308,12 +316,18 @@ def fit_aois_pl_scipyfit(
         avg = np.nanmean(np.nanmean(this_aoi, axis=2), axis=1)
 
         fitting_results = least_squares(
-            fit_model.residuals_scipyfit, guess_params, args=(sweep_list, avg), **fit_opts
+            fit_model.residuals_scipyfit,
+            guess_params,
+            args=(sweep_list, avg),
+            **fit_opts,
         )
         aoi_avg_best_fit_results_lst.append(fitting_results.x)
 
     return qdmpy.pl.common.FitResultCollection(
-        "scipyfit", roi_avg_fit_result, single_pixel_fit_params, aoi_avg_best_fit_results_lst
+        "scipyfit",
+        roi_avg_fit_result,
+        single_pixel_fit_params,
+        aoi_avg_best_fit_results_lst,
     )
 
 
@@ -370,7 +384,9 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, fit_optns):
 # ==========================================================================
 
 
-def fit_all_pixels_pl_scipyfit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
+def fit_all_pixels_pl_scipyfit(
+    options, sig_norm, sweep_list, fit_model, roi_avg_fit_result
+):
     """
     Fits each pixel and returns dictionary of param_name -> param_image.
 

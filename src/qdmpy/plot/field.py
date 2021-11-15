@@ -105,7 +105,9 @@ def bnvs_and_dshifts(options, name, bnvs, dshifts):
             ax = axs[i]
         else:
             ax = axs[0, i]
-        qdmpy.plot.common.plot_image_on_ax(fig, ax, options, data, title, c_map, c_range, "B (G)")
+        qdmpy.plot.common.plot_image_on_ax(
+            fig, ax, options, data, title, c_map, c_range, "B (G)"
+        )
     c_map = options["colormaps"]["dshift_images"]
     for i, dshift in enumerate(dshifts):
         data = (
@@ -193,7 +195,9 @@ def bfield(options, name, field_params):
         )
 
     if options["save_plots"]:
-        fig.savefig(options["field_dir"] / (f"Bfield_{name}." + options["save_fig_type"]))
+        fig.savefig(
+            options["field_dir"] / (f"Bfield_{name}." + options["save_fig_type"])
+        )
 
     return fig
 
@@ -238,7 +242,9 @@ def dshift_fit(options, name, field_params):
     )
 
     if options["save_plots"]:
-        fig.savefig(options["field_dir"] / (f"Dshift_fit_{name}." + options["save_fig_type"]))
+        fig.savefig(
+            options["field_dir"] / (f"Dshift_fit_{name}." + options["save_fig_type"])
+        )
 
     return fig
 
@@ -267,7 +273,10 @@ def field_residual(options, name, field_params):
         return None
 
     if "residual_field" not in field_params:
-        warn("'residual_field' param missing from field_params, skipping field residual plot.")
+        warn(
+            "'residual_field' param missing from field_params, skipping field residual"
+            " plot."
+        )
         return None
     elif field_params["residual_field"] is None:
         return None
@@ -275,7 +284,8 @@ def field_residual(options, name, field_params):
     fig, ax = plt.subplots()
 
     c_range = qdmpy.plot.common.get_colormap_range(
-        options["colormap_range_dicts"]["residual_images"], field_params["residual_field"]
+        options["colormap_range_dicts"]["residual_images"],
+        field_params["residual_field"],
     )
     c_map = options["colormaps"]["residual_images"]
 
@@ -293,7 +303,10 @@ def field_residual(options, name, field_params):
     )
 
     if options["save_plots"]:
-        fig.savefig(options["field_dir"] / (f"residual_field_{name}." + options["save_fig_type"]))
+        fig.savefig(
+            options["field_dir"]
+            / (f"residual_field_{name}." + options["save_fig_type"])
+        )
 
     return fig
 
@@ -360,7 +373,9 @@ def field_param(
     )
 
     if options["save_plots"]:
-        fig.savefig(options["field_dir"] / (f"{param_name}_{name}." + options["save_fig_type"]))
+        fig.savefig(
+            options["field_dir"] / (f"{param_name}_{name}." + options["save_fig_type"])
+        )
 
     return fig
 
@@ -503,14 +518,22 @@ def field_param_flattened(
         )
         legend_names.append("Guess")
         custom_lines.append(
-            Line2D([0], [0], color="k", ls=(0, (1, 1)), lw=mpl.rcParams["lines.linewidth"] * 2)
+            Line2D(
+                [0],
+                [0],
+                color="k",
+                ls=(0, (1, 1)),
+                lw=mpl.rcParams["lines.linewidth"] * 2,
+            )
         )
     if bounds is not None and isinstance(bounds, (list, tuple)) and len(bounds) == 2:
         for b in bounds:
             ax.axhline(b, ls=(0, (2, 1)), c="grey", zorder=9)
         legend_names.append("Bounds")
         custom_lines.append(
-            Line2D([0], [0], color="k", ls=(0, (2, 1)), lw=mpl.rcParams["lines.linewidth"])
+            Line2D(
+                [0], [0], color="k", ls=(0, (2, 1)), lw=mpl.rcParams["lines.linewidth"]
+            )
         )
 
     ax.legend(
@@ -616,7 +639,9 @@ def bfield_consistency(options, name, field_params):
         )
 
     if options["save_plots"]:
-        fig.savefig(options["field_dir"] / (f"Bfield_{name}_recon." + options["save_fig_type"]))
+        fig.savefig(
+            options["field_dir"] / (f"Bfield_{name}_recon." + options["save_fig_type"])
+        )
 
     return fig
 
@@ -679,7 +704,9 @@ def bfield_theta_phi(
 
     title = f"{name}: B_theta_{np.round(theta,1)}_phi_{np.round(phi,1)}"
 
-    qdmpy.plot.common.plot_image_on_ax(fig, ax, options, b, title, c_map, c_range, cbar_label)
+    qdmpy.plot.common.plot_image_on_ax(
+        fig, ax, options, b, title, c_map, c_range, cbar_label
+    )
 
     if options["save_plots"]:
         fig.savefig(

@@ -71,10 +71,14 @@ class MagSim:
         if polys is not None:
             if isinstance(polys, dict):
                 if check_size and "image_size" in polys:
-                    if self.ny != polys["image_size"][0] or self.nx != polys["image_size"][1]:
+                    if (
+                        self.ny != polys["image_size"][0]
+                        or self.nx != polys["image_size"][1]
+                    ):
                         # TODO massage to match?
                         raise RuntimeError(
-                            "Image size polygons were defined on as passed to add_polygons does "
+                            "Image size polygons were defined on as passed to"
+                            " add_polygons does "
                             + "not match this MagSim's mesh."
                         )
                 return [np.array(p) for p in polys["nodes"]]
@@ -155,7 +159,9 @@ class MagSim:
         fig.colorbar(img, cax=cax)
         ax.set_title(prompt)
 
-        psw = qdmpy.shared.polygon.PolygonSelectionWidget(ax, base_scale=base_scale, style=kwargs)
+        psw = qdmpy.shared.polygon.PolygonSelectionWidget(
+            ax, base_scale=base_scale, style=kwargs
+        )
 
         if polygon_nodes is not None:
             psw.load_nodes(polygon_nodes)
@@ -167,7 +173,9 @@ class MagSim:
         if len(pgons) < 1:
             raise RuntimeError("You didn't define any polygons")
 
-        pgon_lst = [pgon.get_nodes() for pgon in pgons if np.shape(pgon.get_nodes())[0] > 2]
+        pgon_lst = [
+            pgon.get_nodes() for pgon in pgons if np.shape(pgon.get_nodes())[0] > 2
+        ]
         output_dict = {"nodes": pgon_lst, "image_shape": (self.ny, self.nx)}
 
         return output_dict
@@ -191,7 +199,8 @@ class MagSim:
     def save_polygons(self, output_path):
         if output_path is not None:
             self._save_dict(
-                output_path, {"nodes": self.polygon_nodes, "image_shape": (self.ny, self.nx)}
+                output_path,
+                {"nodes": self.polygon_nodes, "image_shape": (self.ny, self.nx)},
             )
 
     def define_magnets(self, magnetizations, unit_vectors):
@@ -203,7 +212,9 @@ class MagSim:
         """
         # todo: do we want to be able to add _noise_ here too? / other imperfections?
         if isinstance(magnetizations, (float, int)):
-            self.magnetizations_lst = [magnetizations for m, _ in enumerate(self.polygon_nodes)]
+            self.magnetizations_lst = [
+                magnetizations for m, _ in enumerate(self.polygon_nodes)
+            ]
         else:
             if len(magnetizations) != len(self.polygon_nodes):
                 raise ValueError(
@@ -222,20 +233,25 @@ class MagSim:
                     ]
                 else:
                     raise RuntimeError(
-                        f"I don't recognise that shape of unit_vectors. ({np.shape(unit_vectors)})"
+                        "I don't recognise that shape of unit_vectors."
+                        f" ({np.shape(unit_vectors)})"
                     )
             else:
                 # ensure unit vectors
-                self.unit_vectors_lst = [tuple(np.array(uv) / LA.norm(uv)) for uv in unit_vectors]
+                self.unit_vectors_lst = [
+                    tuple(np.array(uv) / LA.norm(uv)) for uv in unit_vectors
+                ]
         else:
             raise TypeError(
-                f"unit_vectors wrong type ({type(unit_vectors)}), not ndarray/list/tuple. :("
+                f"unit_vectors wrong type ({type(unit_vectors)}), not"
+                " ndarray/list/tuple. :("
             )
 
         if len(self.magnetizations_lst) != len(self.unit_vectors_lst):
             raise RuntimeError(
                 f"magnetizations_lst (len: {len(self.magnetizations_lst)}) "
-                + f"not the same length as unit_vectors_lst (len: {len(self.unit_vectors_lst)}). :("
+                + "not the same length as unit_vectors_lst (len:"
+                f" {len(self.unit_vectors_lst)}). :("
             )
 
         # now construct mag
@@ -253,7 +269,9 @@ class MagSim:
             polygon = qdmpy.shared.polygon.Polygon(p[:, 0], p[:, 1])
             in_or_out = polygon.is_inside(grid_y, grid_x)
             # 2021-08-04 changed from > 0 -> only defined __inside__ polygon
-            self.mag[self.unit_vectors_lst[i]][in_or_out > 0] += self.magnetizations_lst[i]
+            self.mag[self.unit_vectors_lst[i]][
+                in_or_out > 0
+            ] += self.magnetizations_lst[i]
 
     def save_magnets(self, output_path):
         output_dict = {
@@ -394,7 +412,9 @@ class MagSim:
 
         proj_vec = np.array(projection)
 
-        return np.apply_along_axis(lambda bvec: np.dot(proj_vec, bvec), -1, bfield_reshaped)
+        return np.apply_along_axis(
+            lambda bvec: np.dot(proj_vec, bvec), -1, bfield_reshaped
+        )
 
     def get_magnetization_im(self, unit_vector):
         if self.mag is None:
@@ -426,7 +446,9 @@ class MagSim:
         )
         return fig, ax
 
-    def plot_magsim_magnetizations(self, annotate_polygons=True, polygon_patch_params=None):
+    def plot_magsim_magnetizations(
+        self, annotate_polygons=True, polygon_patch_params=None
+    ):
         # use single colorbar, different plots
         # https://matplotlib.org/stable/gallery/subplots_axes_and_figures/colorbar_placement.html
         # calculate c_range smartly.
@@ -550,13 +572,17 @@ class MagSim:
                 if not np.all(crop_polygon.is_inside(p[:, 0], p[:, 1]) > 0):
                     break  # don't append to keep lst
             else:
-                keep_idxs.append(idx)  # only executes if loop exits normally (not 'break')
+                keep_idxs.append(
+                    idx
+                )  # only executes if loop exits normally (not 'break')
         self.polygon_nodes = [
             val for idx, val in enumerate(self.polygon_nodes) if idx in keep_idxs
         ]
         if self.magnetizations_lst is not None:
             self.magnetizations_lst = [
-                val for idx, val in enumerate(self.magnetizations_lst) if idx in keep_idxs
+                val
+                for idx, val in enumerate(self.magnetizations_lst)
+                if idx in keep_idxs
             ]
             self.unit_vectors_lst = [
                 val for idx, val in enumerate(self.unit_vectors_lst) if idx in keep_idxs
@@ -569,7 +595,9 @@ class MagSim:
         else:
             pn = None
             n_og_polygons = 0
-        pgon_dict = self._polygon_gui(polygon_nodes=pn, prompt="Select crop polygon", **kwargs)
+        pgon_dict = self._polygon_gui(
+            polygon_nodes=pn, prompt="Select crop polygon", **kwargs
+        )
         new_pgons = [np.array(p) for p in pgon_dict["nodes"][n_og_polygons:]]
         self.crop_polygons(new_pgons)
 
@@ -625,7 +653,9 @@ class SandboxMagSim(MagSim):
         pxl_y = fov_dims[0] / self.ny
         pxl_x = fov_dims[1] / self.nx
         if pxl_y != pxl_x:
-            raise ValueError("fov_dims ratio height:width does not match mesh height:width ratio.")
+            raise ValueError(
+                "fov_dims ratio height:width does not match mesh height:width ratio."
+            )
         self.pixel_size = pxl_y
 
     def add_template_polygons(self, polygons=None):
@@ -695,8 +725,12 @@ class TilingMagSim(SandboxMagSim):
                     )
                 )
                 # label loc could be generated with tiling... oh well
-                label_loc = qdmpy.shared.polygon.Polygon(nodes[:, 0], nodes[:, 1]).get_center()
-                ax.text(label_loc[1], label_loc[0], s=f"P{i}", zorder=15, fontsize=fontsize)
+                label_loc = qdmpy.shared.polygon.Polygon(
+                    nodes[:, 0], nodes[:, 1]
+                ).get_center()
+                ax.text(
+                    label_loc[1], label_loc[0], s=f"P{i}", zorder=15, fontsize=fontsize
+                )
 
             return fig, ax
         else:
@@ -763,7 +797,12 @@ class TilingMagSim(SandboxMagSim):
                 # Add a horizontal offset on odd numbered rows
                 x_ = x if (y % 2 == 0) else x + 0.5
 
-                yield [(y * h, x_), (y * h, x_ + 1), ((y + 1) * h, x_ + 0.5), (y * h, x_)]
+                yield [
+                    (y * h, x_),
+                    (y * h, x_ + 1),
+                    ((y + 1) * h, x_ + 0.5),
+                    (y * h, x_),
+                ]
                 yield [
                     (y * h, x_ + 1),
                     ((y + 1) * h, x_ + 1.5),
@@ -866,13 +905,17 @@ class VoronoiMagSim(SandboxMagSim):
         valid_pts = np.stack((grid_y[in_or_out > 0], grid_x[in_or_out > 0]), axis=-1)
 
         # sample just n valid_pts  {reshape valid_pts into (ny*nx, 2) instead of (ny, nx, 2)}
-        sampler = qmc.Sobol(d=1)  # quasirandom number sequence (more uniform than real random)
+        sampler = qmc.Sobol(
+            d=1
+        )  # quasirandom number sequence (more uniform than real random)
         samples_float = sampler.random_base2(
             m=int(np.ceil(np.log2(num_domains)))
         ).flatten()  # floats in [0,1]
         num_possible = np.prod(valid_pts.shape[:-1])
         # num_domains ints in [0, num_possible-1]
-        samples_idx = np.round(samples_float * (num_possible - 1)).astype(int)[:num_domains]
+        samples_idx = np.round(samples_float * (num_possible - 1)).astype(int)[
+            :num_domains
+        ]
         points = np.reshape(valid_pts, (num_possible, 2))[samples_idx]
         # print(points)
         # below: with normal random numbers
@@ -889,14 +932,18 @@ class VoronoiMagSim(SandboxMagSim):
         if self.domain_sources is None or self.polygon_nodes is None:
             raise RuntimeError("Domain_sources or polygon_nodes was None?")
         save_dict = {
-            "domain_sources": {str(key): val for key, val in self.domain_sources.items()},
+            "domain_sources": {
+                str(key): val for key, val in self.domain_sources.items()
+            },
             "polygon_nodes": self.polygon_nodes,
         }
         self._save_dict(path, save_dict)
 
     def load_voronoi(self, path):
         data_dict = self._load_dict(path)
-        self.domain_sources = {int(key): val for key, val in data_dict["domain_sources"].items()}
+        self.domain_sources = {
+            int(key): val for key, val in data_dict["domain_sources"].items()
+        }
         self.polygon_nodes = data_dict["polygon_nodes"]
 
     def define_domain_sources_gui(self, output_path=None):
@@ -910,7 +957,9 @@ class VoronoiMagSim(SandboxMagSim):
         """
         for key, val in domain_dict.items():
             if not isinstance(key, int) or key < 0 or key > len(self.polygon_nodes):
-                raise ValueError(f"key: {key} is < 0 or larger than number of polygons defined.")
+                raise ValueError(
+                    f"key: {key} is < 0 or larger than number of polygons defined."
+                )
             if not isinstance(val, (list, np.ndarray, tuple)):
                 raise TypeError(f"val: {val} is not array-like.")
             if not len(np.shape(val)) == 2 or np.shape(val)[1] != 2:
@@ -945,7 +994,9 @@ class VoronoiMagSim(SandboxMagSim):
                 if not _is_convex_polygon(np.fliplr(nodes)[:-1].tolist()):
                     raise RuntimeError("chosen polygon was convex: won't work :(")
                 # voronoi = foronoi.Voronoi(ConcavePolygon(np.fliplr(nodes)[:-1].tolist()))
-                voronoi = foronoi.Voronoi(foronoi.Polygon(np.fliplr(nodes)[:-1].tolist()))
+                voronoi = foronoi.Voronoi(
+                    foronoi.Polygon(np.fliplr(nodes)[:-1].tolist())
+                )
                 voronoi.create_diagram(points=np.fliplr(self.domain_sources[idx]))
                 # below is for testing.
                 # foronoi.Visualizer(voronoi).plot_sites(init_order_names=True).plot_edges(
@@ -953,13 +1004,16 @@ class VoronoiMagSim(SandboxMagSim):
                 # ).plot_vertices().show()
                 for domain_source in voronoi.sites:
                     new_nodes = [
-                        (vertex.xy[1], vertex.xy[0]) for vertex in domain_source.vertices()
+                        (vertex.xy[1], vertex.xy[0])
+                        for vertex in domain_source.vertices()
                     ]
                     # need to add on first point again (i.e. link polygon back to start)
                     first_vertex = domain_source.vertices()[0]
                     new_nodes.append((first_vertex.xy[1], first_vertex.xy[0]))
                     new_polygon_nodes.append(np.array(new_nodes))
-                    self.domain_label_pts.append((domain_source.xy[1], domain_source.xy[0]))
+                    self.domain_label_pts.append(
+                        (domain_source.xy[1], domain_source.xy[0])
+                    )
         self.polygon_nodes = np.array(new_polygon_nodes, dtype=np.ndarray)
 
     def load_domain_sources(self, path):
@@ -991,7 +1045,9 @@ class VoronoiMagSim(SandboxMagSim):
                 }
             domain_labels_ar = np.array(self.domain_label_pts)
             ax.scatter(domain_labels_ar[:, 1], domain_labels_ar[:, 0], s=markersize)
-            for i, (nodes, label_loc) in enumerate(zip(self.polygon_nodes, self.domain_label_pts)):
+            for i, (nodes, label_loc) in enumerate(
+                zip(self.polygon_nodes, self.domain_label_pts)
+            ):
                 patch_params = (
                     polygon_patch_params
                     if not isinstance(polygon_patch_params, (tuple, list))
@@ -1024,7 +1080,9 @@ class ComparisonMagSim(MagSim):
         fov_dims,  # (the height, width of the image in m)
     ):
         if fov_dims is None:
-            raise ValueError("You need to supply fov_dims (the height, width of the image in m).")
+            raise ValueError(
+                "You need to supply fov_dims (the height, width of the image in m)."
+            )
         if (
             not isinstance(fov_dims, (tuple, list, np.ndarray))
             or len(fov_dims) != 2
@@ -1147,7 +1205,9 @@ def _plot_image_on_ax(
     pixel_size=None,
 ):
 
-    im = ax.imshow(image_data, cmap=c_map, vmin=c_range[0], vmax=c_range[1], aspect="equal")
+    im = ax.imshow(
+        image_data, cmap=c_map, vmin=c_range[0], vmax=c_range[1], aspect="equal"
+    )
 
     ax.set_title(title)
     ax.get_xaxis().set_ticks([])
@@ -1172,7 +1232,9 @@ def _plot_image_on_ax(
             )
             # polygons reversed to (x,y) indexing for patch
             ax.add_patch(
-                matplotlib.patches.Polygon(np.stack((p[:, 1], p[:, 0]), axis=-1), **patch_params)
+                matplotlib.patches.Polygon(
+                    np.stack((p[:, 1], p[:, 0]), axis=-1), **patch_params
+                )
             )
 
     if pixel_size is not None:

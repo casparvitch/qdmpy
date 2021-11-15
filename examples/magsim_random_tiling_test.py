@@ -51,7 +51,9 @@ sim.add_polygons(polys_path)
 # sim.save_magnets(mag_path)  # only save/load mag data, ensure compatible with domains/polygons.
 sim.load_magnets(mag_path)
 
-sim.plot_magsim_magnetizations(annotate_polygons=False, polygon_patch_params=pgon_patches)
+sim.plot_magsim_magnetizations(
+    annotate_polygons=False, polygon_patch_params=pgon_patches
+)
 
 sim.run(height, pad_mode="constant", resolution=res)
 

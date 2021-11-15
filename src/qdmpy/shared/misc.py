@@ -118,7 +118,10 @@ def _define_area_roi(start_x, start_y, end_x, end_y):
     x = np.linspace(start_x, end_x, end_x - start_x + 1, dtype=int)
     y = np.linspace(start_y, end_y, end_y - start_y + 1, dtype=int)
     xv, yv = np.meshgrid(x, y)
-    return [yv, xv]  # arrays are indexed in image convention, e.g. sig[sweep_param, y, x]
+    return [
+        yv,
+        xv,
+    ]  # arrays are indexed in image convention, e.g. sig[sweep_param, y, x]
 
 
 # ============================================================================

@@ -7,7 +7,10 @@ import qdmpy.shared.fourier
 import numpy as np
 import matplotlib.pyplot as plt
 
-numpy_txt_file_path = "/home/samsc/ResearchData/test_images/mz_test/ODMR - Pulsed_10_Rectangle_bin_8/field/sig_sub_ref/sig_sub_ref_bnv_0.txt"
+numpy_txt_file_path = (
+    "/home/samsc/ResearchData/test_images/mz_test/ODMR -"
+    " Pulsed_10_Rectangle_bin_8/field/sig_sub_ref/sig_sub_ref_bnv_0.txt"
+)
 json_output_path = "/home/samsc/ResearchData/test_images/mz_test/polys_mz_sandbox.json"
 json_input_path = "/home/samsc/ResearchData/test_images/mz_test/polys.json"
 domains_output_path = "/home/samsc/ResearchData/test_images/mz_test/polys_domain.json"
@@ -67,7 +70,9 @@ sim.define_magnets(
 
 sim.crop_magnetization_gui()
 
-sim.plot_magsim_magnetizations(annotate_polygons=True, polygon_patch_params=pgon_patches)
+sim.plot_magsim_magnetizations(
+    annotate_polygons=True, polygon_patch_params=pgon_patches
+)
 
 sim.run(height, pad_mode="constant", resolution=res)
 

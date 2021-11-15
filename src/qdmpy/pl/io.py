@@ -165,7 +165,10 @@ def reshape_dataset(options, image, sweep_list):
         try:
             if options[f"AOI_{i}_start"] is None or options[f"AOI_{i}_end"] is None:
                 continue
-            options[f"AOI_{i}_start"], options[f"AOI_{i}_end"] = _check_start_end_rectangle(
+            (
+                options[f"AOI_{i}_start"],
+                options[f"AOI_{i}_end"],
+            ) = _check_start_end_rectangle(
                 f"AOI_{i}",
                 *options[f"AOI_{i}_start"],
                 *options[f"AOI_{i}_end"],
@@ -182,7 +185,8 @@ def reshape_dataset(options, image, sweep_list):
         ]
     except IndexError as e:
         warn(
-            f"Avoiding IndexError for single_pixel_check (setting pixel check to centre of image):\n{e}"
+            "Avoiding IndexError for single_pixel_check (setting pixel check to centre"
+            f" of image):\n{e}"
         )
         single_pixel_pl = sig_norm[:, sig_norm.shape[1] // 2, sig_norm.shape[2] // 2]
         options["single_pixel_check"] = (sig_norm.shape[2] // 2, sig_norm.shape[1] // 2)
@@ -255,7 +259,9 @@ def _rebin_image(options, image):
         #     .sum(3)
         # ) # this is old version... moving to rebin package
         image_rebinned = rebin(
-            image, factor=(1, options["additional_bins"], options["additional_bins"]), func=np.mean
+            image,
+            factor=(1, options["additional_bins"], options["additional_bins"]),
+            func=np.mean,
         )
 
     # define sig and ref differently if we're using a ref
@@ -355,7 +361,9 @@ def _remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_nor
 # ============================================================================
 
 
-def _check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_w, full_size_h):
+def _check_start_end_rectangle(
+    name, start_x, start_y, end_x, end_y, full_size_w, full_size_h
+):
     """
     Checks that 'name' rectange (defined by top left corner 'start_x', 'start_y' and bottom
     right corner 'end_x', 'end_y') fits within a larger rectangle of size 'full_size_w',
@@ -393,17 +401,25 @@ def _check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_w
         warn(f"{name} Rectangle ends before it starts (in y), swapping them")
         start_y, end_y = end_y, start_y
     if start_x >= full_size_w:
-        warn(f"{name} Rectangle starts outside image (too large in x), setting to zero.")
+        warn(
+            f"{name} Rectangle starts outside image (too large in x), setting to zero."
+        )
         start_x = 0
     elif start_x < 0:
-        warn(f"{name} Rectangle starts outside image (negative in x), setting to zero..")
+        warn(
+            f"{name} Rectangle starts outside image (negative in x), setting to zero.."
+        )
         start_x = 0
 
     if start_y >= full_size_h:
-        warn(f"{name} Rectangle starts outside image (too large in y), setting to zero.")
+        warn(
+            f"{name} Rectangle starts outside image (too large in y), setting to zero."
+        )
         start_y = 0
     elif start_y < 0:
-        warn(f"{name}  Rectangle starts outside image (negative in y), setting to zero.")
+        warn(
+            f"{name}  Rectangle starts outside image (negative in y), setting to zero."
+        )
         start_y = 0
 
     if end_x >= full_size_w:
@@ -568,7 +584,9 @@ def check_if_already_fit(options, loading_ref=False):
     """
     if not loading_ref:
         if not options["force_fit"]:
-            if not prev_options_exist(options):  # i.e. look for saved options in output dir
+            if not prev_options_exist(
+                options
+            ):  # i.e. look for saved options in output dir
                 options["found_prev_result_reason"] = "couldn't find previous options"
                 options["found_prev_result"] = False
             elif not (res := options_compatible(options, get_prev_options(options)))[0]:
@@ -586,7 +604,9 @@ def check_if_already_fit(options, loading_ref=False):
             options["found_prev_result_reason"] = "option 'force_fit' was True"
             options["found_prev_result"] = False
     elif not (res3 := _prev_pl_fits_exist(options))[0]:
-        options["found_prev_result_reason"] = "couldn't find prev pixel results: " + res3[1]
+        options["found_prev_result_reason"] = (
+            "couldn't find prev pixel results: " + res3[1]
+        )
         options["found_prev_result"] = False
     else:
         options["found_prev_result_reason"] = "found prev result :)"
@@ -631,11 +651,17 @@ def options_compatible(options, prev_options):
         and options["found_prev_result"] is not None
         and not options["found_prev_result"]
     ):
-        return False, "already checked for previous fit result and didn't find anything."
+        return (
+            False,
+            "already checked for previous fit result and didn't find anything.",
+        )
 
     if not (
         options["additional_bins"] == prev_options["additional_bins"]
-        or (options["additional_bins"] in [0, 1] and prev_options["additional_bins"] in [0, 1])
+        or (
+            options["additional_bins"] in [0, 1]
+            and prev_options["additional_bins"] in [0, 1]
+        )
     ):
         return False, "different binning"
     for option_name in [
@@ -679,12 +705,18 @@ def options_compatible(options, prev_options):
             ):
                 return False, f"scipyfit option different: {fit_opt_name}"
     elif options["fit_backend"] == "gpufit":
-        for fit_opt_name in ["gpufit_tolerance", "gpufit_max_iterations", "gpufit_estimator_id"]:
+        for fit_opt_name in [
+            "gpufit_tolerance",
+            "gpufit_max_iterations",
+            "gpufit_estimator_id",
+        ]:
             if options[fit_opt_name] != prev_options[fit_opt_name]:
                 return False, f"gpufit option different: {fit_opt_name}"
 
     # ok now the trickiest one, check parameter guesses & bounds
-    unique_params = set(qdmpy.pl.model.FitModel(options["fit_functions"]).get_param_defn())
+    unique_params = set(
+        qdmpy.pl.model.FitModel(options["fit_functions"]).get_param_defn()
+    )
 
     for param_name in unique_params:
         if options[param_name + "_guess"] != prev_options[param_name + "_guess"]:
@@ -733,7 +765,9 @@ def _prev_pl_fits_exist(options):
         for param_name in qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn:
             for n in range(num):
                 param_key = param_name + "_" + str(n)
-                if not (pathlib.Path(options["data_dir"]) / (param_key + ".txt")).is_file():
+                if not (
+                    pathlib.Path(options["data_dir"]) / (param_key + ".txt")
+                ).is_file():
                     return False, f"couldn't find previous param: {param_key}"
 
     if not (pathlib.Path(options["data_dir"]) / "residual_0.txt").is_file():
@@ -767,7 +801,9 @@ def get_prev_options(options):
     """
     Reads options file from previous fit result (.json), returns a dictionary.
     """
-    return qdmpy.shared.json2dict.json_to_dict(options["output_dir"] / "saved_options.json")
+    return qdmpy.shared.json2dict.json_to_dict(
+        options["output_dir"] / "saved_options.json"
+    )
 
 
 # ============================================================================

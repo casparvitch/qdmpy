@@ -56,7 +56,7 @@ __pdoc__ = {
 # ============================================================================
 
 import numpy as np
-from numpy.polynomial.polynomial import polyval2d
+from numpy.polynomial.polynomial import polyval2d  # check this works
 from scipy.optimize import least_squares
 from scipy.interpolate import griddata
 import scipy.ndimage
@@ -133,8 +133,8 @@ def get_background(
             - params required in method_params_dict:
                 "zero" an int/float, defining the constant offset of the background
         - "three_point"
-            - Calculate plane background with linear algebra from three [x,y] lateral positions
-              given
+            - Calculate plane background with linear algebra from three [x,y]
+              lateral positions given
             - params required in method_params_dict:
                 - "points" a len-3 iterable containing [x, y] points
         - "mean"
@@ -148,16 +148,18 @@ def get_background(
             - background calculated from _gaussian fit to image.
             - no params required
         - "interpolate"
-            - Background defined by the dataset smoothed via a sigma-_gaussian filtering,
-                and method-interpolation over masked (polygon) regions.
+            - Background defined by the dataset smoothed via a sigma-_gaussian
+                filtering, and method-interpolation over masked (polygon) regions.
             - params required in method_params_dict:
                 - "interp_method": nearest, linear, cubic.
-                - "sigma": sigma passed to _gaussian filter (see scipy.ndimage._gaussian_filter)
-                    which is utilized on the background before interpolating
+                - "sigma": sigma passed to _gaussian filter
+                    (see scipy.ndimage._gaussian_filter) which is utilized on the
+                    background before interpolating
         - "gaussian_filter"
             - background calculated from image filtered with a _gaussian filter.
             - params required in method_params_dict:
-                - "sigma": sigma passed to _gaussian filter (see scipy.ndimage._gaussian_filter)
+                - "sigma": sigma passed to _gaussian filter (see
+                        scipy.ndimage._gaussian_filter)
         - "gaussian_then_poly"
             - runs gaussian then poly subtraction
             - params required in method_params_dict:
@@ -166,8 +168,8 @@ def get_background(
     polygon utilization:
         - if method is not interpolate, the image is masked where the polygons are
           and the background is calculated without these regions
-        - if the method is interpolate, these regions are interpolated over (and the rest
-          of the image, _gaussian smoothed, is 'background').
+        - if the method is interpolate, these regions are interpolated over
+            (and the rest of the image, _gaussian smoothed, is 'background').
 
     Arguments
     ---------
@@ -262,8 +264,9 @@ def get_background(
             return bground, np.ma.getmaskarray(clipped).astype(int)
         elif no_bground_if_clip_fails:
             return np.zeros(image.shape), np.zeros(image.shape)
-    return method_fns[method](image, **method_params_dict), np.ma.getmaskarray(image).astype(
-        int
+    return (
+        method_fns[method](image, **method_params_dict),
+        np.ma.getmaskarray(image).astype(int),
     )
 
 

@@ -100,10 +100,14 @@ def get_m_from_bxy(
     fft_bx = qdmpy.shared.fourier.set_naninf_to_zero(fft_bx)
     fft_by = qdmpy.shared.fourier.set_naninf_to_zero(fft_by)
 
-    ky, kx, k = qdmpy.shared.fourier.define_k_vectors(fft_bx.shape, pixel_size, k_vector_epsilon)
+    ky, kx, k = qdmpy.shared.fourier.define_k_vectors(
+        fft_bx.shape, pixel_size, k_vector_epsilon
+    )
 
     # define transform
-    d_matrix = define_magnetization_transformation(ky, kx, k, standoff, nv_layer_thickness)
+    d_matrix = define_magnetization_transformation(
+        ky, kx, k, standoff, nv_layer_thickness
+    )
 
     if mag_angle is None:
         m_to_bx = d_matrix[2, 0, ::]  # z magnetized
@@ -197,10 +201,14 @@ def get_m_from_bz(
     fft_bz = numpy_fft.fftshift(numpy_fft.fft2(bz_pad))
     fft_bz = qdmpy.shared.fourier.set_naninf_to_zero(fft_bz)
 
-    ky, kx, k = qdmpy.shared.fourier.define_k_vectors(fft_bz.shape, pixel_size, k_vector_epsilon)
+    ky, kx, k = qdmpy.shared.fourier.define_k_vectors(
+        fft_bz.shape, pixel_size, k_vector_epsilon
+    )
 
     # define transform
-    d_matrix = define_magnetization_transformation(ky, kx, k, standoff, nv_layer_thickness)
+    d_matrix = define_magnetization_transformation(
+        ky, kx, k, standoff, nv_layer_thickness
+    )
 
     if mag_angle is None:
         m_to_bz = d_matrix[2, 2, ::]  # z magnetized
@@ -296,10 +304,14 @@ def get_m_from_bnv(
 
     fft_bnv = numpy_fft.fftshift(numpy_fft.fft2(bnv_pad))
 
-    ky, kx, k = qdmpy.shared.fourier.define_k_vectors(fft_bnv.shape, pixel_size, k_vector_epsilon)
+    ky, kx, k = qdmpy.shared.fourier.define_k_vectors(
+        fft_bnv.shape, pixel_size, k_vector_epsilon
+    )
 
     # define transform
-    d_matrix = define_magnetization_transformation(ky, kx, k, standoff, nv_layer_thickness)
+    d_matrix = define_magnetization_transformation(
+        ky, kx, k, standoff, nv_layer_thickness
+    )
 
     if nvs_above_sample:
         unv_cpy = copy(unv)
@@ -320,7 +332,8 @@ def get_m_from_bnv(
         psi = np.deg2rad(mag_angle)
         for idx in b_axis:
             new = unv_cpy[int(idx)] * (
-                np.cos(psi) * d_matrix[0, int(idx), ::] + np.sin(psi) * d_matrix[1, int(idx), ::]
+                np.cos(psi) * d_matrix[0, int(idx), ::]
+                + np.sin(psi) * d_matrix[1, int(idx), ::]
             )
             m_to_bnv = new if m_to_bnv is None else m_to_bnv + new
 

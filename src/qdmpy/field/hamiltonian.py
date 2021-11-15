@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-This module is for...
+This module is for... TODO
 
 Functions
 ---------
@@ -41,6 +41,7 @@ __pdoc__ = {
     "qdmpy.field.hamiltonian.ham_get_pixel_fitting_results": True,
 }
 # ============================================================================
+from typing import Dict, List
 
 import numpy as np
 import numpy.linalg as LA  # noqa: N812
@@ -91,7 +92,9 @@ class Chooser:
         self.chooser_ar = chooser_ar
 
     def __call__(self, some_ar):
-        return np.array([some_ar[i] for i, do_use in enumerate(self.chooser_ar) if do_use])
+        return np.array(
+            [some_ar[i] for i, do_use in enumerate(self.chooser_ar) if do_use]
+        )
 
 
 # ============================================================================
@@ -185,8 +188,8 @@ def fit_hamiltonian_pixels(options, data, hamiltonian):
 
 class Hamiltonian:
 
-    param_defn = []
-    param_units = {}
+    param_defn: List[str] = []
+    param_units: Dict[str, str] = {}
     jac_defined = False
 
     def __init__(self, chooser_obj, unv_frames):
@@ -196,7 +199,9 @@ class Hamiltonian:
         """
         self.chooser_obj = chooser_obj
         self.unv_frames = unv_frames
-        self.unvs = unv_frames[:, 2, :].copy()  # i.e. z axis of each nv ref. frame in lab frame
+        self.unvs = unv_frames[
+            :, 2, :
+        ].copy()  # i.e. z axis of each nv ref. frame in lab frame
 
     # =================================
 
@@ -229,7 +234,9 @@ class Hamiltonian:
         Measured data must be a np array (of the same shape that __call__ returns),
         i.e. freqs, or bnvs.
         """
-        return self.chooser_obj(self.__call__(param_ar)) - self.chooser_obj(measured_data)
+        return self.chooser_obj(self.__call__(param_ar)) - self.chooser_obj(
+            measured_data
+        )
 
     # =================================
 
@@ -285,7 +292,7 @@ class ApproxBxyz(Hamiltonian):
     (matrix).
     """
 
-    param_defn = ["Bx", "By", "Bz"]
+    param_defn: List[str] = ["Bx", "By", "Bz"]
     param_units = {
         "Bx": "Magnetic field, Bx (G)",
         "By": "Magnetic field, By (G)",
@@ -332,7 +339,7 @@ class Bxyz(Hamiltonian):
     """
 
     param_defn = ["D", "Bx", "By", "Bz"]
-    param_units = {
+    param_units: Dict[str, str] = {
         "D": "Zero field splitting (MHz)",
         "Bx": "Magnetic field, Bx (G)",
         "By": "Magnetic field, By (G)",
@@ -467,7 +474,9 @@ def ham_gen_init_guesses(options):
             init_guesses[param_key] = guess
             init_bounds[param_key] = np.array(bounds)
         else:
-            raise RuntimeError(f"Not sure why your guess for {ham}.{param_key} is None?")
+            raise RuntimeError(
+                f"Not sure why your guess for {ham}.{param_key} is None?"
+            )
 
     return init_guesses, init_bounds
 
@@ -666,7 +675,9 @@ def ham_get_pixel_fitting_results(hamiltonian, fit_results, pixel_data):
         fit_image_results[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
         sigmas[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
-    fit_image_results["residual_field"] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+    fit_image_results["residual_field"] = (
+        np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+    )
 
     # Fill the arrays element-wise from the results function, which returns a
     # 1D array of flattened best-fit parameters.

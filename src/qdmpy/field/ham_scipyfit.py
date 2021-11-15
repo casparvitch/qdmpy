@@ -71,7 +71,9 @@ def gen_ham_scipyfit_init_guesses(options, init_guesses, init_bounds):
     bound_lst = []
 
     for pos, key in enumerate(
-        qdmpy.field.hamiltonian.AVAILABLE_HAMILTONIANS[options["hamiltonian"]].param_defn
+        qdmpy.field.hamiltonian.AVAILABLE_HAMILTONIANS[
+            options["hamiltonian"]
+        ].param_defn
     ):
         # this check is to handle the edge case of guesses/bounds
         # options being provided as numbers rather than lists of numbers
@@ -203,7 +205,9 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
     else:
         pixel_data = data
 
-    roi_avg_params, fit_options = fit_hamiltonian_roi_avg_scipyfit(options, data, hamiltonian)
+    roi_avg_params, fit_options = fit_hamiltonian_roi_avg_scipyfit(
+        options, data, hamiltonian
+    )
 
     # call into the library (measure time)
     t0 = timer()

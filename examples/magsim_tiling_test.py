@@ -42,16 +42,22 @@ sim.crop_polygons_gui()
 
 num_domains = len(sim.polygon_nodes)
 mags = [5 * (2 * (i % 2) - 1) for i in range(num_domains)]
-mags = [5 * (random.randint(0, 1) * 2 - 1) for i in range(num_domains)]  # randomly up/down
+mags = [
+    5 * (random.randint(0, 1) * 2 - 1) for i in range(num_domains)
+]  # randomly up/down
 sim.define_magnets(mags, (0, 0, 1))  # mag unit: mu_b/nm^2
 
 # sim.crop_magnetization_gui()
 
 sim.save_polygons(polys_path)
-sim.save_magnets(mag_path)  # only save/load mag data, ensure compatible with domains/polygons.
+sim.save_magnets(
+    mag_path
+)  # only save/load mag data, ensure compatible with domains/polygons.
 # sim.load_magnets(mag_path)
 
-sim.plot_magsim_magnetizations(annotate_polygons=True, polygon_patch_params=pgon_patches)
+sim.plot_magsim_magnetizations(
+    annotate_polygons=True, polygon_patch_params=pgon_patches
+)
 
 sim.run(height, pad_mode="constant", resolution=res)
 

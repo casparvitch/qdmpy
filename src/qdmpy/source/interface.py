@@ -89,8 +89,12 @@ def odmr_source_retrieval(options, bnvs, field_params):
         y_min = norm_region[0][1]
         y_max = norm_region[1][1]
         for key in source_params.keys():
-            source_params[key] -= np.nanmean(source_params[key][y_min:y_max, x_min:x_max])
-            source_params[key] -= np.nanmean(source_params[key][y_min:y_max, x_min:x_max])
+            source_params[key] -= np.nanmean(
+                source_params[key][y_min:y_max, x_min:x_max]
+            )
+            source_params[key] -= np.nanmean(
+                source_params[key][y_min:y_max, x_min:x_max]
+            )
 
     options["source_params"] = list(source_params.keys())
     return source_params
@@ -141,7 +145,9 @@ def get_current_density(
         options["nv_layer_thickness"],
     ]
 
-    if any([i in ["from_bxy", "from_bz", "without_ft"] for i in options["recon_methods"]]):
+    if any(
+        [i in ["from_bxy", "from_bz", "without_ft"] for i in options["recon_methods"]]
+    ):
 
         # first check if Bx, By, Bz in fit_params
         # extract them
@@ -153,7 +159,8 @@ def get_current_density(
         for p in ["B" + comp for comp in components]:
             if p not in field_params:
                 warn(
-                    f"bfield param '{p}' missing from field_params, skipping current calculation."
+                    f"bfield param '{p}' missing from field_params, skipping current"
+                    " calculation."
                 )
                 return None
             elif field_params[p] is None:
@@ -311,7 +318,10 @@ def get_magnetization(
 
         for p in ["B" + comp for comp in components]:
             if p not in field_params:
-                warn(f"bfield param '{p}' missing from field_params, skipping mag calculation.")
+                warn(
+                    f"bfield param '{p}' missing from field_params, skipping mag"
+                    " calculation."
+                )
                 return None
             elif field_params[p] is None:
                 return None
@@ -343,7 +353,10 @@ def get_magnetization(
                 nvs_above_sample=options["NVs_above_sample"],
             )
         else:
-            warn("recon_method '{method}' option not recognised for mag. recon, skipping.")
+            warn(
+                "recon_method '{method}' option not recognised for mag. recon,"
+                " skipping."
+            )
             return None
 
         if (
@@ -437,7 +450,9 @@ def add_divperp_j(options, source_params):
     for method in methods:
         for p in ["J" + comp + "_" + method for comp in components]:
             if p not in source_params:
-                warn(f"source param '{p}' missing from source_params, skipping j recon.")
+                warn(
+                    f"source param '{p}' missing from source_params, skipping j recon."
+                )
                 return None
             elif source_params[p] is None:
                 return None
@@ -491,7 +506,9 @@ def in_plane_mag_normalise(mag_image, psi, edge_pixels_used):
     max_y_idx = height - 1
 
     # first get indices of a line from origin at bottom left at psi (from +x to +y)
-    origin_line_y = max_y_idx - np.tan(psi) * range(width)  # y = y_max - x*tan(psi) (y downwards)
+    origin_line_y = max_y_idx - np.tan(psi) * range(
+        width
+    )  # y = y_max - x*tan(psi) (y downwards)
     origin_line_y_ints = [
         round(y) for y in origin_line_y.tolist()
     ]  # y-idxs of line from bot. left @ psi
@@ -514,7 +531,10 @@ def in_plane_mag_normalise(mag_image, psi, edge_pixels_used):
         for coords in [(above_y_idxs, above_x_idxs), (below_y_idxs, below_x_idxs)]:
             im_cut = mag_image[coords]
             new_im[coords] = im_cut - (
-                np.mean(im_cut[0:edge_pixels_used] + np.mean(im_cut[-edge_pixels_used:])) / 2
+                np.mean(
+                    im_cut[0:edge_pixels_used] + np.mean(im_cut[-edge_pixels_used:])
+                )
+                / 2
             )
 
         offset += 1

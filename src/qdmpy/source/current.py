@@ -82,7 +82,9 @@ def get_divperp_j(
     fft_jx = qdmpy.shared.fourier.set_naninf_to_zero(fft_jx)
     fft_jy = qdmpy.shared.fourier.set_naninf_to_zero(fft_jy)
 
-    ky, kx, k = qdmpy.shared.fourier.define_k_vectors(fft_jx.shape, pixel_size, k_vector_epsilon)
+    ky, kx, k = qdmpy.shared.fourier.define_k_vectors(
+        fft_jx.shape, pixel_size, k_vector_epsilon
+    )
 
     fft_divperp_j = -1j * kx * fft_jx + -1j * ky + fft_jy
 
@@ -166,13 +168,19 @@ def get_j_from_bxy(
     fft_bx = qdmpy.shared.fourier.set_naninf_to_zero(fft_bx)
     fft_by = qdmpy.shared.fourier.set_naninf_to_zero(fft_by)
 
-    ky, kx, k = qdmpy.shared.fourier.define_k_vectors(fft_bx.shape, pixel_size, k_vector_epsilon)
+    ky, kx, k = qdmpy.shared.fourier.define_k_vectors(
+        fft_bx.shape, pixel_size, k_vector_epsilon
+    )
 
     sign = 1 if nvs_above_sample else -1
 
     # define transform
-    _, bx_to_jy = define_current_transform([sign, 0, 0], ky, kx, k, standoff, nv_layer_thickness)
-    by_to_jx, _ = define_current_transform([0, sign, 0], ky, kx, k, standoff, nv_layer_thickness)
+    _, bx_to_jy = define_current_transform(
+        [sign, 0, 0], ky, kx, k, standoff, nv_layer_thickness
+    )
+    by_to_jx, _ = define_current_transform(
+        [0, sign, 0], ky, kx, k, standoff, nv_layer_thickness
+    )
 
     hanning_filt = qdmpy.shared.fourier.hanning_filter_kspace(
         k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff, standoff
@@ -256,7 +264,9 @@ def get_j_from_bz(
     fft_bz = numpy_fft.fftshift(numpy_fft.fft2(bz_pad))
     fft_bz = qdmpy.shared.fourier.set_naninf_to_zero(fft_bz)
 
-    ky, kx, k = qdmpy.shared.fourier.define_k_vectors(fft_bz.shape, pixel_size, k_vector_epsilon)
+    ky, kx, k = qdmpy.shared.fourier.define_k_vectors(
+        fft_bz.shape, pixel_size, k_vector_epsilon
+    )
 
     # define transformation
     bz_to_jx, bz_to_jy = define_current_transform(
@@ -498,7 +508,9 @@ def get_j_from_bnv(
 
     fft_bnv = numpy_fft.fftshift(numpy_fft.fft2(bnv_pad))
 
-    ky, kx, k = qdmpy.shared.fourier.define_k_vectors(fft_bnv.shape, pixel_size, k_vector_epsilon)
+    ky, kx, k = qdmpy.shared.fourier.define_k_vectors(
+        fft_bnv.shape, pixel_size, k_vector_epsilon
+    )
 
     if nvs_above_sample:
         unv_cpy = copy(unv)
