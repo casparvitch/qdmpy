@@ -459,7 +459,7 @@ class Polygon:
 
 # ============================================================================
 
-
+# TODO allow nptxt to be an array
 def polygon_selector(
     numpy_txt_file_path,
     json_output_path=None,
@@ -502,10 +502,11 @@ def polygon_selector(
     Press 'enter' to continue in the program.
     Press the 'esc' key to reset the current polygon
     Hold 'shift' to move all of the vertices (from all polygons)
+    Hold 'r' and scroll to resize all of the polygons.
     'ctrl' to move a single vertex in the current polygon
     'alt' to start a new polygon (and finalise the current one)
     'del' to clear all lines from the graphic  (thus deleting all polygons).
-
+    'right click' on a vertex (of a finished polygon) to remove it.
     """
     if print_help:
         print(

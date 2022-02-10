@@ -91,9 +91,7 @@ class System:
         """
         Initialisation of system. Must set options_dict.
         """
-        raise NotImplementedError(
-            "System init must set options_dict: override default!"
-        )
+        raise NotImplementedError("System init must set options_dict: override default!")
 
     def read_image(self, filepath, options):
         """
@@ -218,9 +216,7 @@ class UniMelb(System):
         # ensure all values default to None (at all levels of reading in json)
 
         # global defaults
-        self.options_dict = qdmpy.shared.json2dict.json_to_dict(
-            self.uni_defaults_path, hook="dd"
-        )
+        self.options_dict = qdmpy.shared.json2dict.json_to_dict(self.uni_defaults_path, hook="dd")
         # system specific options, then recursively update
         sys_spec_opts = qdmpy.shared.json2dict.json_to_dict(self.config_path, hook="dd")
         qdmpy.shared.json2dict.recursive_dict_update(self.options_dict, sys_spec_opts)
@@ -283,9 +279,7 @@ class UniMelb(System):
         if not int(options["additional_bins"]):
             options["total_bin"] = options["original_bin"]
         else:
-            options["total_bin"] = options["original_bin"] * int(
-                options["additional_bins"]
-            )
+            options["total_bin"] = options["original_bin"] * int(options["additional_bins"])
 
     def read_sweep_list(self, filepath):
         with open(os.path.normpath(str(filepath) + "_metaSpool.txt"), "r") as fid:
@@ -365,7 +359,7 @@ class UniMelb(System):
             # ok now read the metadata
             rest_str = fid.read()
             matches = re.findall(
-                    r"^([a-zA-Z0-9_ /+()#-]+):([a-zA-Z0-9_ /+()#-]+)",
+                r"^([a-zA-Z0-9_ /+()#-]+):([a-zA-Z0-9_ /+()#-]+)",
                 rest_str,
                 re.MULTILINE,
             )
@@ -503,9 +497,7 @@ class LegacyCryoWidefield(UniMelb):
         if not int(options["additional_bins"]):
             options["total_bin"] = options["original_bin"]
         else:
-            options["total_bin"] = options["original_bin"] * int(
-                options["additional_bins"]
-            )
+            options["total_bin"] = options["original_bin"] * int(options["additional_bins"])
 
 
 # ============================================================================
