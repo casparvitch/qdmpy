@@ -174,7 +174,12 @@ def vert_linecut_vs_position(
     axs[2].axvline(0, color="k", zorder=0)
     axs[2].axhline(0, color="k", zorder=0)
 
-    # FIXME decide upon how to save data -> json?
+    odict = {
+        "integral_column_labels": col_labels,
+        "integral_values": integrals,
+        "profiles_formatted_for_mpl_plot": profiles,
+    }
+    qdmpy.shared.json2dict.dict_to_json(odict, output_path)
 
 
 # ============================================================================
