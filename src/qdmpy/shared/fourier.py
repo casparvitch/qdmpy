@@ -148,7 +148,7 @@ def define_k_vectors(shape, pixel_size, k_vector_epsilon):
 
 
 def set_naninf_to_zero(array):
-    """ replaces NaNs and infs with zero"""
+    """replaces NaNs and infs with zero"""
     idxs = np.logical_or(np.isnan(array), np.isinf(array))
     array[idxs] = 0
     return array
@@ -192,6 +192,7 @@ def hanning_filter_kspace(
         # apply cutoffs
         if hanning_high_cutoff is not None:
             k_cut_high = (2 * np.pi) / hanning_high_cutoff
+            img_filt[k > k_cut_high] = 0
         else:
             k_cut_high = (2 * np.pi) / standoff
             img_filt[k > k_cut_high] = 0
