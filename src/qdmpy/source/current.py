@@ -8,6 +8,7 @@ Functions
  - `qdmpy.source.current.get_j_from_bxy`
  - `qdmpy.source.current.get_j_from_bz`
  - `qdmpy.source.current.get_j_from_bnv`
+ - `qdmpy.source.current.get_j_without_ft`
 """
 
 
@@ -19,6 +20,7 @@ __pdoc__ = {
     "qdmpy.source.current.get_j_from_bxy": True,
     "qdmpy.source.current.get_j_from_bz": True,
     "qdmpy.source.current.get_j_from_bnv": True,
+    "qdmpy.source.current.get_j_without_ft": True,
 }
 
 # ============================================================================
@@ -131,12 +133,12 @@ def get_j_from_bxy(
         Add an epsilon value to the k-vectors to avoid some issues with 1/0.
     do_hanning_filter : bool
         Do a hanning filter?
-    hanning_high_cutoff : float
-        Set highpass cutoff k values. Give as a distance/wavelength, e.g. k_high will be set
-        via k_high = 2pi/high_cutoff. Should be _smaller_ number than low_cutoff.
     hanning_low_cutoff : float
         Set lowpass cutoff k values. Give as a distance/wavelength, e.g. k_low will be set
         via k_low = 2pi/low_cutoff. Should be _larger_ number than high_cutoff.
+    hanning_high_cutoff : float
+        Set highpass cutoff k values. Give as a distance/wavelength, e.g. k_high will be set
+        via k_high = 2pi/high_cutoff. Should be _smaller_ number than low_cutoff.
     standoff : float
         Distance NV layer <-> Sample (in metres)
     nv_layer_thickness : float
@@ -235,12 +237,12 @@ def get_j_from_bz(
         Add an epsilon value to the k-vectors to avoid some issues with 1/0.
     do_hanning_filter : bool
         Do a hanning filter?
-    hanning_high_cutoff : float
-        Set highpass cutoff k values. Give as a distance/wavelength, e.g. k_high will be set
-        via k_high = 2pi/high_cutoff. Should be _smaller_ number than low_cutoff.
     hanning_low_cutoff : float
         Set lowpass cutoff k values. Give as a distance/wavelength, e.g. k_low will be set
         via k_low = 2pi/low_cutoff. Should be _larger_ number than high_cutoff.
+    hanning_high_cutoff : float
+        Set highpass cutoff k values. Give as a distance/wavelength, e.g. k_high will be set
+        via k_high = 2pi/high_cutoff. Should be _smaller_ number than low_cutoff.
     standoff : float
         Distance NV layer <-> Sample (in metres)
     nv_layer_thickness : float
@@ -478,12 +480,12 @@ def get_j_from_bnv(
         Add an epsilon value to the k-vectors to avoid some issues with 1/0.
     do_hanning_filter : bool
         Do a hanning filter?
-    hanning_high_cutoff : float
-        Set highpass cutoff k values. Give as a distance/wavelength, e.g. k_high will be set
-        via k_high = 2pi/high_cutoff. Should be _smaller_ number than low_cutoff.
     hanning_low_cutoff : float
         Set lowpass cutoff k values. Give as a distance/wavelength, e.g. k_low will be set
         via k_low = 2pi/low_cutoff. Should be _larger_ number than high_cutoff.
+    hanning_high_cutoff : float
+        Set highpass cutoff k values. Give as a distance/wavelength, e.g. k_high will be set
+        via k_high = 2pi/high_cutoff. Should be _smaller_ number than low_cutoff.
     standoff : float
         Distance NV layer <-> Sample (in metres)
     nv_layer_thickness : float
