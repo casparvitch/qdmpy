@@ -217,7 +217,9 @@ def _is_inside_sm(point, polygon):
         dy2 = point[1] - polygon[jj][1]
 
         # consider only lines which are not completely above/bellow/right from the point
-        if dy * dy2 <= 0.0 and (point[0] >= polygon[ii][0] or point[0] >= polygon[jj][0]):
+        if dy * dy2 <= 0.0 and (
+            point[0] >= polygon[ii][0] or point[0] >= polygon[jj][0]
+        ):
 
             # non-horizontal line
             if dy < 0 or dy2 < 0:
@@ -225,7 +227,9 @@ def _is_inside_sm(point, polygon):
                     dy * (polygon[jj][0] - polygon[ii][0]) / (dy - dy2) + polygon[ii][0]
                 )  # noqa: N806
 
-                if point[0] > F:  # if line is left from the point - the ray moving towards left,
+                if (
+                    point[0] > F
+                ):  # if line is left from the point - the ray moving towards left,
                     #  will intersect it
                     intersections += 1
                 elif point[0] == F:  # point on line
@@ -235,7 +239,10 @@ def _is_inside_sm(point, polygon):
             # (dy=dy2=0 and dx*dx2<=0)
             elif dy2 == 0 and (
                 point[0] == polygon[jj][0]
-                or (dy == 0 and (point[0] - polygon[ii][0]) * (point[0] - polygon[jj][0]) <= 0)
+                or (
+                    dy == 0
+                    and (point[0] - polygon[ii][0]) * (point[0] - polygon[jj][0]) <= 0
+                )
             ):
                 return 2
 
@@ -256,7 +263,9 @@ def _is_inside_sm_parallel(points, polygon):
     # note this fn works in (x,y) coords (but if point/polygon is consistent all is g.)
     p_ar = np.asfarray(points)
     pts_shape = p_ar.shape[:-1]
-    p_ar_flat = p_ar.reshape(-1, 2)  # shape: (len_y * len_x, 2), i.e. long list of coords (y, x)
+    p_ar_flat = p_ar.reshape(
+        -1, 2
+    )  # shape: (len_y * len_x, 2), i.e. long list of coords (y, x)
     d = np.zeros(p_ar_flat.shape[0], dtype=numba.int8)
     for i in numba.prange(p_ar_flat.shape[0]):
         d[i] = _is_inside_sm(p_ar_flat[i], polygon)
@@ -564,7 +573,8 @@ def polygon_selector(
             shp = polys["image_shape"]
             if shp[0] != image.shape[0] or shp[1] != image.shape[1]:
                 warn(
-                    "Image shape loaded polygons were defined on does not match current" " image."
+                    "Image shape loaded polygons were defined on does not match current"
+                    " image."
                 )
 
     fig, ax = plt.subplots()
@@ -661,7 +671,11 @@ def polygon_gui(image=None):
     size = (3, 1)
 
     if image is not None:
-        layout0 = [sg.Text("Image file chosen: " + str(image.__class__) + " @ " + hex(id(image)))]
+        layout0 = [
+            sg.Text(
+                "Image file chosen: " + str(image.__class__) + " @ " + hex(id(image))
+            )
+        ]
     else:
         layout0 = [
             sg.Text("Choose .txt numpy array File"),
@@ -714,7 +728,12 @@ def polygon_gui(image=None):
         [sg.Text("Hold 'r' and scroll to resize all of the polygons.")],
         [sg.Text("'ctrl' to move a single vertex in the current polygon")],
         [sg.Text("'alt' to start a new polygon (and finalise the current one)")],
-        [sg.Text("'del' to clear all lines from the graphic  (thus deleting all" " polygons).")],
+        [
+            sg.Text(
+                "'del' to clear all lines from the graphic  (thus deleting all"
+                " polygons)."
+            )
+        ],
         [sg.Text("'right click' on a vertex (of a closer polygon) to remove it.")],
     ]
     window = sg.Window("Polygon selection tool", layout, grab_anywhere=False)
@@ -754,7 +773,8 @@ def polygon_gui(image=None):
             shp = polys["image_shape"]
             if shp[0] != image.shape[0] or shp[1] != image.shape[1]:
                 warn(
-                    "Image shape loaded polygons were defined on does not match current" " image."
+                    "Image shape loaded polygons were defined on does not match current"
+                    " image."
                 )
     else:
         polygon_nodes = None
@@ -894,7 +914,9 @@ class PolygonSelectionWidget:
             new_line = Line2D(nodes_ar[:, 1], nodes_ar[:, 0], **self.lp)
             self.ax.add_line(new_line)
 
-            new_line_dict = dict(line_obj=new_line, xs=nodes_ar[:, 1], ys=nodes_ar[:, 0])
+            new_line_dict = dict(
+                line_obj=new_line, xs=nodes_ar[:, 1], ys=nodes_ar[:, 0]
+            )
 
             self.polys.artists.append(new_line)
             self.polys.lines.append(new_line_dict)  # list of line dicts

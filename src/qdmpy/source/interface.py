@@ -354,7 +354,7 @@ def get_magnetization(
             )
         else:
             warn(
-                "recon_method '{method}' option not recognised for mag. recon,"
+                f"recon_method '{method}' option not recognised for mag. recon,"
                 " skipping."
             )
             return None

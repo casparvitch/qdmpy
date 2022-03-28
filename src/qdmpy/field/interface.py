@@ -160,8 +160,7 @@ def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
             if num_peaks_wanted not in [1, 2]:
                 raise RuntimeError(
                     "field_method option was 'prop_single_bnv', but number of true"
-                    " values in option "
-                    + "'freqs_to_use' was not 1 or 2."
+                    " values in option " + "'freqs_to_use' was not 1 or 2."
                 )
             else:
                 sig_params = qdmpy.field.bxyz.from_single_bnv(options, sig_bnvs)
@@ -174,8 +173,7 @@ def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
             if num_peaks_wanted != 6:
                 raise RuntimeError(
                     "field_method option was 'invert_unvs', but number of true values"
-                    " in option "
-                    + "'freqs_to_use' was not 6."
+                    " in option " + "'freqs_to_use' was not 6."
                 )
             else:
                 sig_params = qdmpy.field.bxyz.from_unv_inversion(options, sig_bnvs)
@@ -632,7 +630,7 @@ def _check_fit_params_are_ok(options, sig_fit_params, ref_fit_params):
         raise RuntimeError("No 'pos' keys found in sig_fit_params")
     else:
         sig_poskey = next(filter(lambda x: x.startswith("pos"), sig_fit_params.keys()))[
-            :3
+            :-2
         ]
 
     if ref_fit_params:
@@ -643,7 +641,7 @@ def _check_fit_params_are_ok(options, sig_fit_params, ref_fit_params):
         else:
             ref_poskey = next(
                 filter(lambda x: x.startswith("pos"), ref_fit_params.keys())
-            )[:3]
+            )[:-2]
 
         if (
             not sig_fit_params[sig_poskey + "_0"].shape

@@ -296,11 +296,11 @@
         "option_default": [-0.0100, -0.0003]
     },
     "fwhm_gauss_guess": {
-        "option_default": -0.0015
+        "option_default": 9
     },
 
     "fwhm_gauss_bounds": {
-        "option_default": [5, 20]
+        "option_default": [3, 40]
     },
 
     // linear function (background)

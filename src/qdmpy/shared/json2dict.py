@@ -286,7 +286,9 @@ def _json_remove_comments(string, strip_space=True):
             escaped = end_slashes_re.search(string, 0, match.start())
 
             # start of string or unescaped quote character to end string
-            if not in_string or (escaped is None or len(escaped.group()) % 2 == 0):  # noqa
+            if not in_string or (
+                escaped is None or len(escaped.group()) % 2 == 0
+            ):  # noqa
                 in_string = not in_string
             index -= 1  # include " character in next catch
         elif not (in_string or in_multi or in_single):
@@ -300,7 +302,9 @@ def _json_remove_comments(string, strip_space=True):
                 new_str.append(" " * len(val))
         elif val in "\r\n" and not (in_multi or in_string) and in_single:
             in_single = False
-        elif not ((in_multi or in_single) or (val in " \r\n\t" and strip_space)):  # noqa
+        elif not (
+            (in_multi or in_single) or (val in " \r\n\t" and strip_space)
+        ):  # noqa
             new_str.append(val)
 
         if not strip_space:
@@ -348,7 +352,9 @@ def recursive_dict_update(to_be_updated_dict, updating_dict):
     for key, val in updating_dict.items():
         if isinstance(val, abc.Mapping):
             # avoids KeyError by returning {}
-            to_be_updated_dict[key] = recursive_dict_update(to_be_updated_dict.get(key, {}), val)
+            to_be_updated_dict[key] = recursive_dict_update(
+                to_be_updated_dict.get(key, {}), val
+            )
         else:
             to_be_updated_dict[key] = val
     return to_be_updated_dict

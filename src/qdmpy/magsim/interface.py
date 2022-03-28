@@ -78,8 +78,7 @@ class MagSim:
                         # TODO massage to match?
                         raise RuntimeError(
                             "Image size polygons were defined on as passed to"
-                            " add_polygons does "
-                            + "not match this MagSim's mesh."
+                            " add_polygons does " + "not match this MagSim's mesh."
                         )
                 return [np.array(p) for p in polys["nodes"]]
             elif isinstance(polys, (str, pathlib.PurePath)):

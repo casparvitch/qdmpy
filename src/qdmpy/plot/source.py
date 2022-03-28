@@ -782,7 +782,7 @@ def divperp_j(options, source_params, sigma=5):
         options["recon_methods"]
     ):  # # m_idx: each doublet of rows
         if f"divperp_J_{method}" not in source_params:
-            warn("missing recon_method '{method}', skipping.")
+            warn(f"missing recon_method '{method}', skipping.")
             continue
         ax = axs if width == 1 else axs[m_idx]
         data = source_params[f"divperp_J_{method}"]
