@@ -133,7 +133,7 @@ def _prep_fit_backends(options, fit_model):
 # ============================================================================
 
 
-def fit_roi_avg_pl(options, sig_norm, sweep_list, fit_model):
+def fit_roi_avg_pl(options, sig, ref, sweep_list, fit_model):
     """
     Fit the average of the measurement over the region of interest specified, with backend
     chosen via options["fit_backend_comparison"].
@@ -142,8 +142,10 @@ def fit_roi_avg_pl(options, sig_norm, sweep_list, fit_model):
     ---------
     options : dict
         Generic options dict holding all the user options.
-    sig_norm : np array, 3D
-        Normalised measurement array, shape: [sweep_list, y, x].
+    sig : np array, 3D
+        Sig measurement array, unnormalised, shape: [sweep_list, y, x].
+    ref : np array, 3D
+        Ref measurement array, unnormalised, shape: [sweep_list, y, x].
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
     fit_model : `qdmpy.pl.model.FitModel`
@@ -164,14 +166,14 @@ def fit_roi_avg_pl(options, sig_norm, sweep_list, fit_model):
         if fit_backend == "scipyfit":
             backend_roi_results_lst.append(
                 fit_scipyfit.fit_roi_avg_pl_scipyfit(
-                    options, sig_norm, sweep_list, fit_model
+                    options, sig, ref, sweep_list, fit_model
                 )
             )
         elif fit_backend == "gpufit":
 
             backend_roi_results_lst.append(
                 fit_gpufit.fit_roi_avg_pl_gpufit(
-                    options, sig_norm, sweep_list, fit_model
+                    options, sig, ref, sweep_list, fit_model
                 )
             )
         else:
@@ -186,7 +188,7 @@ def fit_roi_avg_pl(options, sig_norm, sweep_list, fit_model):
 
 
 def fit_aois_pl(
-    options, sig_norm, single_pixel_pl, sweep_list, fit_model, backend_roi_results_lst
+    options, sig, ref, single_pixel_pl, sweep_list, fit_model, backend_roi_results_lst
 ):
     """
     Fit AOIs and single pixel with chosen backends and return fit_result_collection_lst
@@ -195,8 +197,10 @@ def fit_aois_pl(
     ---------
     options : dict
         Generic options dict holding all the user options.
-    sig_norm : np array, 3D
-        Normalised measurement array, shape: [sweep_list, y, x].
+    sig : np array, 3D
+        Sig measurement array, unnormalised, shape: [sweep_list, y, x].
+    ref : np array, 3D
+        Ref measurement array, unnormalised, shape: [sweep_list, y, x].
     single_pixel_pl : np array, 1D
         Normalised measurement array, for chosen single pixel check.
     sweep_list : np array, 1D
@@ -221,7 +225,8 @@ def fit_aois_pl(
             fit_result_collection_lst.append(
                 fit_scipyfit.fit_aois_pl_scipyfit(
                     options,
-                    sig_norm,
+                    sig, 
+                    ref,
                     single_pixel_pl,
                     sweep_list,
                     fit_model,
@@ -233,7 +238,8 @@ def fit_aois_pl(
             fit_result_collection_lst.append(
                 fit_gpufit.fit_aois_pl_gpufit(
                     options,
-                    sig_norm,
+                    sig, 
+                    ref,
                     single_pixel_pl,
                     sweep_list,
                     fit_model,

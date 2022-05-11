@@ -317,7 +317,7 @@ def fit_single_pixel_pl_gpufit(
 # ============================================================================
 
 
-def fit_roi_avg_pl_gpufit(options, sig_norm, sweep_list, fit_model):
+def fit_roi_avg_pl_gpufit(options, sig, ref, sweep_list, fit_model):
     """
     Fit the average of the measurement over the region of interest specified, with gpufit.
 
@@ -325,8 +325,10 @@ def fit_roi_avg_pl_gpufit(options, sig_norm, sweep_list, fit_model):
     ---------
     options : dict
         Generic options dict holding all the user options.
-    sig_norm : np array, 3D
-        Normalised measurement array, shape: [sweep_list, y, x].
+    sig : np array, 3D
+        Sig measurement array, unnormalised, shape: [sweep_list, y, x].
+    ref : np array, 3D
+        Ref measurement array, unnormalised, shape: [sweep_list, y, x].
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
     fit_model : `qdmpy.pl.model.FitModel`
@@ -342,8 +344,16 @@ def fit_roi_avg_pl_gpufit(options, sig_norm, sweep_list, fit_model):
 
     # fit *all* pl data (i.e. summing over FOV)
     # collapse to just pl_ar (as function of sweep, 1D)
-    pl_roi = np.nanmean(np.nanmean(sig_norm, axis=2), axis=1)
-    pl_roi_twice = np.repeat([pl_roi], repeats=2, axis=0)
+    sig_mean = np.nanmean(np.nanmean(sig, axis=2), axis=1)
+    ref_mean = np.nanmean(np.nanmean(ref, axis=2), axis=1)
+    if not options["used_ref"]:
+        roi_norm = sig_mean
+    elif options["normalisation"] == "div":
+        roi_norm = sig_mean / ref_mean
+    elif options["normalisation"] == "sub":
+        roi_norm = 1 + (sig_mean - ref_mean) / (sig_mean + ref_mean)
+
+    roi_norm_twice = np.repeat([roi_norm], repeats=2, axis=0)
 
     # this is just constructing the initial parameter guesses and bounds in the right format
     init_guess_params, init_bounds = gen_gpufit_init_guesses(
@@ -366,7 +376,7 @@ def fit_roi_avg_pl_gpufit(options, sig_norm, sweep_list, fit_model):
         number_iterations,
         execution_time,
     ) = gf.fit_constrained(
-        pl_roi_twice.astype(np.float32),
+        roi_norm_twice.astype(np.float32),
         None,
         options["ModelID"],
         init_guess_params,
@@ -383,7 +393,7 @@ def fit_roi_avg_pl_gpufit(options, sig_norm, sweep_list, fit_model):
         "gpufit",
         gpufit_fit_options,
         fit_model,
-        pl_roi,
+        roi_norm,
         sweep_list,
         best_params[0, :],  # only take one of the results
         init_guess_params[0],  # return the params un-repeated
@@ -395,7 +405,7 @@ def fit_roi_avg_pl_gpufit(options, sig_norm, sweep_list, fit_model):
 
 
 def fit_aois_pl_gpufit(
-    options, sig_norm, pixel_pl_ar, sweep_list, fit_model, aois, roi_avg_fit_result
+    options, sig, ref, pixel_pl_ar, sweep_list, fit_model, aois, roi_avg_fit_result
 ):
     """
     Fit AOIs and single pixel and return list of (list of) fit results (optimal fit parameters),
@@ -405,8 +415,10 @@ def fit_aois_pl_gpufit(
     ---------
     options : dict
         Generic options dict holding all the user options.
-    sig_norm : np array, 3D
-        Normalised measurement array, shape: [sweep_list, y, x].
+    sig : np array, 3D
+        Sig measurement array, unnormalised, shape: [sweep_list, y, x].
+    ref : np array, 3D
+        Ref measurement array, unnormalised, shape: [sweep_list, y, x].
     pixel_pl_ar : np array, 1D
         Normalised measurement array, for chosen single pixel check.
     sweep_list : np array, 1D
@@ -448,12 +460,20 @@ def fit_aois_pl_gpufit(
     init_guess_params = init_guess_params.astype(dtype=np.float32)
 
     for a in aois:
-        sn = sig_norm[:, a[0], a[1]]
-        avg = np.nanmean(np.nanmean(sn, axis=2), axis=1)
-        avg_twice = np.repeat([avg], repeats=2, axis=0)
+        this_sig = np.nanmean(np.nanmean(sig[:, a[0], a[1]], axis=2), axis=1)
+        this_ref = np.nanmean(np.nanmean(ref[:, a[0], a[1]], axis=2), axis=1)
+
+        if not options["used_ref"]:
+            this_aoi = this_sig
+        elif options["normalisation"] == "div":
+            this_aoi = this_sig / this_ref
+        elif options["normalisation"] == "sub":
+            this_aoi = 1 + (this_sig - this_ref) / (this_sig + this_ref)
+
+        this_aoi_twice = np.repeat([this_aoi], repeats=2, axis=0)
 
         fitting_results, _, _, _, _ = gf.fit_constrained(
-            avg_twice.astype(np.float32),
+            this_aoi_twice.astype(np.float32),
             None,
             options["ModelID"],
             np.array(init_guess_params, dtype=np.float32),

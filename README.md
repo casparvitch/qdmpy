@@ -125,7 +125,7 @@ View in text editor if scrambled.
 |                                                                                       |                                                                                 
 | pl.define_fit_model               fit_model: FitModel                                 |                                                                                 
 | pl.fit_roi_avg_pl                                          plot.roi_avg_fits          |                                                                                 
-| pl.fit_aois_pl                                             plot.aoi_spectra_fit       |                                                                                 
+|                                                            plot.aoi_spectra_fit       |                                                                                 
 |                                                                                       |                                                                                 
 | pl.get_pl_fit_result              pixel_fit_params: dict   plot.pl_param_images       |                                                                                 
 |                                   sigmas: dict             plot.pl_param_sigmas       |                                                                                 

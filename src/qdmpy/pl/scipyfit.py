@@ -158,7 +158,7 @@ def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
 # ==========================================================================
 
 
-def fit_roi_avg_pl_scipyfit(options, sig_norm, sweep_list, fit_model):
+def fit_roi_avg_pl_scipyfit(options, sig, ref, sweep_list, fit_model):
     """
     Fit the average of the measurement over the region of interest specified, with scipy.
 
@@ -166,8 +166,10 @@ def fit_roi_avg_pl_scipyfit(options, sig_norm, sweep_list, fit_model):
     ---------
     options : dict
         Generic options dict holding all the user options.
-    sig_norm : np array, 3D
-        Normalised measurement array, shape: [sweep_list, y, x].
+    sig : np array, 3D
+        Sig measurement array, unnormalised, shape: [sweep_list, y, x].
+    ref : np array, 3D
+        Ref measurement array, unnormalised, shape: [sweep_list, y, x].
     sweep_list : np array, 1D
         Affine parameter list (e.g. tau or freq)
     fit_model : `qdmpy.pl.model.FitModel`
@@ -179,7 +181,14 @@ def fit_roi_avg_pl_scipyfit(options, sig_norm, sweep_list, fit_model):
     """
     # fit *all* pl data (i.e. summing over FOV)
     # collapse to just pl_ar (as function of sweep, 1D)
-    pl_roi = np.nanmean(np.nanmean(sig_norm, axis=2), axis=1)
+    sig_mean = np.nanmean(np.nanmean(sig, axis=2), axis=1)
+    ref_mean = np.nanmean(np.nanmean(ref, axis=2), axis=1)
+    if not options["used_ref"]:
+        roi_norm = sig_mean
+    elif options["normalisation"] == "div":
+        roi_norm = sig_mean / ref_mean
+    elif options["normalisation"] == "sub":
+        roi_norm = 1 + (sig_mean - ref_mean) / (sig_mean + ref_mean)
 
     fit_options = prep_scipyfit_options(options, fit_model)
 
@@ -190,7 +199,7 @@ def fit_roi_avg_pl_scipyfit(options, sig_norm, sweep_list, fit_model):
     fitting_results = least_squares(
         fit_model.residuals_scipyfit,
         init_param_guess,
-        args=(sweep_list, pl_roi),
+        args=(sweep_list, roi_norm),
         **fit_options,
     )
 
@@ -200,7 +209,7 @@ def fit_roi_avg_pl_scipyfit(options, sig_norm, sweep_list, fit_model):
         "scipyfit",
         fit_options,
         fit_model,
-        pl_roi,
+        roi_norm,
         sweep_list,
         best_params,
         init_param_guess,
@@ -262,7 +271,7 @@ def fit_single_pixel_pl_scipyfit(
 
 
 def fit_aois_pl_scipyfit(
-    options, sig_norm, pixel_pl_ar, sweep_list, fit_model, aois, roi_avg_fit_result
+    options, sig, ref, pixel_pl_ar, sweep_list, fit_model, aois, roi_avg_fit_result
 ):
     """
     Fit AOIs and single pixel and return list of (list of) fit results (optimal fit parameters),
@@ -272,8 +281,10 @@ def fit_aois_pl_scipyfit(
     ---------
     options : dict
         Generic options dict holding all the user options.
-    sig_norm : np array, 3D
-        Normalised measurement array, shape: [sweep_list, y, x].
+    sig : np array, 3D
+        Sig measurement array, unnormalised, shape: [sweep_list, y, x].
+    ref : np array, 3D
+        Ref measurement array, unnormalised, shape: [sweep_list, y, x].
     single_pixel_pl : np array, 1D
         Normalised measurement array, for chosen single pixel check.
     sweep_list : np array, 1D
@@ -312,13 +323,20 @@ def fit_aois_pl_scipyfit(
     aoi_avg_best_fit_results_lst = []
 
     for a in aois:
-        this_aoi = sig_norm[:, a[0], a[1]]
-        avg = np.nanmean(np.nanmean(this_aoi, axis=2), axis=1)
+        this_sig = np.nanmean(np.nanmean(sig[:, a[0], a[1]], axis=2), axis=1)
+        this_ref = np.nanmean(np.nanmean(ref[:, a[0], a[1]], axis=2), axis=1)
+
+        if not options["used_ref"]:
+            this_aoi = this_sig
+        elif options["normalisation"] == "div":
+            this_aoi = this_sig / this_ref
+        elif options["normalisation"] == "sub":
+            this_aoi = 1 + (this_sig - this_ref) / (this_sig + this_ref)
 
         fitting_results = least_squares(
             fit_model.residuals_scipyfit,
             guess_params,
-            args=(sweep_list, avg),
+            args=(sweep_list, this_aoi),
             **fit_opts,
         )
         aoi_avg_best_fit_results_lst.append(fitting_results.x)

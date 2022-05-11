@@ -576,15 +576,12 @@ def aoi_spectra_fit(
 
     # plot normalisation as second column
     for i, (s, r) in enumerate(zip(sigs, refs)):
-        sub = 1 + (s - r) / (s + r)
-        div = s / r
-
-        if len(sub.shape) > 1:
-            sub_avg = np.nanmean(np.nanmean(sub, axis=2), axis=1)
-            div_avg = np.nanmean(np.nanmean(div, axis=2), axis=1)
+        if len(s.shape) > 1:
+            sub_avg = np.nanmean(np.nanmean(1 + (s - r) / (s + r), axis=2), axis=1)
+            div_avg = np.nanmean(np.nanmean(s / r, axis=2), axis=1)
         else:
-            sub_avg = sub
-            div_avg = div
+            sub_avg = 1 + (s - r) / (s + r)
+            div_avg = s / r
 
         axs[i, 1].plot(
             sweep_list,
@@ -646,17 +643,16 @@ def aoi_spectra_fit(
         # now plot fits as third column
         for i, (fit_param_ar, s, r) in enumerate(zip(fit_params_lst, sigs, refs)):
 
+            if len(s.shape) > 1:
+                s = np.nanmean(np.nanmean(s, axis=2), axis=1)
+                r = np.nanmean(np.nanmean(r, axis=2), axis=1)
+            
             if not options["used_ref"]:
-                sig_norm = s
+                sig_norm_avg = s
             elif options["normalisation"] == "div":
-                sig_norm = s / r
+                sig_norm_avg = s / r
             elif options["normalisation"] == "sub":
-                sig_norm = 1 + (s - r) / (s + r)
-
-            if len(sig_norm.shape) > 1:
-                sig_norm_avg = np.nanmean(np.nanmean(sig_norm, axis=2), axis=1)
-            else:
-                sig_norm_avg = sig_norm
+                sig_norm_avg = 1 + (s - r) / (s + r)
 
             best_fit_ydata = fit_model(fit_param_ar, high_res_xdata)
             roi_fit_ydata = fit_model(
