@@ -1,0 +1,89 @@
+{
+    // Name of system used (see systems.py).
+    "system_name": {
+        "option_default": "Argus",
+        "option_choices":
+            [
+                "Zyla",
+                "cQDM",
+                "Cryo_Widefield"
+            ]
+    },
+    // =======================================
+    // === microscope settings ===
+    // Default options for the Zyla microscope
+    "microscope_setup": {
+        "option_default": {
+            "sensor_pixel_size": 6.5e-6,
+            "default_objective_mag": 40,
+            "default_objective_reference_focal_length":  200e-3,
+            "default_camera_tube_lens": 300e-3
+        }
+    },
+
+    // Read magnetic field from options (i.e. if applied with vector electromagnet)
+    // --> system dependent option (i.e. Unimelb reads from metadata)
+    "auto_read_bias": {
+        "option_default": false,
+        "option_choices": 
+            [
+                true,
+                false
+            ]
+    },
+    // Field of bias field, used to automatically determine uNVs
+    "bias_mag": {
+        "option_default": 80
+    },
+    // in degrees
+    "bias_theta": {
+        "option_default": 15
+    },
+    // in degrees
+    "bias_phi": {
+        "option_default": 15
+    },
+
+    // ========== scipy least squares fitting options ===========
+
+    // number of threads to *not* use for fitting
+    "scipyfit_sub_threads": {
+        "option_default": 2
+    },
+
+    // ===========================================================================================
+    // ===============================  Fourier Parameters =======================================
+    // ===========================================================================================
+
+    // True if NVs exist at higher z (in lab frame) than sample.
+    // Argus is an inverted microscope
+    "NVs_above_sample": {
+        "option_default": false,
+        "option_choices": [
+            true,
+            false
+        ]
+    },
+
+    // ===========================================================================================
+    // ============================= Source Recon Parameters ====================================
+    // ===========================================================================================
+    // type of source to reconstruct to
+    "source_type": {
+        "option_default": "current_density",
+        "option_choices": [
+            "current_density",
+            "magnetization"
+        ]
+    },
+
+	// ===========================================================================================
+    // =============================== Plotting Parameters =======================================
+	// ===========================================================================================
+    
+    // Add a minus sign to bnv (and dshift) plots if bias field magnitude (in spherical coords)
+    // is negative. Useful to compare magnetic flake bnv images when you're +- the vector bias.
+    "plot_bnv_flip_with_bias_mag": {
+        "option_default": false
+    }
+}

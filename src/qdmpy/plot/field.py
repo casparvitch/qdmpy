@@ -4,28 +4,28 @@ This module holds functions for plotting fields.
 
 Functions
 ---------
- - `qdmpy.plot.field.plot_bnvs_and_dshifts`
- - `qdmpy.plot.field.plot_bfield`
- - `qdmpy.plot.field.plot_dshift_fit`
- - `qdmpy.plot.field.plot_field_residual`
- - `qdmpy.plot.field.plot_field_param`
- - `qdmpy.plot.field.plot_field_param_flattened`
- - `qdmpy.plot.field.plot_bfield_consistency`
- - `qdmpy.plot.field.plot_bfield_theta_phi`
+ - `qdmpy.plot.field.bnvs_and_dshifts`
+ - `qdmpy.plot.field.bfield`
+ - `qdmpy.plot.field.dshift_fit`
+ - `qdmpy.plot.field.field_residual`
+ - `qdmpy.plot.field.field_param`
+ - `qdmpy.plot.field.field_param_flattened`
+ - `qdmpy.plot.field.bfield_consistency`
+ - `qdmpy.plot.field.bfield_theta_phi`
 """
 
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
-    "qdmpy.plot.fields.plot_bnvs_and_dshifts": True,
-    "qdmpy.plot.fields.plot_bfield": True,
-    "qdmpy.plot.fields.plot_dshift_fit": True,
-    "qdmpy.plot.fields.plot_field_residual": True,
-    "qdmpy.plot.fields.plot_field_param": True,
-    "qdmpy.plot.fields.plot_field_param_flattened": True,
-    "qdmpy.plot.fields.plot_bfield_consistency": True,
-    "qdmpy.plot.fields.plot_bfield_theta_phi": True,
+    "qdmpy.plot.fields.bnvs_and_dshifts": True,
+    "qdmpy.plot.fields.bfield": True,
+    "qdmpy.plot.fields.dshift_fit": True,
+    "qdmpy.plot.fields.field_residual": True,
+    "qdmpy.plot.fields.field_param": True,
+    "qdmpy.plot.fields.field_param_flattened": True,
+    "qdmpy.plot.fields.bfield_consistency": True,
+    "qdmpy.plot.fields.bfield_theta_phi": True,
 }
 
 # ============================================================================
@@ -34,17 +34,17 @@ import numpy as np
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
-import warnings
 
 # ============================================================================
 
-import qdmpy.plot.common as plot_common
-import qdmpy.hamiltonian as Qham
+import qdmpy.plot.common
+import qdmpy.field
+from qdmpy.shared.misc import warn
 
 # ============================================================================
 
 
-def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
+def bnvs_and_dshifts(options, name, bnvs, dshifts):
     """
     Plots bnv arrays above dshift arrays.
 
@@ -68,7 +68,7 @@ def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
     fig : matplotlib Figure object
     """
 
-    if not bnvs and (dshifts is None or not len(dshifts)):
+    if not bnvs and (dshifts is None or not dshifts):
         return None
 
     figsize = mpl.rcParams["figure.figsize"].copy()
@@ -77,10 +77,11 @@ def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
     figsize[0] *= width  # number of columns
     figsize[1] *= height  # number of rows
 
-    figsize[0] *= 3 / 4  # (usually 4 images wide not 3...)
-    figsize[1] *= 3 / 4
+    # standardise figsize of output
+    # figsize[0] *= 3 / 4  # (usually 4 images wide not 3...)
+    # figsize[1] *= 3 / 4
 
-    fig, axs = plt.subplots(height, width, figsize=figsize, constrained_layout=True)
+    fig, axs = plt.subplots(height, width, figsize=figsize)
 
     c_map = options["colormaps"]["bnv_images"]
     # axs index: axs[row, col]
@@ -92,19 +93,21 @@ def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
             else bnv
         )
 
-        c_range = plot_common._get_colormap_range(
+        c_range = qdmpy.plot.common.get_colormap_range(
             options["colormap_range_dicts"]["bnv_images"], data
         )
         title = f"{name} B NV_{i}"
-        if width == 1 and (dshifts is None or not len(dshifts)):
+        if width == 1 and (dshifts is None or not dshifts):
             ax = axs
         elif width == 1:
             ax = axs[0]
-        elif dshifts is None or not len(dshifts):
+        elif dshifts is None or not dshifts:
             ax = axs[i]
         else:
             ax = axs[0, i]
-        plot_common.plot_image_on_ax(fig, ax, options, data, title, c_map, c_range, "B (G)")
+        qdmpy.plot.common.plot_image_on_ax(
+            fig, ax, options, data, title, c_map, c_range, "B (G)"
+        )
     c_map = options["colormaps"]["dshift_images"]
     for i, dshift in enumerate(dshifts):
         data = (
@@ -113,12 +116,14 @@ def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
             and options["bias_field_spherical_deg_gauss"][0] < 0
             else dshift
         )
-        c_range = plot_common._get_colormap_range(
+        c_range = qdmpy.plot.common.get_colormap_range(
             options["colormap_range_dicts"]["dshift_images"], data
         )
         title = f"{name} D_{i}"
         ax = axs[1] if width == 1 else axs[1, i]
-        plot_common.plot_image_on_ax(fig, ax, options, data, title, c_map, c_range, "D (MHz)")
+        qdmpy.plot.common.plot_image_on_ax(
+            fig, ax, options, data, title, c_map, c_range, "D (MHz)"
+        )
 
     if options["save_plots"]:
         fig.savefig(options["field_dir"] / (f"Bnv_{name}." + options["save_fig_type"]))
@@ -129,7 +134,7 @@ def plot_bnvs_and_dshifts(options, name, bnvs, dshifts):
 # ============================================================================
 
 
-def plot_bfield(options, name, field_params):
+def bfield(options, name, field_params):
     """Plot Bxyz if available as keys in 'field_params'.
 
     Arguments
@@ -150,12 +155,14 @@ def plot_bfield(options, name, field_params):
 
     components = ["x", "y", "z"]
 
-    if name == "bground":
-        components = [i + "_bground" for i in components]
+    other_selectors = ["bground", "full", "mask"]
+
+    if name in other_selectors:
+        components = [i + "_" + name for i in components]
 
     for p in ["B" + comp for comp in components]:
         if p not in field_params:
-            warnings.warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
+            warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
             return None
         elif field_params[p] is None:
             return None
@@ -167,24 +174,30 @@ def plot_bfield(options, name, field_params):
     height = 1  # number of rows
     figsize[0] *= width  # number of columns
 
-    fig, ax = plt.subplots(height, width, figsize=figsize, constrained_layout=True)
+    fig, ax = plt.subplots(height, width, figsize=figsize)
 
-    c_map = options["colormaps"]["bfield_images"]
+    c_map = "Greys" if name == "mask" else options["colormaps"]["bfield_images"]
 
     for i, bcomponent in enumerate(bfields):
-        c_range = plot_common._get_colormap_range(
-            options["colormap_range_dicts"]["bfield_images"], bcomponent
+        c_range = (
+            [0, 1]
+            if name == "mask"
+            else qdmpy.plot.common.get_colormap_range(
+                options["colormap_range_dicts"]["bfield_images"], bcomponent
+            )
         )
-        if name != "bground":
+        if name not in other_selectors:
             title = f"{name} B" + components[i]
         else:
             title = "B" + components[i]
-        plot_common.plot_image_on_ax(
+        qdmpy.plot.common.plot_image_on_ax(
             fig, ax[i], options, bcomponent, title, c_map, c_range, "B (G)"
         )
 
     if options["save_plots"]:
-        fig.savefig(options["field_dir"] / (f"Bfield_{name}." + options["save_fig_type"]))
+        fig.savefig(
+            options["field_dir"] / (f"Bfield_{name}." + options["save_fig_type"])
+        )
 
     return fig
 
@@ -192,7 +205,7 @@ def plot_bfield(options, name, field_params):
 # ============================================================================
 
 
-def plot_dshift_fit(options, name, field_params):
+def dshift_fit(options, name, field_params):
     """Plot dshift (fit) if available as keys in 'field_params'.
 
     Arguments
@@ -212,24 +225,26 @@ def plot_dshift_fit(options, name, field_params):
         return None
 
     if "D" not in field_params:
-        warnings.warn("'D' param missing from field_params, skipping Dshift_fit plot.")
+        warn("'D' param missing from field_params, skipping Dshift_fit plot.")
         return None
     elif field_params["D"] is None:
         return None
 
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots()
 
     c_map = options["colormaps"]["dshift_images"]
-    c_range = plot_common._get_colormap_range(
+    c_range = qdmpy.plot.common.get_colormap_range(
         options["colormap_range_dicts"]["dshift_images"], field_params["D"]
     )
     title = f"{name} Dshift fit"
-    plot_common.plot_image_on_ax(
+    qdmpy.plot.common.plot_image_on_ax(
         fig, ax, options, field_params["D"], title, c_map, c_range, "D (MHz)"
     )
 
     if options["save_plots"]:
-        fig.savefig(options["field_dir"] / (f"Dshift_fit_{name}." + options["save_fig_type"]))
+        fig.savefig(
+            options["field_dir"] / (f"Dshift_fit_{name}." + options["save_fig_type"])
+        )
 
     return fig
 
@@ -237,7 +252,7 @@ def plot_dshift_fit(options, name, field_params):
 # ============================================================================
 
 
-def plot_field_residual(options, name, field_params):
+def field_residual(options, name, field_params):
     """Plot residual if available as keys in 'field_params' (as 'residual_field').
 
     Arguments
@@ -258,23 +273,25 @@ def plot_field_residual(options, name, field_params):
         return None
 
     if "residual_field" not in field_params:
-        warnings.warn(
-            "'residual_field' param missing from field_params, skipping field residual plot."
+        warn(
+            "'residual_field' param missing from field_params, skipping field residual"
+            " plot."
         )
         return None
     elif field_params["residual_field"] is None:
         return None
 
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots()
 
-    c_range = plot_common._get_colormap_range(
-        options["colormap_range_dicts"]["residual_images"], field_params["residual_field"]
+    c_range = qdmpy.plot.common.get_colormap_range(
+        options["colormap_range_dicts"]["residual_images"],
+        field_params["residual_field"],
     )
     c_map = options["colormaps"]["residual_images"]
 
     title = f"{name} residual (hamiltonian fit)"
 
-    plot_common.plot_image_on_ax(
+    qdmpy.plot.common.plot_image_on_ax(
         fig,
         ax,
         options,
@@ -286,7 +303,10 @@ def plot_field_residual(options, name, field_params):
     )
 
     if options["save_plots"]:
-        fig.savefig(options["field_dir"] / (f"residual_field_{name}." + options["save_fig_type"]))
+        fig.savefig(
+            options["field_dir"]
+            / (f"residual_field_{name}." + options["save_fig_type"])
+        )
 
     return fig
 
@@ -294,7 +314,7 @@ def plot_field_residual(options, name, field_params):
 # ============================================================================
 
 
-def plot_field_param(
+def field_param(
     options,
     name,  # i.e. "sig"/"ref" etc.
     param_name,  # "Bx" etc.
@@ -302,7 +322,7 @@ def plot_field_param(
     c_map=None,
     c_map_type="param_images",
     c_range_type="percentile",
-    c_range_vals=[5, 95],
+    c_range_vals=(5, 95),
     cbar_label="",
 ):
     """plot a given field param.
@@ -322,9 +342,9 @@ def plot_field_param(
     c_map_type : str, default: "param_images"
         colormap type to search options (options["colormaps"][c_map_type]) for.
     c_map_range : str, default: "percentile"
-        colormap range option (see `qdmpy.plot.common._get_colormap_range`) to use.
-    c_range_vals : number or list, default: [5, 95]
-        passed with c_map_range to _get_colormap_range
+        colormap range option (see `qdmpy.plot.common.get_colormap_range`) to use.
+    c_range_vals : number or list, default: (5, 95)
+        passed with c_map_range to get_colormap_range
     cbar_label : str, default:""
         label to chuck on ye olde colorbar (z-axis label).
 
@@ -335,31 +355,35 @@ def plot_field_param(
     if field_params is None:
         return None
     if param_name not in field_params:
-        warnings.warn(f"No param (key) called {param_name} in field_params.")
+        warn(f"No param (key) called {param_name} in field_params.")
         return None
 
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots()
 
     if c_map is None:
-        c_range = plot_common._get_colormap_range(
+        c_range = qdmpy.plot.common.get_colormap_range(
             {"type": c_range_type, "values": c_range_vals}, field_params[param_name]
         )
         c_map = options["colormaps"][c_map_type]
 
     title = f"{name}: {param_name}"
 
-    plot_common.plot_image_on_ax(
+    qdmpy.plot.common.plot_image_on_ax(
         fig, ax, options, field_params[param_name], title, c_map, c_range, cbar_label
     )
 
     if options["save_plots"]:
-        fig.savefig(options["field_dir"] / (f"{param_name}_{name}." + options["save_fig_type"]))
+        fig.savefig(
+            options["field_dir"] / (f"{param_name}_{name}." + options["save_fig_type"])
+        )
+
+    return fig
 
 
 # ============================================================================
 
 
-def plot_field_param_flattened(
+def field_param_flattened(
     options,
     name,
     param_name,
@@ -405,7 +429,7 @@ def plot_field_param_flattened(
     if field_params is None:
         return None
     if param_name not in field_params:
-        warnings.warn(f"Couldn't find {param_name} in field_params.")
+        warn(f"Couldn't find {param_name} in field_params.")
         return None
     if not sigmas or param_name not in sigmas:
         plot_sigmas = False
@@ -413,7 +437,7 @@ def plot_field_param_flattened(
     figsize = mpl.rcParams["figure.figsize"].copy()
     figsize[0] *= 2  # make some extra space in width...
 
-    fig, ax = plt.subplots(figsize=figsize, constrained_layout=True)
+    fig, ax = plt.subplots(figsize=figsize)
 
     # get guesses and bounds
     if param_name.startswith("residual"):
@@ -421,15 +445,15 @@ def plot_field_param_flattened(
         bounds = None
         plot_sigmas = False
     elif options["field_method_used"] == "hamiltonian_fitting":
-        guess_dict, bound_dict = Qham.get_ham_guess_and_bounds(options)
+        guess_dict, bound_dict = qdmpy.field.get_ham_guess_and_bounds(options)
         guess = guess_dict[param_name]
         bounds = bound_dict[param_name]
     else:
         bounds = None  # no bounds if not a fit
         comps = ["Bx", "By", "Bz"]
         if param_name in comps:
-            Bguesses = options["bias_field_cartesian_gauss"]
-            guess = Bguesses[comps.index(param_name)]
+            bguesses = options["bias_field_cartesian_gauss"]
+            guess = bguesses[comps.index(param_name)]
 
     if not plot_guess:
         guess = None
@@ -447,7 +471,7 @@ def plot_field_param_flattened(
         yerr = np.ma.filled(sigmas[param_name], fill_value=np.nan).flatten()
         if np.all(np.isnan(yerr)):
             yerr = None
-            warnings.warn("All sigmas were nans.")
+            warn("All sigmas were nans.")
         ax.errorbar(
             xvals,
             yvals,
@@ -494,14 +518,22 @@ def plot_field_param_flattened(
         )
         legend_names.append("Guess")
         custom_lines.append(
-            Line2D([0], [0], color="k", ls=(0, (1, 1)), lw=mpl.rcParams["lines.linewidth"] * 2)
+            Line2D(
+                [0],
+                [0],
+                color="k",
+                ls=(0, (1, 1)),
+                lw=mpl.rcParams["lines.linewidth"] * 2,
+            )
         )
-    if bounds is not None and type(bounds) == list and len(bounds) == 2:
+    if bounds is not None and isinstance(bounds, (list, tuple)) and len(bounds) == 2:
         for b in bounds:
             ax.axhline(b, ls=(0, (2, 1)), c="grey", zorder=9)
         legend_names.append("Bounds")
         custom_lines.append(
-            Line2D([0], [0], color="k", ls=(0, (2, 1)), lw=mpl.rcParams["lines.linewidth"])
+            Line2D(
+                [0], [0], color="k", ls=(0, (2, 1)), lw=mpl.rcParams["lines.linewidth"]
+            )
         )
 
     ax.legend(
@@ -521,25 +553,27 @@ def plot_field_param_flattened(
             / (f"{name}_{param_name}_fit_flattened." + options["save_fig_type"])
         )
 
+    return fig
+
 
 # ============================================================================
 
 
-def plot_strain(options, name, field_params):
+def strain(options, name, field_params):
     raise NotImplementedError()
 
 
 # ============================================================================
 
 
-def plot_efield(options, name, field_params):
+def efield(options, name, field_params):
     raise NotImplementedError()
 
 
 # ============================================================================
 
 
-def plot_bfield_consistency(options, name, field_params):
+def bfield_consistency(options, name, field_params):
     """plot bfield vs bfield_recon
 
     Parameters
@@ -563,13 +597,13 @@ def plot_bfield_consistency(options, name, field_params):
 
     for p in ["B" + comp for comp in components]:
         if p not in field_params:
-            warnings.warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
+            warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
             return None
         elif field_params[p] is None:
             return None
     for p in ["B" + comp + "_recon" for comp in components]:
         if p not in field_params:
-            warnings.warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
+            warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
             return None
         elif field_params[p] is None:
             return None
@@ -583,29 +617,31 @@ def plot_bfield_consistency(options, name, field_params):
     figsize[0] *= width  # number of columns
     figsize[1] *= height
 
-    fig, ax = plt.subplots(height, width, figsize=figsize, constrained_layout=True)
+    fig, ax = plt.subplots(height, width, figsize=figsize)
 
     c_map = options["colormaps"]["bfield_images"]
 
     bfield_ranges = []  # store bfield map cmap ranges to use for recon as well
     for i, bcomponent in enumerate(bfields):
-        c_range = plot_common._get_colormap_range(
+        c_range = qdmpy.plot.common.get_colormap_range(
             options["colormap_range_dicts"]["bfield_images"], bcomponent
         )
         bfield_ranges.append(c_range)
         title = "B" + components[i]
-        plot_common.plot_image_on_ax(
+        qdmpy.plot.common.plot_image_on_ax(
             fig, ax[0, i], options, bcomponent, title, c_map, c_range, "B (G)"
         )
 
     for i, bcomp_recon in enumerate(bfield_recons):
         title = "B" + components[i] + "_recon"
-        plot_common.plot_image_on_ax(
+        qdmpy.plot.common.plot_image_on_ax(
             fig, ax[1, i], options, bcomp_recon, title, c_map, bfield_ranges[i], "B (G)"
         )
 
     if options["save_plots"]:
-        fig.savefig(options["field_dir"] / (f"Bfield_{name}_recon." + options["save_fig_type"]))
+        fig.savefig(
+            options["field_dir"] / (f"Bfield_{name}_recon." + options["save_fig_type"])
+        )
 
     return fig
 
@@ -613,14 +649,14 @@ def plot_bfield_consistency(options, name, field_params):
 # ============================================================================
 
 
-def plot_bfield_theta_phi(
+def bfield_theta_phi(
     options,
     name,
     field_params,
     c_map=None,
     c_map_type="bfield_images",
     c_range_type="percentile",
-    c_range_vals=[5, 95],
+    c_range_vals=(5, 95),
     cbar_label="",
 ):
     """Plots B_theta_phi if found in field_params (the vector field projected onto
@@ -639,9 +675,9 @@ def plot_bfield_theta_phi(
     c_map_type : str, default: "bfield_images"
         colormap type to search options (options["colormaps"][c_map_type]) for.
     c_map_range : str, default: "percentile"
-        colormap range option (see `qdmpy.plot.common._get_colormap_range`) to use.
-    c_range_vals : number or list, default: [5, 95]
-        passed with c_map_range to _get_colormap_range.
+        colormap range option (see `qdmpy.plot.common.get_colormap_range`) to use.
+    c_range_vals : number or list, default: (5, 95)
+        passed with c_map_range to get_colormap_range.
     c_bar_label : str, default:""
         label to chuck on ye olde colorbar (z-axis label).
     Returns
@@ -652,29 +688,32 @@ def plot_bfield_theta_phi(
         return None
 
     if "B_theta_phi" not in field_params:
-        warnings.warn("Couldn't find 'B_theta_phi' in field_params.")
+        warn("Couldn't find 'B_theta_phi' in field_params.")
         return None
 
     b = field_params["B_theta_phi"]
     theta, phi = options["bfield_proj_angles_(deg)"]
 
-    fig, ax = plt.subplots(constrained_layout=True)
+    fig, ax = plt.subplots()
 
     if c_map is None:
-        c_range = plot_common._get_colormap_range(
+        c_range = qdmpy.plot.common.get_colormap_range(
             {"type": c_range_type, "values": c_range_vals}, b
         )
         c_map = options["colormaps"][c_map_type]
 
     title = f"{name}: B_theta_{np.round(theta,1)}_phi_{np.round(phi,1)}"
 
-    plot_common.plot_image_on_ax(fig, ax, options, b, title, c_map, c_range, cbar_label)
+    qdmpy.plot.common.plot_image_on_ax(
+        fig, ax, options, b, title, c_map, c_range, cbar_label
+    )
 
     if options["save_plots"]:
         fig.savefig(
             options["field_dir"]
             / (
-                f"B_theta_{int(np.round(theta))}_phi_{int(np.round(phi))}_{name}"
+                f"B_theta_{int(np.round(theta))}_phi_{int(np.round(phi))}_{name}."
                 + options["save_fig_type"]
             )
         )
+    return fig

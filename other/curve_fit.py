@@ -1,4 +1,5 @@
-import warnings
+'''
+from warnings import warn
 from . import _minpack
 
 import numpy as np
@@ -43,7 +44,8 @@ def _check_func(checker, argname, thefunc, x0, args, numinputs, output_shape=Non
                     return shape(res)
             msg = (
                 "%s: there is a mismatch between the input and output "
-                "shape of the '%s' argument" % (checker, argname)
+                "shape of the '%s' argument"
+                % (checker, argname)
             )
             func_name = getattr(thefunc, "__name__", None)
             if func_name:
@@ -189,7 +191,9 @@ def fsolve(
     res = _root_hybr(func, x0, args, jac=fprime, **options)
     if full_output:
         x = res["x"]
-        info = dict((k, res.get(k)) for k in ("nfev", "njev", "fjac", "r", "qtf") if k in res)
+        info = dict(
+            (k, res.get(k)) for k in ("nfev", "njev", "fjac", "r", "qtf") if k in res
+        )
         info["fvec"] = res["fun"]
         return x, info, res["status"], res["message"]
     else:
@@ -200,7 +204,7 @@ def fsolve(
         elif status == 1:
             pass
         elif status in [2, 3, 4, 5]:
-            warnings.warn(msg, RuntimeWarning)
+            warn(msg, RuntimeWarning)
         else:
             raise TypeError(msg)
         return res["x"]
@@ -273,28 +277,39 @@ def _root_hybr(
             ml, mu = band[:2]
         if maxfev == 0:
             maxfev = 200 * (n + 1)
-        retval = _minpack._hybrd(func, x0, args, 1, xtol, maxfev, ml, mu, epsfcn, factor, diag)
+        retval = _minpack._hybrd(
+            func, x0, args, 1, xtol, maxfev, ml, mu, epsfcn, factor, diag
+        )
     else:
         _check_func("fsolve", "fprime", Dfun, x0, args, n, (n, n))
         if maxfev == 0:
             maxfev = 100 * (n + 1)
-        retval = _minpack._hybrj(func, Dfun, x0, args, 1, col_deriv, xtol, maxfev, factor, diag)
+        retval = _minpack._hybrj(
+            func, Dfun, x0, args, 1, col_deriv, xtol, maxfev, factor, diag
+        )
 
     x, status = retval[0], retval[-1]
 
     errors = {
         0: "Improper input parameters were entered.",
         1: "The solution converged.",
-        2: "The number of calls to function has " "reached maxfev = %d." % maxfev,
-        3: "xtol=%f is too small, no further improvement "
-        "in the approximate\n  solution "
-        "is possible." % xtol,
-        4: "The iteration is not making good progress, as measured "
-        "by the \n  improvement from the last five "
-        "Jacobian evaluations.",
-        5: "The iteration is not making good progress, "
-        "as measured by the \n  improvement from the last "
-        "ten iterations.",
+        2: "The number of calls to function has reached maxfev = %d." % maxfev,
+        3: (
+            "xtol=%f is too small, no further improvement "
+            "in the approximate\n  solution "
+            "is possible."
+        )
+        % xtol,
+        4: (
+            "The iteration is not making good progress, as measured "
+            "by the \n  improvement from the last five "
+            "Jacobian evaluations."
+        ),
+        5: (
+            "The iteration is not making good progress, "
+            "as measured by the \n  improvement from the last "
+            "ten iterations."
+        ),
         "unknown": "An error occurred.",
     }
 
@@ -480,45 +495,68 @@ def leastsq(
         if maxfev == 0:
             maxfev = 100 * (n + 1)
         retval = _minpack._lmder(
-            func, Dfun, x0, args, full_output, col_deriv, ftol, xtol, gtol, maxfev, factor, diag
+            func,
+            Dfun,
+            x0,
+            args,
+            full_output,
+            col_deriv,
+            ftol,
+            xtol,
+            gtol,
+            maxfev,
+            factor,
+            diag,
         )
 
     errors = {
         0: ["Improper input parameters.", TypeError],
         1: [
             "Both actual and predicted relative reductions "
-            "in the sum of squares\n  are at most %f" % ftol,
+            "in the sum of squares\n  are at most %f"
+            % ftol,
             None,
         ],
-        2: ["The relative error between two consecutive " "iterates is at most %f" % xtol, None],
+        2: [
+            "The relative error between two consecutive iterates is at most %f" % xtol,
+            None,
+        ],
         3: [
             "Both actual and predicted relative reductions in "
             "the sum of squares\n  are at most %f and the "
             "relative error between two consecutive "
-            "iterates is at \n  most %f" % (ftol, xtol),
+            "iterates is at \n  most %f"
+            % (ftol, xtol),
             None,
         ],
         4: [
             "The cosine of the angle between func(x) and any "
             "column of the\n  Jacobian is at most %f in "
-            "absolute value" % gtol,
+            "absolute value"
+            % gtol,
             None,
         ],
-        5: ["Number of calls to function has reached " "maxfev = %d." % maxfev, ValueError],
+        5: [
+            "Number of calls to function has reached maxfev = %d." % maxfev,
+            ValueError,
+        ],
         6: [
             "ftol=%f is too small, no further reduction "
-            "in the sum of squares\n  is possible." % ftol,
+            "in the sum of squares\n  is possible."
+            % ftol,
             ValueError,
         ],
         7: [
             "xtol=%f is too small, no further improvement in "
-            "the approximate\n  solution is possible." % xtol,
+            "the approximate\n  solution is possible."
+            % xtol,
             ValueError,
         ],
         8: [
             "gtol=%f is too small, func(x) is orthogonal to the "
             "columns of\n  the Jacobian to machine "
-            "precision." % gtol,
+            "precision."
+            % gtol,
             ValueError,
         ],
     }
@@ -539,7 +577,7 @@ def leastsq(
         return (retval[0], cov_x) + retval[1:-1] + (errors[info][0], info)
     else:
         if info in LEASTSQ_FAILURE:
-            warnings.warn(errors[info][0], RuntimeWarning)
+            warn(errors[info][0], RuntimeWarning)
         elif info == 0:
             raise errors[info][1](errors[info][0])
         return retval[0], info
@@ -585,7 +623,9 @@ def _wrap_jac(jac, xdata, transform):
     else:
 
         def jac_wrapped(params):
-            return solve_triangular(transform, np.asarray(jac(xdata, *params)), lower=True)
+            return solve_triangular(
+                transform, np.asarray(jac(xdata, *params)), lower=True
+            )
 
     return jac_wrapped
 
@@ -813,7 +853,8 @@ def curve_fit(
 
     if method == "lm" and bounded_problem:
         raise ValueError(
-            "Method 'lm' only works for unconstrained problems. " "Use 'trf' or 'dogbox' instead."
+            "Method 'lm' only works for unconstrained problems. "
+            "Use 'trf' or 'dogbox' instead."
         )
 
     # optimization may produce garbage for float32 inputs, cast them to float64
@@ -913,8 +954,9 @@ def curve_fit(
             warn_cov = True
 
     if warn_cov:
-        warnings.warn(
-            "Covariance of the parameters could not be estimated", category=OptimizeWarning
+        warn(
+            "Covariance of the parameters could not be estimated",
+            category=OptimizeWarning,
         )
 
     if return_full:
@@ -1022,3 +1064,4 @@ def fixed_point(func, x0, args=(), xtol=1e-8, maxiter=500, method="del2"):
     use_accel = {"del2": True, "iteration": False}[method]
     x0 = _asarray_validated(x0, as_inexact=True)
     return _fixed_point_helper(func, x0, args, xtol, maxiter, use_accel)
+'''

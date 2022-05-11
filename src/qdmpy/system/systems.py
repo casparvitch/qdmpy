@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 """
-This module holds classes and functions to define different systems.
+This sub-package holds classes and functions to define different systems.
 
-This module allows users with different data saving/loading procedures to use
+This sub-package allows users with different data saving/loading procedures to use
 this package. Also defined are variables such as raw_pixel_size which may be
 different for different systems at the same institution.
 
@@ -10,28 +10,26 @@ Also defined are functions to handle the checking/cleaning of the json options
 file (and then dict) to ensure it is valid etc.
 
 _Make sure_ that any valid systems you define here are placed
-in the SYSTEMS defined in `qdmpy.constants`.
+in the _SYSTEMS dict at the bottom of the file.
 
 Classes
 -------
  - `qdmpy.system.systems.System`
  - `qdmpy.system.systems.UniMelb`
  - `qdmpy.system.systems.Zyla`
- - `qdmpy.system.systems.LiamsWidefield`
+ - `qdmpy.system.systems.cQDM`
  - `qdmpy.system.systems.CryoWidefield`
- - `qdmpy.system.systems.OptionsError`
 
 
 Functions
 ---------
- - `qdmpy.system.systems.check_option`
- - `qdmpy.system.systems.check_options`
- - `qdmpy.system.systems.clean_options`
+ - `qdmpy.system.systems.choose_system`
 
 
 Module variables
 ----------------
  - `qdmpy.system.systems._CONFIG_PATH`
+ - `qdmpy.system.systems._SYSTEMS`
 
 """
 
@@ -43,13 +41,11 @@ __pdoc__ = {
     "qdmpy.system.systems.System": True,
     "qdmpy.system.systems.UniMelb": True,
     "qdmpy.system.systems.Zyla": True,
-    "qdmpy.system.systems.LiamsWidefield": True,
+    "qdmpy.system.systems.cQDM": True,
     "qdmpy.system.systems.CryoWidefield": True,
-    "qdmpy.system.systems.OptionsError": True,
-    "qdmpy.system.systems.check_option": True,
-    "qdmpy.system.systems.check_options": True,
-    "qdmpy.system.systems.clean_options": True,
     "qdmpy.system.systems._CONFIG_PATH": True,
+    "qdmpy.system.systems._SYSTEMS": True,
+    "qdmpy.system.systems.choose_system": True,
 }
 
 # ============================================================================
@@ -58,14 +54,15 @@ import numpy as np
 import pandas as pd
 import os
 import re
-import warnings
 import pathlib
 from multiprocessing import cpu_count
 from math import radians
+from importlib.metadata import version
 
 # ============================================================================
 
-import qdmpy.io as Qio
+import qdmpy.shared.json2dict
+from qdmpy.shared.misc import warn
 
 # ============================================================================
 
@@ -94,9 +91,11 @@ class System:
         """
         Initialisation of system. Must set options_dict.
         """
-        pass
+        raise NotImplementedError(
+            "System init must set options_dict: override default!"
+        )
 
-    def read_image(self, filepath, **kwargs):
+    def read_image(self, filepath, options):
         """
         Method that must be defined to read raw data in from filepath.
 
@@ -105,6 +104,8 @@ class System:
         image : np array, 3D
             Format: [sweep values, y, x]. Has not been seperated into sig/ref etc. and has
             not been rebinned. Unwanted sweep values not removed.
+        options : dict
+            Generic options dict holding all the user options.
         """
         raise NotImplementedError
 
@@ -121,15 +122,20 @@ class System:
         """
         raise NotImplementedError
 
-    def read_sweep_list(self, filepath, **kwargs):
+    def read_sweep_list(self, filepath):
         """
         Method that must be defined to read sweep_list in from filepath.
         """
         raise NotImplementedError
 
-    def get_raw_pixel_size(self):
+    def get_raw_pixel_size(self, options):
         """
         Method that must be defined to return a raw_pixel_size.
+
+        Arguments
+        ---------
+        options : dict
+            Generic options dict holding all the user options.
         """
         raise NotImplementedError
 
@@ -151,10 +157,15 @@ class System:
         """
         raise NotImplementedError
 
-    def get_bias_field(self):
+    def get_bias_field(self, options):
         """
         Method to get magnet bias field from experiment metadata,
         i.e. if set with programmed electromagnet. Default: False, None.
+
+        Arguments
+        ---------
+        options : dict
+            Generic options dict holding all the user options.
 
         Returns
         -------
@@ -200,17 +211,34 @@ class UniMelb(System):
     """
 
     name = "Unknown UniMelb System"
+    uni_defaults_path = _CONFIG_PATH / "unimelb_defaults.json"
 
     def __init__(self, *args, **kwargs):
-        super().__init__(self, *args, **kwargs)
+        # super().__init__(self, *args, **kwargs) # don't super init, it's a NotImplemented guard.
         # ensure all values default to None (at all levels of reading in json)
-        self.options_dict = Qio.json_to_dict(self.config_path, hook="dd")
+
+        # global defaults
+        self.options_dict = qdmpy.shared.json2dict.json_to_dict(
+            self.uni_defaults_path, hook="dd"
+        )
+        # system specific options, then recursively update
+        sys_spec_opts = qdmpy.shared.json2dict.json_to_dict(self.config_path, hook="dd")
+        qdmpy.shared.json2dict.recursive_dict_update(self.options_dict, sys_spec_opts)
+        # in case we want this info in future, set the qdmpy version currently running
+        self.options_dict["qdmpy_version"] = {
+            "option_default": version("qdmpy"),
+            "option_choices": None,
+        }
 
     def get_raw_pixel_size(self, options):
         if "pixel_size" in options and options["pixel_size"]:
             return options["pixel_size"]
         # override keys available as options
-        override_keys = ["objective_mag", "objective_reference_focal_length", "camera_tube_lens"]
+        override_keys = [
+            "objective_mag",
+            "objective_reference_focal_length",
+            "camera_tube_lens",
+        ]
         # not the cleanest way to do this... eh it works
         default_keys = ["default_" + key for key in override_keys]
         default_keys.insert(0, "sensor_pixel_size")
@@ -244,8 +272,10 @@ class UniMelb(System):
         return cam_pixel_size
 
     def read_image(self, filepath, options):
-        with open(os.path.normpath(filepath), "r") as fid:
-            raw_data = np.fromfile(fid, dtype=np.float32())[2:]
+        with open(os.path.normpath(filepath), mode="r") as fid:
+            raw_data = np.fromfile(fid, dtype=np.float32)[2:] 
+            # NOTE is the 2 the file size info (labview save binary default to add ar. shape)?
+            # TODO inspect that data to see what it looks like etc.!
         return self._reshape_raw(options, raw_data, self.read_sweep_list(filepath))
 
     def determine_binning(self, options):
@@ -255,7 +285,9 @@ class UniMelb(System):
         if not int(options["additional_bins"]):
             options["total_bin"] = options["original_bin"]
         else:
-            options["total_bin"] = options["original_bin"] * int(options["additional_bins"])
+            options["total_bin"] = options["original_bin"] * int(
+                options["additional_bins"]
+            )
 
     def read_sweep_list(self, filepath):
         with open(os.path.normpath(str(filepath) + "_metaSpool.txt"), "r") as fid:
@@ -289,11 +321,11 @@ class UniMelb(System):
             if not found:
                 return False, None
         if len(bias_field) != 3:
-            warnings.warn(
+            warn(
                 f"Found {len(bias_field)} bias field params in metadata, "
                 + "this shouldn't happen (expected 3)."
             )
-            return  False, None
+            return False, None
         onoff_str = options["metadata"].get("Mag on/off", "")
         bias_on = onoff_str == " TRUE"
         return bias_on, (bias_field[0], radians(bias_field[1]), radians(bias_field[2]))
@@ -311,7 +343,7 @@ class UniMelb(System):
                 options["loss"] = "linear"
 
         if "freqs_to_use" in options:
-            options["freqs_to_use"] = list(map(lambda x: bool(x), options["freqs_to_use"]))
+            options["freqs_to_use"] = list(map(bool, options["freqs_to_use"]))
 
         if "base_dir" in options and not self.filepath_joined:
             options["filepath"] = os.path.join(options["base_dir"], options["filepath"])
@@ -335,11 +367,11 @@ class UniMelb(System):
             # ok now read the metadata
             rest_str = fid.read()
             matches = re.findall(
-                r"^([a-zA-Z0-9_ _/+()#-]+):([a-zA-Z0-9_ _/+()#-]+)",
+                r"^([a-zA-Z0-9_ /+()#-]+):([a-zA-Z0-9_ /+()#-]+)",
                 rest_str,
                 re.MULTILINE,
             )
-            metadata = {a: Qio.json2dict._failfloat(b) for (a, b) in matches}
+            metadata = {a: qdmpy.shared.json2dict.failfloat(b) for (a, b) in matches}
         return metadata
 
     def _reshape_raw(self, options, raw_data, sweep_list):
@@ -436,13 +468,13 @@ class Zyla(UniMelb):
     config_path = _CONFIG_PATH / "zyla_config.json"
 
 
-class LiamsWidefield(UniMelb):
+class cQDM(UniMelb):  # noqa: N801
     """
-    Specific system details for Liam's Widefield QDM. Currently a copy of Zyla.
+    Specific system details for the cQDM QDM.
     """
 
-    name = "Liam's Widefield"
-    config_path = _CONFIG_PATH / "liam_widefield_config.json"
+    name = "cQDM"
+    config_path = _CONFIG_PATH / "cqdm_config.json"
 
 
 class CryoWidefield(UniMelb):
@@ -451,6 +483,16 @@ class CryoWidefield(UniMelb):
     """
 
     name = "Cryo Widefield"
+    config_path = _CONFIG_PATH / "cryo_widefield_config.json"
+
+
+class LegacyCryoWidefield(UniMelb):
+    """
+    Specific system details for cryogenic (Attocube) widefield QDM.
+    - Legacy binning version
+    """
+
+    name = "Legacy Cryo Widefield"
     config_path = _CONFIG_PATH / "cryo_widefield_config.json"
 
     def determine_binning(self, options):
@@ -463,69 +505,60 @@ class CryoWidefield(UniMelb):
         if not int(options["additional_bins"]):
             options["total_bin"] = options["original_bin"]
         else:
-            options["total_bin"] = options["original_bin"] * int(options["additional_bins"])
+            options["total_bin"] = options["original_bin"] * int(
+                options["additional_bins"]
+            )
+
+
+class Argus(UniMelb):
+    """
+    Specific system details for Argus room-temperature widefield QDM.
+    """
+
+    name = "Argus"
+    config_path = _CONFIG_PATH / "argus_config.json"
+
+
+class LegacyArgus(UniMelb):
+    name = "Legacy Argus"
+    config_path = _CONFIG_PATH / "argus_config.json"
+
+    def determine_binning(self, options):
+        # silly old binning convention -> change when labview updated to new binning
+        bin_conversion = [1, 2, 3, 4, 8]
+        metadata = self._read_metadata(options["filepath"])
+        metadata_bin = int(metadata["Binning"])
+        options["original_bin"] = bin_conversion[metadata_bin]
+
+        if not int(options["additional_bins"]):
+            options["total_bin"] = options["original_bin"]
+        else:
+            options["total_bin"] = options["original_bin"] * int(
+                options["additional_bins"]
+            )
 
 
 # ============================================================================
 
+_SYSTEMS = {
+    "Zyla": Zyla,
+    "Cryo_Widefield": CryoWidefield,
+    "Legacy_Cryo_Widefield": LegacyCryoWidefield,
+    "cQDM": cQDM,
+    "Argus": Argus,
+    "Legacy_Argus": LegacyArgus,
+}
+"""Dictionary that defines systems available for use.
 
-class OptionsError(Exception):
-    """
-    Exception with custom messages for errors to do with options dictionary.
-    """
-
-    def __init__(self, option_name, option_given, system, custom_msg=None):
-
-        self.custom_msg = custom_msg
-
-        choices = system.option_choices(option_name)
-
-        if choices is not None:
-            self.default_msg = (
-                f"Option {option_given} not a valid option for {option_name}"
-                + f", pick from: {choices}"
-            )
-        else:
-            self.default_msg = f"Option {option_given} not a valid option for {option_name}."
-
-        super().__init__(custom_msg)
-
-    def __str__(self):
-        if self.custom_msg is not None:
-            return str(self.custom_msg) + "\n" + self.default_msg
-        else:
-            # use system to get possible options (read specific json into dict etc.)
-            return self.default_msg
+Add any systems you define here so you can use them.
+"""
 
 
-# ===============================
+def choose_system(name):
+    """Returns `qdmpy.system.systems.System` object called 'name'."""
+    if name is None:
+        raise RuntimeError("System chosen was 'None': override this default option!!!")
+    return _SYSTEMS[name]()
 
 
-def check_option(key, val, system):
-    if key not in system.available_options():
-        warnings.warn(f"Option {key} was not recognised by the {system.name} system.")
-    elif system.option_choices(key) is not None and val not in system.option_choices(key):
-        OptionsError(key, val, system)
-    elif key == "freqs_to_use":
-        if len(val) != 8:
-            OptionsError(key, val, system, custom_msg="Length of option 'freqs_to_use' must be 8.")
-
-
-# ===============================
-
-
-def check_options(options):
-    system = options["system"]
-    for key, val in options.items():
-        check_option(key, val, system)
-    options["cleaned"] = True
-
-
-# ===============================
-
-
-def clean_options(options):
-    if "cleaned" in options.keys() and options["cleaned"]:
-        return
-    else:
-        check_options(options)
+# ============================================================================

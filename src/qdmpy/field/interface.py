@@ -5,38 +5,40 @@ This module holds tools for calculating Bxyz from Bnv.
 Functions
 ---------
  - `qdmpy.field.interface.odmr_field_retrieval`
- - `qdmpy.field.interface.field_refsub`
- - `qdmpy.field.interface.field_sigma_add`
+ - `qdmpy.field.interface._odmr_with_field_ref`
+ - `qdmpy.field.interface._odmr_with_pre_glac_ref`
  - `qdmpy.field.interface.get_unvs`
  - `qdmpy.field.interface.add_bfield_reconstructed`
  - `qdmpy.field.interface.add_bfield_theta_phi`
  - `qdmpy.field.interface._check_fit_params_are_ok`
+ - `qdmpy.field.interface.get_bnv_sd`
 """
 # ============================================================================
 
 __author__ = "Sam Scholten"
 __pdoc__ = {
     "qdmpy.field.interface.odmr_field_retrieval": True,
-    "qdmpy.field.interface.field_refsub": True,
-    "qdmpy.field.interface.field_sigma_add": True,
+    "qdmpy.field.interface._odmr_with_field_ref": True,
+    "qdmpy.field.interface._odmr_with_pre_glac_ref": True,
     "qdmpy.field.interface.get_unvs": True,
     "qdmpy.field.interface.add_bfield_reconstructed": True,
     "qdmpy.field.interface.add_bfield_theta_phi": True,
     "qdmpy.field.interface._check_fit_params_are_ok": True,
+    "qdmpy.field.interface.get_bnv_sd": True,
 }
 # ============================================================================
 
-import warnings
 import numpy as np
 
 # ============================================================================
 
-import qdmpy.field._bnv as Qbnv
-import qdmpy.field._bxyz as Qbxyz
-import qdmpy.field._geom as Qgeom
-import qdmpy.fourier
+import qdmpy.field.bnv
+import qdmpy.field.bxyz
+import qdmpy.field.io
+import qdmpy.shared.geom
+from qdmpy.shared.misc import warn
 
-# ============================================================================
+# ===========================================================================
 
 
 def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
@@ -72,8 +74,8 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
 
     if options["exp_reference_type"] == "field":
         return _odmr_with_field_ref(options, sig_fit_params, ref_fit_params)
-    elif options["exp_reference_type"] == "dshift":
-        return _odmr_with_dshift_ref(options, sig_fit_params, ref_fit_params)
+    elif options["exp_reference_type"] == "pre_gslac":
+        return _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params)
     else:
         raise RuntimeError(
             f"exp_reference_type_type: {options['exp_reference_type']} not recognised."
@@ -85,7 +87,7 @@ def odmr_field_retrieval(options, sig_fit_params, ref_fit_params):
 
 def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
     """Calculate field, for case where we are using a field reference (even if field ref is None,
-    as long as it isn't a dshift ref etc.).
+    as long as it isn't a pre_gslac etc.).
 
     Parameters
     ----------
@@ -109,23 +111,27 @@ def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
     """
 
     # first get bnvs (as in global scope)
-    sig_bnvs, sig_dshifts = Qbnv.get_bnvs_and_dshifts(
+    sig_bnvs, sig_dshifts = qdmpy.field.bnv.get_bnvs_and_dshifts(
         sig_fit_params, options["bias_field_spherical_deg_gauss"]
     )
-    ref_bnvs, ref_dshifts = Qbnv.get_bnvs_and_dshifts(
+    ref_bnvs, ref_dshifts = qdmpy.field.bnv.get_bnvs_and_dshifts(
         ref_fit_params, options["ref_bias_field_spherical_deg_gauss"]
     )
 
-    import qdmpy.io as Qio
-    Qio.choose_field_method(options)
+    qdmpy.field.io.choose_field_method(options)
 
     if options["calc_field_pixels"] and options["found_prev_field_calc"]:
-        warnings.warn("Using previous field calculation.")
+        warn("Using previous field calculation.")
 
-        bnv_lst, dshift_lst, params_lst, sigmas_lst = Qio.load_prev_field_calcs(options)
+        (
+            bnv_lst,
+            dshift_lst,
+            params_lst,
+            sigmas_lst,
+        ) = qdmpy.field.io.load_prev_field_calcs(options)
 
         if options["bfield_bground_method"]:
-            params_lst[2], sigmas_lst[2] = Qbxyz.sub_bground_Bxyz(
+            params_lst[2], sigmas_lst[2] = qdmpy.field.bxyz.sub_bground_bxyz(
                 options,
                 params_lst[2],
                 sigmas_lst[2],
@@ -134,7 +140,7 @@ def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
             )
 
         if options["bnv_bground_method"]:
-            bnv_lst[2] = Qbnv.sub_bground_bnvs(
+            bnv_lst[2] = qdmpy.field.bnv.sub_bground_bnvs(
                 options,
                 bnv_lst[2],
                 method=options["bnv_bground_method"],
@@ -153,52 +159,56 @@ def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
         if options["field_method_used"] == "prop_single_bnv":
             if num_peaks_wanted not in [1, 2]:
                 raise RuntimeError(
-                    "field_method option was 'prop_single_bnv', but number of true values in option "
-                    + "'freqs_to_use' was not 1 or 2."
+                    "field_method option was 'prop_single_bnv', but number of true"
+                    " values in option " + "'freqs_to_use' was not 1 or 2."
                 )
             else:
-                sig_params = Qbxyz.from_single_bnv(options, sig_bnvs)
+                sig_params = qdmpy.field.bxyz.from_single_bnv(options, sig_bnvs)
                 missing = np.empty(sig_params[list(sig_params.keys())[0]].shape)
                 missing[:] = np.nan
-                ref_params = Qbxyz.from_single_bnv(options, ref_bnvs)
+                ref_params = qdmpy.field.bxyz.from_single_bnv(options, ref_bnvs)
                 sig_sigmas = {key: missing for key in sig_params}
                 ref_sigmas = None
         elif options["field_method_used"] == "invert_unvs":
             if num_peaks_wanted != 6:
                 raise RuntimeError(
-                    "field_method option was 'invert_unvs', but number of true values in option "
-                    + "'freqs_to_use' was not 6."
+                    "field_method option was 'invert_unvs', but number of true values"
+                    " in option " + "'freqs_to_use' was not 6."
                 )
             else:
-                sig_params = Qbxyz.from_unv_inversion(options, sig_bnvs)
-                ref_params = Qbxyz.from_unv_inversion(options, ref_bnvs)
+                sig_params = qdmpy.field.bxyz.from_unv_inversion(options, sig_bnvs)
+                ref_params = qdmpy.field.bxyz.from_unv_inversion(options, ref_bnvs)
                 missing = np.empty(sig_params[list(sig_params.keys())[0]].shape)
                 missing[:] = np.nan
                 sig_sigmas = {key: missing for key in sig_params}
                 ref_sigmas = None
         else:
             # hamiltonian fitting
-            sig_params, sig_sigmas = Qbxyz.from_hamiltonian_fitting(
+            sig_params, sig_sigmas = qdmpy.field.bxyz.from_hamiltonian_fitting(
                 options, sig_fit_params, options["bias_field_spherical_deg_gauss"]
             )
-            ref_params, ref_sigmas = Qbxyz.from_hamiltonian_fitting(
+            ref_params, ref_sigmas = qdmpy.field.bxyz.from_hamiltonian_fitting(
                 options, ref_fit_params, options["ref_bias_field_spherical_deg_gauss"]
             )
 
-        sub_ref_params = Qbxyz.field_refsub(options, sig_params, ref_params)
+        sub_ref_params = qdmpy.field.bxyz.field_refsub(options, sig_params, ref_params)
 
         # both params and sigmas need a sub_ref method
-        bnv_lst = [sig_bnvs, ref_bnvs, Qbnv.bnv_refsub(options, sig_bnvs, ref_bnvs)]
+        bnv_lst = [
+            sig_bnvs,
+            ref_bnvs,
+            qdmpy.field.bnv.bnv_refsub(options, sig_bnvs, ref_bnvs),
+        ]
         dshift_lst = [sig_dshifts, ref_dshifts]
         params_lst = [sig_params, ref_params, sub_ref_params]
         sigmas_lst = [
             sig_sigmas,
             ref_sigmas,
-            Qbxyz.field_sigma_add(options, sig_sigmas, ref_sigmas),
+            qdmpy.field.bxyz.field_sigma_add(options, sig_sigmas, ref_sigmas),
         ]
 
         if options["bfield_bground_method"]:
-            params_lst[2], sigmas_lst[2] = Qbxyz.sub_bground_Bxyz(
+            params_lst[2], sigmas_lst[2] = qdmpy.field.bxyz.sub_bground_bxyz(
                 options,
                 params_lst[2],
                 sigmas_lst[2],
@@ -207,7 +217,7 @@ def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
             )
 
         if options["bnv_bground_method"]:
-            bnv_lst[2] = Qbnv.sub_bground_bnvs(
+            bnv_lst[2] = qdmpy.field.bnv.sub_bground_bnvs(
                 options,
                 bnv_lst[2],
                 method=options["bnv_bground_method"],
@@ -226,13 +236,17 @@ def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
 
     else:
         bnv_lst, dshift_lst, params_lst, sigmas_lst = (
-            [sig_bnvs, ref_bnvs, Qbnv.bnv_refsub(options, sig_bnvs, ref_bnvs)],
+            [
+                sig_bnvs,
+                ref_bnvs,
+                qdmpy.field.bnv.bnv_refsub(options, sig_bnvs, ref_bnvs),
+            ],
             [sig_dshifts, ref_dshifts],
             [None, None, None],
             [None, None, None],
         )
         if options["bnv_bground_method"]:
-            bnv_lst[2] = Qbnv.sub_bground_bnvs(
+            bnv_lst[2] = qdmpy.field.bnv.sub_bground_bnvs(
                 options,
                 bnv_lst[2],
                 method=options["bnv_bground_method"],
@@ -244,8 +258,8 @@ def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
 # ============================================================================
 
 
-def _odmr_with_dshift_ref(options, sig_fit_params, ref_fit_params):
-    """Calculate field, for case where we are using a dshift reference.
+def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
+    """Calculate field, for case where we are using a pre-gslac reference.
     This is a bit of an ad-hoc addon. Can't be reloaded etc.
 
     Note
@@ -276,23 +290,28 @@ def _odmr_with_dshift_ref(options, sig_fit_params, ref_fit_params):
     sigmas_lst : list
         List of field sigmas (errors) (each a dict), [sig_dict, ref_dict, sig_sub_ref_dict]
     """
+
     # first get bnvs (as in global scope)
-    sig_bnvs, sig_dshifts = Qbnv.get_bnvs_and_dshifts(
+    sig_bnvs, sig_dshifts = qdmpy.field.bnv.get_bnvs_and_dshifts(
         sig_fit_params, options["bias_field_spherical_deg_gauss"]
     )
-    ref_bnvs, ref_dshifts = Qbnv.get_bnvs_and_dshifts(
+    ref_bnvs, ref_dshifts = qdmpy.field.bnv.get_bnvs_and_dshifts(
         ref_fit_params, options["ref_bias_field_spherical_deg_gauss"]
     )
 
     if not options["calc_field_pixels"]:
         bnv_lst, dshift_lst, params_lst, sigmas_lst = (
-            [sig_bnvs, ref_bnvs, Qbnv.bnv_refsub(options, sig_bnvs, ref_bnvs)],
+            [
+                sig_bnvs,
+                ref_bnvs,
+                qdmpy.field.bnv.bnv_refsub(options, sig_bnvs, ref_bnvs),
+            ],
             [sig_dshifts, ref_dshifts],
             [None, None, None],
             [None, None, None],
         )
         if options["bnv_bground_method"]:
-            bnv_lst[2] = Qbnv.sub_bground_bnvs(
+            bnv_lst[2] = qdmpy.field.bnv.sub_bground_bnvs(
                 options,
                 bnv_lst[2],
                 method=options["bnv_bground_method"],
@@ -301,43 +320,56 @@ def _odmr_with_dshift_ref(options, sig_fit_params, ref_fit_params):
     else:
         # always force field calc for this method (it's quick)
         if not ref_fit_params:
-            raise RuntimeError("with exp_reference_type = 'dshift' you must define a reference.")
+            raise RuntimeError(
+                "with exp_reference_type = 'pre_gslac' you must define a reference."
+            )
         else:
-            warnings.warn("Using dshift reference. Assuming unv is same for sig & ref.")
+            warn("Using pre_gslac reference. Assuming unv is same for sig & ref.")
             # must match expected pattern
-            num_freqs_sig = len(list(filter(lambda x: x.startswith("pos"), sig_fit_params)))
-            num_freqs_ref = len(list(filter(lambda x: x.startswith("pos"), ref_fit_params)))
+            num_freqs_sig = len(
+                list(filter(lambda x: x.startswith("pos"), sig_fit_params))
+            )
+            num_freqs_ref = len(
+                list(filter(lambda x: x.startswith("pos"), ref_fit_params))
+            )
             if num_freqs_sig != 1:
-                raise ValueError("num freqs fit (sig) for dshift ref type is not 1.")
+                raise ValueError("num freqs fit (sig) for pre_gslac ref type is not 1.")
             if num_freqs_ref != 2:
-                raise ValueError("num freqs fit (ref) for dshift ref type is not 2.")
+                raise ValueError("num freqs fit (ref) for pre_gslac ref type is not 2.")
 
             chosen_freqs = options["freqs_to_use"]
             if sum(chosen_freqs) != 1:
                 raise ValueError(
-                    "Only select 1 freq ('freqs_to_use') for exp_reference_type: dshift."
+                    "Only select 1 freq ('freqs_to_use') for exp_reference_type:"
+                    " pre_gslac."
                 )
-            if chosen_freqs[:4] == [0, 0, 0, 0]:  # only single freq used, R transition rel to bias
+            if chosen_freqs[:4] == [
+                0,
+                0,
+                0,
+                0,
+            ]:  # only single freq used, R transition rel to bias
                 idx = np.argwhere(np.array(list(reversed(chosen_freqs[4:]))) == 1)[0][0]
             else:
                 idx = np.argwhere(np.array(chosen_freqs[:4]) == 1)[0][0]
 
-            sig_bias = options["bias_field_spherical_deg_gauss"]
+            # sig_bias = options["bias_field_spherical_deg_gauss"] not required..?
             ref_bias = options["ref_bias_field_spherical_deg_gauss"]
-            sig_bias_mag = np.abs(sig_bias[0])
+            # sig_bias_mag = np.abs(sig_bias[0]) not required..?
             ref_bias_mag = np.abs(ref_bias[0])
-            from qdmpy.constants import GSLAC, GAMMA
 
-            if ref_bias_mag > GSLAC:
+            if ref_bias_mag > qdmpy.field.bnv.GSLAC:
                 raise RuntimeError(
-                    "As currently coded, ref bias mag must be < GSLAC for dshift reference."
+                    "As currently coded, ref bias mag must be < GSLAC for dshift"
+                    " reference."
                 )
 
-            unv = Qgeom.get_unvs(options)[idx]
+            unv = qdmpy.shared.geom.get_unvs(options)[idx]
             sig_bnv = sig_bnvs[0]
             ref_bnv = ref_bnvs[0]
-            ref_dshift = ref_dshifts[0] / GAMMA
+            ref_dshift = ref_dshifts[0] / qdmpy.field.bnv.GAMMA
 
+            # glac +- should be sorted in freq -> bnv
             sig_sub_ref_bnv = (
                 sig_bnv + ref_dshift #if sig_bias_mag > GSLAC else sig_bnv - ref_dshift
             )
@@ -350,9 +382,11 @@ def _odmr_with_dshift_ref(options, sig_fit_params, ref_fit_params):
                 options["NVs_above_sample"],
             ]
 
-            sig_bxyz = qdmpy.fourier.prop_single_bnv(sig_bnv, unv, *other_opts)
-            ref_bxyz = qdmpy.fourier.prop_single_bnv(ref_bnv, unv, *other_opts)
-            sig_sub_ref_bxyz = qdmpy.fourier.prop_single_bnv(sig_sub_ref_bnv, unv, *other_opts)
+            sig_bxyz = qdmpy.field.bnv.prop_single_bnv(sig_bnv, unv, *other_opts)
+            ref_bxyz = qdmpy.field.bnv.prop_single_bnv(ref_bnv, unv, *other_opts)
+            sig_sub_ref_bxyz = qdmpy.field.bnv.prop_single_bnv(
+                sig_sub_ref_bnv, unv, *other_opts
+            )
 
             sig_params, ref_params, sub_ref_params = [
                 {
@@ -373,7 +407,7 @@ def _odmr_with_dshift_ref(options, sig_fit_params, ref_fit_params):
             sigmas_lst = [sigmas, sigmas, sigmas]
 
             if options["bfield_bground_method"]:
-                params_lst[2], sigmas_lst[2] = Qbxyz.sub_bground_Bxyz(
+                params_lst[2], sigmas_lst[2] = qdmpy.field.bxyz.sub_bground_bxyz(
                     options,
                     params_lst[2],
                     sigmas_lst[2],
@@ -381,7 +415,7 @@ def _odmr_with_dshift_ref(options, sig_fit_params, ref_fit_params):
                     **options["bfield_bground_params"],
                 )
             if options["bnv_bground_method"]:
-                bnv_lst[2] = Qbnv.sub_bground_bnvs(
+                bnv_lst[2] = qdmpy.field.bnv.sub_bground_bnvs(
                     options,
                     bnv_lst[2],
                     method=options["bnv_bground_method"],
@@ -398,7 +432,7 @@ def _odmr_with_dshift_ref(options, sig_fit_params, ref_fit_params):
             else:
                 options["field_params"] = None
 
-            return bnv_lst, dshift_lst, params_lst, sigmas_lst
+    return bnv_lst, dshift_lst, params_lst, sigmas_lst
 
 
 # ============================================================================
@@ -418,7 +452,7 @@ def get_unvs(options):
     unvs : np array
         Shape: (4,3). Equivalent to uNV_Z for each NV.
     """
-    return Qgeom.get_unvs(options)
+    return qdmpy.shared.geom.get_unvs(options)
 
 
 # ============================================================================
@@ -499,14 +533,14 @@ def add_bfield_reconstructed(options, field_params):
 
     for p in ["B" + comp for comp in components]:
         if p not in field_params:
-            warnings.warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
+            warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
             return None
         elif field_params[p] is None:
             return None
 
     bx, by, bz = [field_params["B" + comp] for comp in components]
 
-    bx_recon, by_recon, bz_recon = qdmpy.fourier.get_reconstructed_bfield(
+    bx_recon, by_recon, bz_recon = qdmpy.field.bxyz.get_reconstructed_bfield(
         [bx, by, bz],
         options["fourier_pad_mode"],
         options["fourier_pad_factor"],
@@ -555,7 +589,7 @@ def add_bfield_theta_phi(options, field_params, theta, phi):
 
     for p in ["B" + comp for comp in components]:
         if p not in field_params:
-            warnings.warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
+            warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
             return None
         elif field_params[p] is None:
             return None
@@ -568,7 +602,9 @@ def add_bfield_theta_phi(options, field_params, theta, phi):
     u = np.array([ux, uy, uz])
     uhat = u / np.linalg.norm(u)
 
-    field_params["B_theta_phi"] = np.apply_along_axis(lambda b: np.dot(uhat, b), 0, bvec)
+    field_params["B_theta_phi"] = np.apply_along_axis(
+        lambda b: np.dot(uhat, b), 0, bvec
+    )
     options["bfield_proj_angles_(deg)"] = [theta, phi]
 
     return None
@@ -592,17 +628,64 @@ def _check_fit_params_are_ok(options, sig_fit_params, ref_fit_params):
     if not any(map(lambda x: x.startswith("pos"), sig_fit_params.keys())):
         raise RuntimeError("No 'pos' keys found in sig_fit_params")
     else:
-        sig_poskey = next(filter(lambda x: x.startswith("pos"), sig_fit_params.keys()))[:3]
+        sig_poskey = next(filter(lambda x: x.startswith("pos"), sig_fit_params.keys()))[
+            :-2
+        ]
 
     if ref_fit_params:
         if not any(map(lambda x: x.startswith("pos"), ref_fit_params.keys())):
-            raise RuntimeError("No 'pos_<something>' keys found in given ref_fit_params")
+            raise RuntimeError(
+                "No 'pos_<something>' keys found in given ref_fit_params"
+            )
         else:
-            ref_poskey = next(filter(lambda x: x.startswith("pos"), ref_fit_params.keys()))[:3]
+            ref_poskey = next(
+                filter(lambda x: x.startswith("pos"), ref_fit_params.keys())
+            )[:-2]
 
-        if not sig_fit_params[sig_poskey + "_0"].shape == ref_fit_params[ref_poskey + "_0"].shape:
+        if (
+            not sig_fit_params[sig_poskey + "_0"].shape
+            == ref_fit_params[ref_poskey + "_0"].shape
+        ):
             raise RuntimeError("Different FOV shape between sig & ref.")
         if options["exp_reference_type"] == "field" and not len(
             list(filter(lambda x: x.startswith("pos"), sig_fit_params))
         ) == len(list(filter(lambda x: x.startswith("pos"), ref_fit_params))):
-            raise RuntimeError("Different # of frequencies fit in sig & ref. (ref. type = field).")
+            raise RuntimeError(
+                "Different # of frequencies fit in sig & ref. (ref. type = field)."
+            )
+
+
+# ============================================================================
+
+
+def get_ham_guess_and_bounds(options):
+    """
+    Generate initial guesses (and bounds) in fit parameters from options dictionary.
+
+    Both are returned as dictionaries, you need to use 'gen_{scipy/gpufit/...}_init_guesses'
+    to convert to the correct (array) format for each specific fitting backend.
+
+
+    Arguments
+    ---------
+    options : dict
+        Generic options dict holding all the user options.
+
+    Returns
+    -------
+    init_guesses : dict
+        Dict holding guesses for each parameter, e.g. key -> list of guesses for each independent
+        version of that fn_type.
+    init_bounds : dict
+        Dict holding guesses for each parameter, e.g. key -> list of bounds for each independent
+        version of that fn_type.
+    """
+    return qdmpy.field.hamiltonian.ham_gen_init_guesses(options)
+
+
+# ============================================================================
+
+
+def get_bnv_sd(sigmas):
+    """ get standard deviation of bnvs given SD of peaks. """
+    return qdmpy.field.bnv.get_bnv_sd(sigmas)
