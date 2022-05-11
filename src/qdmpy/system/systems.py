@@ -273,7 +273,9 @@ class UniMelb(System):
 
     def read_image(self, filepath, options):
         with open(os.path.normpath(filepath), mode="r") as fid:
-            raw_data = np.fromfile(fid, dtype=np.float32)[2:]
+            raw_data = np.fromfile(fid, dtype=np.float32)[2:] 
+            # NOTE is the 2 the file size info (labview save binary default to add ar. shape)?
+            # TODO inspect that data to see what it looks like etc.!
         return self._reshape_raw(options, raw_data, self.read_sweep_list(filepath))
 
     def determine_binning(self, options):

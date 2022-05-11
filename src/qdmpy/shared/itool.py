@@ -15,9 +15,12 @@ Functions
  - `qdmpy.shared.itool._residual_poly`
  - `qdmpy.shared.itool._poly_background`
  - `qdmpy.shared.itool._gaussian`
+ - `qdmpy.shared.itool._lorentzian`
  - `qdmpy.shared.itool._moments`
  - `qdmpy.shared.itool._residual_gaussian`
+ - `qdmpy.shared.itool._residual_lorentzian`
  - `qdmpy.shared.itool._gaussian_background`
+ - `qdmpy.shared.itool._lorentzian background`
  - `qdmpy.shared.itool._interpolated_background`
  - `qdmpy.shared.itool._filtered_background`
  - `qdmpy.shared.itool.get_background`
@@ -56,7 +59,7 @@ __pdoc__ = {
 # ============================================================================
 
 import numpy as np
-from numpy.polynomial.polynomial import polyval2d  # check this works
+from numpy.polynomial.polynomial import polyval2d
 from scipy.optimize import least_squares
 from scipy.interpolate import griddata
 import scipy.ndimage
@@ -145,8 +148,10 @@ def get_background(
             - params required in method_params_dict:
                 - "order": an int, the 'order' polynomial to fit. (e.g. 1 = plane).
         - "gaussian"
-            - background calculated from _gaussian fit to image.
+            - background calculated from _gaussian fit to image (with rotation)
             - no params required
+        - "lorentzian"
+            - as above, but a lorentzian lineshape (with rotation)
         - "interpolate"
             - Background defined by the dataset smoothed via a sigma-_gaussian
                 filtering, and method-interpolation over masked (polygon) regions.
@@ -206,6 +211,7 @@ def get_background(
         "mean": [],
         "poly": ["order"],
         "gaussian": [],
+        "lorentzian": [],
         "interpolate": ["interp_method", "sigma"],
         "gaussian_filter": ["sigma"],
         "gaussian_then_poly": ["order"],
@@ -216,6 +222,7 @@ def get_background(
         "mean": _mean_background,
         "poly": _poly_background,
         "gaussian": _gaussian_background,
+        "lorentzian": _lorentzian_background,
         "interpolate": _interpolated_background,
         "gaussian_filter": _filtered_background,
         "gaussian_then_poly": _gaussian_then_poly,
@@ -460,15 +467,23 @@ def _poly_background(image, order):
 
 
 def _gaussian(p, y, x):
-    """Simple Gaussian function, height, center_y, center_x, width_y, width_x = p ."""
-    height, center_y, center_x, width_y, width_x = p
-    return height * np.exp(
-        -((((center_y - y) / width_y) ** 2 + (center_x - x) / width_x) ** 2) / 2
+    """Simple Gaussian function, height, center_y, center_x, width_y, width_x, rot = p ."""
+    height, center_y, center_x, width_y, width_x, rot, offset = p
+    return offset + height * np.exp(
+        -(
+            (((y - center_y) * np.cos(rot) + (x - center_x) * np.sin(rot)) / width_y)
+            ** 2
+            + (((x - center_x) * np.cos(rot) - (y - center_y) * np.sin(rot)) / width_x)
+            ** 2
+        )
+        / 2
     )
 
 
 def _moments(image):
-    """Calculate _moments of image (get initial guesses on _gaussian function)"""
+    """Calculate _moments of image (get initial guesses for _gaussian and _lorentzian
+    function), rot=0.0 assumed"""
+    offset = np.nanmin(image)
     total = np.nansum(image)
     Y, X = np.indices(image.shape)  # noqa: N806
 
@@ -488,7 +503,7 @@ def _moments(image):
         np.sqrt(abs((np.arange(row.size) - center_x) ** 2 * row)) / np.nansum(row)
     )
     height = np.nanmax(image)
-    return height, center_y, center_x, width_y, width_x
+    return height, center_y, center_x, width_y, width_x, 0.0, offset
 
 
 def _residual_gaussian(p, y, x, data):
@@ -504,8 +519,42 @@ def _gaussian_background(image):
     y = Y[good_vals]
     x = X[good_vals]
     data = image[good_vals]
-    p = least_squares(_residual_gaussian, params, method="lm", args=(y, x, data)).x
+    p = least_squares(
+        _residual_gaussian, params, method="trf", bounds=(0, np.inf), args=(y, x, data)
+    ).x
     return _gaussian(p, Y, X)
+
+
+def _lorentzian(p, y, x):
+    height, center_y, center_x, width_y, width_x, rot, offset = p
+    xp = (x - center_x) * np.cos(rot) - (y - center_y) * np.sin(rot)
+    yp = (x - center_x) * np.sin(rot) + (y - center_y) * np.cos(rot)
+
+    R = (xp / width_x) ** 2 + (yp / width_y) ** 2
+
+    return offset + height * (1 / (1 + R))
+
+
+def _residual_lorentzian(p, y, x, data):
+    return _lorentzian(p, y, x) - data
+
+
+def _lorentzian_background(image):
+    params = _moments(image)
+    Y, X = np.indices(image.shape)  # noqa: N806
+    good_vals = np.logical_and(~np.isnan(image), ~image.mask)
+    y = Y[good_vals]
+    x = X[good_vals]
+    data = image[good_vals]
+    p = least_squares(
+        _residual_lorentzian,
+        params,
+        bounds=(0, np.inf),
+        method="trf",
+        args=(y, x, data),
+    ).x
+
+    return p, _lorentzian(p, Y, X)
 
 
 # ============================================================================

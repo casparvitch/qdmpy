@@ -75,6 +75,7 @@
     // pre_gslac: provide a dshift reference for single-peak odmr past gslac with 2-peak below gslac.
     //  (can be used with both below gslac, but does require 1/2 peaks in sig/ref along same uNV)
     //  bnv = (sig_bnv + ref_bnv) / 2 || dshift = GAMMA * (sig_bnv - ref_bnv) / 2 
+    // TODO add 'current' ref here -> add bnvs together (i.e. inverted voltage reference)
     "exp_reference_type": {
         "option_default": "field",
         "option_choices":
@@ -708,7 +709,7 @@
         "option_default": 2871
     },
     "D_range": {
-        "option_default": 5
+        "option_default": 100
     },
 
     // ========== scipy least squares fitting options ===========

@@ -56,8 +56,9 @@
     // ===========================================================================================
 
     // True if NVs exist at higher z (in lab frame) than sample.
+    // Argus is an inverted microscope
     "NVs_above_sample": {
-        "option_default": true,
+        "option_default": false,
         "option_choices": [
             true,
             false
