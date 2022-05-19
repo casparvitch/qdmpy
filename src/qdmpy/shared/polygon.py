@@ -468,9 +468,8 @@ class Polygon:
 
 # ============================================================================
 
-# TODO allow nptxt to be an array
 def polygon_selector(
-    numpy_txt_file_path,
+    array,
     json_output_path=None,
     json_input_path=None,
     mean_plus_minus=None,
@@ -483,8 +482,9 @@ def polygon_selector(
 
     Arguments
     ---------
-    numpy_txt_file_path : path
+    array : path OR arraylike
         Path to (numpy) .txt file to load as image.
+        OR can be an arraylike directly
     json_output_path : str or path-like, default="~/poly.json"
         Path to put output json, defaults to home/poly.json.
     json_input_path : str or path-like, default=None
@@ -525,7 +525,7 @@ def polygon_selector(
 
         Input help
         ----------
-        numpy_txt_file_path : path 
+        array : path 
             Path to (numpy) .txt file to load as image.
         json_output_path : str or path-like, default="~/poly.json"
             Path to put output json, defaults to home/poly.json.
@@ -561,7 +561,7 @@ def polygon_selector(
         )
         return []
 
-    image = np.loadtxt(numpy_txt_file_path)
+    image = np.loadtxt(array) if not isinstance(array, np.ndarray) else array
 
     if json_input_path is None:
         polys = None
@@ -590,7 +590,7 @@ def polygon_selector(
         mean = np.mean(image)
         vmin, vmax = mean - mean_plus_minus, mean + mean_plus_minus
     else:
-        vmin = vmax = [minimum, maximum]
+        vmin, vmax = minimum, maximum
     img = ax.imshow(
         image,
         aspect="equal",
@@ -616,7 +616,7 @@ def polygon_selector(
     divider = make_axes_locatable(ax)
     cax = divider.append_axes("right", size="5%", pad=0.05)
     fig.colorbar(img, cax=cax)
-    ax.set_title("Select polygons to exclude from background fit")
+    ax.set_title("Select polygons")
 
     psw = PolygonSelectionWidget(ax, style=kwargs)
 
