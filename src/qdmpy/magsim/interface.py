@@ -14,6 +14,7 @@ Classes
  - `qdmpy.magsim.interface.MagSim`
  - `qdmpy.magsim.interface.SandboxMagSim`
  - `qdmpy.magsim.interface.ComparisonMagSim`
+ - `qdmpy.magsim.interface.VoronoiMagSim`
 """
 # ============================================================================
 
@@ -22,6 +23,7 @@ __pdoc__ = {
     "qdmpy.magsim.interface.MagSim": True,
     "qdmpy.magsim.interface.SandboxMagSim": True,
     "qdmpy.magsim.interface.ComparisonMagSim": True,
+    "qdmpy.magsim.interface.VoronoiMagSim": True,
     "qdmpy.magsim.interface._plot_image_on_ax": True,
     "qdmpy.magsim.interface._add_cbar": True,
 }
@@ -359,6 +361,8 @@ class MagSim:
                 # integrate exp factor exp(-k z) across
                 # z = [standoff - nv_thickness / 2, standoff + nv_thickness / 2]
                 # get exp(-k z) * sinh(k nv_thickness / 2) / (k / 2)
+                # NOTE hmmm... I think nv_layer_thickness needs to be in on the bottom too??
+                # otherwise it doesn't scale correctly... TODO test FIXME
                 arg = k / 2
                 nv_thickness_correction = np.sinh(arg * nv_layer_thickness) / arg
                 for vec in fft_b_vec:
@@ -660,6 +664,15 @@ class SandboxMagSim(MagSim):
     def add_template_polygons(self, polygons=None):
         """polygons takes precedence."""
         self.template_polygon_nodes = self._load_polys(polygons, check_size=True)
+
+    def rescale_template(self, factor):
+        if self.template_polygon_nodes is None:
+            raise RuntimeError("Add/define template_polygon_nodes before rescaling.")
+
+        for polygon in self.template_polygon_nodes:
+            for node in polygon:
+                node[0] *= factor
+                node[1] *= factor
 
     def adjust_template(self, output_path=None, mean_plus_minus=None, **kwargs):
         if self.template_polygon_nodes is None:

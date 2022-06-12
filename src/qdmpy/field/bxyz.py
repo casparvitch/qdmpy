@@ -540,6 +540,7 @@ def get_reconstructed_bfield(
         Add an epsilon value to the k-vectors to avoid some issues with 1/0.
     nvs_above_sample : bool
         True if NV layer is above (higher in z) than sample being imaged.
+        Unused in this function.
 
     Returns
     -------

@@ -73,6 +73,7 @@ from numba import jit
 from qdmpy.shared.json2dict import json_to_dict, dict_to_json
 import qdmpy.shared.widget
 from qdmpy.shared.misc import warn
+from qdmpy.shared.fourier import pad_image
 
 # ============================================================================
 
@@ -160,43 +161,6 @@ CMAP_OPTIONS = [
     "nipy_spectral",
     "gist_ncar",
 ]
-
-# ============================================================================
-
-
-# def _tri_2area_det(yvert, xvert):
-#     """
-#     Compute twice the area of the triangle defined by points with using
-#     determinant formula.
-
-#     Arguments
-#     ---------
-
-#     yvert : array-like
-#         A vector of nodal y-coords (all unique).
-
-#     xvert : array-like
-#         A vector of nodal x-coords (all unique).
-
-#     Returns
-#     -------
-#     Twice the area of the triangle defined by the points.
-
-#     Notes:asfarray
-
-#     _tri_2area_det is positive if asfarraypoints define polygon in anticlockwise
-#           order.
-#     _tri_2area_det is negative if asfarraypoints define polygon in clockwise order.
-#     _tri_2area_det is zero if at least two of the points are coincident or if
-#         all points are collinear.
-
-#     """
-#     xvert = np.asfarray(xvert)
-#     yvert = np.asfarray(yvert)
-#     x_prev = np.concatenate(([xvert[-1]], xvert[:-1]))
-#     y_prev = np.concatenate(([yvert[-1]], yvert[:-1]))
-#     return np.sum(yvert * x_prev - xvert * y_prev, axis=0)  # good or no?
-#     # return np.sum(xvert * y_prev - yvert * x_prev, axis=0)
 
 # ============================================================================
 
@@ -289,7 +253,7 @@ class Polygon:
         A sequence of nodal x-coords (all unique).
     """
 
-    def __init__(self, y, x):
+    def __init__(self, y, x):   
         if len(y) != len(x):
             raise IndexError("y and x must be equally sized.")
         self.y = np.asfarray(y)
@@ -341,131 +305,6 @@ class Polygon:
         else:
             return _is_inside_sm_parallel(np.stack((ys, xs), axis=-1), self.get_yx())
 
-    # def is_inside(self, ypoint, xpoint, smalld=1e-12):
-    #     """
-    #     Check if point is inside a general polygon.
-
-    #     Arguments
-    #     ---------
-
-    #     ypoint : array-like
-    #         The y-coord of the point to be tested.
-    #     xpoint : array-like
-    #         The x-coords of the point to be tested.
-    #     smalld : float
-    #         A small float number.
-
-    #     ypoint and xpoint could be scalars or array-like sequences.
-
-    #     Returns
-    #     -------
-    #     mindst : scalar
-    #         The distance from the point to the nearest point of the
-    #         polygon.
-    #         If mindst < 0 then point is outside the polygon.
-    #         If mindst = 0 then point in on a side of the polygon.
-    #         If mindst > 0 then point is inside the polygon.
-
-    #     Notes
-    #     -----
-
-    #     An improved version of the algorithm of Nordbeck and Rydstedt.
-
-    #     REF: SLOAN, S.W. (1985): A point-in-polygon program. Adv. Eng.
-    #          Software, Vol 7, No. 1, pp 45-47.
-
-    #     """
-    #     xpoint = np.asfarray(xpoint)
-    #     ypoint = np.asfarray(ypoint)
-    #     # Scalar to array
-    #     if xpoint.shape is tuple():
-    #         xpoint = np.array([xpoint], dtype=float)
-    #         ypoint = np.array([ypoint], dtype=float)
-    #         scalar = True
-    #     else:
-    #         scalar = False
-    #     # Check consistency
-    #     if xpoint.shape != ypoint.shape:
-    #         raise IndexError("x and y has different shapes")
-    #     # If snear = True: Dist to nearest side < nearest vertex
-    #     # If snear = False: Dist to nearest vertex < nearest side
-    #     snear = np.ma.masked_all(xpoint.shape, dtype=bool)
-    #     # Initialize arrays
-    #     mindst = np.ones_like(ypoint, dtype=float) * np.inf
-    #     j = np.ma.masked_all(ypoint.shape, dtype=int)
-    #     x = self.x
-    #     y = self.y
-    #     n = len(y) - 1  # Number of sides/vertices defining the polygon
-
-    #     # Loop over each side defining polygon
-    #     for i in range(n):
-    #         d = np.ones_like(ypoint, dtype=float) * np.inf
-    #         # Start of side has coords (y1, x1)
-    #         # End of side has coords (y2, x2)
-    #         # Point has coords (xpoint, ypoint)
-    #         x1 = x[i]
-    #         y1 = y[i]
-    #         x21 = x[i + 1] - x1
-    #         y21 = y[i + 1] - y1
-    #         x1p = x1 - xpoint
-    #         y1p = y1 - ypoint
-
-    #         # Points on infinite line defined by
-    #         #     y = y1 + t * (y1 - y2)
-    #         #     x = x1 + t * (x1 - x2)
-    #         # where
-    #         #     t = 0    at (y1, x1)
-    #         #     t = 1    at (y2, x2)
-    #         # Find where normal passing through (xpoint, ypoint) intersects
-    #         # infinite line
-    #         t = -(x1p * x21 + y1p * y21) / (x21 ** 2 + y21 ** 2)
-    #         tlt0 = t < 0
-    #         tle1 = (0 <= t) & (t <= 1)  # this looks silly but don't change it
-    #         # Normal intersects side
-    #         d[tle1] = (
-    #               (x1p[tle1] + t[tle1] * x21) ** 2 + (y1p[tle1] + t[tle1] * y21) ** 2
-    #         )
-    #         # Normal does not intersects side
-    #         # Point is closest to vertex (y1, x1)
-    #         # Compute square of distance to this vertex
-    #         d[tlt0] = x1p[tlt0] ** 2 + y1p[tlt0] ** 2
-    #         # Store distances
-    #         mask = d < mindst
-    #         mindst[mask] = d[mask]
-    #         j[mask] = i
-    #         # Point is closer to (y1, x1) than any other vertex or side
-    #         snear[mask & tlt0] = False
-    #         # Point is closer to this side than to any other side or vertex
-    #         snear[mask & tle1] = True
-
-    #     if np.ma.count(snear) != snear.size:
-    #         raise IndexError("Error computing distances")
-
-    #     mindst **= 0.5
-    #     # Point is closer to its nearest vertex than its nearest side, check if
-    #     # nearest vertex is concave
-
-    #     # If the nearest vertex is concave then point is inside the polygon,
-    #     # else the point is outside the polygon.
-    #     jo = j.copy()
-    #     jo[j == 0] -= 1
-    #     area = _tri_2area_det(
-    #           [y[j + 1], y[j], y[jo - 1]], [x[j + 1], x[j], x[jo - 1]])
-    #     mindst[~snear] = np.copysign(mindst, area)[~snear]
-    #     # Point is closer to its nearest side than to its nearest vertex, check
-    #     # if point is to left or right of this side.
-    #     # If point is to left of side it is inside polygon, else point is
-    #     # outside polygon.
-    #     area = _tri_2area_det([y[j], y[j + 1], ypoint], [x[j], x[j + 1], xpoint])
-    #     mindst[snear] = np.copysign(mindst, area)[snear]
-    #     # Point is on side of polygon
-    #     mindst[np.fabs(mindst) < smalld] = 0
-    #     # If input values were scalar then the output should be too
-    #     if scalar:
-    #         mindst = float(mindst)
-    #     return mindst
-
-
 # ============================================================================
 
 def polygon_selector(
@@ -475,6 +314,7 @@ def polygon_selector(
     mean_plus_minus=None,
     strict_range=None,
     print_help=False,
+    pad=0,
     **kwargs,
 ):
     """
@@ -495,6 +335,9 @@ def polygon_selector(
         Plot image with color scaled between these values. Precedence over mean_plus_minus.
     print_help : bool, default=False
         View this message.
+    pad : bool
+        If > 0, pads with zeros by 'pad' fraction times the image size in both dimensions.
+        The 'padder' (see `qdmpy.sharead.fourier.unpad_image`) is placed in the output dict/json.
     **kwargs : dict
         Other keyword arguments to pass to plotters. Currently implemented:
             cmap : string
@@ -525,8 +368,9 @@ def polygon_selector(
 
         Input help
         ----------
-        array : path 
+        array : path OR arraylike
             Path to (numpy) .txt file to load as image.
+            OR can be an arraylike directly
         json_output_path : str or path-like, default="~/poly.json"
             Path to put output json, defaults to home/poly.json.
         json_input_path : str or path-like, default=None
@@ -562,6 +406,11 @@ def polygon_selector(
         return []
 
     image = np.loadtxt(array) if not isinstance(array, np.ndarray) else array
+
+    if pad > 0:
+        image, padder = pad_image(image, "constant", pad)
+    else:
+        padder = ((0, 0), (0, 0))
 
     if json_input_path is None:
         polys = None
@@ -633,7 +482,7 @@ def polygon_selector(
 
     # exclude polygons with nodes < 3
     pgon_lst = [pgon.get_nodes() for pgon in pgons if np.shape(pgon.get_nodes())[0] > 2]
-    output_dict = {"nodes": pgon_lst, "image_shape": image.shape}
+    output_dict = {"nodes": pgon_lst, "image_shape": image.shape, "padder": padder}
 
     dict_to_json(output_dict, json_output_path)
 

@@ -17,6 +17,7 @@ from matplotlib.image import AxesImage
 from scipy import integrate
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
+import matplotlib as mpl
 import pathlib
 import matplotlib.patches
 
@@ -52,9 +53,7 @@ def bulk_vert_linecut_vs_position(
     axs[0].imshow(image_to_show, cmap="bwr", vmin=-furthest, vmax=furthest)
     # axs[0].axvline(middle_idx, color="k", ls="--", lw=2)
 
-    if (
-        linecut_coords is not None
-    ):  # clean this stuff up, assume a linecut and fall back to 0->height
+    if linecut_coords is not None:
         start_y, end_y = linecut_coords
         p = matplotlib.patches.Polygon(
             [[width // 2, start_y], [width // 2, end_y]], closed=False, ec="k", ls="--"
@@ -62,7 +61,6 @@ def bulk_vert_linecut_vs_position(
         axs[0].add_patch(p)
 
     cols = list(range(avg_steps, width - avg_steps))
-    # col_labels = [col_idx - middle_idx for col_idx in cols]
     col_labels = [col_idx for col_idx in cols]
     x_pos = [col_labels for _ in times]
     x_pos = np.transpose(x_pos)
@@ -215,18 +213,40 @@ class BulkLinecutWidget:
         self.xlabels = xlabels
 
         self.pts = []
-        self.line_selector = qdmpy.shared.widget.LineSelector(
-            imax,
-            self.onselect,
-            ondraw=self.ondraw,
-            lineprops={"color": "k", "linestyle": "-", "linewidth": 1.0, "alpha": 0.5},
-            markerprops={
+
+        dflt_style = {
+            "lineprops": {
+                "color": "k",
+                "linestyle": "-",
+                "linewidth": 1.0,
+                "alpha": 0.5,
+            },
+            "markerprops": {
                 "marker": "o",
                 "markersize": 2.0,
                 "mec": "k",
                 "mfc": "k",
                 "alpha": 0.5,
             },
+        }
+
+        self.lp = dflt_style["lineprops"]
+        self.mp = dflt_style["markerprops"]
+
+        if style is not None:
+            if "lineprops" in style and isinstance(style["lineprops"], dict):
+                for key, item in style["lineprops"].items():
+                    self.lp[key] = item
+            if "markerprops" in style and isinstance(style["markerprops"], dict):
+                for key, item in style["markerprops"].items():
+                    self.mp[key] = item
+
+        self.line_selector = qdmpy.shared.widget.LineSelector(
+            imax,
+            self.onselect,
+            ondraw=self.ondraw,
+            lineprops=self.lp,
+            markerprops=self.mp,
             vertex_select_radius=7.5 * 2.0,
             useblit=useblit,
         )
@@ -380,10 +400,10 @@ class LinecutSelectionWidget:
         self.mp = dflt_style["markerprops"]
         if style is not None:
             if "lineprops" in style and isinstance(style["lineprops"], dict):
-                for key, item in style["lineprops"]:
+                for key, item in style["lineprops"].items():
                     self.lp[key] = item
             if "markerprops" in style and isinstance(style["markerprops"], dict):
-                for key, item in style["markerprops"]:
+                for key, item in style["markerprops"].items():
                     self.mp[key] = item
 
         vsr = 7.5 * self.mp["markersize"]  # linear scaling on what our select radius is

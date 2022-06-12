@@ -137,6 +137,16 @@ def get_unvs(options):
             raise ValueError(
                 "Incorrect unvs format passed to Hamiltonian. Expected shape: (4,3)."
             )
+        if options["auto_order_unvs"]:
+            nv_axes = [{"nv_number": i, "ori": ori.copy()} for i, ori in enumerate(unvs)]
+            for nv_num in range(len(nv_axes)):
+                projection = np.dot(nv_axes[nv_num]["ori"], [bias_x, bias_y, bias_z])
+                nv_axes[nv_num]["mag"] = np.abs(projection)
+                nv_axes[nv_num]["sign"] = np.sign(projection)
+            sorted_dict = sorted(nv_axes, key=lambda x: x["mag"], reverse=True)
+
+            for idx in range(len(sorted_dict)):
+                unvs[idx, :] = np.array(sorted_dict[idx]["ori"]) * sorted_dict[idx]["sign"]
     else:
         if options["diamond_ori"] == "<100>_<100>":
             nv_axes = NV_AXES_100_100

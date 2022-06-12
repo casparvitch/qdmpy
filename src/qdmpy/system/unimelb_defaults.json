@@ -642,7 +642,7 @@
                 false
             ]
     },
-    // Guess mag field (Bx, By, Bz) from auto_read_bias parameters/bias_mag etc.
+    // Guess mag field (Bx, By, Bz) from auto_read_bias parameters or bias_mag etc.
     // for hamiltonian fit. (else uses Bx_guess options etc.)
     "auto_guess_B": {
         "option_default": true,
@@ -671,6 +671,15 @@
             [-0.57735, -0.57735, 0.57735]
         ]
     },
+    // order unvs by the bfield projection onto them (largest to smallest)
+    "auto_order_unvs": {
+        "option_default": false,
+        "option_choices":
+            [
+                true,
+                false
+            ]
+    },
     // Field of bias field, used to automatically determine uNVs (and with auto_guess_B for ham.fit)
     "bias_mag": {
         "option_default": 80
@@ -691,25 +700,25 @@
         "option_default": 10
     },
     "Bx_range": {
-        "option_default": 30
+        "option_default": 200
     },
     "By_guess": {
         "option_default": 10
     },
     "By_range": {
-        "option_default": 30
+        "option_default": 200
     },
     "Bz_guess": {
         "option_default": 10
     },
     "Bz_range": {
-        "option_default": 30
+        "option_default": 200
     },
     "D_guess": {
         "option_default": 2871
     },
     "D_range": {
-        "option_default": 100
+        "option_default": 500
     },
 
     // ========== scipy least squares fitting options ===========

@@ -9,6 +9,8 @@ Functions
  - `qdmpy.shared.fourier.define_k_vectors`
  - `qdmpy.shared.fourier.set_naninf_to_zero`
  - `qdmpy.shared.fourier.hanning_filter_kspace`
+ - `qdmpy.shared.fourier.define_magnetization_transformation`
+ - `qdmpy.shared.fourier.define_current_transform`
 
 Constants
 ---------
