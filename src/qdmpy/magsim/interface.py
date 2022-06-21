@@ -450,7 +450,7 @@ class MagSim:
         return fig, ax
 
     def plot_magsim_magnetizations(
-        self, annotate_polygons=True, polygon_patch_params=None
+        self, annotate_polygons=True, polygon_patch_params=None, cmap="PuOr", c_range=None
     ):
         # use single colorbar, different plots
         # https://matplotlib.org/stable/gallery/subplots_axes_and_figures/colorbar_placement.html
@@ -464,8 +464,9 @@ class MagSim:
 
         mag_images = [self.get_magnetization_im(uv) for uv in unique_uvs]
 
-        mx = max([np.nanmax(mag) for mag in mag_images])
-        c_range = (-mx, mx)
+        if c_range is None:
+            mx = max([np.nanmax(mag) for mag in mag_images])
+            c_range = (-mx, mx)
 
         figsize = mpl.rcParams["figure.figsize"].copy()
         nrows = 1
@@ -479,7 +480,7 @@ class MagSim:
             axs[0] if isinstance(axs, np.ndarray) else axs,
             np.sum(mag_images, axis=0),
             "sum",
-            "PuOr",
+            cmap,
             c_range,
             self._get_mag_unit_str(),
             polygon_nodes=self.polygon_nodes if annotate_polygons else None,
@@ -500,7 +501,7 @@ class MagSim:
                 axs[i + 1] if isinstance(axs, np.ndarray) else axs,
                 mag,
                 title,
-                "PuOr",
+                cmap,
                 c_range,
                 self._get_mag_unit_str(),
                 polygon_nodes=polys,

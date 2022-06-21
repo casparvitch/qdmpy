@@ -162,7 +162,7 @@ def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
                     "field_method option was 'prop_single_bnv', but number of true"
                     " values in option " + "'freqs_to_use' was not 1 or 2."
                 )
-            else:
+            else:   
                 sig_params = qdmpy.field.bxyz.from_single_bnv(options, sig_bnvs)
                 missing = np.empty(sig_params[list(sig_params.keys())[0]].shape)
                 missing[:] = np.nan
