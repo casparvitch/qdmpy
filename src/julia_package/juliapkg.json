@@ -1,0 +1,24 @@
+{
+  "julia": "1.7.2",
+  "packages": {
+    "Distributed": {
+      "uuid": "8ba89e20-285c-5b6f-9357-94700520ee1b"
+    },
+    "Deconvolution": {
+      "uuid": "41ba435c-a500-5816-a783-a9707c6f5f3a",
+      "version": "1.1.1"
+    },
+    "ImageFiltering": {
+      "uuid": "6a3955dd-da59-5b1f-98d4-e7296123deb5",
+      "version": "0.7.1"
+    },
+    "DistributedArrays": {
+      "uuid": "aaf54ef3-cdf8-58ed-94cc-d582ad619b94",
+      "version": "0.6.6"
+    },
+    "FFWT": {
+      "uuid": "7a1cc6ca-52ef-59f5-83cd-3a7055c09341",
+      "version": "1.4.6"
+    }
+  }
+}

@@ -187,7 +187,7 @@ def hanning_filter_kspace(
     # Define Hanning filter to prevent noise amplification at frequencies higher than the
     # spatial resolution
 
-    if do_filt and standoff:
+    if do_filt and standoff and standoff > 1e-10: # standoff greater than an angstrom...
         hy = np.hanning(k.shape[0])
         hx = np.hanning(k.shape[1])
         img_filt = np.sqrt(np.outer(hy, hx))

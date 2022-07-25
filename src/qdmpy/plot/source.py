@@ -694,6 +694,7 @@ def magnetization(options, source_params, plot_bgrounds=True):
             c_range = qdmpy.plot.common.get_colormap_range(
                 options["colormap_range_dicts"]["magnetization_images"], data
             )
+            c_map = options["colormaps"]["magnetization_images"]
             qdmpy.plot.common.plot_image_on_ax(
                 fig, ax, options, data, name, c_map, c_range, root_name + " (mu_B/nm^2)"
             )

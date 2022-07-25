@@ -516,7 +516,7 @@ class MagSim:
         projection=(0, 0, 1),
         annotate_polygons=True,
         polygon_patch_params=None,
-        c_map="bwr",
+        cmap="bwr",
         strict_range=None,
         c_label=None,
     ):
@@ -539,7 +539,7 @@ class MagSim:
             ax,
             self.get_bfield_im(projection),
             f"B . {proj_name} at z = {self.standoff}{self._get_dist_unit_str()}",
-            c_map,
+            cmap,
             c_range,
             c_label_,
             polygon_nodes=polys,

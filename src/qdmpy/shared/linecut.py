@@ -205,7 +205,7 @@ class BulkLinecutWidget:
     selector.disconnect(path="/home/samsc/share/result.json")
     """
 
-    def __init__(self, imax, profax, resax, images, xlabels, style=None, useblit=False):
+    def __init__(self, imax, profax, resax, images, xlabels, style=None, useblit=False, dointegral=True):
         # check that input ax has an imshow (else not so useful eh)
         if not any([[isinstance(t, AxesImage) for t in imax.get_children()]]):
             raise ValueError("input axis does not contain an AxesImage (imshow).")
@@ -255,6 +255,7 @@ class BulkLinecutWidget:
         self.resax = resax
         self.integrals = [0 for i in xlabels]
         self.integral = 0
+        self.do_integral = dointegral
 
         self.canvas = self.imax.figure.canvas
 
@@ -320,12 +321,14 @@ class BulkLinecutWidget:
                         pxl_ar[1:]
                     )  # get rid of initial 0 on pxl_ar (bit hacky)
                     prof.set_ydata(list(z))
-                    self.integrals[p] = integrate.simpson(z, pxl_ar[1:])
+                    if self.do_integral:
+                        self.integrals[p] = integrate.simpson(z, pxl_ar[1:])
+                    else:
+                        self.integrals[p] = np.nan
                 else:
                     # dummy data for this guy...
                     prof.set_xdata((np.nan,))
                     prof.set_ydata((np.nan,))
-                    self.integrals[p] = np.nan
             self.integrals_plot.set_ydata(self.integrals)
         self.profax.relim()
         self.profax.autoscale_view()
