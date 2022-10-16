@@ -417,6 +417,8 @@ Untested in our lab, follow: [https://gpufit.readthedocs.io/en/latest/installati
 <a id="installation-procedure"></a>
 ## Installation Procedure
 
+ - Install/update gpu driver
+
  - Install microsoft visual studio (MSVS)
     - *not to be confused with Visual Studio Code*
     - best to go with an older rather than newer version for compatibility with everything above

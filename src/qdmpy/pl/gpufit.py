@@ -133,6 +133,8 @@ def get_gpufit_modelID(options, fit_model):  # noqa: N802
             + "\t{'lorentzian': 1<=n<=8}\n"  # noqa: W503
             + "STRETCHED_EXP: \n"
             + "\t{'constant': 1, 'stretched_exponential': 1}"  # noqa: W503
+            + "DAMPED_RABI: \n"
+            + "\t{'constant': 1, 'damped_rabi': 1`}"
         )
 
     return model

@@ -303,11 +303,12 @@ class MagSim:
         # e.g. if we wanted to average over an nv-depth distribution that would be easy
 
         # get shape so we can define kvecs
-        dummy_img, _ = qdmpy.shared.fourier.pad_image(
+        shp = qdmpy.shared.fourier.pad_image(
             np.empty(np.shape(self.mag[self.unit_vectors_lst[0]])), pad_mode, pad_factor
-        )
+        )[0].shape
+
         ky, kx, k = qdmpy.shared.fourier.define_k_vectors(
-            dummy_img.shape, self.pixel_size, k_vector_epsilon
+            shp, self.pixel_size, k_vector_epsilon
         )
 
         d_matrix = qdmpy.shared.fourier.define_magnetization_transformation(
