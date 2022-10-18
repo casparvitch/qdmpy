@@ -353,16 +353,16 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
             else:
                 idx = np.argwhere(np.array(chosen_freqs[:4]) == 1)[0][0]
 
-            # sig_bias = options["bias_field_spherical_deg_gauss"] not required..?
+            sig_bias = options["bias_field_spherical_deg_gauss"]
             ref_bias = options["ref_bias_field_spherical_deg_gauss"]
-            # sig_bias_mag = np.abs(sig_bias[0]) not required..?
+            sig_bias_mag = np.abs(sig_bias[0]) 
             ref_bias_mag = np.abs(ref_bias[0])
 
-            if ref_bias_mag > qdmpy.field.bnv.GSLAC:
-                raise RuntimeError(
-                    "As currently coded, ref bias mag must be < GSLAC for dshift"
-                    " reference."
-                )
+            # if ref_bias_mag > qdmpy.field.bnv.GSLAC:
+            #     raise RuntimeError(
+            #         "As currently coded, ref bias mag must be < GSLAC for dshift"
+            #         " reference."
+            #     )
 
             unv = qdmpy.shared.geom.get_unvs(options)[idx]
             sig_bnv = sig_bnvs[0]
@@ -372,7 +372,8 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
             # glac +- should be sorted in freq -> bnv
             sig_sub_ref_bnv = (
                 sig_bnv
-                + ref_dshift  # if sig_bias_mag > GSLAC else sig_bnv - ref_dshift
+                + ref_dshift if sig_bias_mag >  qdmpy.field.bnv.GSLAC and 
+                chosen_freqs[0] else sig_bnv - ref_dshift
             )
 
             other_opts = [
