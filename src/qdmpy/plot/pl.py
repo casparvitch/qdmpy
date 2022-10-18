@@ -83,7 +83,14 @@ def roi_pl_image(options, pl_image):
     fig, ax = plt.subplots()
 
     fig, ax = qdmpy.plot.common.plot_image_on_ax(
-        fig, ax, options, pl_image, "pl - Full & Rebinned", c_map, c_range, "Counts"
+        fig,
+        ax,
+        options,
+        pl_image,
+        "pl - Full & Rebinned",
+        c_map,
+        c_range,
+        "Counts",
     )
 
     if options["annotate_image_regions"]:
@@ -91,7 +98,8 @@ def roi_pl_image(options, pl_image):
 
     if options["save_plots"]:
         fig.savefig(
-            options["output_dir"] / ("pl_full_rebinned." + options["save_fig_type"])
+            options["output_dir"]
+            / ("pl_full_rebinned." + options["save_fig_type"])
         )
 
     return fig
@@ -123,7 +131,14 @@ def aoi_pl_image(options, pl_image_roi):
     )
 
     fig, ax = qdmpy.plot.common.plot_image_on_ax(
-        fig, ax, options, pl_image_roi, "pl - ROI & Rebinned", c_map, c_range, "Counts"
+        fig,
+        ax,
+        options,
+        pl_image_roi,
+        "pl - ROI & Rebinned",
+        c_map,
+        c_range,
+        "Counts",
     )
 
     if options["annotate_image_regions"]:
@@ -131,7 +146,8 @@ def aoi_pl_image(options, pl_image_roi):
 
     if options["save_plots"]:
         fig.savefig(
-            options["output_dir"] / ("pl_ROI_rebinned." + options["save_fig_type"])
+            options["output_dir"]
+            / ("pl_ROI_rebinned." + options["save_fig_type"])
         )
 
     return fig
@@ -178,7 +194,9 @@ def roi_avg_fits(options, backend_roi_results_lst):
         mec="firebrick",
     )
     lspec_names.append(f"raw data ({options['normalisation']})")
-    lspec_lines.append(Line2D([0], [0], ls=" ", marker="o", mfc="w", mec="firebrick"))
+    lspec_lines.append(
+        Line2D([0], [0], ls=" ", marker="o", mfc="w", mec="firebrick")
+    )
 
     high_res_sweep_list = np.linspace(
         np.min(backend_roi_results_lst[0].sweep_list),
@@ -198,13 +216,14 @@ def roi_avg_fits(options, backend_roi_results_lst):
     lspec_names.append("init guess")
     lspec_lines.append(Line2D([0], [0], linestyle=(0, (1, 1)), c="darkgreen"))
 
-    spectrum_frame.set_xticklabels([])  # remove from first frame
+    # spectrum_frame.set_xticklabels([])  # remove from first frame
+    plt.setp(spectrum_frame.get_xticklabels(), visible=False)
 
     spectrum_frame.grid()
     spectrum_frame.set_ylabel("pl (a.u.)")
 
     # residual plot
-    residual_frame = fig.add_axes((0.1, 0.1, 0.8, 0.2))
+    residual_frame = fig.add_axes((0.1, 0.1, 0.8, 0.2), sharex=spectrum_frame)
 
     lresid_names = []
     lresid_lines = []
@@ -224,7 +243,9 @@ def roi_avg_fits(options, backend_roi_results_lst):
             high_res_best_fit,
             linestyle="--",
             label=f"{res.fit_backend} best fit",
-            c=options["fit_backend_colors"][res.fit_backend]["ROIfit_linecolor"],
+            c=options["fit_backend_colors"][res.fit_backend][
+                "ROIfit_linecolor"
+            ],
         )
         lspec_names.append(f"{res.fit_backend} best fit")
         lspec_lines.append(
@@ -232,22 +253,30 @@ def roi_avg_fits(options, backend_roi_results_lst):
                 [0],
                 [0],
                 linestyle="--",
-                c=options["fit_backend_colors"][res.fit_backend]["ROIfit_linecolor"],
+                c=options["fit_backend_colors"][res.fit_backend][
+                    "ROIfit_linecolor"
+                ],
             )
         )
 
         residual_xdata = res.sweep_list
-        residual_ydata = res.fit_model(res.best_params, res.sweep_list) - res.pl_roi
+        residual_ydata = (
+            res.fit_model(res.best_params, res.sweep_list) - res.pl_roi
+        )
 
         residual_frame.plot(
             residual_xdata,
             residual_ydata,
             label=f"{res.fit_backend} residual",
             ls="dashed",
-            c=options["fit_backend_colors"][res.fit_backend]["residual_linecolor"],
+            c=options["fit_backend_colors"][res.fit_backend][
+                "residual_linecolor"
+            ],
             marker="o",
             mfc="w",
-            mec=options["fit_backend_colors"][res.fit_backend]["residual_linecolor"],
+            mec=options["fit_backend_colors"][res.fit_backend][
+                "residual_linecolor"
+            ],
         )
         lresid_names.append(f"{res.fit_backend} residual")
         lresid_lines.append(
@@ -255,7 +284,9 @@ def roi_avg_fits(options, backend_roi_results_lst):
                 [0],
                 [0],
                 ls="dashed",
-                c=options["fit_backend_colors"][res.fit_backend]["residual_linecolor"],
+                c=options["fit_backend_colors"][res.fit_backend][
+                    "residual_linecolor"
+                ],
                 marker="o",
                 mfc="w",
                 mec=options["fit_backend_colors"][res.fit_backend][
@@ -264,7 +295,9 @@ def roi_avg_fits(options, backend_roi_results_lst):
             )
         )
 
-        res.savejson(f"ROI_avg_fit_{res.fit_backend}.json", options["data_dir"])
+        res.savejson(
+            f"ROI_avg_fit_{res.fit_backend}.json", options["data_dir"]
+        )
 
     # https://jdhao.github.io/2018/01/23/matplotlib-legend-outside-of-axes/
     # https://matplotlib.org/3.2.1/gallery/lines_bars_and_markers/linestyles.html
@@ -289,7 +322,8 @@ def roi_avg_fits(options, backend_roi_results_lst):
 
     if options["save_plots"]:
         fig.savefig(
-            options["output_dir"] / ("ROI_avg_fits." + options["save_fig_type"])
+            options["output_dir"]
+            / ("ROI_avg_fits." + options["save_fig_type"])
         )
 
     return fig
@@ -327,8 +361,12 @@ def aoi_spectra(options, sig, ref, sweep_list):
     sig_avgs = []
     ref_avgs = []
     for i, aoi in enumerate(aois):
-        sig_avg = np.nanmean(np.nanmean(sig[:, aoi[0], aoi[1]], axis=2), axis=1)
-        ref_avg = np.nanmean(np.nanmean(ref[:, aoi[0], aoi[1]], axis=2), axis=1)
+        sig_avg = np.nanmean(
+            np.nanmean(sig[:, aoi[0], aoi[1]], axis=2), axis=1
+        )
+        ref_avg = np.nanmean(
+            np.nanmean(ref[:, aoi[0], aoi[1]], axis=2), axis=1
+        )
         sig_avgs.append(sig_avg)
         ref_avgs.append(ref_avg)
 
@@ -336,7 +374,9 @@ def aoi_spectra(options, sig, ref, sweep_list):
     num_wide = 2 if len(aois) < 2 else len(aois)
     figsize[0] *= num_wide
     figsize[1] *= 2
-    fig, axs = plt.subplots(2, num_wide, figsize=figsize, sharex=True, sharey=False)
+    fig, axs = plt.subplots(
+        2, num_wide, figsize=figsize, sharex=True, sharey=False
+    )
 
     for i, aoi in enumerate(aois):
 
@@ -366,7 +406,8 @@ def aoi_spectra(options, sig, ref, sweep_list):
         axs[0, i].legend()
         axs[0, i].grid(True)
         axs[0, i].set_title(
-            "AOI " + str(i + 1), fontdict={"color": options["AOI_colors"][i + 1]}
+            "AOI " + str(i + 1),
+            fontdict={"color": options["AOI_colors"][i + 1]},
         )
         axs[0, i].set_ylabel("pl (a.u.)")
 
@@ -420,7 +461,9 @@ def aoi_spectra(options, sig, ref, sweep_list):
 
         axs[1, 1].legend()
         axs[1, 1].grid(True)
-        axs[1, 1].set_title("Division Normalisation (Weber contrast, sig / ref)")
+        axs[1, 1].set_title(
+            "Division Normalisation (Weber contrast, sig / ref)"
+        )
         axs[1, 1].set_xlabel("Sweep parameter")
         axs[1, 1].set_ylabel("pl (a.u.)")
 
@@ -447,7 +490,9 @@ def aoi_spectra(options, sig, ref, sweep_list):
     )
 
     if options["save_plots"]:
-        fig.savefig(options["output_dir"] / ("AOI_spectra." + options["save_fig_type"]))
+        fig.savefig(
+            options["output_dir"] / ("AOI_spectra." + options["save_fig_type"])
+        )
     return fig
 
 
@@ -564,7 +609,8 @@ def aoi_spectra_fit(
             axs[i, 0].set_title("ROI avg")
         elif i == 1:
             axs[i, 0].set_title(
-                "Single Pixel Check", fontdict={"color": options["AOI_colors"][0]}
+                "Single Pixel Check",
+                fontdict={"color": options["AOI_colors"][0]},
             )
         else:
             axs[i, 0].set_title(
@@ -577,7 +623,9 @@ def aoi_spectra_fit(
     # plot normalisation as second column
     for i, (s, r) in enumerate(zip(sigs, refs)):
         if len(s.shape) > 1:
-            sub_avg = np.nanmean(np.nanmean(1 + (s - r) / (s + r), axis=2), axis=1)
+            sub_avg = np.nanmean(
+                np.nanmean(1 + (s - r) / (s + r), axis=2), axis=1
+            )
             div_avg = np.nanmean(np.nanmean(s / r, axis=2), axis=1)
         else:
             sub_avg = 1 + (s - r) / (s + r)
@@ -641,22 +689,27 @@ def aoi_spectra_fit(
             *fit_backend_fit_result.AOI_fit_results_lst,
         ]
         # now plot fits as third column
-        for i, (fit_param_ar, s, r) in enumerate(zip(fit_params_lst, sigs, refs)):
+        for i, (fit_param_ar, s, r) in enumerate(
+            zip(fit_params_lst, sigs, refs)
+        ):
 
             if len(s.shape) > 1:
                 s = np.nanmean(np.nanmean(s, axis=2), axis=1)
                 r = np.nanmean(np.nanmean(r, axis=2), axis=1)
-            
+
             if not options["used_ref"]:
                 sig_norm_avg = s
             elif options["normalisation"] == "div":
                 sig_norm_avg = s / r
             elif options["normalisation"] == "sub":
                 sig_norm_avg = 1 + (s - r) / (s + r)
+            elif options["normalisation"] == "true_sub":
+                sig_norm_avg = (s - r) / np.nanmax(s - r)
 
             best_fit_ydata = fit_model(fit_param_ar, high_res_xdata)
             roi_fit_ydata = fit_model(
-                fit_backend_fit_result.ROI_avg_fit_result.best_params, high_res_xdata
+                fit_backend_fit_result.ROI_avg_fit_result.best_params,
+                high_res_xdata,
             )
 
             # this is the first loop -> plot raw data, add titles
@@ -719,7 +772,8 @@ def aoi_spectra_fit(
 
     if options["save_plots"]:
         fig.savefig(
-            options["output_dir"] / ("AOI_spectra_fits." + options["save_fig_type"])
+            options["output_dir"]
+            / ("AOI_spectra_fits." + options["save_fig_type"])
         )
 
     return fig
@@ -729,7 +783,12 @@ def aoi_spectra_fit(
 
 
 def pl_param_image(
-    options, fit_model, pixel_fit_params, param_name, param_number=0, errorplot=False
+    options,
+    fit_model,
+    pixel_fit_params,
+    param_name,
+    param_number=0,
+    errorplot=False,
 ):
     """
     Plots an image corresponding to a single parameter in pixel_fit_params.
@@ -778,7 +837,9 @@ def pl_param_image(
         c_map = options["colormaps"]["param_images"]
 
     if param_name == "residual" and errorplot:
-        warn("residual doesn't have an error, can't plot residual sigma (ret. None).")
+        warn(
+            "residual doesn't have an error, can't plot residual sigma (ret. None)."
+        )
         return None
 
     if errorplot:
@@ -810,7 +871,11 @@ def pl_param_image(
             )
         else:
             path = options["output_dir"] / (
-                param_name + "_" + str(param_number) + "." + options["save_fig_type"]
+                param_name
+                + "_"
+                + str(param_number)
+                + "."
+                + options["save_fig_type"]
             )
         fig.savefig(path)
 
@@ -820,7 +885,9 @@ def pl_param_image(
 # ============================================================================
 
 
-def pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=False):
+def pl_param_images(
+    options, fit_model, pixel_fit_params, param_name, errorplot=False
+):
     """
     Plots images for all independent versions of a single parameter type in pixel_fit_params.
 
@@ -852,7 +919,9 @@ def pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=
         return None
 
     if param_name == "residual" and errorplot:
-        warn("residual doesn't have an error, can't plot residual sigma (ret. None).")
+        warn(
+            "residual doesn't have an error, can't plot residual sigma (ret. None)."
+        )
         return None
 
     # plot 2 columns wide, as many rows as required
@@ -872,7 +941,9 @@ def pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=
         return int(num)
 
     # sort based on number (just in case)
-    our_keys.sort(key=param_sorter)  # i.e. key = lambda x: int(x.split("_")[-1])
+    our_keys.sort(
+        key=param_sorter
+    )  # i.e. key = lambda x: int(x.split("_")[-1])
     nk = len(our_keys)
 
     if nk == 1:
@@ -912,7 +983,9 @@ def pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=
             if nk % 2:
                 param_nums.append(nk // 2 + 1)
             if len(param_nums) < 4:
-                param_nums.extend([-1 for _ in range(4 - len(param_nums))])  # dummies
+                param_nums.extend(
+                    [-1 for _ in range(4 - len(param_nums))]
+                )  # dummies
             param_nums.extend(
                 list(range(nk - 1, (nk - 1) // 2, -1))
             )  # range(start, stop, step)
@@ -936,7 +1009,8 @@ def pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=
 
             if param_name == "residual":
                 c_range = qdmpy.plot.common.get_colormap_range(
-                    options["colormap_range_dicts"]["residual_images"], image_data
+                    options["colormap_range_dicts"]["residual_images"],
+                    image_data,
                 )
                 c_map = options["colormaps"]["residual_images"]
             elif errorplot:
@@ -951,12 +1025,21 @@ def pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=
                 c_map = options["colormaps"]["param_images"]
 
             if errorplot:
-                c_label = "SD: " + fit_model.get_param_unit(param_name, param_number)
+                c_label = "SD: " + fit_model.get_param_unit(
+                    param_name, param_number
+                )
             else:
                 c_label = fit_model.get_param_unit(param_name, param_number)
 
             qdmpy.plot.common.plot_image_on_ax(
-                fig, ax, options, image_data, param_key, c_map, c_range, c_label
+                fig,
+                ax,
+                options,
+                image_data,
+                param_key,
+                c_map,
+                c_range,
+                c_label,
             )
 
         if options["save_plots"]:
@@ -1020,7 +1103,9 @@ def pl_params_flattened(
 
     # initial guess vs ROI fit vs pixel fit
 
-    param_keys = sorted([p for p in pixel_fit_params if p.startswith(param_name)])
+    param_keys = sorted(
+        [p for p in pixel_fit_params if p.startswith(param_name)]
+    )
 
     figsize = mpl.rcParams["figure.figsize"].copy()
 
@@ -1086,7 +1171,11 @@ def pl_params_flattened(
         legend_names = ["Fit bounds", "Initial guesses", "ROI fits"]
         custom_lines = [
             Line2D(
-                [0], [0], color="k", ls=(0, (2, 1)), lw=mpl.rcParams["lines.linewidth"]
+                [0],
+                [0],
+                color="k",
+                ls=(0, (2, 1)),
+                lw=mpl.rcParams["lines.linewidth"],
             ),
             Line2D(
                 [0],
@@ -1303,7 +1392,12 @@ def _add_patch_rect(
             rect_corner_x + 0.95 * size_x,  # label posn.: top right
             rect_corner_y,
             label,
-            {"color": edgecolor, "fontsize": 10, "ha": "center", "va": "bottom"},
+            {
+                "color": edgecolor,
+                "fontsize": 10,
+                "ha": "center",
+                "va": "bottom",
+            },
         )
 
 
@@ -1425,9 +1519,16 @@ def spectra_comparison(
 
     for i, spectra in enumerate(spectra_lst):
         ax.plot(
-            sweep_list, spectra, label=f"{i + 1} raw", marker="o", lw=0, c=colors[i]
+            sweep_list,
+            spectra,
+            label=f"{i + 1} raw",
+            marker="o",
+            lw=0,
+            c=colors[i],
         )
-        ax.plot(sweep_list, fit_result_ars[i], label=f"{i + 1} fit", c=colors[i])
+        ax.plot(
+            sweep_list, fit_result_ars[i], label=f"{i + 1} fit", c=colors[i]
+        )
 
     ax.legend()
 
@@ -1446,7 +1547,8 @@ def spectra_comparison(
 
     if options["save_plots"]:
         fig.savefig(
-            options["output_dir"] / ("spectra_comparison." + options["save_fig_type"])
+            options["output_dir"]
+            / ("spectra_comparison." + options["save_fig_type"])
         )
 
     return fig, output_dict

@@ -188,7 +188,8 @@ def _is_inside_sm(point, polygon):
             # non-horizontal line
             if dy < 0 or dy2 < 0:
                 F = (
-                    dy * (polygon[jj][0] - polygon[ii][0]) / (dy - dy2) + polygon[ii][0]
+                    dy * (polygon[jj][0] - polygon[ii][0]) / (dy - dy2)
+                    + polygon[ii][0]
                 )  # noqa: N806
 
                 if (
@@ -205,7 +206,9 @@ def _is_inside_sm(point, polygon):
                 point[0] == polygon[jj][0]
                 or (
                     dy == 0
-                    and (point[0] - polygon[ii][0]) * (point[0] - polygon[jj][0]) <= 0
+                    and (point[0] - polygon[ii][0])
+                    * (point[0] - polygon[jj][0])
+                    <= 0
                 )
             ):
                 return 2
@@ -253,7 +256,7 @@ class Polygon:
         A sequence of nodal x-coords (all unique).
     """
 
-    def __init__(self, y, x):   
+    def __init__(self, y, x):
         if len(y) != len(x):
             raise IndexError("y and x must be equally sized.")
         self.y = np.asfarray(y)
@@ -303,9 +306,13 @@ class Polygon:
         if xs.shape is tuple():
             return _is_inside_sm((y, x), self.get_yx())
         else:
-            return _is_inside_sm_parallel(np.stack((ys, xs), axis=-1), self.get_yx())
+            return _is_inside_sm_parallel(
+                np.stack((ys, xs), axis=-1), self.get_yx()
+            )
+
 
 # ============================================================================
+
 
 def polygon_selector(
     array,
@@ -435,7 +442,9 @@ def polygon_selector(
         and len(strict_range) == 2
     ):
         vmin, vmax = strict_range
-    elif mean_plus_minus is not None and isinstance(mean_plus_minus, (float, int)):
+    elif mean_plus_minus is not None and isinstance(
+        mean_plus_minus, (float, int)
+    ):
         mean = np.mean(image)
         vmin, vmax = mean - mean_plus_minus, mean + mean_plus_minus
     else:
@@ -481,8 +490,14 @@ def polygon_selector(
         raise RuntimeError("You didn't define any polygons")
 
     # exclude polygons with nodes < 3
-    pgon_lst = [pgon.get_nodes() for pgon in pgons if np.shape(pgon.get_nodes())[0] > 2]
-    output_dict = {"nodes": pgon_lst, "image_shape": image.shape, "padder": padder}
+    pgon_lst = [
+        pgon.get_nodes() for pgon in pgons if np.shape(pgon.get_nodes())[0] > 2
+    ]
+    output_dict = {
+        "nodes": pgon_lst,
+        "image_shape": image.shape,
+        "padder": padder,
+    }
 
     dict_to_json(output_dict, json_output_path)
 
@@ -522,7 +537,10 @@ def polygon_gui(image=None):
     if image is not None:
         layout0 = [
             sg.Text(
-                "Image file chosen: " + str(image.__class__) + " @ " + hex(id(image))
+                "Image file chosen: "
+                + str(image.__class__)
+                + " @ "
+                + hex(id(image))
             )
         ]
     else:
@@ -547,7 +565,10 @@ def polygon_gui(image=None):
             sg.Checkbox("Load the polygon set", key="do_load_polys"),
             sg.Submit(),
         ],
-        [sg.Text("Cmap:"), sg.Combo(cmap_lst, default_value="viridis", key="cmap")],
+        [
+            sg.Text("Cmap:"),
+            sg.Combo(cmap_lst, default_value="viridis", key="cmap"),
+        ],
         [sg.Text(" ")],
         [sg.Text("Line style:")],
         [
@@ -573,17 +594,29 @@ def polygon_gui(image=None):
         [sg.Text("In the mpl gui, select points to draw polygons.")],
         [sg.Text("Press 'enter' to continue in the program.")],
         [sg.Text("Press the 'esc' key to reset the current polygon")],
-        [sg.Text("Hold 'shift' to move all of the vertices (from all polygons)")],
+        [
+            sg.Text(
+                "Hold 'shift' to move all of the vertices (from all polygons)"
+            )
+        ],
         [sg.Text("Hold 'r' and scroll to resize all of the polygons.")],
         [sg.Text("'ctrl' to move a single vertex in the current polygon")],
-        [sg.Text("'alt' to start a new polygon (and finalise the current one)")],
+        [
+            sg.Text(
+                "'alt' to start a new polygon (and finalise the current one)"
+            )
+        ],
         [
             sg.Text(
                 "'del' to clear all lines from the graphic  (thus deleting all"
                 " polygons)."
             )
         ],
-        [sg.Text("'right click' on a vertex (of a closer polygon) to remove it.")],
+        [
+            sg.Text(
+                "'right click' on a vertex (of a closer polygon) to remove it."
+            )
+        ],
     ]
     window = sg.Window("Polygon selection tool", layout, grab_anywhere=False)
     event, values = window.read()
@@ -674,7 +707,9 @@ def polygon_gui(image=None):
         raise RuntimeError("You didn't define any polygons")
 
     # exclude polygons with nodes < 3
-    pgon_lst = [pgon.get_nodes() for pgon in pgons if np.shape(pgon.get_nodes())[0] > 2]
+    pgon_lst = [
+        pgon.get_nodes() for pgon in pgons if np.shape(pgon.get_nodes())[0] > 2
+    ]
     output_dict = {"nodes": pgon_lst, "image_shape": image.shape}
 
     dict_to_json(output_dict, values["output_path"])
@@ -721,11 +756,15 @@ class PolygonSelectionWidget:
             if "lineprops" in style and isinstance(style["lineprops"], dict):
                 for key, item in style["lineprops"]:
                     self.lp[key] = item
-            if "markerprops" in style and isinstance(style["markerprops"], dict):
+            if "markerprops" in style and isinstance(
+                style["markerprops"], dict
+            ):
                 for key, item in style["markerprops"]:
                     self.mp[key] = item
 
-        vsr = 7.5 * self.mp["markersize"]  # linear scaling on what our select radius is
+        vsr = (
+            7.5 * self.mp["markersize"]
+        )  # linear scaling on what our select radius is
         self.ax = ax
         self.polys = qdmpy.shared.widget.PolygonSelector(
             ax,

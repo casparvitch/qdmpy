@@ -93,19 +93,28 @@ def source_param(
 
     if c_map is None:
         c_range = qdmpy.plot.common.get_colormap_range(
-            {"type": c_range_type, "values": c_range_vals}, source_params[param_name]
+            {"type": c_range_type, "values": c_range_vals},
+            source_params[param_name],
         )
         c_map = options["colormaps"][c_map_type]
 
     title = f"{param_name}"
 
     qdmpy.plot.common.plot_image_on_ax(
-        fig, ax, options, source_params[param_name], title, c_map, c_range, cbar_label
+        fig,
+        ax,
+        options,
+        source_params[param_name],
+        title,
+        c_map,
+        c_range,
+        cbar_label,
     )
 
     if options["save_plots"]:
         fig.savefig(
-            options["source_dir"] / (f"{param_name}." + options["save_fig_type"])
+            options["source_dir"]
+            / (f"{param_name}." + options["save_fig_type"])
         )
 
     return fig
@@ -163,7 +172,9 @@ def current(options, source_params, plot_bgrounds=True):
                     name = "J" + comp + suffix + "_" + method
 
                     if name not in source_params:
-                        warn(f"source param {name} missing from source_params.")
+                        warn(
+                            f"source param {name} missing from source_params."
+                        )
                         continue
                     elif source_params[name] is None:
                         warn(f"source_param[{name}] was None?")
@@ -178,14 +189,22 @@ def current(options, source_params, plot_bgrounds=True):
                             options["colormap_range_dicts"][ckey], jmap
                         )
                     )
-                    c_map = "Greys" if suffix == "_mask" else options["colormaps"][ckey]
+                    c_map = (
+                        "Greys"
+                        if suffix == "_mask"
+                        else options["colormaps"][ckey]
+                    )
                     qdmpy.plot.common.plot_image_on_ax(
                         fig, ax, options, jmap, name, c_map, c_range, "J (A/m)"
                     )
     else:
         for m_idx, method in enumerate(options["recon_methods"]):
             for i, comp in enumerate(components.keys()):
-                ax = axs[i] if len(options["recon_methods"]) == 1 else axs[m_idx, i]
+                ax = (
+                    axs[i]
+                    if len(options["recon_methods"]) == 1
+                    else axs[m_idx, i]
+                )
 
                 ckey = components[comp]
                 name = "J" + comp + "_" + method
@@ -217,7 +236,9 @@ def current(options, source_params, plot_bgrounds=True):
 # ============================================================================
 
 
-def current_quiver(options, source_params, clean=False, stepper=np.index_exp[::5, ::5]):
+def current_quiver(
+    options, source_params, clean=False, stepper=np.index_exp[::5, ::5]
+):
     if source_params is None:
         return None
     components = ["x", "y", "norm"]
@@ -240,7 +261,9 @@ def current_quiver(options, source_params, clean=False, stepper=np.index_exp[::5
         flag = False
         for p in ["J" + comp + "_" + method for comp in components]:
             if p not in source_params:
-                warn(f"param '{p}'' missing from source_params, skipping stream plot.")
+                warn(
+                    f"param '{p}'' missing from source_params, skipping stream plot."
+                )
                 flag = True
                 break
             elif source_params[p] is None:
@@ -303,7 +326,8 @@ def current_quiver(options, source_params, clean=False, stepper=np.index_exp[::5
 
         if options["show_scalebar"]:
             pixel_size = (
-                options["system"].get_raw_pixel_size(options) * options["total_bin"]
+                options["system"].get_raw_pixel_size(options)
+                * options["total_bin"]
             )
             scalebar = ScaleBar(pixel_size)
             ax.add_artist(scalebar)
@@ -326,7 +350,8 @@ def current_quiver(options, source_params, clean=False, stepper=np.index_exp[::5
 
     if options["save_plots"]:
         fig.savefig(
-            options["source_dir"] / ("Jquiver." + options["large_fig_save_type"])
+            options["source_dir"]
+            / ("Jquiver." + options["large_fig_save_type"])
         )
 
     return fig
@@ -367,7 +392,9 @@ def current_hyperstream(
         flag = False
         for p in ["J" + comp + "_" + method for comp in components]:
             if p not in source_params:
-                warn(f"param '{p}'' missing from source_params, skipping stream plot.")
+                warn(
+                    f"param '{p}'' missing from source_params, skipping stream plot."
+                )
                 flag = True
                 break
             elif source_params[p] is None:
@@ -395,7 +422,9 @@ def current_hyperstream(
         )
 
         if vary_lws:
-            options["streamplot_options"]["linewidth"] *= jnorms / np.nanmax(jnorms)
+            options["streamplot_options"]["linewidth"] *= jnorms / np.nanmax(
+                jnorms
+            )
         if "color" not in options["streamplot_options"]:
             options["streamplot_options"]["color"] = "w"
 
@@ -437,7 +466,8 @@ def current_hyperstream(
 
         if options["show_scalebar"]:
             pixel_size = (
-                options["system"].get_raw_pixel_size(options) * options["total_bin"]
+                options["system"].get_raw_pixel_size(options)
+                * options["total_bin"]
             )
             scalebar = ScaleBar(pixel_size)
             ax.add_artist(scalebar)
@@ -460,7 +490,8 @@ def current_hyperstream(
 
     if options["save_plots"]:
         fig.savefig(
-            options["source_dir"] / ("Jhyperstream." + options["large_fig_save_type"])
+            options["source_dir"]
+            / ("Jhyperstream." + options["large_fig_save_type"])
         )
 
     return fig
@@ -506,7 +537,9 @@ def current_stream(
         flag = False
         for p in ["J" + comp + "_" + method for comp in components]:
             if p not in source_params:
-                warn(f"param '{p}'' missing from source_params, skipping stream plot.")
+                warn(
+                    f"param '{p}'' missing from source_params, skipping stream plot."
+                )
                 flag = True
                 break
             elif source_params[p] is None:
@@ -610,7 +643,8 @@ def current_stream(
 
         if options["show_scalebar"]:
             pixel_size = (
-                options["system"].get_raw_pixel_size(options) * options["total_bin"]
+                options["system"].get_raw_pixel_size(options)
+                * options["total_bin"]
             )
             scalebar = ScaleBar(pixel_size)
             ax.add_artist(scalebar)
@@ -633,7 +667,8 @@ def current_stream(
 
     if options["save_plots"]:
         fig.savefig(
-            options["source_dir"] / ("Jstream." + options["large_fig_save_type"])
+            options["source_dir"]
+            / ("Jstream." + options["large_fig_save_type"])
         )
 
     return fig
@@ -696,7 +731,14 @@ def magnetization(options, source_params, plot_bgrounds=True):
             )
             c_map = options["colormaps"]["magnetization_images"]
             qdmpy.plot.common.plot_image_on_ax(
-                fig, ax, options, data, name, c_map, c_range, root_name + " (mu_B/nm^2)"
+                fig,
+                ax,
+                options,
+                data,
+                name,
+                c_map,
+                c_range,
+                root_name + " (mu_B/nm^2)",
             )
     # step through recon methods with background
     else:
@@ -704,7 +746,11 @@ def magnetization(options, source_params, plot_bgrounds=True):
 
             suffix = ["_full", "_bground", "_mask", ""]
             for i, suf in enumerate(suffix):
-                ax = axs[i] if len(options["recon_methods"]) == 1 else axs[m_idx, i]
+                ax = (
+                    axs[i]
+                    if len(options["recon_methods"]) == 1
+                    else axs[m_idx, i]
+                )
 
                 name = root_name + "_" + method + suf
 
@@ -720,7 +766,10 @@ def magnetization(options, source_params, plot_bgrounds=True):
                     [0, 1]
                     if suf == "_mask"
                     else qdmpy.plot.common.get_colormap_range(
-                        options["colormap_range_dicts"]["magnetization_images"], data
+                        options["colormap_range_dicts"][
+                            "magnetization_images"
+                        ],
+                        data,
                     )
                 )
                 c_map = (
@@ -742,7 +791,8 @@ def magnetization(options, source_params, plot_bgrounds=True):
 
     if options["save_plots"]:
         fig.savefig(
-            options["source_dir"] / (root_name + "." + options["save_fig_type"])
+            options["source_dir"]
+            / (root_name + "." + options["save_fig_type"])
         )
 
     return fig
@@ -788,7 +838,9 @@ def divperp_j(options, source_params, sigma=5):
         ax = axs if width == 1 else axs[m_idx]
         data = source_params[f"divperp_J_{method}"]
         if sigma > 1:
-            data = qdmpy.shared.itool.get_im_filtered(data, "gaussian", sigma=sigma)
+            data = qdmpy.shared.itool.get_im_filtered(
+                data, "gaussian", sigma=sigma
+            )
         title = f"Div perp ( J_{method} )"
         c_range = qdmpy.plot.common.get_colormap_range(
             options["colormap_range_dicts"]["current_div_images"], data
@@ -799,6 +851,8 @@ def divperp_j(options, source_params, sigma=5):
         )
 
     if options["save_plots"]:
-        fig.savefig(options["source_dir"] / ("divperp_J." + options["save_fig_type"]))
+        fig.savefig(
+            options["source_dir"] / ("divperp_J." + options["save_fig_type"])
+        )
 
     return fig

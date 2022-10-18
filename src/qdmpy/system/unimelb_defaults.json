@@ -62,12 +62,14 @@
         "option_default": 0
     },
     // Style of the reference normalisation used. div = division and sub = subtraction
+    // use true_sub for T1 datasets
     "normalisation": {
         "option_default": "div",
         "option_choices":
             [
                 "div",
-                "sub"
+                "sub",
+                "true_sub"
             ]
     },
     // how to handle experiment reference (if one found).
@@ -201,7 +203,8 @@
         "option_choices":
             [
                 "scipyfit",
-                "gpufit"
+                "gpufit",
+                "cpufit"
             ]
     },
     // Backends compared in ROI/AOI spectra comparisons.
@@ -325,6 +328,35 @@
     },
     "constant_bounds": {
         "option_default": [0.9995, 1.0005]
+    },
+
+    // rabi
+    "rabi_freq_guess": {
+        "option_default": 20e6
+    },
+    "rabi_freq_bounds": {
+        "option_default": [1e1, 1e7]
+    },
+
+    "rabi_t_offset_guess": {
+        "option_default": 20e-9
+    },
+    "rabi_t_offset_bounds": {
+        "option_default": [1e-9, 1e-6]
+    },
+
+    "rabi_amp_guess": {
+        "option_default": -0.0015
+    },
+    "rabi_amp_bounds": {
+        "option_default": [-0.0100, -0.0003]
+    },
+
+    "rabi_decay_time_guess": {
+        "option_default": 1e-6
+    },
+    "rabi_decay_time_bounds": {
+        "option_default": [1e-9, 1e-4]
     },
 
     // circular function (haven't defined useful defaults)
@@ -831,7 +863,7 @@
     // number of iterations, the fit returns with a status value indicating that the maximum 
     // number of iterations was reached.
     "gpufit_max_iterations": {
-        "option_default": 25
+        "option_default": 50
     },
     // See https://gpufit.readthedocs.io/en/latest/fit_estimator_functions.html
     // default: least squares estimator
@@ -934,7 +966,7 @@
     // must be an array of method you would like to run (even if only 1 choice)
     // from_bnv uses the 'single_unv_choice' option.
     "recon_methods": {
-        "option_default": ["from_bxy", "from_bz", "from_bnv", "without_ft"]
+        "option_default": ["from_bxy", "from_bz", "from_bnv"]
     },
     // If using from_bnv, set the index in bnvs (and unvs) to use for current recon. If null, uses 0
     // (i.e. outermost peaks).
@@ -1268,6 +1300,12 @@
                 "residual_linecolor": "dimgrey",
                 "AOI_ROI_fit_linecolor": "mediumpurple",
                 "AOI_best_fit_linecolor": "coral"
+            },
+            "cpufit": {
+                "ROIfit_linecolor": "lightskyblue",
+                "residual_linecolor": "lightgrey",
+                "AOI_ROI_fit_linecolor": "plum",
+                "AOI_best_fit_linecolor": "goldenrod"
             }
         }
     },

@@ -30,6 +30,9 @@ __pdoc__ = {
 
 # ============================================================================
 
+import importlib.metadata
+import packaging
+
 # ============================================================================
 
 import qdmpy.pl.model
@@ -115,14 +118,29 @@ def _prep_fit_backends(options, fit_model):
             _temp = __import__("qdmpy.pl.scipyfit", globals(), locals())
             fit_scipyfit = _temp.pl.scipyfit
 
-        elif fit_backend == "gpufit":
+        elif fit_backend in ("gpufit", "cpufit"):
             # here we use a programmatic import as we don't want to load (and crash)
             # if user doesn't have the gpufit stuff installed
-            global fit_gpufit
-            _temp = __import__("qdmpy.pl.gpufit", globals(), locals())
-            fit_gpufit = _temp.pl.gpufit
 
-            fit_gpufit.prep_gpufit_backend(options, fit_model)
+            if (
+                "fit_gpufit" not in globals()
+            ):  # only import once for gpu/cpufit
+                if fit_backend == "cpufit":
+                    # we want to catch this if it errors
+                    vrs = importlib.metadata.version("pygpufit")
+                    if packaging.version.parse(vrs) <= packaging.version.parse(
+                        "1.2.0"
+                    ):
+                        raise RuntimeError(
+                            "cpufit requires pygpufit > 1.2.0 "
+                            + "(with cpufit api exposed to python)"
+                        )
+
+                global fit_gpufit
+                _temp = __import__("qdmpy.pl.gpufit", globals(), locals())
+                fit_gpufit = _temp.pl.gpufit
+
+                fit_gpufit.prep_gpufit_backend(options, fit_model)
         else:
             raise RuntimeError(
                 "No backend preparation defined for fit_backend ="
@@ -169,11 +187,15 @@ def fit_roi_avg_pl(options, sig, ref, sweep_list, fit_model):
                     options, sig, ref, sweep_list, fit_model
                 )
             )
-        elif fit_backend == "gpufit":
-
+        elif fit_backend in ("gpufit", "cpufit"):
             backend_roi_results_lst.append(
                 fit_gpufit.fit_roi_avg_pl_gpufit(
-                    options, sig, ref, sweep_list, fit_model
+                    options,
+                    sig,
+                    ref,
+                    sweep_list,
+                    fit_model,
+                    platform=fit_backend[:3],
                 )
             )
         else:
@@ -188,7 +210,13 @@ def fit_roi_avg_pl(options, sig, ref, sweep_list, fit_model):
 
 
 def fit_aois_pl(
-    options, sig, ref, single_pixel_pl, sweep_list, fit_model, backend_roi_results_lst
+    options,
+    sig,
+    ref,
+    single_pixel_pl,
+    sweep_list,
+    fit_model,
+    backend_roi_results_lst,
 ):
     """
     Fit AOIs and single pixel with chosen backends and return fit_result_collection_lst
@@ -225,7 +253,7 @@ def fit_aois_pl(
             fit_result_collection_lst.append(
                 fit_scipyfit.fit_aois_pl_scipyfit(
                     options,
-                    sig, 
+                    sig,
                     ref,
                     single_pixel_pl,
                     sweep_list,
@@ -234,17 +262,18 @@ def fit_aois_pl(
                     backend_roi_results_lst[n],
                 ),
             )
-        elif fit_backend == "gpufit":
+        elif fit_backend in ("gpufit", "cpufit"):
             fit_result_collection_lst.append(
                 fit_gpufit.fit_aois_pl_gpufit(
                     options,
-                    sig, 
+                    sig,
                     ref,
                     single_pixel_pl,
                     sweep_list,
                     fit_model,
                     aois,
                     backend_roi_results_lst[n],
+                    platform=fit_backend[:3],
                 )
             )
         else:
@@ -257,7 +286,9 @@ def fit_aois_pl(
 # ============================================================================
 
 
-def fit_all_pixels_pl(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
+def fit_all_pixels_pl(
+    options, sig_norm, sweep_list, fit_model, roi_avg_fit_result
+):
     """
     Fit all pixels in image with chosen fit backend.
 
@@ -288,9 +319,14 @@ def fit_all_pixels_pl(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
         return fit_scipyfit.fit_all_pixels_pl_scipyfit(
             options, sig_norm, sweep_list, fit_model, roi_avg_fit_result
         )
-    elif options["fit_backend"] == "gpufit":
+    elif options["fit_backend"] in ("gpufit", "cpufit"):
         return fit_gpufit.fit_all_pixels_pl_gpufit(
-            options, sig_norm, sweep_list, fit_model, roi_avg_fit_result
+            options,
+            sig_norm,
+            sweep_list,
+            fit_model,
+            roi_avg_fit_result,
+            platform=options["fit_backend"][:3],
         )
     else:
         raise RuntimeError(
@@ -302,7 +338,9 @@ def fit_all_pixels_pl(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
 # ============================================================================
 
 
-def get_pl_fit_result(options, sig_norm, sweep_list, fit_model, wanted_roi_result):
+def get_pl_fit_result(
+    options, sig_norm, sweep_list, fit_model, wanted_roi_result
+):
     """Fit all pixels in image with chosen fit backend (or loads previous fit result)
 
     Wrapper for `qdmpy.pl.interface.fit_all_pixels_pl` with some options logic.

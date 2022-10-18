@@ -159,7 +159,9 @@ def ham_limit_cpu():
     elif platform.startswith("darwin"):  # macOS
         warn("Not sure what to use for macOS... skipping cpu limitting")
     else:  # 'freebsd', 'aix', 'cygwin'...
-        warn(f"Not sure what to use for your OS: {platform}... skipping cpu limitting")
+        warn(
+            f"Not sure what to use for your OS: {platform}... skipping cpu limitting"
+        )
 
 
 # ==========================================================================
@@ -201,7 +203,9 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
 
     # randomize order of fitting pixels (will un-scramble later) so ETA is more correct
     if options["scramble_pixels"]:
-        pixel_data, unshuffler = qdmpy.field.hamiltonian.ham_shuffle_pixels(data)
+        pixel_data, unshuffler = qdmpy.field.hamiltonian.ham_shuffle_pixels(
+            data
+        )
     else:
         pixel_data = data
 
@@ -224,6 +228,7 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
                     repeat(fit_options),
                     chunksize=chunksize,
                 ),
+                desc="ham-scipyfit",
                 ascii=True,
                 mininterval=1,
                 total=num_pixels,
@@ -239,8 +244,12 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
         hamiltonian, ham_fit_results, pixel_data
     )
     if options["scramble_pixels"]:
-        res = qdmpy.field.hamiltonian.ham_unshuffle_fit_results(res, unshuffler)
-        sigmas = qdmpy.field.hamiltonian.ham_unshuffle_fit_results(sigmas, unshuffler)
+        res = qdmpy.field.hamiltonian.ham_unshuffle_fit_results(
+            res, unshuffler
+        )
+        sigmas = qdmpy.field.hamiltonian.ham_unshuffle_fit_results(
+            sigmas, unshuffler
+        )
 
     return res, sigmas
 
@@ -283,7 +292,10 @@ def fit_hamiltonian_roi_avg_scipyfit(options, data, ham):
     )
 
     ham_result = least_squares(
-        ham.residuals_scipyfit, init_param_guess, args=(data_roi,), **fit_options
+        ham.residuals_scipyfit,
+        init_param_guess,
+        args=(data_roi,),
+        **fit_options,
     )
     best_params = ham_result.x
 

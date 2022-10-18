@@ -51,7 +51,7 @@ from qdmpy.shared.misc import warn
 
 
 def json_to_dict(filepath, hook="od"):
-    """ read the json file at filepath into a dict """
+    """read the json file at filepath into a dict"""
     _, pattern = os.path.splitext(filepath)
     if pattern != ".json":
         warn("input options file did not have a json pattern/suffix")
@@ -73,7 +73,7 @@ def json_to_dict(filepath, hook="od"):
 
 
 def dict_to_json(dictionary, filename, path_to_dir=None):
-    """ save the dict as a json in a pretty way """
+    """save the dict as a json in a pretty way"""
     # FIXME this pattern here below with CWD is weird.
     # ensure json pattern
     root, pattern = os.path.splitext(filename)
@@ -118,7 +118,9 @@ def _prettyjson(obj, indent=4, maxlinelength=80):
     <Pass the dict as obj and get back a string>
     """
 
-    items, _ = _getsubitems(obj, itemkey="", islast=True, maxlinelength=maxlinelength)
+    items, _ = _getsubitems(
+        obj, itemkey="", islast=True, maxlinelength=maxlinelength
+    )
     res = _indentitems(items, indent, indentcurrent=0)
     return res
 
@@ -165,7 +167,9 @@ def _getsubitems(obj, itemkey, islast, maxlinelength):
             if isdict:
                 itemkey_ = _basictype2str(k)
             # inner = (items, indent)
-            inner, can_concat_ = _getsubitems(obj[k], itemkey_, islast_, maxlinelength)
+            inner, can_concat_ = _getsubitems(
+                obj[k], itemkey_, islast_, maxlinelength
+            )
             # inner can be a string or a list
             subitems.extend(inner)
             # if a child couldn't concat, then we are not able either

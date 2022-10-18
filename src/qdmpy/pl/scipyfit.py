@@ -94,7 +94,10 @@ def prep_scipyfit_options(options, fit_model):
         options["scipyfit_scale_x"] = False
 
     # define jacobian option for least_squares fitting
-    if not fit_model.jacobian_defined() or not options["scipyfit_use_analytic_jac"]:
+    if (
+        not fit_model.jacobian_defined()
+        or not options["scipyfit_use_analytic_jac"]
+    ):
         scipyfit_options["jac"] = options["scipyfit_fit_jac_acc"]
     else:
         scipyfit_options["jac"] = fit_model.jacobian_scipyfit
@@ -138,7 +141,9 @@ def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
         # extract a guess/bounds for each of the copies of each fn_type (e.g. 8 lorentzians)
         for n in range(num):
 
-            for pos, key in enumerate(qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn):
+            for pos, key in enumerate(
+                qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn
+            ):
                 # this check is to handle the edge case of guesses/bounds
                 # options being provided as numbers rather than lists of numbers
                 try:
@@ -189,13 +194,14 @@ def fit_roi_avg_pl_scipyfit(options, sig, ref, sweep_list, fit_model):
         roi_norm = sig_mean / ref_mean
     elif options["normalisation"] == "sub":
         roi_norm = 1 + (sig_mean - ref_mean) / (sig_mean + ref_mean)
+    elif options["normalisation"] == "true_sub":
+        roi_norm = (sig_mean - ref_mean) / np.nanmax(sig_mean - ref_mean)
 
     fit_options = prep_scipyfit_options(options, fit_model)
 
     init_param_guess, init_bounds = gen_scipyfit_init_guesses(
         options, *qdmpy.pl.common.gen_init_guesses(options)
     )
-
     fitting_results = least_squares(
         fit_model.residuals_scipyfit,
         init_param_guess,
@@ -204,7 +210,6 @@ def fit_roi_avg_pl_scipyfit(options, sig, ref, sweep_list, fit_model):
     )
 
     best_params = fitting_results.x
-
     return qdmpy.pl.common.ROIAvgFitResult(
         "scipyfit",
         fit_options,
@@ -271,7 +276,14 @@ def fit_single_pixel_pl_scipyfit(
 
 
 def fit_aois_pl_scipyfit(
-    options, sig, ref, pixel_pl_ar, sweep_list, fit_model, aois, roi_avg_fit_result
+    options,
+    sig,
+    ref,
+    pixel_pl_ar,
+    sweep_list,
+    fit_model,
+    aois,
+    roi_avg_fit_result,
 ):
     """
     Fit AOIs and single pixel and return list of (list of) fit results (optimal fit parameters),
@@ -332,6 +344,8 @@ def fit_aois_pl_scipyfit(
             this_aoi = this_sig / this_ref
         elif options["normalisation"] == "sub":
             this_aoi = 1 + (this_sig - this_ref) / (this_sig + this_ref)
+        elif options["normalisation"] == "true_sub":
+            this_aoi = (this_sig - this_ref) / np.nanmax(this_sig - this_ref)
 
         fitting_results = least_squares(
             fit_model.residuals_scipyfit,
@@ -363,7 +377,9 @@ def limit_cpu():
     elif platform.startswith("darwin"):  # macOS
         warn("Not sure what to use for macOS... skipping cpu limitting")
     else:  # 'freebsd', 'aix', 'cygwin'...
-        warn(f"Not sure what to use for your OS: {platform}... skipping cpu limitting")
+        warn(
+            f"Not sure what to use for your OS: {platform}... skipping cpu limitting"
+        )
 
 
 # ==========================================================================
@@ -395,7 +411,9 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, fit_optns):
     """
     # shaped_data: [y, x, pl]
     # output: (y, x), result_params, jac
-    fitres = least_squares(fun, p0, args=(sweep_vec, shaped_data[2]), **fit_optns)
+    fitres = least_squares(
+        fun, p0, args=(sweep_vec, shaped_data[2]), **fit_optns
+    )
     return ((shaped_data[0], shaped_data[1]), fitres.x, fitres.jac)
 
 
@@ -467,6 +485,7 @@ def fit_all_pixels_pl_scipyfit(
                     repeat(roi_avg_fit_result.fit_options.copy()),
                     chunksize=chunksize,
                 ),
+                desc="pl-scipyfit",
                 ascii=True,
                 mininterval=1,
                 total=num_pixels,

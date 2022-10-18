@@ -142,7 +142,7 @@ def define_k_vectors(shape, pixel_size, k_vector_epsilon):
     else:
         ky, kx = np.meshgrid(ky_vec, kx_vec, indexing="ij")
 
-    k = np.sqrt(ky ** 2 + kx ** 2)
+    k = np.sqrt(ky**2 + kx**2)
     return -ky, kx, k  # negative here to maintain correct image orientation
 
 
@@ -187,7 +187,9 @@ def hanning_filter_kspace(
     # Define Hanning filter to prevent noise amplification at frequencies higher than the
     # spatial resolution
 
-    if do_filt and standoff and standoff > 1e-10: # standoff greater than an angstrom...
+    if (
+        do_filt and standoff and standoff > 1e-10
+    ):  # standoff greater than an angstrom...
         hy = np.hanning(k.shape[0])
         hx = np.hanning(k.shape[1])
         img_filt = np.sqrt(np.outer(hy, hx))
@@ -260,8 +262,8 @@ def define_magnetization_transformation(
 
     return (-1 / alpha) * np.array(
         [
-            [kx ** 2 / k, (kx * ky) / k, 1j * kx],
-            [(kx * ky) / k, ky ** 2 / k, 1j * ky],
+            [kx**2 / k, (kx * ky) / k, 1j * kx],
+            [(kx * ky) / k, ky**2 / k, 1j * ky],
             [1j * kx, 1j * ky, -k],
         ]
     )
@@ -277,7 +279,9 @@ def define_magnetization_transformation(
 # ============================================================================
 
 
-def define_current_transform(u_proj, ky, kx, k, standoff=None, nv_layer_thickness=None):
+def define_current_transform(
+    u_proj, ky, kx, k, standoff=None, nv_layer_thickness=None
+):
     """b => J fourier-space transformation.
 
     Arguments
@@ -317,8 +321,14 @@ def define_current_transform(u_proj, ky, kx, k, standoff=None, nv_layer_thicknes
     alpha = 2 * exp_factor / MU_0
 
     # sign on 1j's is opposite to Broadway paper due to different FT definition.
-    b_to_jx = -1 * (alpha * ky) / (u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k)
-    b_to_jy = (alpha * kx) / (u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k)
+    b_to_jx = (
+        -1
+        * (alpha * ky)
+        / (u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k)
+    )
+    b_to_jy = (alpha * kx) / (
+        u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k
+    )
 
     return b_to_jx, b_to_jy
 

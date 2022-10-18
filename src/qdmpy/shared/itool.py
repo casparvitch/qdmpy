@@ -101,7 +101,9 @@ def mask_polygons(image, polygons=None, invert_mask=False):
     if not isinstance(polygons, (list, tuple)) or not isinstance(
         polygons[0], qdmpy.shared.polygon.Polygon
     ):
-        raise TypeError("polygons were not None, a list or a list of Polygon objects")
+        raise TypeError(
+            "polygons were not None, a list or a list of Polygon objects"
+        )
 
     ylen, xlen = image.shape
     masked_area = np.full(image.shape, True)  # all masked to start with
@@ -267,7 +269,10 @@ def get_background(
         bground = method_fns[method](clipped, **method_params_dict)
         # only use the clipping if it's helpful (reduces median away from features)
         tmp_img = np.ma.getdata(image)
-        if abs(np.nanmedian(tmp_img - bground)) - abs(np.nanmedian(tmp_img)) < 0:
+        if (
+            abs(np.nanmedian(tmp_img - bground)) - abs(np.nanmedian(tmp_img))
+            < 0
+        ):
             return bground, np.ma.getmaskarray(clipped).astype(int)
         elif no_bground_if_clip_fails:
             return np.zeros(image.shape), np.zeros(image.shape)
@@ -352,7 +357,9 @@ def _points_to_params(points):
     points: iterable of 3 iterables: [x, y, z]
     returns a,b,c,d parameters (see _equation_plane)
     """
-    rearranged_points = [[p[1], p[0], p[2]] for p in points]  # change to [y, x, z]
+    rearranged_points = [
+        [p[1], p[0], p[2]] for p in points
+    ]  # change to [y, x, z]
     pts = np.array(rearranged_points)
     vec1_in_plane = pts[1] - pts[0]
     vec2_in_plane = pts[2] - pts[0]
@@ -370,7 +377,9 @@ def _three_point_background(image, points, sample_size):
     """
 
     if len(points) != 3:
-        raise ValueError("points needs to be len 3 of format: [x, y] (int or floats).")
+        raise ValueError(
+            "points needs to be len 3 of format: [x, y] (int or floats)."
+        )
     if not isinstance(sample_size, int) or sample_size < 0:
         raise TypeError("sample_size must be an integer >= 0")
     for p in points:
@@ -402,10 +411,15 @@ def _three_point_background(image, points, sample_size):
                     except IndexError:
                         continue
 
-        return np.mean([sample for sample in _sample_generator(image, sample_size, yx)])
+        return np.mean(
+            [sample for sample in _sample_generator(image, sample_size, yx)]
+        )
 
     points = np.array(
-        [np.append(p, _mean_sample(image, sample_size, (p[1], p[0]))) for p in points]
+        [
+            np.append(p, _mean_sample(image, sample_size, (p[1], p[0])))
+            for p in points
+        ]
     )
     Y, X = np.indices(image.shape)  # noqa: N806
     return _equation_plane(_points_to_params(points), Y, X)
@@ -471,9 +485,15 @@ def _gaussian(p, y, x):
     height, center_y, center_x, width_y, width_x, rot, offset = p
     return offset + height * np.exp(
         -(
-            (((y - center_y) * np.cos(rot) + (x - center_x) * np.sin(rot)) / width_y)
+            (
+                ((y - center_y) * np.cos(rot) + (x - center_x) * np.sin(rot))
+                / width_y
+            )
             ** 2
-            + (((x - center_x) * np.cos(rot) - (y - center_y) * np.sin(rot)) / width_x)
+            + (
+                ((x - center_x) * np.cos(rot) - (y - center_y) * np.sin(rot))
+                / width_x
+            )
             ** 2
         )
         / 2
@@ -497,10 +517,12 @@ def _moments(image):
     col = image[int(center_y), :]
     row = image[:, int(center_x)]
     width_x = np.nansum(
-        np.sqrt(abs((np.arange(col.size) - center_y) ** 2 * col)) / np.nansum(col)
+        np.sqrt(abs((np.arange(col.size) - center_y) ** 2 * col))
+        / np.nansum(col)
     )
     width_y = np.nansum(
-        np.sqrt(abs((np.arange(row.size) - center_x) ** 2 * row)) / np.nansum(row)
+        np.sqrt(abs((np.arange(row.size) - center_x) ** 2 * row))
+        / np.nansum(row)
     )
     height = np.nanmax(image)
     return height, center_y, center_x, width_y, width_x, 0.0, offset
@@ -520,7 +542,11 @@ def _gaussian_background(image):
     x = X[good_vals]
     data = image[good_vals]
     p = least_squares(
-        _residual_gaussian, params, method="trf", bounds=(0, np.inf), args=(y, x, data)
+        _residual_gaussian,
+        params,
+        method="trf",
+        bounds=(0, np.inf),
+        args=(y, x, data),
     ).x
     return _gaussian(p, Y, X)
 
@@ -569,7 +595,9 @@ def _interpolated_background(image, interp_method, polygons, sigma):
     if not isinstance(polygons, (list, tuple)) or not isinstance(
         polygons[0], qdmpy.shared.polygon.Polygon
     ):
-        raise TypeError("polygons were not None, a list or a list of Polygon objects")
+        raise TypeError(
+            "polygons were not None, a list or a list of Polygon objects"
+        )
 
     ylen, xlen = image.shape
     isnt_poly = np.full(image.shape, True)  # all masked to start with

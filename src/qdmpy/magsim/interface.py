@@ -69,7 +69,7 @@ class MagSim:
     unit_vectors_lst = None
 
     def _load_polys(self, polys, check_size=False):
-        """ polys: either path to json/pickle, or dict containing 'nodes' key. """
+        """polys: either path to json/pickle, or dict containing 'nodes' key."""
         if polys is not None:
             if isinstance(polys, dict):
                 if check_size and "image_size" in polys:
@@ -80,7 +80,8 @@ class MagSim:
                         # TODO massage to match?
                         raise RuntimeError(
                             "Image size polygons were defined on as passed to"
-                            " add_polygons does " + "not match this MagSim's mesh."
+                            " add_polygons does "
+                            + "not match this MagSim's mesh."
                         )
                 return [np.array(p) for p in polys["nodes"]]
             elif isinstance(polys, (str, pathlib.PurePath)):
@@ -118,7 +119,9 @@ class MagSim:
             elif isinstance(image, str):
                 return np.loadtxt(image)
             else:
-                raise TypeError("image argument must be an np.ndarray or string?")
+                raise TypeError(
+                    "image argument must be an np.ndarray or string?"
+                )
         return None
 
     def _polygon_gui(
@@ -134,7 +137,9 @@ class MagSim:
         fig, ax = plt.subplots()
         image = self.base_image if image is None else image
 
-        if mean_plus_minus is not None and isinstance(mean_plus_minus, (float, int)):
+        if mean_plus_minus is not None and isinstance(
+            mean_plus_minus, (float, int)
+        ):
             mean = np.mean(image)
             vmin, vmax = mean - mean_plus_minus, mean + mean_plus_minus
         else:
@@ -175,7 +180,9 @@ class MagSim:
             raise RuntimeError("You didn't define any polygons")
 
         pgon_lst = [
-            pgon.get_nodes() for pgon in pgons if np.shape(pgon.get_nodes())[0] > 2
+            pgon.get_nodes()
+            for pgon in pgons
+            if np.shape(pgon.get_nodes())[0] > 2
         ]
         output_dict = {"nodes": pgon_lst, "image_shape": (self.ny, self.nx)}
 
@@ -186,11 +193,17 @@ class MagSim:
         self.polygon_nodes = self._load_polys(polys, check_size=True)
 
     def select_polygons(
-        self, polygon_nodes=None, output_path=None, mean_plus_minus=None, **kwargs
+        self,
+        polygon_nodes=None,
+        output_path=None,
+        mean_plus_minus=None,
+        **kwargs,
     ):
         """manually select polygons"""
         pgon_dict = self._polygon_gui(
-            polygon_nodes=polygon_nodes, mean_plus_minus=mean_plus_minus, **kwargs
+            polygon_nodes=polygon_nodes,
+            mean_plus_minus=mean_plus_minus,
+            **kwargs,
         )
         if output_path is not None:
             self._save_dict(output_path, pgon_dict)
@@ -201,7 +214,10 @@ class MagSim:
         if output_path is not None:
             self._save_dict(
                 output_path,
-                {"nodes": self.polygon_nodes, "image_shape": (self.ny, self.nx)},
+                {
+                    "nodes": self.polygon_nodes,
+                    "image_shape": (self.ny, self.nx),
+                },
             )
 
     def define_magnets(self, magnetizations, unit_vectors):
@@ -257,7 +273,9 @@ class MagSim:
 
         # now construct mag
         self.mag = dd(lambda: np.zeros((self.ny, self.nx)))
-        grid_y, grid_x = np.meshgrid(range(self.ny), range(self.nx), indexing="ij")
+        grid_y, grid_x = np.meshgrid(
+            range(self.ny), range(self.nx), indexing="ij"
+        )
 
         for i, p in tqdm(
             enumerate(self.polygon_nodes),
@@ -304,7 +322,9 @@ class MagSim:
 
         # get shape so we can define kvecs
         shp = qdmpy.shared.fourier.pad_image(
-            np.empty(np.shape(self.mag[self.unit_vectors_lst[0]])), pad_mode, pad_factor
+            np.empty(np.shape(self.mag[self.unit_vectors_lst[0]])),
+            pad_mode,
+            pad_factor,
         )[0].shape
 
         ky, kx, k = qdmpy.shared.fourier.define_k_vectors(
@@ -344,9 +364,15 @@ class MagSim:
                 self.mag[uv] * uv[2] * m_scale,
             )
 
-            mx_pad, p = qdmpy.shared.fourier.pad_image(mx, pad_mode, pad_factor)
-            my_pad, _ = qdmpy.shared.fourier.pad_image(my, pad_mode, pad_factor)
-            mz_pad, _ = qdmpy.shared.fourier.pad_image(mz, pad_mode, pad_factor)
+            mx_pad, p = qdmpy.shared.fourier.pad_image(
+                mx, pad_mode, pad_factor
+            )
+            my_pad, _ = qdmpy.shared.fourier.pad_image(
+                my, pad_mode, pad_factor
+            )
+            mz_pad, _ = qdmpy.shared.fourier.pad_image(
+                mz, pad_mode, pad_factor
+            )
 
             fft_mx = numpy_fft.fftshift(numpy_fft.fft2(mx_pad))
             fft_my = numpy_fft.fftshift(numpy_fft.fft2(my_pad))
@@ -365,7 +391,9 @@ class MagSim:
                 # NOTE hmmm... I think nv_layer_thickness needs to be in on the bottom too??
                 # otherwise it doesn't scale correctly... TODO test FIXME
                 arg = k / 2
-                nv_thickness_correction = np.sinh(arg * nv_layer_thickness) / arg
+                nv_thickness_correction = (
+                    np.sinh(arg * nv_layer_thickness) / arg
+                )
                 for vec in fft_b_vec:
                     vec *= nv_thickness_correction
 
@@ -451,13 +479,19 @@ class MagSim:
         return fig, ax
 
     def plot_magsim_magnetizations(
-        self, annotate_polygons=True, polygon_patch_params=None, cmap="PuOr", c_range=None
+        self,
+        annotate_polygons=True,
+        polygon_patch_params=None,
+        cmap="PuOr",
+        c_range=None,
     ):
         # use single colorbar, different plots
         # https://matplotlib.org/stable/gallery/subplots_axes_and_figures/colorbar_placement.html
         # calculate c_range smartly.
         if self.magnetizations_lst is None:
-            raise AttributeError("no magnetizations_lst found, define it first aye.")
+            raise AttributeError(
+                "no magnetizations_lst found, define it first aye."
+            )
 
         unique_uvs = dd(list)
         for i, uv in enumerate(self.unit_vectors_lst):
@@ -527,13 +561,17 @@ class MagSim:
         if strict_range is not None:
             c_range = strict_range
         else:
-            furthest = np.max(np.abs([np.nanmin(self.bfield), np.nanmax(self.bfield)]))
+            furthest = np.max(
+                np.abs([np.nanmin(self.bfield), np.nanmax(self.bfield)])
+            )
             c_range = (-furthest, furthest)
 
         polys = None if annotate_polygons is None else self.polygon_nodes
 
         fig, ax = plt.subplots()
-        proj_name = f"({projection[0]:.2f},{projection[1]:.2f},{projection[2]:.2f})"
+        proj_name = (
+            f"({projection[0]:.2f},{projection[1]:.2f},{projection[2]:.2f})"
+        )
         c_label_ = f"B . {proj_name}, (G)" if c_label is None else c_label
         _plot_image_on_ax(
             fig,
@@ -581,7 +619,9 @@ class MagSim:
                     idx
                 )  # only executes if loop exits normally (not 'break')
         self.polygon_nodes = [
-            val for idx, val in enumerate(self.polygon_nodes) if idx in keep_idxs
+            val
+            for idx, val in enumerate(self.polygon_nodes)
+            if idx in keep_idxs
         ]
         if self.magnetizations_lst is not None:
             self.magnetizations_lst = [
@@ -590,7 +630,9 @@ class MagSim:
                 if idx in keep_idxs
             ]
             self.unit_vectors_lst = [
-                val for idx, val in enumerate(self.unit_vectors_lst) if idx in keep_idxs
+                val
+                for idx, val in enumerate(self.unit_vectors_lst)
+                if idx in keep_idxs
             ]
 
     def crop_polygons_gui(self, show_polygons=True, **kwargs):
@@ -608,12 +650,16 @@ class MagSim:
 
     def crop_magnetization(self, crop_polygon_nodes):
         if self.mag is None:
-            raise AttributeError("You haven't defined mag yet! (use define_magnets).")
+            raise AttributeError(
+                "You haven't defined mag yet! (use define_magnets)."
+            )
         crop_polygons = [
             qdmpy.shared.polygon.Polygon(crop_nodes[:, 0], crop_nodes[:, 1])
             for crop_nodes in crop_polygon_nodes
         ]
-        grid_y, grid_x = np.meshgrid(range(self.ny), range(self.nx), indexing="ij")
+        grid_y, grid_x = np.meshgrid(
+            range(self.ny), range(self.nx), indexing="ij"
+        )
 
         for polygon in tqdm(
             crop_polygons,
@@ -634,7 +680,9 @@ class MagSim:
         unique_uvs = dd(list)
         for i, uv in enumerate(self.unit_vectors_lst):
             unique_uvs[uv].append(i)
-        mag_image = np.sum([self.get_magnetization_im(uv) for uv in unique_uvs], axis=0)
+        mag_image = np.sum(
+            [self.get_magnetization_im(uv) for uv in unique_uvs], axis=0
+        )
         n_og_polygons = len(self.polygon_nodes)
         crop_dict = self._polygon_gui(
             polygon_nodes=self.polygon_nodes,
@@ -665,18 +713,24 @@ class SandboxMagSim(MagSim):
 
     def add_template_polygons(self, polygons=None):
         """polygons takes precedence."""
-        self.template_polygon_nodes = self._load_polys(polygons, check_size=True)
+        self.template_polygon_nodes = self._load_polys(
+            polygons, check_size=True
+        )
 
     def rescale_template(self, factor):
         if self.template_polygon_nodes is None:
-            raise RuntimeError("Add/define template_polygon_nodes before rescaling.")
+            raise RuntimeError(
+                "Add/define template_polygon_nodes before rescaling."
+            )
 
         for polygon in self.template_polygon_nodes:
             for node in polygon:
                 node[0] *= factor
                 node[1] *= factor
 
-    def adjust_template(self, output_path=None, mean_plus_minus=None, **kwargs):
+    def adjust_template(
+        self, output_path=None, mean_plus_minus=None, **kwargs
+    ):
         if self.template_polygon_nodes is None:
             raise AttributeError("Add template polygons before adjusting.")
         pgon_dict = self._polygon_gui(
@@ -709,11 +763,15 @@ class TilingMagSim(SandboxMagSim):
             6: self.get_hexagon_tiling,
         }
         if poly_sides not in generator:
-            raise ValueError(f"'sides' must be one of: {sorted(generator.keys())}.")
+            raise ValueError(
+                f"'sides' must be one of: {sorted(generator.keys())}."
+            )
 
         self.polygon_nodes = generator[poly_sides](side_len)
 
-    def plot_domains(self, polygon_patch_params=None, fontsize=12, markersize=50):
+    def plot_domains(
+        self, polygon_patch_params=None, fontsize=12, markersize=50
+    ):
         """kwargs passed to mpl.scatter"""
         if self.polygon_nodes is not None:
             fig, ax = plt.subplots()
@@ -735,7 +793,8 @@ class TilingMagSim(SandboxMagSim):
                 )
                 ax.add_patch(
                     matplotlib.patches.Polygon(
-                        np.stack((nodes[:, 1], nodes[:, 0]), axis=-1), **patch_params
+                        np.stack((nodes[:, 1], nodes[:, 0]), axis=-1),
+                        **patch_params,
                     )
                 )
                 # label loc could be generated with tiling... oh well
@@ -743,7 +802,11 @@ class TilingMagSim(SandboxMagSim):
                     nodes[:, 0], nodes[:, 1]
                 ).get_center()
                 ax.text(
-                    label_loc[1], label_loc[0], s=f"P{i}", zorder=15, fontsize=fontsize
+                    label_loc[1],
+                    label_loc[0],
+                    s=f"P{i}",
+                    zorder=15,
+                    fontsize=fontsize,
                 )
 
             return fig, ax
@@ -751,16 +814,28 @@ class TilingMagSim(SandboxMagSim):
             return None, None
 
     def get_triangle_tiling(self, side_len):
-        scaling = side_len / self.pixel_size  # convert from SI units to num_pixels
-        return self._scale_coords(self._gen_unit_triangles, self.ny, self.nx, scaling)
+        scaling = (
+            side_len / self.pixel_size
+        )  # convert from SI units to num_pixels
+        return self._scale_coords(
+            self._gen_unit_triangles, self.ny, self.nx, scaling
+        )
 
     def get_square_tiling(self, side_len):
-        scaling = side_len / self.pixel_size  # convert from SI units to num_pixels
-        return self._scale_coords(self._gen_unit_square, self.ny, self.nx, scaling)
+        scaling = (
+            side_len / self.pixel_size
+        )  # convert from SI units to num_pixels
+        return self._scale_coords(
+            self._gen_unit_square, self.ny, self.nx, scaling
+        )
 
     def get_hexagon_tiling(self, side_len):
-        scaling = side_len / self.pixel_size  # convert from SI units to num_pixels
-        return self._scale_coords(self._gen_unit_hexagon, self.ny, self.nx, scaling)
+        scaling = (
+            side_len / self.pixel_size
+        )  # convert from SI units to num_pixels
+        return self._scale_coords(
+            self._gen_unit_hexagon, self.ny, self.nx, scaling
+        )
 
     @staticmethod
     def _scale_coords(generator, image_height, image_width, scaling):
@@ -774,7 +849,9 @@ class TilingMagSim(SandboxMagSim):
             unit="polygons",
             desc="generating tiling...",
         ):
-            output.append(np.array([(y * scaling, x * scaling) for (y, x) in coords]))
+            output.append(
+                np.array([(y * scaling, x * scaling) for (y, x) in coords])
+            )
         return output
 
     @staticmethod
@@ -895,7 +972,9 @@ class VoronoiMagSim(SandboxMagSim):
             else:
                 keep_idxs.append(idx)
         self.domain_label_pts = [
-            val for idx, val in enumerate(self.domain_label_pts) if idx in keep_idxs
+            val
+            for idx, val in enumerate(self.domain_label_pts)
+            if idx in keep_idxs
         ]
 
     def add_domain_sources(self, num_domains, polygon_idx=0, output_path=None):
@@ -907,16 +986,22 @@ class VoronoiMagSim(SandboxMagSim):
         if not isinstance(polygon_idx, int) or polygon_idx < 0:
             raise ValueError("polygon_idx must be positive int.")
         if len(self.polygon_nodes) < polygon_idx:
-            raise ValueError(f"didn't find {polygon_idx}th polygon to add domains to.")
+            raise ValueError(
+                f"didn't find {polygon_idx}th polygon to add domains to."
+            )
 
         # generate domain sources
 
         # first get all valid points (inside domain, not on edge), as list of [y, x]
-        grid_y, grid_x = np.meshgrid(range(self.ny), range(self.nx), indexing="ij")
+        grid_y, grid_x = np.meshgrid(
+            range(self.ny), range(self.nx), indexing="ij"
+        )
         p = self.polygon_nodes[polygon_idx]
         polygon = qdmpy.shared.polygon.Polygon(p[:, 0], p[:, 1])
         in_or_out = polygon.is_inside(grid_y, grid_x)
-        valid_pts = np.stack((grid_y[in_or_out > 0], grid_x[in_or_out > 0]), axis=-1)
+        valid_pts = np.stack(
+            (grid_y[in_or_out > 0], grid_x[in_or_out > 0]), axis=-1
+        )
 
         # sample just n valid_pts  {reshape valid_pts into (ny*nx, 2) instead of (ny, nx, 2)}
         sampler = qmc.Sobol(
@@ -970,14 +1055,20 @@ class VoronoiMagSim(SandboxMagSim):
         value = array-like of domain sources (len 2 array/tuple: y,x) for this polygon.
         """
         for key, val in domain_dict.items():
-            if not isinstance(key, int) or key < 0 or key > len(self.polygon_nodes):
+            if (
+                not isinstance(key, int)
+                or key < 0
+                or key > len(self.polygon_nodes)
+            ):
                 raise ValueError(
                     f"key: {key} is < 0 or larger than number of polygons defined."
                 )
             if not isinstance(val, (list, np.ndarray, tuple)):
                 raise TypeError(f"val: {val} is not array-like.")
             if not len(np.shape(val)) == 2 or np.shape(val)[1] != 2:
-                raise ValueError(f"val: {val} is not shape (x, 2) for x domains.")
+                raise ValueError(
+                    f"val: {val} is not shape (x, 2) for x domains."
+                )
         self.domain_sources = domain_dict
 
         self._redefine_polygons()
@@ -1001,17 +1092,23 @@ class VoronoiMagSim(SandboxMagSim):
             if idx not in self.domain_sources:
                 new_polygon_nodes.append(nodes)
                 self.domain_label_pts.append(
-                    qdmpy.shared.polygon.Polygon(nodes[:, 0], nodes[:, 1]).get_center()
+                    qdmpy.shared.polygon.Polygon(
+                        nodes[:, 0], nodes[:, 1]
+                    ).get_center()
                 )
             # tesselate this polygon via domains/voronoi
             else:
                 if not _is_convex_polygon(np.fliplr(nodes)[:-1].tolist()):
-                    raise RuntimeError("chosen polygon was convex: won't work :(")
+                    raise RuntimeError(
+                        "chosen polygon was convex: won't work :("
+                    )
                 # voronoi = foronoi.Voronoi(ConcavePolygon(np.fliplr(nodes)[:-1].tolist()))
                 voronoi = foronoi.Voronoi(
                     foronoi.Polygon(np.fliplr(nodes)[:-1].tolist())
                 )
-                voronoi.create_diagram(points=np.fliplr(self.domain_sources[idx]))
+                voronoi.create_diagram(
+                    points=np.fliplr(self.domain_sources[idx])
+                )
                 # below is for testing.
                 # foronoi.Visualizer(voronoi).plot_sites(init_order_names=True).plot_edges(
                 # show_labels=False
@@ -1032,18 +1129,24 @@ class VoronoiMagSim(SandboxMagSim):
 
     def load_domain_sources(self, path):
         if not isinstance(path, (str, pathlib.PurePath)):
-            raise TypeError("path must be a string or subclass of pathlib.PurePath.")
+            raise TypeError(
+                "path must be a string or subclass of pathlib.PurePath."
+            )
         str_dict = self._load_dict(path)
         self.domain_sources = {int(key): val for key, val in str_dict.items()}
         self._redefine_polygons()
 
     def save_domain_sources(self, path):
         if not isinstance(path, (str, pathlib.PurePath)):
-            raise TypeError("path must be a string or subclass of pathlib.PurePath.")
+            raise TypeError(
+                "path must be a string or subclass of pathlib.PurePath."
+            )
         str_dict = {str(key): val for key, val in self.domain_sources.items()}
         self._save_dict(path, str_dict)
 
-    def plot_domains(self, polygon_patch_params=None, fontsize=12, markersize=50):
+    def plot_domains(
+        self, polygon_patch_params=None, fontsize=12, markersize=50
+    ):
         """kwargs passed to mpl.scatter"""
         if self.polygon_nodes is not None:
             fig, ax = plt.subplots()
@@ -1058,7 +1161,9 @@ class VoronoiMagSim(SandboxMagSim):
                     "fill": False,
                 }
             domain_labels_ar = np.array(self.domain_label_pts)
-            ax.scatter(domain_labels_ar[:, 1], domain_labels_ar[:, 0], s=markersize)
+            ax.scatter(
+                domain_labels_ar[:, 1], domain_labels_ar[:, 0], s=markersize
+            )
             for i, (nodes, label_loc) in enumerate(
                 zip(self.polygon_nodes, self.domain_label_pts)
             ):
@@ -1069,11 +1174,16 @@ class VoronoiMagSim(SandboxMagSim):
                 )
                 ax.add_patch(
                     matplotlib.patches.Polygon(
-                        np.stack((nodes[:, 1], nodes[:, 0]), axis=-1), **patch_params
+                        np.stack((nodes[:, 1], nodes[:, 0]), axis=-1),
+                        **patch_params,
                     )
                 )
                 ax.text(
-                    label_loc[1], label_loc[0], s=f"P{i}", zorder=15, fontsize=fontsize
+                    label_loc[1],
+                    label_loc[0],
+                    s=f"P{i}",
+                    zorder=15,
+                    fontsize=fontsize,
                 )  # x  # y
 
             return fig, ax
@@ -1103,7 +1213,9 @@ class ComparisonMagSim(MagSim):
             or not isinstance(fov_dims[0], (int, float))
             or not isinstance(fov_dims[1], (int, float))
         ):
-            raise TypeError("fov_dims needs to be length 2 array-like of int/floats")
+            raise TypeError(
+                "fov_dims needs to be length 2 array-like of int/floats"
+            )
 
         # check for path etc. here
         self.base_image = self._load_image(image)
@@ -1156,8 +1268,12 @@ class ComparisonMagSim(MagSim):
 
         c_label_meas_ = "B (G)" if c_label_meas is None else c_label_meas
 
-        proj_name = f"({projection[0]:.2f},{projection[1]:.2f},{projection[2]:.2f})"
-        c_label_sim_ = f"B . {proj_name}, (G)" if c_label_sim is None else c_label_sim
+        proj_name = (
+            f"({projection[0]:.2f},{projection[1]:.2f},{projection[2]:.2f})"
+        )
+        c_label_sim_ = (
+            f"B . {proj_name}, (G)" if c_label_sim is None else c_label_sim
+        )
 
         if annotate_polygons is False:
             unscaled_polys = None
@@ -1220,7 +1336,11 @@ def _plot_image_on_ax(
 ):
 
     im = ax.imshow(
-        image_data, cmap=c_map, vmin=c_range[0], vmax=c_range[1], aspect="equal"
+        image_data,
+        cmap=c_map,
+        vmin=c_range[0],
+        vmax=c_range[1],
+        aspect="equal",
     )
 
     ax.set_title(title)

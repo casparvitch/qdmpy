@@ -47,7 +47,7 @@ If you're installing for the first time scroll down to 'Installing with pip on n
 <a id="usage"></a>
 # Usage
 
-Best used in a jupyter notebook to avoid producing a million graphs. In future a command-line suitable hook will be defined.
+Best used in a jupyter notebook to avoid producing a million graphs. In future a command-line suitable hook will be defined, hopefully utilizing some sort of template scheme (e.g. `qdmpy --template=mz --fit-backend=gpu ./ODMR_1`)
 
 Usage is best understood through the example notebooks.
 
@@ -181,7 +181,7 @@ TODO. Code still in state of flux.
 - first get the new code:
     - open sublime merge
     - if you aren't already, checkout the main branch: on LHS double click on 'main' under BRANCHES
-    - in top right click down arrow (not down triangle) for 'pull'. 
+    - in top right click down arrow (not down triangle) for 'pull'.
     - Alternatively in top-middle there's a bar that says 'main', (left of magnifying glass symbol), click on that, delete whatever is there (probably 'checkout branch'), type 'pull', hit enter twice. (this top-middle bar is for sending commands directly to git instead of via the GUI).
     - if you have a 'local_<system>' branch or similar, check it out (double left click on LHS), then right click on 'main' branch on LHS and choose 'merge main into local'. Now you have the latest code in your own branch that's quarantined from causing problems.
 
@@ -195,9 +195,12 @@ TODO. Code still in state of flux.
         - for you probably in C:\src\qdmpy or something like that
         - see where you are with `dir` (windows cmd) or `ls` (unix/bash)
         - navigate to new dir with `cd`, e.g. `cd C:\src\qdmpy` or if you're currently in C: `cd src\qdmpy` etc.
-    - build package: `python setup.py bdist_wheel` (this should run without error)
-    - navigate to distribution folder: `cd dist`
-    - install package: `pip install qdmpy-<VERSION_NUMBER>-[...].whl` (whatever the wheel .whl file with the latest version is)
+    - install package (new way): `pip install .`
+    - install package (old way):
+        - build package: `python setup.py bdist_wheel` (this should run without error)
+        - navigate to distribution folder: `cd dist`
+        - install package: `pip install qdmpy-<VERSION_NUMBER>-[...].whl` (whatever the wheel .whl file with the latest version is)
+    - NB: you may require `pip install --force-reinstall --no-deps .` or similar
     - navigate elsewhere, e.g. `cd C:\`
     - test that it's installed properly: `python` then `import qdmpy`.
 
@@ -212,13 +215,7 @@ TODO. Code still in state of flux.
 
 You're installing for the first time etc. and want to be able to run 'import qdmpy'. Follow these instructions.
 
-Download source from gitlab, and go to the root directory (containing 'src', 'docs' etc.). Run `python3 setup.py bdist_wheel` if there's no wheel file (probably contained within 'dist' directory, a '.whl' file). Once you have the wheel file (note I haven't tested on different platforms...) run `pip3 install <PATH_TO_WHEEL_FILE>.whl`. Note on windows those commands should probably be python and pip, not python3 and pip3.
-
-On linux, to quickly uninstall, build new wheel, install and then run jupyterlab (change version number to current):
-```bash
-pip3 uninstall qdmpy -y && python3 setup.py bdist_wheel && pip3 install ./dist/qdmpy-1.1.0-py3-none-any.whl && jupyter-lab  
-```
-
+Download source from gitlab, and go to the root directory (containing 'src', 'docs' etc.). Run `pip install .`.
 
 <a id="jupyterlab-installation"></a>
 ## Jupyterlab installation
@@ -560,5 +557,6 @@ Maintaining two references for the available options didn't go so well. Check th
 # How to implement your own custom System class
 
 Largely TODO at the moment. Key things to check:
+
 - the '_SYSTEMS' variable in systems.py
 - implement your own child of the System class, including all its methods (unless you're inheriting from the unimelb defaults, which would be the case if you're at RMIT/Unimelb).

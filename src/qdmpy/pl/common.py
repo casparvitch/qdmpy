@@ -50,7 +50,11 @@ class FitResultCollection:
     """Object to hold AOI average fit results, and a place to define their names."""
 
     def __init__(
-        self, fit_backend, roi_avg_fit_result, single_pixel_result, aoi_fit_results_lst
+        self,
+        fit_backend,
+        roi_avg_fit_result,
+        single_pixel_result,
+        aoi_fit_results_lst,
     ):
         """
         Arguments
@@ -401,10 +405,14 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
 
     # override with correct size empty arrays using np.zeros
     for key in fit_image_results.keys():
-        fit_image_results[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+        fit_image_results[key] = (
+            np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+        )
         sigmas[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
-    fit_image_results["residual_0"] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+    fit_image_results["residual_0"] = (
+        np.zeros((roi_shape[0], roi_shape[1])) * np.nan
+    )
 
     # Fill the arrays element-wise from the results function, which returns a
     # 1D array of flattened best-fit parameters.
@@ -412,7 +420,9 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
     for (y, x), result, jac in fit_results:
         filled_params = {}  # keep track of index, i.e. pos_0, for this pixel
 
-        resid = fit_model.residuals_scipyfit(result, sweep_list, pixel_data[:, y, x])
+        resid = fit_model.residuals_scipyfit(
+            result, sweep_list, pixel_data[:, y, x]
+        )
         fit_image_results["residual_0"][y, x] = np.sum(
             np.abs(resid, dtype=np.float64), dtype=np.float64
         )
@@ -421,7 +431,7 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
         threshold = np.finfo(float).eps * max(jac.shape) * s[0]
         s = s[s > threshold]
         vt = vt[: s.size]
-        pcov = np.dot(vt.T / s ** 2, vt)
+        pcov = np.dot(vt.T / s**2, vt)
         perr = np.sqrt(np.diag(pcov))  # array of standard deviations
 
         for fn in fit_model.fn_chain:

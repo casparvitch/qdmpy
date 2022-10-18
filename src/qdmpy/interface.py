@@ -115,7 +115,10 @@ def initialize(
 
 
 def load_options(
-    options_dict=None, options_path=None, check_for_prev_result=False, loading_ref=False
+    options_dict=None,
+    options_path=None,
+    check_for_prev_result=False,
+    loading_ref=False,
 ):
     """
     Load and process options (from json file or dict) into generic options dict used everywhere.
@@ -165,15 +168,21 @@ def load_options(
     required_options = ["filepath", "fit_functions"]
     for key in required_options:
         if key not in prelim_options:
-            raise RuntimeError(f"Must provide these options: {required_options}")
+            raise RuntimeError(
+                f"Must provide these options: {required_options}"
+            )
 
     chosen_system = qdmpy.system.choose_system(prelim_options["system_name"])
 
     chosen_system.system_specific_option_update(prelim_options)
 
-    options = chosen_system.get_default_options()  # first load in default options
+    options = (
+        chosen_system.get_default_options()
+    )  # first load in default options
     # now update with what has been decided upon by user
-    options = qdmpy.shared.json2dict.recursive_dict_update(options, prelim_options)
+    options = qdmpy.shared.json2dict.recursive_dict_update(
+        options, prelim_options
+    )
 
     chosen_system.determine_binning(options)
 
@@ -238,7 +247,9 @@ def load_ref_options(options, ref_options=None, ref_options_dir=None):
         options["field_dir"] = options["output_dir"].joinpath("field")
         options["field_sig_dir"] = options["field_dir"].joinpath("sig")
         options["field_ref_dir"] = options["field_dir"].joinpath("ref_nothing")
-        options["field_sig_sub_ref_dir"] = options["field_dir"].joinpath("sig_sub_ref")
+        options["field_sig_sub_ref_dir"] = options["field_dir"].joinpath(
+            "sig_sub_ref"
+        )
 
         pathlib.Path(options["field_dir"]).mkdir(exist_ok=True)
         pathlib.Path(options["field_sig_dir"]).mkdir(exist_ok=True)
@@ -269,7 +280,9 @@ def load_ref_options(options, ref_options=None, ref_options_dir=None):
     options["field_dir"] = options["output_dir"].joinpath("field")
     options["field_sig_dir"] = options["field_dir"].joinpath("sig")
     options["field_ref_dir"] = options["field_dir"].joinpath(f"ref_{ref_name}")
-    options["field_sig_sub_ref_dir"] = options["field_dir"].joinpath("sig_sub_ref")
+    options["field_sig_sub_ref_dir"] = options["field_dir"].joinpath(
+        "sig_sub_ref"
+    )
 
     pathlib.Path(options["field_dir"]).mkdir(exist_ok=True)
     pathlib.Path(options["field_sig_dir"]).mkdir(exist_ok=True)
@@ -443,7 +456,9 @@ def _interpolate_option_str(interp_str, options):
     locs = []
     for match_substr in match_substr_lst:
         start_loc = interp_str.find(match_substr)
-        end_loc = start_loc + len(match_substr) - 1  # both fence posts inclusive
+        end_loc = (
+            start_loc + len(match_substr) - 1
+        )  # both fence posts inclusive
         locs.append((start_loc, end_loc))
 
     # ok so now we have the option names (keys) to interpolate (match_substr_lst)
@@ -544,9 +559,9 @@ class OptionsError(Exception):
 def check_option(key, val, system):
     if key not in system.available_options():
         warn(f"Option {key} was not recognised by the {system.name} system.")
-    elif system.option_choices(key) is not None and val not in system.option_choices(
+    elif system.option_choices(
         key
-    ):
+    ) is not None and val not in system.option_choices(key):
         OptionsError(
             key, val, system
         )  # FIXME test this actually raises exception/warning...

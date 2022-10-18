@@ -154,7 +154,15 @@ def reshape_dataset(options, image, sweep_list):
         )  # opposite convention here, [x, y]
 
     # somewhat important a lot of this isn't hidden, so we can adjust it later
-    pl_image, pl_image_roi, sig, ref, sig_norm, sweep_list, roi = _remove_unwanted_data(
+    (
+        pl_image,
+        pl_image_roi,
+        sig,
+        ref,
+        sig_norm,
+        sweep_list,
+        roi,
+    ) = _remove_unwanted_data(
         options, image_rebinned, sweep_list, sig, ref, sig_norm
     )  # also cuts sig etc. down to ROI
 
@@ -163,7 +171,10 @@ def reshape_dataset(options, image, sweep_list):
     while True:
         i += 1
         try:
-            if options[f"AOI_{i}_start"] is None or options[f"AOI_{i}_end"] is None:
+            if (
+                options[f"AOI_{i}_start"] is None
+                or options[f"AOI_{i}_end"] is None
+            ):
                 continue
             (
                 options[f"AOI_{i}_start"],
@@ -172,7 +183,9 @@ def reshape_dataset(options, image, sweep_list):
                 f"AOI_{i}",
                 *options[f"AOI_{i}_start"],
                 *options[f"AOI_{i}_end"],
-                *reversed(sig_norm.shape[1:]),  # opposite convention here, [x, y]
+                *reversed(
+                    sig_norm.shape[1:]
+                ),  # opposite convention here, [x, y]
             )
 
         except KeyError:
@@ -181,17 +194,33 @@ def reshape_dataset(options, image, sweep_list):
     # single pixel check
     try:
         single_pixel_pl = sig_norm[
-            :, options["single_pixel_check"][1], options["single_pixel_check"][0]
+            :,
+            options["single_pixel_check"][1],
+            options["single_pixel_check"][0],
         ]
     except IndexError as e:
         warn(
             "Avoiding IndexError for single_pixel_check (setting pixel check to centre"
             f" of image):\n{e}"
         )
-        single_pixel_pl = sig_norm[:, sig_norm.shape[1] // 2, sig_norm.shape[2] // 2]
-        options["single_pixel_check"] = (sig_norm.shape[2] // 2, sig_norm.shape[1] // 2)
+        single_pixel_pl = sig_norm[
+            :, sig_norm.shape[1] // 2, sig_norm.shape[2] // 2
+        ]
+        options["single_pixel_check"] = (
+            sig_norm.shape[2] // 2,
+            sig_norm.shape[1] // 2,
+        )
 
-    return pl_image, pl_image_roi, sig, ref, sig_norm, single_pixel_pl, sweep_list, roi
+    return (
+        pl_image,
+        pl_image_roi,
+        sig,
+        ref,
+        sig_norm,
+        single_pixel_pl,
+        sweep_list,
+        roi,
+    )
 
 
 # ============================================================================
@@ -239,7 +268,9 @@ def _rebin_image(options, image):
         image_rebinned = image
     else:
         if options["additional_bins"] != 1 and options["additional_bins"] % 2:
-            raise RuntimeError("The binning parameter needs to be a multiple of 2.")
+            raise RuntimeError(
+                "The binning parameter needs to be a multiple of 2."
+            )
 
         # data_pts = image.shape[0]
         # height = image.shape[1]
@@ -271,9 +302,12 @@ def _rebin_image(options, image):
         if options["normalisation"] == "sub":
             sig_norm = 1 + (sig - ref) / (sig + ref)
         elif options["normalisation"] == "div":
-            sig_norm = sig / ref
+            sig_norm = 1 + (sig - ref) / (sig + ref)
+            # sig_norm = sig / ref
+        elif options["normalisation"] == "true_sub":
+            sig_norm = (sig - ref) / np.nanmax(sig - ref, axis=0)
         else:
-            raise KeyError("bad normalisation option, use: ['sub', 'div']")
+            raise KeyError("bad normalisation option, use: ['sub', 'div', 'true_sub']")
     else:
         sig = image_rebinned
         ref = image_rebinned
@@ -285,7 +319,9 @@ def _rebin_image(options, image):
 # ============================================================================
 
 
-def _remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_norm):
+def _remove_unwanted_data(
+    options, image_rebinned, sweep_list, sig, ref, sig_norm
+):
     """
     Removes unwanted sweep values (i.e. freq values or tau values) for all of the data arrays.
 
@@ -338,7 +374,9 @@ def _remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_nor
     rem_start = options["remove_start_sweep"]
     rem_end = options["remove_end_sweep"]
 
-    roi = qdmpy.shared.misc.define_roi(options, *options["rebinned_image_shape"])
+    roi = qdmpy.shared.misc.define_roi(
+        options, *options["rebinned_image_shape"]
+    )
 
     if rem_start < 0:
         warn("remove_start_sweep must be >=0, setting to zero now.")
@@ -352,8 +390,12 @@ def _remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_nor
     pl_image_roi = pl_image[roi[0], roi[1]].copy()
     sig = sig[rem_start : -1 - rem_end, roi[0], roi[1]].copy()  # noqa: E203
     ref = ref[rem_start : -1 - rem_end, roi[0], roi[1]].copy()  # noqa: E203
-    sig_norm = sig_norm[rem_start : -1 - rem_end, roi[0], roi[1]].copy()  # noqa: E203
-    sweep_list = np.asarray(sweep_list[rem_start : -1 - rem_end]).copy()  # noqa: E203
+    sig_norm = sig_norm[
+        rem_start : -1 - rem_end, roi[0], roi[1]
+    ].copy()  # noqa: E203
+    sweep_list = np.asarray(
+        sweep_list[rem_start : -1 - rem_end]
+    ).copy()  # noqa: E203
 
     return pl_image, pl_image_roi, sig, ref, sig_norm, sweep_list, roi
 
@@ -452,7 +494,9 @@ def load_prev_pl_fit_results(options):
         for param_name in qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn:
             for n in range(num):
                 param_key = param_name + "_" + str(n)
-                fit_param_res_dict[param_key] = load_fit_param(options, param_key)
+                fit_param_res_dict[param_key] = load_fit_param(
+                    options, param_key
+                )
     fit_param_res_dict["residual_0"] = load_fit_param(options, "residual_0")
     return fit_param_res_dict
 
@@ -479,7 +523,7 @@ def load_prev_pl_fit_sigmas(options):
 
 
 def load_pl_fit_sigma(options, key):
-    """ Load a previous fit sigma result, of name 'param_key' """
+    """Load a previous fit sigma result, of name 'param_key'"""
     return np.loadtxt(options["data_dir"] / (key + "_sigma.txt"))
 
 
@@ -587,10 +631,16 @@ def check_if_already_fit(options, loading_ref=False):
             if not prev_options_exist(
                 options
             ):  # i.e. look for saved options in output dir
-                options["found_prev_result_reason"] = "couldn't find previous options"
+                options[
+                    "found_prev_result_reason"
+                ] = "couldn't find previous options"
                 options["found_prev_result"] = False
-            elif not (res := options_compatible(options, get_prev_options(options)))[0]:
-                options["found_prev_result_reason"] = "option not compatible: " + res[1]
+            elif not (
+                res := options_compatible(options, get_prev_options(options))
+            )[0]:
+                options["found_prev_result_reason"] = (
+                    "option not compatible: " + res[1]
+                )
                 options["found_prev_result"] = False
             elif not (res2 := _prev_pl_fits_exist(options))[0]:
                 options["found_prev_result_reason"] = (
@@ -719,7 +769,10 @@ def options_compatible(options, prev_options):
     )
 
     for param_name in unique_params:
-        if options[param_name + "_guess"] != prev_options[param_name + "_guess"]:
+        if (
+            options[param_name + "_guess"]
+            != prev_options[param_name + "_guess"]
+        ):
             return False, f"param guess different: {param_name}"
 
         range_opt = param_name + "_range"
@@ -734,7 +787,10 @@ def options_compatible(options, prev_options):
         if range_opt not in options and range_opt in prev_options:
             return False, f"different range/bound options: {param_name}"
         # finally check bounds
-        if options[param_name + "_bounds"] != prev_options[param_name + "_bounds"]:
+        if (
+            options[param_name + "_bounds"]
+            != prev_options[param_name + "_bounds"]
+        ):
             return False, f"param range different: {param_name}"
 
     # if all that was ok, return True
@@ -779,7 +835,7 @@ def _prev_pl_fits_exist(options):
 
 
 def _prev_pl_sigmas_exist(prev_options):
-    """ as `qdmpy.pl.io._prev_pl_fits_exist` but for sigmas """
+    """as `qdmpy.pl.io._prev_pl_fits_exist` but for sigmas"""
     # avoid cyclic imports
 
     for fn_type, num in prev_options["fit_functions"].items():
@@ -787,7 +843,8 @@ def _prev_pl_sigmas_exist(prev_options):
             for n in range(num):
                 param_key = param_name + "_" + str(n)
                 if not (
-                    pathlib.Path(prev_options["data_dir"]) / (param_key + "_sigma.txt")
+                    pathlib.Path(prev_options["data_dir"])
+                    / (param_key + "_sigma.txt")
                 ).is_file():
                     return False
 

@@ -104,11 +104,13 @@ def get_bnvs_and_dshifts(pixel_fit_params, bias_field_spherical_deg):
     num_peaks = len(peak_posns)
 
     if num_peaks == 1:
-        sign = -1 if np.mean(peak_posns[0]) < 2870 else +1  # det. if L/R resonance (rel to bias)
-        if bias_mag > qdmpy.constants.GSLAC:
-            #sign *= -1
+        sign = (
+            -1 if np.mean(peak_posns[0]) < 2870 else +1
+        )  # det. if L/R resonance (rel to bias)
+        if bias_mag > GSLAC:
+            # sign *= -1
             sign = 1
-        bnvs = [sign * peak_posns[0] / qdmpy.constants.GAMMA]
+        bnvs = [sign * peak_posns[0] / GAMMA]
         dshifts = [np.empty(bnvs[0].shape)]
         dshifts[0].fill(np.nan)
     elif num_peaks == 2:
@@ -118,7 +120,9 @@ def get_bnvs_and_dshifts(pixel_fit_params, bias_field_spherical_deg):
         bnvs = []
         dshifts = []
         for i in range(num_peaks // 2):
-            bnvs.append(np.abs(peak_posns[-i - 1] - peak_posns[i]) / (2 * GAMMA))
+            bnvs.append(
+                np.abs(peak_posns[-i - 1] - peak_posns[i]) / (2 * GAMMA)
+            )
             dshifts.append((peak_posns[-i - 1] + peak_posns[i]) / 2)
         if ((num_peaks // 2) * 2) + 1 == num_peaks:
             peak = peak_posns[num_peaks // 2 + 1]
@@ -137,7 +141,7 @@ def get_bnvs_and_dshifts(pixel_fit_params, bias_field_spherical_deg):
 
 
 def get_bnv_sd(sigmas):
-    """ get standard deviation of bnvs given SD of peaks. """
+    """get standard deviation of bnvs given SD of peaks."""
     if sigmas is None:
         return None
     # find params for peak position (all must start with 'pos')
@@ -190,7 +194,9 @@ def check_exp_bnv_compatibility(sig_bnvs, ref_bnvs):
             " reference."
         )
     if sig_bnvs[0].shape != ref_bnvs[0].shape:
-        raise RuntimeError("Different image shape in main experiment to reference.")
+        raise RuntimeError(
+            "Different image shape in main experiment to reference."
+        )
 
 
 # ============================================================================
@@ -356,7 +362,9 @@ def prop_single_bnv(
     bnv = copy(single_bnv)
 
     # first pad bnv
-    padded_bnv, padder = qdmpy.shared.fourier.pad_image(bnv, pad_mode, pad_factor)
+    padded_bnv, padder = qdmpy.shared.fourier.pad_image(
+        bnv, pad_mode, pad_factor
+    )
 
     fft_bnv = numpy_fft.fftshift(numpy_fft.fft2(padded_bnv))
     ky, kx, k = qdmpy.shared.fourier.define_k_vectors(

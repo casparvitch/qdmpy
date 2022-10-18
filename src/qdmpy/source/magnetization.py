@@ -28,7 +28,10 @@ from copy import copy
 # ============================================================================
 
 import qdmpy.shared.fourier
-from qdmpy.shared.fourier import MAG_UNIT_CONV, define_magnetization_transformation
+from qdmpy.shared.fourier import (
+    MAG_UNIT_CONV,
+    define_magnetization_transformation,
+)
 
 # ============================================================================
 
@@ -114,8 +117,12 @@ def get_m_from_bxy(
         m_to_by = d_matrix[2, 1, ::]
     else:
         psi = np.deg2rad(mag_angle)
-        m_to_bx = np.cos(psi) * d_matrix[0, 0, ::] + np.sin(psi) * d_matrix[1, 0, ::]
-        m_to_by = np.cos(psi) * d_matrix[0, 1, ::] + np.sin(psi) * d_matrix[1, 1, ::]
+        m_to_bx = (
+            np.cos(psi) * d_matrix[0, 0, ::] + np.sin(psi) * d_matrix[1, 0, ::]
+        )
+        m_to_by = (
+            np.cos(psi) * d_matrix[0, 1, ::] + np.sin(psi) * d_matrix[1, 1, ::]
+        )
 
     hanning_filt = qdmpy.shared.fourier.hanning_filter_kspace(
         k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff, standoff
@@ -214,7 +221,9 @@ def get_m_from_bz(
         m_to_bz = d_matrix[2, 2, ::]  # z magnetized
     else:
         psi = np.deg2rad(mag_angle)
-        m_to_bz = np.cos(psi) * d_matrix[0, 2, ::] + np.sin(psi) * d_matrix[1, 2, ::]
+        m_to_bz = (
+            np.cos(psi) * d_matrix[0, 2, ::] + np.sin(psi) * d_matrix[1, 2, ::]
+        )
 
     hanning_filt = qdmpy.shared.fourier.hanning_filter_kspace(
         k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff, standoff

@@ -120,7 +120,9 @@ def save_bnvs_and_dshifts(options, name, bnvs, dshifts):
         for i, dshift in enumerate(dshifts):
             if dshift is not None:
                 if name in ["sig", "ref"]:
-                    path = options[f"field_{name}_dir"] / f"{name}_dshift_{i}.txt"
+                    path = (
+                        options[f"field_{name}_dir"] / f"{name}_dshift_{i}.txt"
+                    )
                 else:
                     path = options["field_dir"] / f"{name}_dshift_{i}.txt"
                 np.savetxt(path, dshift)
@@ -146,7 +148,10 @@ def save_field_params(options, name, pixel_fit_params):
         for param_key, result in pixel_fit_params.items():
             if result is not None:
                 if name in ["sig", "ref", "sig_sub_ref"]:
-                    path = options[f"field_{name}_dir"] / f"{name}_{param_key}.txt"
+                    path = (
+                        options[f"field_{name}_dir"]
+                        / f"{name}_{param_key}.txt"
+                    )
                 else:
                     path = options["field_dir"] / f"{name}_{param_key}.txt"
                 np.savetxt(path, result)
@@ -173,10 +178,13 @@ def save_field_sigmas(options, name, sigmas):
             if sigma is not None:
                 if name in ["sig", "ref", "sig_sub_ref"]:
                     path = (
-                        options[f"field_{name}_dir"] / f"{name}_{param_key}_sigma.txt"
+                        options[f"field_{name}_dir"]
+                        / f"{name}_{param_key}_sigma.txt"
                     )
                 else:
-                    path = options["field_dir"] / f"{name}_{param_key}_sigma.txt"
+                    path = (
+                        options["field_dir"] / f"{name}_{param_key}_sigma.txt"
+                    )
                 np.savetxt(path, sigma)
 
 
@@ -214,7 +222,9 @@ def load_prev_field_calcs(options):
     # Sam changed to below on 2021-04-21, so that background subtraction is done transparently.
     sig_sub_ref_bnvs = qdmpy.field.bnv.bnv_refsub(options, sig_bnvs, ref_bnvs)
     # sig_sub_ref_bnvs, _ = load_prev_bnvs_and_dshifts(options, "sig_sub_ref")
-    sig_sub_ref_params = qdmpy.field.bxyz.field_refsub(options, sig_params, ref_params)
+    sig_sub_ref_params = qdmpy.field.bxyz.field_refsub(
+        options, sig_params, ref_params
+    )
     # sig_sub_ref_params = load_prev_field_params(options, "sig_sub_ref")
     sig_sub_ref_sigmas = qdmpy.field.bxyz.field_sigma_add(
         options, sig_sigmas, ref_sigmas
@@ -454,7 +464,8 @@ def choose_field_method(options):
             )
         # check that freqs_to_use is symmetric (necessary for bnvs retrieval methods)
         symmetric_freqs = (
-            list(reversed(options["freqs_to_use"][4:])) == options["freqs_to_use"][:4]
+            list(reversed(options["freqs_to_use"][4:]))
+            == options["freqs_to_use"][:4]
         )
 
         if meth == "auto_dc":
@@ -500,15 +511,21 @@ def check_for_prev_field_calc(options):
     if not options["force_field_calc"]:
         if not qdmpy.pl.io.prev_options_exist(options):
             options["found_prev_field_calc"] = False
-            options["found_prev_field_calc_reason"] = "couldn't find previous options"
+            options[
+                "found_prev_field_calc_reason"
+            ] = "couldn't find previous options"
         elif not qdmpy.pl.io.options_compatible(
             options, qdmpy.pl.io.get_prev_options(options)
         ):
             options["found_prev_field_calc"] = False
-            options["found_prev_field_calc_reason"] = "incompatible fit options"
+            options[
+                "found_prev_field_calc_reason"
+            ] = "incompatible fit options"
         elif not (res := _field_options_compatible(options))[0]:
             options["found_prev_field_calc"] = False
-            options["found_prev_field_calc_reason"] = "option not compatible: " + res[1]
+            options["found_prev_field_calc_reason"] = (
+                "option not compatible: " + res[1]
+            )
         elif not (res2 := _prev_pixel_field_calcs_exist(options))[0]:
             options["found_prev_field_calc"] = False
             options["found_prev_field_calc_reason"] = (
@@ -519,7 +536,9 @@ def check_for_prev_field_calc(options):
             options["found_prev_field_calc_reason"] = "found prev calc :)"
     else:
         options["found_prev_field_calc"] = False
-        options["found_prev_field_calc_reason"] = "option 'force_field_calc' was True"
+        options[
+            "found_prev_field_calc_reason"
+        ] = "option 'force_field_calc' was True"
 
 
 # ============================================================================
@@ -541,16 +560,27 @@ def _prev_pixel_field_calcs_exist(options):
         Reason for the above decision
     """
     prev_options = qdmpy.pl.io.get_prev_options(options)
-    if "field_params" not in prev_options or prev_options["field_params"] is None:
+    if (
+        "field_params" not in prev_options
+        or prev_options["field_params"] is None
+    ):
         return False, "no key 'field params' in prev_options"
     # skip 'ref' check, as it isn't always there!
     for param_key in prev_options["field_params"]:
         spath = options["field_sig_dir"] / f"sig_{param_key}.txt"
         if not pathlib.Path(spath).is_file():
-            return False, f"couldn't find previous field param: sig_{param_key}"
-        ssfpath = options["field_sig_sub_ref_dir"] / f"sig_sub_ref_{param_key}.txt"
+            return (
+                False,
+                f"couldn't find previous field param: sig_{param_key}",
+            )
+        ssfpath = (
+            options["field_sig_sub_ref_dir"] / f"sig_sub_ref_{param_key}.txt"
+        )
         if not pathlib.Path(ssfpath).is_file():
-            return False, f"couldn't find previous field param: sig_sub_ref_{param_key}"
+            return (
+                False,
+                f"couldn't find previous field param: sig_sub_ref_{param_key}",
+            )
 
     return True, "found all prev field pixel results :)"
 
@@ -576,7 +606,9 @@ def _field_options_compatible(options):
     """
     prev_options = qdmpy.pl.io.get_prev_options(options)
 
-    prev_options["system"] = qdmpy.system.choose_system(prev_options["system_name"])
+    prev_options["system"] = qdmpy.system.choose_system(
+        prev_options["system_name"]
+    )
 
     # can't load dshift (etc.) reference types
     if (
@@ -622,7 +654,8 @@ def _field_options_compatible(options):
     #     return False, "different bfield_bground_params"
 
     if (
-        qdmpy.shared.geom.get_unvs(options) != qdmpy.shared.geom.get_unvs(prev_options)
+        qdmpy.shared.geom.get_unvs(options)
+        != qdmpy.shared.geom.get_unvs(prev_options)
     ).all():
         return False, "different unvs calculated"
 
@@ -665,7 +698,10 @@ def _field_options_compatible(options):
                 or fit_opt_name not in prev_options
                 or options[fit_opt_name] != prev_options[fit_opt_name]
             ):
-                return False, f"scipyfit (field) option different: {fit_opt_name}"
+                return (
+                    False,
+                    f"scipyfit (field) option different: {fit_opt_name}",
+                )
 
     return True, "options are compatible :)"
 

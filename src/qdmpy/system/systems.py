@@ -222,8 +222,12 @@ class UniMelb(System):
             self.uni_defaults_path, hook="dd"
         )
         # system specific options, then recursively update
-        sys_spec_opts = qdmpy.shared.json2dict.json_to_dict(self.config_path, hook="dd")
-        qdmpy.shared.json2dict.recursive_dict_update(self.options_dict, sys_spec_opts)
+        sys_spec_opts = qdmpy.shared.json2dict.json_to_dict(
+            self.config_path, hook="dd"
+        )
+        qdmpy.shared.json2dict.recursive_dict_update(
+            self.options_dict, sys_spec_opts
+        )
         # in case we want this info in future, set the qdmpy version currently running
         self.options_dict["qdmpy_version"] = {
             "option_default": version("qdmpy"),
@@ -254,10 +258,14 @@ class UniMelb(System):
 
         for i, s in enumerate(override_keys):
             if options[s] is not None:
-                settings[i + 1] = options[s]  # +1 to skip sensor pixel size (set)
+                settings[i + 1] = options[
+                    s
+                ]  # +1 to skip sensor pixel size (set)
 
         if None in settings:
-            raise ValueError("Insufficient microscope setup settings provided.")
+            raise ValueError(
+                "Insufficient microscope setup settings provided."
+            )
 
         sensor_pixel_size, mag, f_ref, f_tube = settings
 
@@ -267,16 +275,20 @@ class UniMelb(System):
 
         # save into options so it can be read from disk (by user) when saved
         options["calculated_raw_pixel_size"] = cam_pixel_size
-        options["calculated_binned_pixel_size"] = cam_pixel_size * options["total_bin"]
+        options["calculated_binned_pixel_size"] = (
+            cam_pixel_size * options["total_bin"]
+        )
 
         return cam_pixel_size
 
     def read_image(self, filepath, options):
         with open(os.path.normpath(filepath), mode="r") as fid:
-            raw_data = np.fromfile(fid, dtype=np.float32)[2:] 
+            raw_data = np.fromfile(fid, dtype=np.float32)[2:]
             # NOTE is the 2 the file size info (labview save binary default to add ar. shape)?
             # TODO inspect that data to see what it looks like etc.!
-        return self._reshape_raw(options, raw_data, self.read_sweep_list(filepath))
+        return self._reshape_raw(
+            options, raw_data, self.read_sweep_list(filepath)
+        )
 
     def determine_binning(self, options):
         metadata = self._read_metadata(options["filepath"])
@@ -290,7 +302,9 @@ class UniMelb(System):
             )
 
     def read_sweep_list(self, filepath):
-        with open(os.path.normpath(str(filepath) + "_metaSpool.txt"), "r") as fid:
+        with open(
+            os.path.normpath(str(filepath) + "_metaSpool.txt"), "r"
+        ) as fid:
             sweep_str = fid.readline().rstrip().split("\t")
         return [float(i) for i in sweep_str]
 
@@ -307,10 +321,14 @@ class UniMelb(System):
         return self.options_dict.keys()
 
     def get_bias_field(self, options):
-        """ get bias on (bool) and field as tuple (mag (G), theta (rad), phi (rad)) """
+        """get bias on (bool) and field as tuple (mag (G), theta (rad), phi (rad))"""
         if "metadata" not in options:
             return False, None
-        key_ars = [["Field Strength (G)"], ["Theta (deg)"], ["Phi (def)", "Phi (deg)"]]
+        key_ars = [
+            ["Field Strength (G)"],
+            ["Theta (deg)"],
+            ["Phi (def)", "Phi (deg)"],
+        ]
         bias_field = []
         for ar in key_ars:
             found = False
@@ -328,7 +346,11 @@ class UniMelb(System):
             return False, None
         onoff_str = options["metadata"].get("Mag on/off", "")
         bias_on = onoff_str == " TRUE"
-        return bias_on, (bias_field[0], radians(bias_field[1]), radians(bias_field[2]))
+        return bias_on, (
+            bias_field[0],
+            radians(bias_field[1]),
+            radians(bias_field[2]),
+        )
 
     def system_specific_option_update(self, options):
         # set some things that cannot be stored in the json
@@ -346,8 +368,12 @@ class UniMelb(System):
             options["freqs_to_use"] = list(map(bool, options["freqs_to_use"]))
 
         if "base_dir" in options and not self.filepath_joined:
-            options["filepath"] = os.path.join(options["base_dir"], options["filepath"])
-            self.filepath_joined = True  # just a flag so we don't do this twice
+            options["filepath"] = os.path.join(
+                options["base_dir"], options["filepath"]
+            )
+            self.filepath_joined = (
+                True  # just a flag so we don't do this twice
+            )
 
         # add metadata to options (so it's saved for output)
         if "metadata" not in options:
@@ -360,18 +386,33 @@ class UniMelb(System):
         Reads metaspool text file into a metadata dictionary.
         Filepath argument is the filepath of the (binary) dataset.
         """
-
-        # skip over sweep list
         with open(os.path.normpath(str(filepath) + "_metaSpool.txt"), "r") as fid:
+            # skip the sweep list (freqs or taus)
             _ = fid.readline().rstrip().split("\t")
             # ok now read the metadata
             rest_str = fid.read()
+            # any text except newlines and tabs, followed by a colon and a space
+            # then any text except newlines and tabs
+            # (match the two text regions)
             matches = re.findall(
-                r"^([a-zA-Z0-9_ /+()#-]+):([a-zA-Z0-9_ /+()#-]+)",
+                # r"^([a-zA-Z0-9_ /+()#-]+):([a-zA-Z0-9_ /+()#-]+)",
+                r"([^\t\n]+):\s([^\t\n]+)",
                 rest_str,
                 re.MULTILINE,
             )
-            metadata = {a: qdmpy.shared.json2dict.failfloat(b) for (a, b) in matches}
+
+            def failfloat(a):
+                try:
+                    return float(a)
+                except ValueError:
+                    if a == "FALSE":
+                        return False
+                    elif a == "TRUE":
+                        return True
+                    else:
+                        return a
+
+            metadata = {a: failfloat(b) for (a, b) in matches}
         return metadata
 
     def _reshape_raw(self, options, raw_data, sweep_list):
@@ -449,7 +490,9 @@ class UniMelb(System):
         headers = pd.read_csv(path, sep=None, engine="python").columns.tolist()
         headers = [h for h in headers if not h.startswith("Unnamed")]
         # then load dataset
-        dataset = np.genfromtxt(path, skip_header=1, autostrip=True, delimiter="\t")
+        dataset = np.genfromtxt(
+            path, skip_header=1, autostrip=True, delimiter="\t"
+        )
 
         return headers, dataset
 
@@ -557,7 +600,9 @@ Add any systems you define here so you can use them.
 def choose_system(name):
     """Returns `qdmpy.system.systems.System` object called 'name'."""
     if name is None:
-        raise RuntimeError("System chosen was 'None': override this default option!!!")
+        raise RuntimeError(
+            "System chosen was 'None': override this default option!!!"
+        )
     return _SYSTEMS[name]()
 
 

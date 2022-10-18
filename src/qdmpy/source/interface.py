@@ -76,7 +76,9 @@ def odmr_source_retrieval(options, bnvs, field_params):
         "current_density": get_current_density,
         "magnetization": get_magnetization,
     }
-    source_params = source_fns[options["source_type"]](options, bnvs, field_params)
+    source_params = source_fns[options["source_type"]](
+        options, bnvs, field_params
+    )
 
     if source_params is None:
         return None
@@ -146,7 +148,10 @@ def get_current_density(
     ]
 
     if any(
-        [i in ["from_bxy", "from_bz", "without_ft"] for i in options["recon_methods"]]
+        [
+            i in ["from_bxy", "from_bz", "without_ft"]
+            for i in options["recon_methods"]
+        ]
     ):
 
         # first check if Bx, By, Bz in fit_params
@@ -187,7 +192,9 @@ def get_current_density(
                 nvs_above_sample=options["NVs_above_sample"],
             )
         elif method == "from_bz":
-            jx, jy = qdmpy.source.current.get_j_from_bz([bx, by, bz], *useful_opts)
+            jx, jy = qdmpy.source.current.get_j_from_bz(
+                [bx, by, bz], *useful_opts
+            )
         elif method == "from_bnv":
             jx, jy = qdmpy.source.current.get_j_from_bnv(
                 bnv,
@@ -202,10 +209,12 @@ def get_current_density(
         elif method == "without_ft":
             jx, jy = qdmpy.source.current.get_j_without_ft([bx, by, bz])
         else:
-            warn(f"recon_method '{method}' not recognised for j recon, skipping.")
+            warn(
+                f"recon_method '{method}' not recognised for j recon, skipping."
+            )
             return None
 
-        jnorm = np.sqrt(jx ** 2 + jy ** 2)
+        jnorm = np.sqrt(jx**2 + jy**2)
 
         if options["source_bground_method"]:
             if "polygons" in options and (
@@ -253,7 +262,11 @@ def get_current_density(
         else:
             source_params = {
                 **source_params,
-                **{"Jx_" + method: jx, "Jy_" + method: jy, "Jnorm_" + method: jnorm},
+                **{
+                    "Jx_" + method: jx,
+                    "Jy_" + method: jy,
+                    "Jnorm_" + method: jnorm,
+                },
             }
 
     add_divperp_j(options, source_params)
@@ -342,9 +355,13 @@ def get_magnetization(
     source_params = {}
     for method in options["recon_methods"]:
         if method == "from_bxy":
-            m = qdmpy.source.magnetization.get_m_from_bxy([bx, by, bz], *useful_opts)
+            m = qdmpy.source.magnetization.get_m_from_bxy(
+                [bx, by, bz], *useful_opts
+            )
         elif method == "from_bz":
-            m = qdmpy.source.magnetization.get_m_from_bz([bx, by, bz], *useful_opts)
+            m = qdmpy.source.magnetization.get_m_from_bz(
+                [bx, by, bz], *useful_opts
+            )
         elif method == "from_bnv":
             m = qdmpy.source.magnetization.get_m_from_bnv(
                 bnv,
@@ -458,12 +475,15 @@ def add_divperp_j(options, source_params):
                 return None
 
     for method in methods:
-        jx, jy = [source_params["J" + comp + "_" + method] for comp in components]
+        jx, jy = [
+            source_params["J" + comp + "_" + method] for comp in components
+        ]
         conserv_j = qdmpy.source.current.get_divperp_j(
             [jx, jy],
             options["fourier_pad_mode"],
             options["fourier_pad_factor"],
-            options["system"].get_raw_pixel_size(options) * options["total_bin"],
+            options["system"].get_raw_pixel_size(options)
+            * options["total_bin"],
             options["fourier_k_vector_epsilon"],
         )
 
@@ -528,11 +548,15 @@ def in_plane_mag_normalise(mag_image, psi, edge_pixels_used):
                 below_y_idxs.append(y_idx + offset)
                 below_x_idxs.append(x_idx)
 
-        for coords in [(above_y_idxs, above_x_idxs), (below_y_idxs, below_x_idxs)]:
+        for coords in [
+            (above_y_idxs, above_x_idxs),
+            (below_y_idxs, below_x_idxs),
+        ]:
             im_cut = mag_image[coords]
             new_im[coords] = im_cut - (
                 np.mean(
-                    im_cut[0:edge_pixels_used] + np.mean(im_cut[-edge_pixels_used:])
+                    im_cut[0:edge_pixels_used]
+                    + np.mean(im_cut[-edge_pixels_used:])
                 )
                 / 2
             )

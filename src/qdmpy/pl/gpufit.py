@@ -38,6 +38,7 @@ __pdoc__ = {
 
 import pygpufit.gpufit as gf
 import numpy as np
+from warnings import warn
 
 # ============================================================================
 
@@ -120,7 +121,7 @@ def get_gpufit_modelID(options, fit_model):  # noqa: N802
             break
     if ffs in [{"constant": 1, "stretched_exponential": 1}]:
         model = gf.ModelID.STRETCHED_EXP
-    if ffs in [{"contstant": 1, "damped_rabi": 1}]:
+    if ffs in [{"constant": 1, "damped_rabi": 1}]:
         model = gf.ModelID.DAMPED_RABI
 
     if model is None:
@@ -163,7 +164,7 @@ def prep_gpufit_backend(options, fit_model):
 
     """
     if not gf.cuda_available():
-        raise RuntimeError(f"CUDA error:\n{gf.get_last_error()}")
+        warn(f"CUDA error:\n{gf.get_last_error()}")
 
     (
         options["CUDA_version_runtime"],
@@ -251,7 +252,7 @@ def gen_gpufit_init_guesses(options, init_guesses, init_bounds):
 
 
 def fit_single_pixel_pl_gpufit(
-    options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result
+    options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result, platform="gpu"
 ):
     """
     Fit Single pixel and return optimal fit parameters with gpufit backend
@@ -268,6 +269,8 @@ def fit_single_pixel_pl_gpufit(
         Model we're fitting to.
     roi_avg_fit_result : `qdmpy.pl.common.ROIAvgFitResult`
         `qdmpy.pl.common.ROIAvgFitResult` object, to pull fit_options from.
+    platform : str
+        Use 'gpu' (default) or 'cpu' for fit.
 
     Returns
     -------
@@ -276,11 +279,17 @@ def fit_single_pixel_pl_gpufit(
     """
     # NOTE we need to do the fit at least twice (gpufit requirements) so we do it
     # (indentically) twice here, and then disregard one result.
+    # NB this isn't true, see the pygpufit examples, it just needs to be 2D
+    # -- but fine leave this as is
 
     # this is just constructing the initial parameter guesses and bounds in the right format
     init_guess_params, init_bounds = gen_gpufit_init_guesses(
         options, *qdmpy.pl.common.gen_init_guesses(options)
     )
+
+    # shape = num_fits, 2*num_params
+    reshaped_bounds = np.tile(init_bounds, (2, 1)).astype(np.float32)
+
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
         init_guess_params = roi_avg_fit_result.best_params.copy()
 
@@ -293,6 +302,11 @@ def fit_single_pixel_pl_gpufit(
 
     pixel_pl_ar_doubled = np.repeat([pixel_pl_ar], repeats=2, axis=0)
 
+    constraint_types = np.array(
+        [gf.ConstraintType.LOWER_UPPER for i in range(init_guess_params.shape[1])],
+        dtype=np.int32,
+    )
+
     (
         parameters,
         states,
@@ -304,13 +318,11 @@ def fit_single_pixel_pl_gpufit(
         None,
         options["ModelID"],
         init_guess_params,
-        constraints=init_bounds.astype(np.float32),
-        constraint_types=np.array(
-            [gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))],
-            dtype=np.int32,
-        ),
+        constraints=reshaped_bounds,
+        constraint_types=constraint_types,
         user_info=np.array(sweep_list, dtype=np.float32),
         parameters_to_fit=params_to_fit,
+        platform=platform
     )
 
     return parameters[0, :]  # only take one of the parameter results
@@ -319,7 +331,7 @@ def fit_single_pixel_pl_gpufit(
 # ============================================================================
 
 
-def fit_roi_avg_pl_gpufit(options, sig, ref, sweep_list, fit_model):
+def fit_roi_avg_pl_gpufit(options, sig, ref, sweep_list, fit_model, platform="gpu"):
     """
     Fit the average of the measurement over the region of interest specified, with gpufit.
 
@@ -335,6 +347,8 @@ def fit_roi_avg_pl_gpufit(options, sig, ref, sweep_list, fit_model):
         Affine parameter list (e.g. tau or freq)
     fit_model : `qdmpy.pl.model.FitModel`
         Model we're fitting to.
+    platform : str
+        Use 'gpu' (default) or 'cpu' for fit.
 
     Returns
     -------
@@ -354,6 +368,8 @@ def fit_roi_avg_pl_gpufit(options, sig, ref, sweep_list, fit_model):
         roi_norm = sig_mean / ref_mean
     elif options["normalisation"] == "sub":
         roi_norm = 1 + (sig_mean - ref_mean) / (sig_mean + ref_mean)
+    elif options["normalisation"] == "true_sub":
+        roi_norm = (sig_mean - ref_mean) / np.nanmax(sig_mean - ref_mean)
 
     roi_norm_twice = np.repeat([roi_norm], repeats=2, axis=0)
 
@@ -361,6 +377,9 @@ def fit_roi_avg_pl_gpufit(options, sig, ref, sweep_list, fit_model):
     init_guess_params, init_bounds = gen_gpufit_init_guesses(
         options, *qdmpy.pl.common.gen_init_guesses(options)
     )
+
+    # shape = num_fits, 2*num_params
+    reshaped_bounds = np.tile(init_bounds, (2, 1)).astype(np.float32)
 
     gpufit_fit_options = prep_gpufit_fit_options(options)
 
@@ -371,6 +390,10 @@ def fit_roi_avg_pl_gpufit(options, sig, ref, sweep_list, fit_model):
     init_guess_params = np.repeat([init_guess_params], repeats=2, axis=0)
     init_guess_params = init_guess_params.astype(dtype=np.float32)
 
+    constraint_types = np.array(
+        [gf.ConstraintType.LOWER_UPPER for i in range(init_guess_params.shape[1])],
+        dtype=np.int32,
+    )
     (
         best_params,
         states,
@@ -382,17 +405,15 @@ def fit_roi_avg_pl_gpufit(options, sig, ref, sweep_list, fit_model):
         None,
         options["ModelID"],
         init_guess_params,
-        constraints=np.array(init_bounds, dtype=np.float32),
-        constraint_types=np.array(
-            [gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))],
-            dtype=np.int32,
-        ),
+        constraints=reshaped_bounds,
+        constraint_types=constraint_types,
         user_info=np.array(sweep_list, dtype=np.float32),
         parameters_to_fit=params_to_fit,
+        platform=platform,  # NEW fit with gpu or cpu (gpufit/cpufit)
         **gpufit_fit_options,
     )
     return qdmpy.pl.common.ROIAvgFitResult(
-        "gpufit",
+        f"{platform}fit",
         gpufit_fit_options,
         fit_model,
         roi_norm,
@@ -407,7 +428,15 @@ def fit_roi_avg_pl_gpufit(options, sig, ref, sweep_list, fit_model):
 
 
 def fit_aois_pl_gpufit(
-    options, sig, ref, pixel_pl_ar, sweep_list, fit_model, aois, roi_avg_fit_result
+    options,
+    sig,
+    ref,
+    pixel_pl_ar,
+    sweep_list,
+    fit_model,
+    aois,
+    roi_avg_fit_result,
+    platform="gpu",
 ):
     """
     Fit AOIs and single pixel and return list of (list of) fit results (optimal fit parameters),
@@ -433,6 +462,8 @@ def fit_aois_pl_gpufit(
     roi_avg_fit_result : `qdmpy.pl.common.ROIAvgFitResult`
         `qdmpy.pl.common.ROIAvgFitResult` object, to pull `qdmpy.pl.common.ROIAvgFitResult.fit_options`
         from.
+    platform : str
+        Use 'gpu' (default) or 'cpu' for fit.
 
     Returns
     -------
@@ -445,11 +476,15 @@ def fit_aois_pl_gpufit(
     init_guess_params, init_bounds = gen_gpufit_init_guesses(
         options, *qdmpy.pl.common.gen_init_guesses(options)
     )
+
+    # shape = num_fits, 2*num_params
+    reshaped_bounds = np.tile(init_bounds, (2, 1)).astype(np.float32)
+
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
         init_guess_params = roi_avg_fit_result.best_params.copy()
 
     single_pixel_fit_params = fit_single_pixel_pl_gpufit(
-        options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result
+        options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result, platform
     )
 
     aoi_avg_best_fit_results_lst = []
@@ -461,6 +496,11 @@ def fit_aois_pl_gpufit(
     init_guess_params = np.repeat([init_guess_params], repeats=2, axis=0)
     init_guess_params = init_guess_params.astype(dtype=np.float32)
 
+    constraint_types = np.array(
+        [gf.ConstraintType.LOWER_UPPER for i in range(init_guess_params.shape[1])],
+        dtype=np.int32,
+    )
+
     for a in aois:
         this_sig = np.nanmean(np.nanmean(sig[:, a[0], a[1]], axis=2), axis=1)
         this_ref = np.nanmean(np.nanmean(ref[:, a[0], a[1]], axis=2), axis=1)
@@ -471,6 +511,8 @@ def fit_aois_pl_gpufit(
             this_aoi = this_sig / this_ref
         elif options["normalisation"] == "sub":
             this_aoi = 1 + (this_sig - this_ref) / (this_sig + this_ref)
+        elif options["normalisation"] == "true_sub":
+            this_aoi = (this_sig - this_ref) / np.nanmax(this_sig - this_ref)
 
         this_aoi_twice = np.repeat([this_aoi], repeats=2, axis=0)
 
@@ -479,18 +521,16 @@ def fit_aois_pl_gpufit(
             None,
             options["ModelID"],
             np.array(init_guess_params, dtype=np.float32),
-            constraints=np.array(init_bounds, dtype=np.float32),
-            constraint_types=np.array(
-                [gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))],
-                dtype=np.int32,
-            ),
+            constraints=reshaped_bounds,
+            constraint_types=constraint_types,
             user_info=np.array(sweep_list, dtype=np.float32),
             parameters_to_fit=params_to_fit,
+            platform=platform,
         )
         aoi_avg_best_fit_results_lst.append(fitting_results[0, :])
 
     return qdmpy.pl.common.FitResultCollection(
-        "gpufit",
+        f"{platform}fit",
         roi_avg_fit_result,
         single_pixel_fit_params,
         aoi_avg_best_fit_results_lst,
@@ -501,7 +541,12 @@ def fit_aois_pl_gpufit(
 
 
 def fit_all_pixels_pl_gpufit(
-    options, sig_norm, sweep_list, fit_model, roi_avg_fit_result
+    options,
+    sig_norm,
+    sweep_list,
+    fit_model,
+    roi_avg_fit_result,
+    platform="gpu",
 ):
     """
     Fits each pixel and returns dictionary of param_name -> param_image.
@@ -518,6 +563,8 @@ def fit_all_pixels_pl_gpufit(
         Model we're fitting to.
     roi_avg_fit_result : `qdmpy.pl.common.ROIAvgFitResult`
         `qdmpy.pl.common.ROIAvgFitResult` object, to pull fit_options from.
+    platform : str
+        Use 'gpu' (default) or 'cpu' for fit.
 
     Returns
     -------
@@ -526,7 +573,7 @@ def fit_all_pixels_pl_gpufit(
         Also has 'residual' as a key.
     """
     sweep_ar = np.array(sweep_list)
-    # data_length = np.shape(sig_norm)[1] * np.shape(sig_norm)[2]
+    num_pixels = np.shape(sig_norm)[1] * np.shape(sig_norm)[2]
 
     # randomize order of fitting pixels (will un-scramble later) so ETA is more correct
     # not really necessary for gpu?
@@ -539,10 +586,12 @@ def fit_all_pixels_pl_gpufit(
     init_guess_params, init_bounds = gen_gpufit_init_guesses(
         options, *qdmpy.pl.common.gen_init_guesses(options)
     )
+
+    # shape = num_fits, 2*num_params
+    reshaped_bounds = np.tile(init_bounds, (num_pixels, 1)).astype(np.float32)
+
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
         init_guess_params = roi_avg_fit_result.best_params.copy()
-
-    num_pixels = np.shape(sig_norm)[1] * np.shape(sig_norm)[2]
 
     # need to reshape init_guess_params, one for each pixel
     guess_params = np.array([init_guess_params], dtype=np.float32)
@@ -554,18 +603,21 @@ def fit_all_pixels_pl_gpufit(
     # reshape sig_norm in a way that gpufit likes: (number_fits, number_points)
     sig_norm_shaped, pixel_posns = gpufit_data_shape(pixel_data)
 
+    constraint_types = np.array(
+        [gf.ConstraintType.LOWER_UPPER for i in range(init_guess_params_reshaped.shape[1])],
+        dtype=np.int32,
+    )
+
     fitting_results, _, _, _, execution_time = gf.fit_constrained(
         sig_norm_shaped,
         None,
         options["ModelID"],
         init_guess_params_reshaped,
-        constraints=np.array(init_bounds, dtype=np.float32),
-        constraint_types=np.array(
-            [gf.ConstraintType.LOWER_UPPER for i in range(len(init_guess_params))],
-            dtype=np.int32,
-        ),
+        constraints=reshaped_bounds,
+        constraint_types=constraint_types,
         user_info=np.array(sweep_list, dtype=np.float32),
         parameters_to_fit=np.array(params_to_fit, dtype=np.int32),
+        platform=platform,
     )
     # for the record
     options["fit_time_(s)"] = execution_time
