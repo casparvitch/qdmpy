@@ -119,9 +119,7 @@ def define_hamiltonian(options, chooser_obj, unv_frames):
         Hamiltonian model object
     """
 
-    ham = AVAILABLE_HAMILTONIANS[options["hamiltonian"]](
-        chooser_obj, unv_frames
-    )
+    ham = AVAILABLE_HAMILTONIANS[options["hamiltonian"]](chooser_obj, unv_frames)
 
     options["ham_param_defn"] = ham.get_param_defn()
 
@@ -216,9 +214,7 @@ class Hamiltonian:
         param_ar : np array, 1D
             Array of hamiltonian parameters fed in.
         """
-        raise NotImplementedError(
-            "You MUST override __call__, check your spelling."
-        )
+        raise NotImplementedError("You MUST override __call__, check your spelling.")
 
     # =================================
 
@@ -249,9 +245,7 @@ class Hamiltonian:
 
         # need to take out rows (first index) according to chooser_obj.
         keep_rows = self.chooser_obj(list(range(len(measured_data))))
-        delete_rows = [
-            r for r in range(len(measured_data)) if r not in keep_rows
-        ]
+        delete_rows = [r for r in range(len(measured_data)) if r not in keep_rows]
         return np.delete(self.grad_fn(param_ar), delete_rows, axis=0)
 
     # =================================
@@ -279,9 +273,7 @@ class Hamiltonian:
         Get unit for a given param_key
         """
         if param_key == "residual_field":
-            return (
-                "Error: sum( || residual(params) || ) over bnvs/freqs (a.u.)"
-            )
+            return "Error: sum( || residual(params) || ) over bnvs/freqs (a.u.)"
         param_dict = self.get_param_odict()
         return param_dict[param_key]
 
@@ -476,9 +468,7 @@ def ham_gen_init_guesses(options):
             # assumes bounds are passed in with correct formatatting
             bounds = options[param_key + "_bounds"]
         else:
-            raise RuntimeError(
-                f"Provide bounds for the {ham}.{param_key} param."
-            )
+            raise RuntimeError(f"Provide bounds for the {ham}.{param_key} param.")
 
         if guess is not None:
             init_guesses[param_key] = guess
@@ -682,9 +672,7 @@ def ham_get_pixel_fitting_results(hamiltonian, fit_results, pixel_data):
 
     # override with correct size empty arrays using np.zeros
     for key in fit_image_results.keys():
-        fit_image_results[key] = (
-            np.zeros((roi_shape[0], roi_shape[1])) * np.nan
-        )
+        fit_image_results[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
         sigmas[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
     fit_image_results["residual_field"] = (

@@ -159,9 +159,7 @@ def ham_limit_cpu():
     elif platform.startswith("darwin"):  # macOS
         warn("Not sure what to use for macOS... skipping cpu limitting")
     else:  # 'freebsd', 'aix', 'cygwin'...
-        warn(
-            f"Not sure what to use for your OS: {platform}... skipping cpu limitting"
-        )
+        warn(f"Not sure what to use for your OS: {platform}... skipping cpu limitting")
 
 
 # ==========================================================================
@@ -203,9 +201,7 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
 
     # randomize order of fitting pixels (will un-scramble later) so ETA is more correct
     if options["scramble_pixels"]:
-        pixel_data, unshuffler = qdmpy.field.hamiltonian.ham_shuffle_pixels(
-            data
-        )
+        pixel_data, unshuffler = qdmpy.field.hamiltonian.ham_shuffle_pixels(data)
     else:
         pixel_data = data
 
@@ -244,12 +240,8 @@ def fit_hamiltonian_scipyfit(options, data, hamiltonian):
         hamiltonian, ham_fit_results, pixel_data
     )
     if options["scramble_pixels"]:
-        res = qdmpy.field.hamiltonian.ham_unshuffle_fit_results(
-            res, unshuffler
-        )
-        sigmas = qdmpy.field.hamiltonian.ham_unshuffle_fit_results(
-            sigmas, unshuffler
-        )
+        res = qdmpy.field.hamiltonian.ham_unshuffle_fit_results(res, unshuffler)
+        sigmas = qdmpy.field.hamiltonian.ham_unshuffle_fit_results(sigmas, unshuffler)
 
     return res, sigmas
 
@@ -283,7 +275,7 @@ def fit_hamiltonian_roi_avg_scipyfit(options, data, ham):
     # average freqs/bnvs over image -> ignore nanmean of empty slice warning (for nan bnvs etc.)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
-        data_roi = np.nanmean(np.nanmean(data, axis=2), axis=1)
+        data_roi = np.nanmean(data, axis=(1, 2))
 
     fit_options = prep_ham_scipyfit_options(options, ham)
 

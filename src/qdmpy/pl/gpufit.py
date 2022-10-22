@@ -322,7 +322,7 @@ def fit_single_pixel_pl_gpufit(
         constraint_types=constraint_types,
         user_info=np.array(sweep_list, dtype=np.float32),
         parameters_to_fit=params_to_fit,
-        platform=platform
+        platform=platform,
     )
 
     return parameters[0, :]  # only take one of the parameter results
@@ -360,8 +360,8 @@ def fit_roi_avg_pl_gpufit(options, sig, ref, sweep_list, fit_model, platform="gp
 
     # fit *all* pl data (i.e. summing over FOV)
     # collapse to just pl_ar (as function of sweep, 1D)
-    sig_mean = np.nanmean(np.nanmean(sig, axis=2), axis=1)
-    ref_mean = np.nanmean(np.nanmean(ref, axis=2), axis=1)
+    sig_mean = np.nanmean(sig, axis=(1, 2))
+    ref_mean = np.nanmean(ref, axis=(1, 2))
     if not options["used_ref"]:
         roi_norm = sig_mean
     elif options["normalisation"] == "div":
@@ -502,8 +502,8 @@ def fit_aois_pl_gpufit(
     )
 
     for a in aois:
-        this_sig = np.nanmean(np.nanmean(sig[:, a[0], a[1]], axis=2), axis=1)
-        this_ref = np.nanmean(np.nanmean(ref[:, a[0], a[1]], axis=2), axis=1)
+        this_sig = np.nanmean(sig[:, a[0], a[1]], axis=(1, 2))
+        this_ref = np.nanmean(ref[:, a[0], a[1]], axis=(1, 2))
 
         if not options["used_ref"]:
             this_aoi = this_sig
@@ -604,7 +604,10 @@ def fit_all_pixels_pl_gpufit(
     sig_norm_shaped, pixel_posns = gpufit_data_shape(pixel_data)
 
     constraint_types = np.array(
-        [gf.ConstraintType.LOWER_UPPER for i in range(init_guess_params_reshaped.shape[1])],
+        [
+            gf.ConstraintType.LOWER_UPPER
+            for i in range(init_guess_params_reshaped.shape[1])
+        ],
         dtype=np.int32,
     )
 

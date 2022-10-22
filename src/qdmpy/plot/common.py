@@ -63,9 +63,7 @@ def set_mpl_rcparams(options):
         try:
             mpl.rcParams[optn] = val
         except KeyError:
-            warn(
-                f"mpl rcparams key '{optn}' not recognised as a valid rc parameter."
-            )
+            warn(f"mpl rcparams key '{optn}' not recognised as a valid rc parameter.")
 
 
 # ===========================================================================
@@ -104,9 +102,7 @@ def plot_image(options, image_data, title, c_map, c_range, c_label):
 
     np.savetxt(options["data_dir"] / f"{title}.txt", image_data)
     if options["save_plots"]:
-        fig.savefig(
-            options["output_dir"] / (f"{title}." + options["save_fig_type"])
-        )
+        fig.savefig(options["output_dir"] / (f"{title}." + options["save_fig_type"]))
 
     return fig, ax
 
@@ -114,9 +110,7 @@ def plot_image(options, image_data, title, c_map, c_range, c_label):
 # ============================================================================
 
 
-def plot_image_on_ax(
-    fig, ax, options, image_data, title, c_map, c_range, c_label
-):
+def plot_image_on_ax(fig, ax, options, image_data, title, c_map, c_range, c_label):
     """
     Plots an image given by image_data onto given figure and ax.
 
@@ -154,8 +148,7 @@ def plot_image_on_ax(
 
     if options["show_scalebar"]:
         pixel_size = (
-            options["system"].get_raw_pixel_size(options)
-            * options["total_bin"]
+            options["system"].get_raw_pixel_size(options) * options["total_bin"]
         )
         scalebar = ScaleBar(pixel_size)
         ax.add_artist(scalebar)

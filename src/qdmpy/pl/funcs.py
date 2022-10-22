@@ -73,9 +73,7 @@ class FitFunc:
 
     @staticmethod
     def eval(x, *fit_params):
-        raise NotImplementedError(
-            "You MUST override eval, check your spelling."
-        )
+        raise NotImplementedError("You MUST override eval, check your spelling.")
 
     # =================================
 
@@ -201,18 +199,10 @@ class Circular(FitFunc):
         circ_freq, pos, amp = fit_params
         j = np.empty((x.shape[0], 3), dtype=np.float64)
         j[:, 0] = (
-            2
-            * np.pi
-            * amp
-            * (x - pos)
-            * np.cos(2 * np.pi * circ_freq * (x - pos))
+            2 * np.pi * amp * (x - pos) * np.cos(2 * np.pi * circ_freq * (x - pos))
         )
         j[:, 1] = (
-            -2
-            * np.pi
-            * circ_freq
-            * amp
-            * np.cos(2 * np.pi * circ_freq * (x - pos))
+            -2 * np.pi * circ_freq * amp * np.cos(2 * np.pi * circ_freq * (x - pos))
         )
         j[:, 2] = np.sin(2 * np.pi * circ_freq * (x - pos))
         return j
@@ -278,12 +268,9 @@ class GaussianHyperfine14(FitFunc):
             fwhm_3_hyp,
         ) = fit_params
         return (
-            amp_1_hyp
-            * np.exp(-SCALE_SIGMA * (x - pos - 2.14) ** 2 / fwhm_1_hyp**2)
-            + amp_2_hyp
-            * np.exp(-SCALE_SIGMA * (x - pos) ** 2 / fwhm_2_hyp**2)
-            + amp_3_hyp
-            * np.exp(-SCALE_SIGMA * (x - pos + 2.14) ** 2 / fwhm_3_hyp**2)
+            amp_1_hyp * np.exp(-SCALE_SIGMA * (x - pos - 2.14) ** 2 / fwhm_1_hyp**2)
+            + amp_2_hyp * np.exp(-SCALE_SIGMA * (x - pos) ** 2 / fwhm_2_hyp**2)
+            + amp_3_hyp * np.exp(-SCALE_SIGMA * (x - pos + 2.14) ** 2 / fwhm_3_hyp**2)
         )
 
 
@@ -311,9 +298,7 @@ class GaussianHyperfine15(FitFunc):
         pos, amp_1_hyp, amp_2_hyp, fwhm_1_hyp, fwhm_2_hyp = fit_params
         return amp_1_hyp * np.exp(
             -SCALE_SIGMA * (x - pos - 1.515) ** 2 / fwhm_1_hyp**2
-        ) + amp_2_hyp * np.exp(
-            -SCALE_SIGMA * (x - pos + 1.515) ** 2 / fwhm_2_hyp**2
-        )
+        ) + amp_2_hyp * np.exp(-SCALE_SIGMA * (x - pos + 1.515) ** 2 / fwhm_2_hyp**2)
 
 
 # ====================================================================================
@@ -576,7 +561,7 @@ class DampedRabi(FitFunc):
         )  # wrt pos
         j[:, 2] = np.exp(-x / tau) * np.cos(omega * (x - pos))  # wrt amp
         j[:, 3] = (amp * x * np.cos(omega * (x - pos))) / (
-            np.exp(x / tau) * tau ** 2
+            np.exp(x / tau) * tau**2
         )  # wrt tau
         return j
 

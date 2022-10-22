@@ -122,15 +122,11 @@ def _prep_fit_backends(options, fit_model):
             # here we use a programmatic import as we don't want to load (and crash)
             # if user doesn't have the gpufit stuff installed
 
-            if (
-                "fit_gpufit" not in globals()
-            ):  # only import once for gpu/cpufit
+            if "fit_gpufit" not in globals():  # only import once for gpu/cpufit
                 if fit_backend == "cpufit":
                     # we want to catch this if it errors
                     vrs = importlib.metadata.version("pygpufit")
-                    if packaging.version.parse(vrs) <= packaging.version.parse(
-                        "1.2.0"
-                    ):
+                    if packaging.version.parse(vrs) <= packaging.version.parse("1.2.0"):
                         raise RuntimeError(
                             "cpufit requires pygpufit > 1.2.0 "
                             + "(with cpufit api exposed to python)"
@@ -286,9 +282,7 @@ def fit_aois_pl(
 # ============================================================================
 
 
-def fit_all_pixels_pl(
-    options, sig_norm, sweep_list, fit_model, roi_avg_fit_result
-):
+def fit_all_pixels_pl(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
     """
     Fit all pixels in image with chosen fit backend.
 
@@ -338,9 +332,7 @@ def fit_all_pixels_pl(
 # ============================================================================
 
 
-def get_pl_fit_result(
-    options, sig_norm, sweep_list, fit_model, wanted_roi_result
-):
+def get_pl_fit_result(options, sig_norm, sweep_list, fit_model, wanted_roi_result):
     """Fit all pixels in image with chosen fit backend (or loads previous fit result)
 
     Wrapper for `qdmpy.pl.interface.fit_all_pixels_pl` with some options logic.

@@ -11,16 +11,10 @@ numpy_txt_file_path = (
     "/home/samsc/ResearchData/test_images/mz_test/ODMR -"
     " Pulsed_10_Rectangle_bin_8/field/sig_sub_ref/sig_sub_ref_bnv_0.txt"
 )
-json_output_path = (
-    "/home/samsc/ResearchData/test_images/mz_test/polys_mz_sandbox.json"
-)
+json_output_path = "/home/samsc/ResearchData/test_images/mz_test/polys_mz_sandbox.json"
 json_input_path = "/home/samsc/ResearchData/test_images/mz_test/polys.json"
-domains_output_path = (
-    "/home/samsc/ResearchData/test_images/mz_test/polys_domain.json"
-)
-voronoi_output_path = (
-    "/home/samsc/ResearchData/test_images/mz_test/tesselate.pickle"
-)
+domains_output_path = "/home/samsc/ResearchData/test_images/mz_test/polys_domain.json"
+voronoi_output_path = "/home/samsc/ResearchData/test_images/mz_test/tesselate.pickle"
 mag_path = "/home/samsc/ResearchData/test_images/mz_test/tess_mag.pickle"
 mean_plus_minus = 0.25
 
@@ -83,9 +77,7 @@ sim.plot_magsim_magnetizations(
 sim.run(height, pad_mode="constant", resolution=res)
 
 unv = [np.sqrt(1 / 3), np.sqrt(1 / 3), np.sqrt(1 / 3)]
-sim.plot_magsim_bfield_at_nvs(
-    projection=unv, polygon_patch_params=pgon_patches
-)
+sim.plot_magsim_bfield_at_nvs(projection=unv, polygon_patch_params=pgon_patches)
 # sim.plot_magsim_bfield_at_nvs(strict_range=(-0.25, 0.25), projection=(1, 0, 0))
 # sim.plot_magsim_bfield_at_nvs(strict_range=(-0.25, 0.25), projection=(0, 1, 0))
 # sim.plot_magsim_bfield_at_nvs(strict_range=(-0.25, 0.25), projection=(0, 0, 1))

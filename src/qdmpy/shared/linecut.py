@@ -81,9 +81,7 @@ def bulk_vert_linecut_vs_position(
                 prof = np.zeros(height)
             else:
                 prof = np.zeros(1 + end_y - start_y)
-            for col in range(
-                centre_col - avg_steps, centre_col + avg_steps + 1
-            ):
+            for col in range(centre_col - avg_steps, centre_col + avg_steps + 1):
                 if linecut_coords is None:
                     prof += data[:, col]
                 else:
@@ -136,9 +134,7 @@ def vert_linecut_vs_position(
 
     fig, axs = plt.subplots(ncols=3, figsize=(16, 8))
 
-    data = (
-        np.loadtxt(inpt) if isinstance(inpt, (str, pathlib.PurePath)) else inpt
-    )
+    data = np.loadtxt(inpt) if isinstance(inpt, (str, pathlib.PurePath)) else inpt
     data = qdmpy.shared.itool.get_im_filtered(data, "gaussian", sigma=sigma)
 
     height, width = data.shape
@@ -238,9 +234,7 @@ class BulkLinecutWidget:
     ):
         # check that input ax has an imshow (else not so useful eh)
         if not any([[isinstance(t, AxesImage) for t in imax.get_children()]]):
-            raise ValueError(
-                "input axis does not contain an AxesImage (imshow)."
-            )
+            raise ValueError("input axis does not contain an AxesImage (imshow).")
         self.images = images
         self.xlabels = xlabels
 
@@ -269,9 +263,7 @@ class BulkLinecutWidget:
             if "lineprops" in style and isinstance(style["lineprops"], dict):
                 for key, item in style["lineprops"].items():
                     self.lp[key] = item
-            if "markerprops" in style and isinstance(
-                style["markerprops"], dict
-            ):
+            if "markerprops" in style and isinstance(style["markerprops"], dict):
                 for key, item in style["markerprops"].items():
                     self.mp[key] = item
 
@@ -302,18 +294,14 @@ class BulkLinecutWidget:
         # self.profax.legend(handles, self.xlabels, loc="upper left")
         self.profax.legend()
 
-        (self.integrals_plot,) = self.resax.plot(
-            xlabels, self.integrals, "ko-"
-        )
+        (self.integrals_plot,) = self.resax.plot(xlabels, self.integrals, "ko-")
 
     def ondraw(self, verts):
         if len(verts) == 1:
             # change all profiles
             for p, prof in enumerate(self.profiles):
                 prof.set_xdata([0])
-                prof.set_ydata(
-                    self.images[p][int(verts[0][1]), int(verts[0][0])]
-                )
+                prof.set_ydata(self.images[p][int(verts[0][1]), int(verts[0][0])])
         else:
             idxs, jdxs = zip(*verts)
             pxl_ar = [0]
@@ -322,9 +310,7 @@ class BulkLinecutWidget:
             for n in range(len(idxs) - 1):
                 i0, i1 = idxs[n], idxs[n + 1]
                 j0, j1 = jdxs[n], jdxs[n + 1]
-                num = int(
-                    np.sqrt((i1 - i0) ** 2 + (j1 - j0) ** 2) * 2
-                )  # *2 to be safe
+                num = int(np.sqrt((i1 - i0) ** 2 + (j1 - j0) ** 2) * 2)  # *2 to be safe
                 if not num:
                     continue
 
@@ -350,9 +336,7 @@ class BulkLinecutWidget:
                 pxl_ar.extend(
                     (
                         pxl_ar[-1]
-                        + np.sqrt(
-                            (i_ar - i_ar[0]) ** 2 + (j_ar - j_ar[0]) ** 2
-                        )
+                        + np.sqrt((i_ar - i_ar[0]) ** 2 + (j_ar - j_ar[0]) ** 2)
                     ).tolist()
                 )
 
@@ -416,9 +400,7 @@ class LinecutSelectionWidget:
     def __init__(self, imax, lineax, data, style=None, useblit=False):
         # check that input ax has an imshow (else not so useful eh)
         if not any([[isinstance(t, AxesImage) for t in imax.get_children()]]):
-            raise ValueError(
-                "input axis does not contain an AxesImage (imshow)."
-            )
+            raise ValueError("input axis does not contain an AxesImage (imshow).")
 
         self.data = data
         self.imax = imax
@@ -449,15 +431,11 @@ class LinecutSelectionWidget:
             if "lineprops" in style and isinstance(style["lineprops"], dict):
                 for key, item in style["lineprops"].items():
                     self.lp[key] = item
-            if "markerprops" in style and isinstance(
-                style["markerprops"], dict
-            ):
+            if "markerprops" in style and isinstance(style["markerprops"], dict):
                 for key, item in style["markerprops"].items():
                     self.mp[key] = item
 
-        vsr = (
-            7.5 * self.mp["markersize"]
-        )  # linear scaling on what our select radius is
+        vsr = 7.5 * self.mp["markersize"]  # linear scaling on what our select radius is
 
         (self.profile,) = self.lineax.plot([1, 2, 3], [1, 2, 3], "ko-")
         self.lineax.title.set_text(f"Integral: {self.integral}")
@@ -476,9 +454,7 @@ class LinecutSelectionWidget:
     def ondraw(self, verts):
         if len(verts) == 1:
             self.profile.set_xdata([0])
-            self.profile.set_ydata(
-                self.data[int(verts[0][1]), int(verts[0][0])]
-            )
+            self.profile.set_ydata(self.data[int(verts[0][1]), int(verts[0][0])])
             self.lineax.title.set_text(f"Integral: {self.integral}")
         else:
             idxs, jdxs = zip(*verts)
@@ -488,9 +464,7 @@ class LinecutSelectionWidget:
             for n in range(len(idxs) - 1):
                 i0, i1 = idxs[n], idxs[n + 1]
                 j0, j1 = jdxs[n], jdxs[n + 1]
-                num = int(
-                    np.sqrt((i1 - i0) ** 2 + (j1 - j0) ** 2) * 2
-                )  # *2 to be safe
+                num = int(np.sqrt((i1 - i0) ** 2 + (j1 - j0) ** 2) * 2)  # *2 to be safe
                 if not num:
                     continue
 
@@ -516,9 +490,7 @@ class LinecutSelectionWidget:
                 t_ar.extend(
                     (
                         t_ar[-1]
-                        + np.sqrt(
-                            (i_ar - i_ar[0]) ** 2 + (j_ar - j_ar[0]) ** 2
-                        )
+                        + np.sqrt((i_ar - i_ar[0]) ** 2 + (j_ar - j_ar[0]) ** 2)
                     ).tolist()
                 )
 

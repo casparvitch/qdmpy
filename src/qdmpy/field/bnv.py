@@ -120,9 +120,7 @@ def get_bnvs_and_dshifts(pixel_fit_params, bias_field_spherical_deg):
         bnvs = []
         dshifts = []
         for i in range(num_peaks // 2):
-            bnvs.append(
-                np.abs(peak_posns[-i - 1] - peak_posns[i]) / (2 * GAMMA)
-            )
+            bnvs.append(np.abs(peak_posns[-i - 1] - peak_posns[i]) / (2 * GAMMA))
             dshifts.append((peak_posns[-i - 1] + peak_posns[i]) / 2)
         if ((num_peaks // 2) * 2) + 1 == num_peaks:
             peak = peak_posns[num_peaks // 2 + 1]
@@ -194,9 +192,7 @@ def check_exp_bnv_compatibility(sig_bnvs, ref_bnvs):
             " reference."
         )
     if sig_bnvs[0].shape != ref_bnvs[0].shape:
-        raise RuntimeError(
-            "Different image shape in main experiment to reference."
-        )
+        raise RuntimeError("Different image shape in main experiment to reference.")
 
 
 # ============================================================================
@@ -362,9 +358,7 @@ def prop_single_bnv(
     bnv = copy(single_bnv)
 
     # first pad bnv
-    padded_bnv, padder = qdmpy.shared.fourier.pad_image(
-        bnv, pad_mode, pad_factor
-    )
+    padded_bnv, padder = qdmpy.shared.fourier.pad_image(bnv, pad_mode, pad_factor)
 
     fft_bnv = numpy_fft.fftshift(numpy_fft.fft2(padded_bnv))
     ky, kx, k = qdmpy.shared.fourier.define_k_vectors(

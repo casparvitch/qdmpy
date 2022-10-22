@@ -279,9 +279,7 @@ def define_magnetization_transformation(
 # ============================================================================
 
 
-def define_current_transform(
-    u_proj, ky, kx, k, standoff=None, nv_layer_thickness=None
-):
+def define_current_transform(u_proj, ky, kx, k, standoff=None, nv_layer_thickness=None):
     """b => J fourier-space transformation.
 
     Arguments
@@ -321,14 +319,8 @@ def define_current_transform(
     alpha = 2 * exp_factor / MU_0
 
     # sign on 1j's is opposite to Broadway paper due to different FT definition.
-    b_to_jx = (
-        -1
-        * (alpha * ky)
-        / (u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k)
-    )
-    b_to_jy = (alpha * kx) / (
-        u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k
-    )
+    b_to_jx = -1 * (alpha * ky) / (u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k)
+    b_to_jy = (alpha * kx) / (u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k)
 
     return b_to_jx, b_to_jy
 

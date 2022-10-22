@@ -64,8 +64,6 @@ if __name__ == "__main__":
         install_requires=required,
         python_requires=">=3.8.*",  # check pyfftw
         package_data={"": ["*.md", "*.json"]},
-        setup_requires=[
-            "wheel"
-        ],  # force install of wheel first? Untested 2021-08-01.
+        setup_requires=["wheel"],  # force install of wheel first? Untested 2021-08-01.
     )
 # https://setuptools.readthedocs.io/en/latest/userguide/datafiles.html

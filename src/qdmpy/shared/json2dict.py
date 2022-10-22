@@ -118,9 +118,7 @@ def _prettyjson(obj, indent=4, maxlinelength=80):
     <Pass the dict as obj and get back a string>
     """
 
-    items, _ = _getsubitems(
-        obj, itemkey="", islast=True, maxlinelength=maxlinelength
-    )
+    items, _ = _getsubitems(obj, itemkey="", islast=True, maxlinelength=maxlinelength)
     res = _indentitems(items, indent, indentcurrent=0)
     return res
 
@@ -167,9 +165,7 @@ def _getsubitems(obj, itemkey, islast, maxlinelength):
             if isdict:
                 itemkey_ = _basictype2str(k)
             # inner = (items, indent)
-            inner, can_concat_ = _getsubitems(
-                obj[k], itemkey_, islast_, maxlinelength
-            )
+            inner, can_concat_ = _getsubitems(obj[k], itemkey_, islast_, maxlinelength)
             # inner can be a string or a list
             subitems.extend(inner)
             # if a child couldn't concat, then we are not able either

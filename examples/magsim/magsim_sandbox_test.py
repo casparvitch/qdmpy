@@ -11,9 +11,7 @@ numpy_txt_file_path = (
     "/home/samsc/ResearchData/test_images/mz_test/ODMR -"
     " Pulsed_10_Rectangle_bin_8/field/sig_sub_ref/sig_sub_ref_bnv_0.txt"
 )
-json_output_path = (
-    "/home/samsc/ResearchData/test_images/mz_test/polys_mz_sandbox.json"
-)
+json_output_path = "/home/samsc/ResearchData/test_images/mz_test/polys_mz_sandbox.json"
 json_input_path = "/home/samsc/ResearchData/test_images/mz_test/polys.json"
 mean_plus_minus = 0.25
 
@@ -33,15 +31,11 @@ fov_size = 30e-6
 sim = qdmpy.magsim.SandboxMagSim((mesh_size, mesh_size), (fov_size, fov_size))
 sim.add_template_polygons(json_input_path)
 
-sim.adjust_template(
-    output_path=json_output_path, mean_plus_minus=mean_plus_minus
-)
+sim.adjust_template(output_path=json_output_path, mean_plus_minus=mean_plus_minus)
 sim.set_template_as_polygons()
 
 sim.define_magnets(5, (0, 1, 0))  # mag unit: mu_b/nm^2
-sim.plot_magsim_magnetizations(
-    annotate_polygons=True, polygon_patch_params=pgon_patch
-)
+sim.plot_magsim_magnetizations(annotate_polygons=True, polygon_patch_params=pgon_patch)
 
 sim.run(
     height, pad_mode="constant", resolution=res

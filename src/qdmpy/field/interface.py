@@ -163,16 +163,10 @@ def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
                     " values in option " + "'freqs_to_use' was not 1 or 2."
                 )
             else:
-                sig_params = qdmpy.field.bxyz.from_single_bnv(
-                    options, sig_bnvs
-                )
-                missing = np.empty(
-                    sig_params[list(sig_params.keys())[0]].shape
-                )
+                sig_params = qdmpy.field.bxyz.from_single_bnv(options, sig_bnvs)
+                missing = np.empty(sig_params[list(sig_params.keys())[0]].shape)
                 missing[:] = np.nan
-                ref_params = qdmpy.field.bxyz.from_single_bnv(
-                    options, ref_bnvs
-                )
+                ref_params = qdmpy.field.bxyz.from_single_bnv(options, ref_bnvs)
                 sig_sigmas = {key: missing for key in sig_params}
                 ref_sigmas = None
         elif options["field_method_used"] == "invert_unvs":
@@ -182,15 +176,9 @@ def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
                     " in option " + "'freqs_to_use' was not 6."
                 )
             else:
-                sig_params = qdmpy.field.bxyz.from_unv_inversion(
-                    options, sig_bnvs
-                )
-                ref_params = qdmpy.field.bxyz.from_unv_inversion(
-                    options, ref_bnvs
-                )
-                missing = np.empty(
-                    sig_params[list(sig_params.keys())[0]].shape
-                )
+                sig_params = qdmpy.field.bxyz.from_unv_inversion(options, sig_bnvs)
+                ref_params = qdmpy.field.bxyz.from_unv_inversion(options, ref_bnvs)
+                missing = np.empty(sig_params[list(sig_params.keys())[0]].shape)
                 missing[:] = np.nan
                 sig_sigmas = {key: missing for key in sig_params}
                 ref_sigmas = None
@@ -207,9 +195,7 @@ def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
                 options["ref_bias_field_spherical_deg_gauss"],
             )
 
-        sub_ref_params = qdmpy.field.bxyz.field_refsub(
-            options, sig_params, ref_params
-        )
+        sub_ref_params = qdmpy.field.bxyz.field_refsub(options, sig_params, ref_params)
 
         # both params and sigmas need a sub_ref method
         bnv_lst = [
@@ -342,9 +328,7 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
                 "with exp_reference_type = 'pre_gslac' you must define a reference."
             )
         else:
-            warn(
-                "Using pre_gslac reference. Assuming unv is same for sig & ref."
-            )
+            warn("Using pre_gslac reference. Assuming unv is same for sig & ref.")
             # must match expected pattern
             num_freqs_sig = len(
                 list(filter(lambda x: x.startswith("pos"), sig_fit_params))
@@ -353,13 +337,9 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
                 list(filter(lambda x: x.startswith("pos"), ref_fit_params))
             )
             if num_freqs_sig != 1:
-                raise ValueError(
-                    "num freqs fit (sig) for pre_gslac ref type is not 1."
-                )
+                raise ValueError("num freqs fit (sig) for pre_gslac ref type is not 1.")
             if num_freqs_ref != 2:
-                raise ValueError(
-                    "num freqs fit (ref) for pre_gslac ref type is not 2."
-                )
+                raise ValueError("num freqs fit (ref) for pre_gslac ref type is not 2.")
 
             chosen_freqs = options["freqs_to_use"]
             if sum(chosen_freqs) != 1:
@@ -373,9 +353,7 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
                 0,
                 0,
             ]:  # only single freq used, R transition rel to bias
-                idx = np.argwhere(
-                    np.array(list(reversed(chosen_freqs[4:]))) == 1
-                )[0][0]
+                idx = np.argwhere(np.array(list(reversed(chosen_freqs[4:]))) == 1)[0][0]
             else:
                 idx = np.argwhere(np.array(chosen_freqs[:4]) == 1)[0][0]
 
@@ -397,25 +375,21 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
 
             # glac +- should be sorted in freq -> bnv
             sig_sub_ref_bnv = (
-                sig_bnv
-                + ref_dshift if sig_bias_mag > qdmpy.field.bnv.GSLAC and chosen_freqs[0] else sig_bnv - ref_dshift
+                sig_bnv + ref_dshift
+                if sig_bias_mag > qdmpy.field.bnv.GSLAC and chosen_freqs[0]
+                else sig_bnv - ref_dshift
             )
 
             other_opts = [
                 options["fourier_pad_mode"],
                 options["fourier_pad_factor"],
-                options["system"].get_raw_pixel_size(options)
-                * options["total_bin"],
+                options["system"].get_raw_pixel_size(options) * options["total_bin"],
                 options["fourier_k_vector_epsilon"],
                 options["NVs_above_sample"],
             ]
 
-            sig_bxyz = qdmpy.field.bnv.prop_single_bnv(
-                sig_bnv, unv, *other_opts
-            )
-            ref_bxyz = qdmpy.field.bnv.prop_single_bnv(
-                ref_bnv, unv, *other_opts
-            )
+            sig_bxyz = qdmpy.field.bnv.prop_single_bnv(sig_bnv, unv, *other_opts)
+            ref_bxyz = qdmpy.field.bnv.prop_single_bnv(ref_bnv, unv, *other_opts)
             sig_sub_ref_bxyz = qdmpy.field.bnv.prop_single_bnv(
                 sig_sub_ref_bnv, unv, *other_opts
             )
@@ -439,10 +413,7 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
             sigmas_lst = [sigmas, sigmas, sigmas]
 
             if options["bfield_bground_method"]:
-                (
-                    params_lst[2],
-                    sigmas_lst[2],
-                ) = qdmpy.field.bxyz.sub_bground_bxyz(
+                (params_lst[2], sigmas_lst[2],) = qdmpy.field.bxyz.sub_bground_bxyz(
                     options,
                     params_lst[2],
                     sigmas_lst[2],
@@ -568,9 +539,7 @@ def add_bfield_reconstructed(options, field_params):
 
     for p in ["B" + comp for comp in components]:
         if p not in field_params:
-            warn(
-                f"bfield param '{p} missing from field_params, skipping bfield plot."
-            )
+            warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
             return None
         elif field_params[p] is None:
             return None
@@ -626,9 +595,7 @@ def add_bfield_theta_phi(options, field_params, theta, phi):
 
     for p in ["B" + comp for comp in components]:
         if p not in field_params:
-            warn(
-                f"bfield param '{p} missing from field_params, skipping bfield plot."
-            )
+            warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
             return None
         elif field_params[p] is None:
             return None
@@ -667,9 +634,9 @@ def _check_fit_params_are_ok(options, sig_fit_params, ref_fit_params):
     if not any(map(lambda x: x.startswith("pos"), sig_fit_params.keys())):
         raise RuntimeError("No 'pos' keys found in sig_fit_params")
     else:
-        sig_poskey = next(
-            filter(lambda x: x.startswith("pos"), sig_fit_params.keys())
-        )[:-2]
+        sig_poskey = next(filter(lambda x: x.startswith("pos"), sig_fit_params.keys()))[
+            :-2
+        ]
 
     if ref_fit_params:
         if not any(map(lambda x: x.startswith("pos"), ref_fit_params.keys())):
