@@ -274,7 +274,7 @@ def from_hamiltonian_fitting(options, fit_params, bias_field_spherical_deg_gauss
     if use_bnvs:
         # data shape: [bnvs/freqs, y, x]
         bnv_lst, _ = qdmpy.field.bnv.get_bnvs_and_dshifts(
-            fit_params, bias_field_spherical_deg_gauss
+            fit_params, bias_field_spherical_deg_gauss, options["chosen_freqs"]
         )
         if sum(chooser_ar) < 4:
             unwanted_bnvs = np.argwhere(np.array(chooser_ar) == 0)[0]
