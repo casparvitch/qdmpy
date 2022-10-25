@@ -112,10 +112,14 @@ def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
 
     # first get bnvs (as in global scope)
     sig_bnvs, sig_dshifts = qdmpy.field.bnv.get_bnvs_and_dshifts(
-        sig_fit_params, options["bias_field_spherical_deg_gauss"]
+        sig_fit_params,
+        options["bias_field_spherical_deg_gauss"],
+        options["chosen_freqs"],
     )
     ref_bnvs, ref_dshifts = qdmpy.field.bnv.get_bnvs_and_dshifts(
-        ref_fit_params, options["ref_bias_field_spherical_deg_gauss"]
+        ref_fit_params,
+        options["ref_bias_field_spherical_deg_gauss"],
+        options["chosen_freqs"],
     )
 
     qdmpy.field.io.choose_field_method(options)
@@ -293,10 +297,14 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
 
     # first get bnvs (as in global scope)
     sig_bnvs, sig_dshifts = qdmpy.field.bnv.get_bnvs_and_dshifts(
-        sig_fit_params, options["bias_field_spherical_deg_gauss"]
+        sig_fit_params,
+        options["bias_field_spherical_deg_gauss"],
+        options["chosen_freqs"],
     )
     ref_bnvs, ref_dshifts = qdmpy.field.bnv.get_bnvs_and_dshifts(
-        ref_fit_params, options["ref_bias_field_spherical_deg_gauss"]
+        ref_fit_params,
+        options["ref_bias_field_spherical_deg_gauss"],
+        options["chosen_freqs"],
     )
 
     if not options["calc_field_pixels"]:
@@ -355,26 +363,33 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
 
             sig_bias = options["bias_field_spherical_deg_gauss"]
             ref_bias = options["ref_bias_field_spherical_deg_gauss"]
-            sig_bias_mag = np.abs(sig_bias[0]) 
+            sig_bias_mag = np.abs(sig_bias[0])
             ref_bias_mag = np.abs(ref_bias[0])
-
-            # if ref_bias_mag > qdmpy.field.bnv.GSLAC:
-            #     raise RuntimeError(
-            #         "As currently coded, ref bias mag must be < GSLAC for dshift"
-            #         " reference."
-            #     )
 
             unv = qdmpy.shared.geom.get_unvs(options)[idx]
             sig_bnv = sig_bnvs[0]
             ref_bnv = ref_bnvs[0]
-            ref_dshift = ref_dshifts[0] / qdmpy.field.bnv.GAMMA
+            ref_dshift_gauss = ref_dshifts[0] / qdmpy.field.bnv.GAMMA
 
-            # glac +- should be sorted in freq -> bnv
-            sig_sub_ref_bnv = (
-                sig_bnv
-                + ref_dshift if sig_bias_mag >  qdmpy.field.bnv.GSLAC and 
-                chosen_freqs[0] else sig_bnv - ref_dshift
-            )
+            # case: -1 transition, post GSLAC
+            #    single bnv measurements return relative to 'unknown' GSLAC
+            #    (1024 is assumed i.e. D=0)
+            #    BUT INSTEAD we have a reference here so we can use that
+            if sig_bias_mag > qdmpy.field.bnv.GSLAC and chosen_freqs[0]:
+                sig_sub_ref_bnv = sig_bnv - 1024 + ref_dshift_gauss
+            # case: +1 transition anywhere, or -1 transition pre-GSLAC
+            else:
+                # definition of bnv for 1 peak is distance from 2870MHz
+                # so there's a sign flip depending on which side we're on.
+                if chosen_freqs[0]:
+                    sig_sub_ref_bnv = sig_bnv + ref_dshift_gauss
+                elif chosen_freqs[-1]:
+                    sig_sub_ref_bnv = sig_bnv - ref_dshift_gauss
+                else:
+                    raise RuntimeError(
+                        "Chosen frequency for pre-gslac ref must be "
+                        + "identified as 1st or 8th freq in 'chosen_freqs'."
+                    )
 
             other_opts = [
                 options["fourier_pad_mode"],
@@ -626,7 +641,7 @@ def add_bfield_proj_bias(options, field_params):
 
 
 def _check_fit_params_are_ok(options, sig_fit_params, ref_fit_params):
-    """Helper function to just ensure fit params are correct format etc. """
+    """Helper function to just ensure fit params are correct format etc."""
     if not any(map(lambda x: x.startswith("pos"), sig_fit_params.keys())):
         raise RuntimeError("No 'pos' keys found in sig_fit_params")
     else:
@@ -689,5 +704,5 @@ def get_ham_guess_and_bounds(options):
 
 
 def get_bnv_sd(sigmas):
-    """ get standard deviation of bnvs given SD of peaks. """
+    """get standard deviation of bnvs given SD of peaks."""
     return qdmpy.field.bnv.get_bnv_sd(sigmas)
