@@ -308,7 +308,6 @@ class Polygon:
 
 # ============================================================================
 
-
 def polygon_selector(
     array,
     json_output_path=None,

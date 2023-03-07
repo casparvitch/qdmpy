@@ -55,11 +55,11 @@ import copy
 
 
 S_MAT_X = np.array([[0, 1, 0], [1, 0, 1], [0, 1, 0]]) / np.sqrt(2)
-r"""Spin-1 operator: S{\rm X}"""
+r"""Spin-1 operator: S_{\rm X}"""
 S_MAT_Y = np.array([[0, -1j, 0], [1j, 0, 1j], [0, 1j, 0]]) / np.sqrt(2)
-r"""Spin-1 operator: S{\rm Y}"""
+r"""Spin-1 operator: S_{\rm Y}"""
 S_MAT_Z = np.array([[1, 0, 0], [0, 0, 0], [0, 0, -1]])
-r"""Spin-1 operator: S{\rm Z}"""
+r"""Spin-1 operator: S_{\rm Z}"""
 
 
 GAMMA = 2.80  # MHz/G

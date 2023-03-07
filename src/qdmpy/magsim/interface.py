@@ -672,7 +672,7 @@ class SandboxMagSim(MagSim):
         self.base_image = np.full(mesh_shape, np.nan)
         pxl_y = fov_dims[0] / self.ny
         pxl_x = fov_dims[1] / self.nx
-        if pxl_y != pxl_x:
+        if int(np.floor(pxl_y)) != int(np.floor(pxl_x)):
             raise ValueError(
                 "fov_dims ratio height:width does not match mesh height:width ratio."
             )
