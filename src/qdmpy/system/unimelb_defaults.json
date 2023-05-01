@@ -578,6 +578,26 @@
         "option_default": null
     },
 
+    // TODO annotate, for Walsh T1 model
+    "walsh_R_guess": {
+        "option_default": null
+    },
+    "walsh_R_bounds": {
+        "option_default": null
+    },
+    "walsh_eta_guess": {
+        "option_default": null
+    },
+    "walsh_eta_bounds": {
+        "option_default": null
+    },
+    "walsh_A_guess": {
+        "option_default": null
+    },
+    "walsh_A_bounds": {
+        "option_default": null
+    },
+
     // ========== Hamiltonian / field retrieval parameters ==========
     // Note: it is assumed the reference experiment is run under the same
     // measurement parameters, except for some single parameter changed
