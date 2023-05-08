@@ -578,7 +578,7 @@
         "option_default": null
     },
 
-    // TODO annotate, for Walsh T1 model
+    // TODO annotate, for Walsh/Hall T1 models
     "walsh_R_guess": {
         "option_default": null
     },
@@ -595,6 +595,25 @@
         "option_default": null
     },
     "walsh_A_bounds": {
+        "option_default": null
+    },
+    
+    "hall_exp_t_guess": {
+        "option_default": null
+    },
+    "hall_exp_t_bounds": {
+        "option_default": null
+    },
+    "hall_eta_guess": {
+        "option_default": null
+    },
+    "hall_eta_bounds": {
+        "option_default": null
+    },
+    "hall_A_guess": {
+        "option_default": null
+    },
+    "hall_A_bounds": {
         "option_default": null
     },
 
