@@ -416,6 +416,8 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
     for (y, x), result, jac in fit_results:
         filled_params = {}  # keep track of index, i.e. pos_0, for this pixel
 
+        # NOTE not possible to call residuals_gpufit?
+        # might be better to have a flag for which fn to use, just in case residual is diff.
         resid = fit_model.residuals_scipyfit(result, sweep_list, pixel_data[:, y, x])
         fit_image_results["residual_0"][y, x] = np.sum(
             np.abs(resid, dtype=np.float64), dtype=np.float64
@@ -426,6 +428,12 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
         s = s[s > threshold]
         vt = vt[: s.size]
         pcov = np.dot(vt.T / s**2, vt)
+        # FIXME these lines need to be added to correctly scale the errors! 
+        # --> could then pass these uncertainties on to hamiltonian fitting
+        # -> would be neat hey, but need to do some heavy work to pass fit_result fun/cost to here
+        # cost = 2*fit_result.cost
+        # s_sq = cost / (len(fit_result.fun) - len(guess))
+        # pcov *= s_sq
         perr = np.sqrt(np.diag(pcov))  # array of standard deviations
 
         for fn in fit_model.fn_chain:
