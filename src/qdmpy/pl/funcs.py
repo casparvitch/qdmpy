@@ -23,6 +23,7 @@ Classes
  - `qdmpy.pl.funcs.LorentzianHyperfine15`
  - `qdmpy.pl.funcs.StretchedExponential`
  - `qdmpy.pl.funcs.DampedRabi`
+ - `qdmpy.pl.funcs.WalshT1`
 """
 
 
@@ -195,7 +196,6 @@ class Circular(FitFunc):
         """Compute the grad of the residue, excluding pl as a param
         {output shape: (len(x), 3)}
         """
-        # Lorentzian: a*g^2/ ((x-c)^2 + g^2)
         circ_freq, pos, amp = fit_params
         j = np.empty((x.shape[0], 3), dtype=np.float64)
         j[:, 0] = (
@@ -568,6 +568,85 @@ class DampedRabi(FitFunc):
 
 # ==========================================================================
 
+
+class WalshT1(FitFunc):
+    """
+    Walsh/Hall T1 model
+    """
+
+    param_defn = ["walsh_R", "walsh_eta", "walsh_A"]
+    param_units = {
+        "walsh_R": "N/A",
+        "walsh_eta": "N/A",
+        "walsh_A": "N/A",
+    }
+
+    @staticmethod
+    @njit
+    def eval(x, *fit_params):
+        R, eta, A = fit_params
+        return (-1 + eta) / (-A * np.exp(2 * R * x) + eta)
+
+    @staticmethod
+    @njit
+    def grad_fn(x, *fit_params):
+        """Compute the grad of the residue, excluding pl as a param
+        {output shape: (len(x), 3)}
+        """
+        R, eta, A = fit_params
+        j = np.empty((x.shape[0], 3), dtype=np.float64)
+        j[:, 0] = (2 * A * (eta - 1) * x * np.exp(2 * R * x)) / (
+            (eta - A * np.exp(2 * R * x)) ** 2
+        )  # wrt R
+        j[:, 1] = (1 - A * np.exp(2 * R * x)) / (
+            (eta - A * np.exp(2 * R * x)) ** 2
+        )  # wrt eta
+        j[:, 2] = ((eta - 1) * np.exp(2 * R * x)) / (
+            (eta - A * np.exp(2 * R * x)) ** 2
+        )  # wrt A
+        return j
+
+
+class HallT1(FitFunc):
+    """
+    Walsh/Hall T1 model
+    """
+
+    param_defn = ["hall_exp_t", "hall_eta", "hall_A"]
+    param_units = {
+        "hall_exp_t": "N/A",
+        "hall_eta": "N/A",
+        "hall_A": "N/A",
+    }
+
+    @staticmethod
+    @njit
+    def eval(x, *fit_params):
+        exp_t, eta, A = fit_params
+        return (-1 + eta) / (-A * np.exp(2 * x / exp_t) + eta)
+
+    @staticmethod
+    @njit
+    def grad_fn(x, *fit_params):
+        """Compute the grad of the residue, excluding pl as a param
+        {output shape: (len(x), 3)}
+        """
+        exp_t, eta, A = fit_params
+        j = np.empty((x.shape[0], 3), dtype=np.float64)
+        j[:, 0] = (-2 * A * (eta - 1) * x * np.exp(2 * x / exp_t)) / (
+            ((eta - A * np.exp(2 * x / exp_t)) ** 2) * exp_t**2
+        )  # wrt exp_t
+        j[:, 1] = (1 - A * np.exp(2 * x / exp_t)) / (
+            (eta - A * np.exp(2 * x / exp_t)) ** 2
+        )  # wrt eta
+        j[:, 2] = ((eta - 1) * np.exp(2 * x / exp_t)) / (
+            (eta - A * np.exp(2 * x / exp_t)) ** 2
+        )  # wrt A
+        return j
+
+
+# ==========================================================================
+
 AVAILABLE_FNS = {
     "lorentzian": Lorentzian,
     "lorentzian_hyperfine_14": LorentzianHyperfine14,
@@ -581,6 +660,8 @@ AVAILABLE_FNS = {
     "stretched_exponential": StretchedExponential,
     "damped_rabi": DampedRabi,
     "lorentzian_hBN": LorentzianhBN,
+    "walsh_t1": WalshT1,
+    "hall_t1": HallT1,
 }
 """Dictionary that defines fit functions available for use.
 
