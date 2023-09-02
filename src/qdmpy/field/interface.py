@@ -112,10 +112,14 @@ def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
 
     # first get bnvs (as in global scope)
     sig_bnvs, sig_dshifts = qdmpy.field.bnv.get_bnvs_and_dshifts(
-        sig_fit_params, options["bias_field_spherical_deg_gauss"], options["chosen_freqs"]
+        sig_fit_params,
+        options["bias_field_spherical_deg_gauss"],
+        options["freqs_to_use"],
     )
     ref_bnvs, ref_dshifts = qdmpy.field.bnv.get_bnvs_and_dshifts(
-        ref_fit_params, options["ref_bias_field_spherical_deg_gauss"], options["chosen_freqs"]
+        ref_fit_params,
+        options["ref_bias_field_spherical_deg_gauss"],
+        options["freqs_to_use"],
     )
 
     qdmpy.field.io.choose_field_method(options)
@@ -297,10 +301,14 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
 
     # first get bnvs (as in global scope)
     sig_bnvs, sig_dshifts = qdmpy.field.bnv.get_bnvs_and_dshifts(
-        sig_fit_params, options["bias_field_spherical_deg_gauss"], options["chosen_freqs"]
+        sig_fit_params,
+        options["bias_field_spherical_deg_gauss"],
+        options["freqs_to_use"],
     )
     ref_bnvs, ref_dshifts = qdmpy.field.bnv.get_bnvs_and_dshifts(
-        ref_fit_params, options["ref_bias_field_spherical_deg_gauss"], options["chosen_freqs"]
+        ref_fit_params,
+        options["ref_bias_field_spherical_deg_gauss"],
+        options["freqs_to_use"],
     )
 
     if not options["calc_field_pixels"]:
@@ -359,7 +367,7 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
 
             sig_bias = options["bias_field_spherical_deg_gauss"]
             ref_bias = options["ref_bias_field_spherical_deg_gauss"]
-            sig_bias_mag = np.abs(sig_bias[0]) 
+            sig_bias_mag = np.abs(sig_bias[0])
             ref_bias_mag = np.abs(ref_bias[0])
 
             unv = qdmpy.shared.geom.get_unvs(options)[idx]
@@ -368,7 +376,7 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
             ref_dshift_gauss = ref_dshifts[0] / qdmpy.field.bnv.GAMMA
 
             # case: -1 transition, post GSLAC
-            #    single bnv measurements return relative to 'unknown' GSLAC 
+            #    single bnv measurements return relative to 'unknown' GSLAC
             #    (1024 is assumed i.e. D=0)
             #    BUT INSTEAD we have a reference here so we can use that
             if sig_bias_mag > qdmpy.field.bnv.GSLAC and chosen_freqs[0]:

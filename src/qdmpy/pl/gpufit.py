@@ -300,6 +300,10 @@ def fit_single_pixel_pl_gpufit(
     init_guess_params = np.repeat([init_guess_params], repeats=2, axis=0)
     init_guess_params = init_guess_params.astype(dtype=np.float32)
 
+    # constraints needs to be reshaped too
+    constraints = np.repeat([init_bounds], repeats=2, axis=0)
+    constraints = constraints.astype(dtype=np.float32)
+
     pixel_pl_ar_doubled = np.repeat([pixel_pl_ar], repeats=2, axis=0)
 
     constraint_types = np.array(
@@ -318,8 +322,11 @@ def fit_single_pixel_pl_gpufit(
         None,
         options["ModelID"],
         init_guess_params,
-        constraints=reshaped_bounds,
-        constraint_types=constraint_types,
+        constraints=constraints,
+        constraint_types=np.array(
+            [gf.ConstraintType.LOWER_UPPER for i in range(len(params_to_fit))],
+            dtype=np.int32,
+        ),
         user_info=np.array(sweep_list, dtype=np.float32),
         parameters_to_fit=params_to_fit,
         platform=platform,
@@ -390,10 +397,10 @@ def fit_roi_avg_pl_gpufit(options, sig, ref, sweep_list, fit_model, platform="gp
     init_guess_params = np.repeat([init_guess_params], repeats=2, axis=0)
     init_guess_params = init_guess_params.astype(dtype=np.float32)
 
-    constraint_types = np.array(
-        [gf.ConstraintType.LOWER_UPPER for i in range(init_guess_params.shape[1])],
-        dtype=np.int32,
-    )
+    # constraints needs to be reshaped too
+    constraints = np.repeat([init_bounds], repeats=2, axis=0)
+    constraints = constraints.astype(dtype=np.float32)
+
     (
         best_params,
         states,
@@ -405,8 +412,11 @@ def fit_roi_avg_pl_gpufit(options, sig, ref, sweep_list, fit_model, platform="gp
         None,
         options["ModelID"],
         init_guess_params,
-        constraints=reshaped_bounds,
-        constraint_types=constraint_types,
+        constraints=constraints,
+        constraint_types=np.array(
+            [gf.ConstraintType.LOWER_UPPER for i in range(len(params_to_fit))],
+            dtype=np.int32,
+        ),
         user_info=np.array(sweep_list, dtype=np.float32),
         parameters_to_fit=params_to_fit,
         platform=platform,  # NEW fit with gpu or cpu (gpufit/cpufit)
@@ -496,10 +506,9 @@ def fit_aois_pl_gpufit(
     init_guess_params = np.repeat([init_guess_params], repeats=2, axis=0)
     init_guess_params = init_guess_params.astype(dtype=np.float32)
 
-    constraint_types = np.array(
-        [gf.ConstraintType.LOWER_UPPER for i in range(init_guess_params.shape[1])],
-        dtype=np.int32,
-    )
+    # constraints needs to be reshaped too
+    constraints = np.repeat([init_bounds], repeats=2, axis=0)
+    constraints = constraints.astype(dtype=np.float32)
 
     for a in aois:
         this_sig = np.nanmean(sig[:, a[0], a[1]], axis=(1, 2))
@@ -521,8 +530,11 @@ def fit_aois_pl_gpufit(
             None,
             options["ModelID"],
             np.array(init_guess_params, dtype=np.float32),
-            constraints=reshaped_bounds,
-            constraint_types=constraint_types,
+            constraints=constraints,
+            constraint_types=np.array(
+                [gf.ConstraintType.LOWER_UPPER for i in range(len(params_to_fit))],
+                dtype=np.int32,
+            ),
             user_info=np.array(sweep_list, dtype=np.float32),
             parameters_to_fit=params_to_fit,
             platform=platform,
@@ -597,6 +609,10 @@ def fit_all_pixels_pl_gpufit(
     guess_params = np.array([init_guess_params], dtype=np.float32)
     init_guess_params_reshaped = np.repeat(guess_params, repeats=num_pixels, axis=0)
 
+    # constraints needs to be reshaped too
+    constraints = np.repeat([init_bounds], repeats=num_pixels, axis=0)
+    constraints = constraints.astype(dtype=np.float32)
+
     # only fit the params we want to :) {i.e. < 8 peak ODMR fit etc.}
     params_to_fit = get_params_to_fit(options, fit_model)
 
@@ -616,8 +632,11 @@ def fit_all_pixels_pl_gpufit(
         None,
         options["ModelID"],
         init_guess_params_reshaped,
-        constraints=reshaped_bounds,
-        constraint_types=constraint_types,
+        constraints=constraints,
+        constraint_types=np.array(
+            [gf.ConstraintType.LOWER_UPPER for i in range(len(params_to_fit))],
+            dtype=np.int32,
+        ),
         user_info=np.array(sweep_list, dtype=np.float32),
         parameters_to_fit=np.array(params_to_fit, dtype=np.int32),
         platform=platform,
