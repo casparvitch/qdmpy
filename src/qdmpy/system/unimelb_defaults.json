@@ -888,7 +888,7 @@
                 "arctan"
             ]
     },
-    // ========== gpufit options ===========
+    // ========== gpufit options {ALSO USED FOR CPUFIT} ===========
     // Fit tolerance threshold
     // Setting a lower value for the tolerance results in more precise values for the fit 
     // parameters, but requires more fit iterations to reach convergence.
