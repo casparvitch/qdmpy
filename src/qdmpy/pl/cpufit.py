@@ -36,7 +36,7 @@ __pdoc__ = {
 
 # ============================================================================
 
-import pygpufit.cpufit as cf
+import pycpufit.cpufit as cf
 import numpy as np
 from warnings import warn
 
