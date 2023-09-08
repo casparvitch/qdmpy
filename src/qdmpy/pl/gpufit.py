@@ -217,7 +217,6 @@ def gen_gpufit_init_guesses(options, init_guesses, init_bounds):
             num_fns_required = 1
 
         for n in range(num_fns_required):
-
             if n < num:
                 for pos, key in enumerate(
                     qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn
@@ -532,7 +531,7 @@ def fit_aois_pl_gpufit(
         aoi_avg_best_fit_results_lst.append(fitting_results[0, :])
 
     return qdmpy.pl.common.FitResultCollection(
-        "gpuit",
+        "gpufit",
         roi_avg_fit_result,
         single_pixel_fit_params,
         aoi_avg_best_fit_results_lst,
