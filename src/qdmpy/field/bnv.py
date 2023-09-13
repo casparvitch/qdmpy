@@ -10,6 +10,7 @@ Functions
  - `qdmpy.field.bnv.check_exp_bnv_compatibility`
  - `qdmpy.field.bnv.bnv_refsub`
  - `qdmpy.field.bnv.sub_bground_bnvs`
+ - `qdmpy.field.bnv.prop_single_bnv`
 """
 
 # ============================================================================
@@ -21,6 +22,7 @@ __pdoc__ = {
     "qdmpy.field.bnv.check_exp_bnv_compatibility": True,
     "qdmpy.field.bnv.bnv_refsub": True,
     "qdmpy.field.bnv.sub_bground_bnvs": True,
+    "qdmpy.field.bnv.prop_single_bnv": True,
 }
 
 # ============================================================================
@@ -372,7 +374,8 @@ def prop_single_bnv(
 
     # define transformation matrices -> e.g. see Casola 2018 given above
     u = [-1j * kx / k, -1j * ky / k, 1]
-    unv_dot_u = np.dot(unv_cpy, u)
+    unv_dot_u = unv_cpy[0] * u[0] + unv_cpy[1] * u[1] + unv_cpy[2] * u[2]
+    # unv_dot_u = np.dot(unv_cpy, u)
 
     bnv2bx = u[0] / unv_dot_u
     bnv2by = u[1] / unv_dot_u
