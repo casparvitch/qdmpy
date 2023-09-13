@@ -15,9 +15,7 @@ images = [np.loadtxt(p) for p in paths]
 selector_image = images[4]
 
 fig, axs = plt.subplots(ncols=3, figsize=(12, 6))
-axs[0].imshow(
-    selector_image
-)  # (data can be nans if you want an empty selector)
+axs[0].imshow(selector_image)  # (data can be nans if you want an empty selector)
 selector = BulkLinecutWidget(*axs, images, times)
 plt.show()
 selector.disconnect(

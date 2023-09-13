@@ -94,10 +94,7 @@ def prep_scipyfit_options(options, fit_model):
         options["scipyfit_scale_x"] = False
 
     # define jacobian option for least_squares fitting
-    if (
-        not fit_model.jacobian_defined()
-        or not options["scipyfit_use_analytic_jac"]
-    ):
+    if not fit_model.jacobian_defined() or not options["scipyfit_use_analytic_jac"]:
         scipyfit_options["jac"] = options["scipyfit_fit_jac_acc"]
     else:
         scipyfit_options["jac"] = fit_model.jacobian_scipyfit
@@ -141,9 +138,7 @@ def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
         # extract a guess/bounds for each of the copies of each fn_type (e.g. 8 lorentzians)
         for n in range(num):
 
-            for pos, key in enumerate(
-                qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn
-            ):
+            for pos, key in enumerate(qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn):
                 # this check is to handle the edge case of guesses/bounds
                 # options being provided as numbers rather than lists of numbers
                 try:
@@ -186,8 +181,8 @@ def fit_roi_avg_pl_scipyfit(options, sig, ref, sweep_list, fit_model):
     """
     # fit *all* pl data (i.e. summing over FOV)
     # collapse to just pl_ar (as function of sweep, 1D)
-    sig_mean = np.nanmean(np.nanmean(sig, axis=2), axis=1)
-    ref_mean = np.nanmean(np.nanmean(ref, axis=2), axis=1)
+    sig_mean = np.nanmean(sig, axis=(1, 2))
+    ref_mean = np.nanmean(ref, axis=(1, 2))
     if not options["used_ref"]:
         roi_norm = sig_mean
     elif options["normalisation"] == "div":
@@ -335,8 +330,8 @@ def fit_aois_pl_scipyfit(
     aoi_avg_best_fit_results_lst = []
 
     for a in aois:
-        this_sig = np.nanmean(np.nanmean(sig[:, a[0], a[1]], axis=2), axis=1)
-        this_ref = np.nanmean(np.nanmean(ref[:, a[0], a[1]], axis=2), axis=1)
+        this_sig = np.nanmean(sig[:, a[0], a[1]], axis=(1, 2))
+        this_ref = np.nanmean(ref[:, a[0], a[1]], axis=(1, 2))
 
         if not options["used_ref"]:
             this_aoi = this_sig
@@ -377,9 +372,7 @@ def limit_cpu():
     elif platform.startswith("darwin"):  # macOS
         warn("Not sure what to use for macOS... skipping cpu limitting")
     else:  # 'freebsd', 'aix', 'cygwin'...
-        warn(
-            f"Not sure what to use for your OS: {platform}... skipping cpu limitting"
-        )
+        warn(f"Not sure what to use for your OS: {platform}... skipping cpu limitting")
 
 
 # ==========================================================================
@@ -411,9 +404,7 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, fit_optns):
     """
     # shaped_data: [y, x, pl]
     # output: (y, x), result_params, jac
-    fitres = least_squares(
-        fun, p0, args=(sweep_vec, shaped_data[2]), **fit_optns
-    )
+    fitres = least_squares(fun, p0, args=(sweep_vec, shaped_data[2]), **fit_optns)
     return ((shaped_data[0], shaped_data[1]), fitres.x, fitres.jac)
 
 

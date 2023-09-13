@@ -148,21 +148,17 @@ def get_unvs(options):
             )
         if options["auto_order_unvs"]:
             nv_axes = [
-                {"nv_number": i, "ori": ori.copy()}
-                for i, ori in enumerate(unvs)
+                {"nv_number": i, "ori": ori.copy()} for i, ori in enumerate(unvs)
             ]
             for nv_num in range(len(nv_axes)):
-                projection = np.dot(
-                    nv_axes[nv_num]["ori"], [bias_x, bias_y, bias_z]
-                )
+                projection = np.dot(nv_axes[nv_num]["ori"], [bias_x, bias_y, bias_z])
                 nv_axes[nv_num]["mag"] = np.abs(projection)
                 nv_axes[nv_num]["sign"] = np.sign(projection)
             sorted_dict = sorted(nv_axes, key=lambda x: x["mag"], reverse=True)
 
             for idx in range(len(sorted_dict)):
                 unvs[idx, :] = (
-                    np.array(sorted_dict[idx]["ori"])
-                    * sorted_dict[idx]["sign"]
+                    np.array(sorted_dict[idx]["ori"]) * sorted_dict[idx]["sign"]
                 )
     else:
         if options["diamond_ori"] == "<100>_<100>":
@@ -175,18 +171,14 @@ def get_unvs(options):
             raise RuntimeError("diamond_ori not recognised.")
 
         for nv_num in range(len(nv_axes)):
-            projection = np.dot(
-                nv_axes[nv_num]["ori"], [bias_x, bias_y, bias_z]
-            )
+            projection = np.dot(nv_axes[nv_num]["ori"], [bias_x, bias_y, bias_z])
             nv_axes[nv_num]["mag"] = np.abs(projection)
             nv_axes[nv_num]["sign"] = np.sign(projection)
 
         sorted_dict = sorted(nv_axes, key=lambda x: x["mag"], reverse=True)
 
         for idx in range(len(sorted_dict)):
-            unvs[idx, :] = (
-                np.array(sorted_dict[idx]["ori"]) * sorted_dict[idx]["sign"]
-            )
+            unvs[idx, :] = np.array(sorted_dict[idx]["ori"]) * sorted_dict[idx]["sign"]
 
     options["unvs_used"] = unvs
 

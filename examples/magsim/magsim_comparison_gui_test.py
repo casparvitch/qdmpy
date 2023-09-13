@@ -28,14 +28,10 @@ pgon_patch = {
 
 sim = qdmpy.magsim.ComparisonMagSim(numpy_txt_file_path, (30e-6, 30e-6))
 # sim.add_polygons(json_input_path)
-sim.select_polygons(
-    output_path=json_output_path, mean_plus_minus=mean_plus_minus
-)
+sim.select_polygons(output_path=json_output_path, mean_plus_minus=mean_plus_minus)
 sim.rescale(3)
 sim.define_magnets(5, (0, 0, 1))
-sim.plot_magsim_magnetizations(
-    annotate_polygons=True, polygon_patch_params=pgon_patch
-)
+sim.plot_magsim_magnetizations(annotate_polygons=True, polygon_patch_params=pgon_patch)
 sim.run(290e-9, pad_mode="constant", resolution=700e-9)
 unv = [np.sqrt(1 / 3), np.sqrt(1 / 3), np.sqrt(1 / 3)]
 sim.plot_magsim_bfield_at_nvs(

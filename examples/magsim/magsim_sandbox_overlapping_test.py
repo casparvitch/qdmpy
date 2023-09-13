@@ -7,9 +7,7 @@ import qdmpy.shared.fourier
 import numpy as np
 import matplotlib.pyplot as plt
 
-overlapping_path = (
-    "/home/samsc/ResearchData/test_images/mz_test/overlapping.json"
-)
+overlapping_path = "/home/samsc/ResearchData/test_images/mz_test/overlapping.json"
 mean_plus_minus = 0.25
 
 pgon_patch = {
@@ -30,9 +28,7 @@ sim = qdmpy.magsim.SandboxMagSim((mesh_size, mesh_size), (fov_size, fov_size))
 sim.add_polygons(overlapping_path)
 
 sim.define_magnets((5, 2), (0, 0, 1))  # mag unit: mu_b/nm^2
-sim.plot_magsim_magnetizations(
-    annotate_polygons=True, polygon_patch_params=pgon_patch
-)
+sim.plot_magsim_magnetizations(annotate_polygons=True, polygon_patch_params=pgon_patch)
 
 sim.run(
     height, pad_mode="constant", resolution=res

@@ -203,9 +203,7 @@ class _SelectorWidget(AxesWidget):
 
         # If a button was pressed, check if the release-button is the
         # same.
-        return (
-            event.inaxes != self.ax or event.button != self.eventpress.button
-        )
+        return event.inaxes != self.ax or event.button != self.eventpress.button
 
     def update(self):
         """draw using newfangled blit or oldfangled draw depending on
@@ -534,11 +532,7 @@ class PolygonSelector(_SelectorWidget):
 
     def _remove_vertex(self, i):
         """Remove vertex with index i."""
-        if (
-            self._nverts > 2
-            and self._polygon_completed
-            and i in (0, self._nverts - 1)
-        ):
+        if self._nverts > 2 and self._polygon_completed and i in (0, self._nverts - 1):
             # If selecting the first or final vertex, remove both first and
             # last vertex as they are the same for a closed polygon
             self._xs.pop(0)
@@ -809,12 +803,8 @@ class PolygonSelector(_SelectorWidget):
 
             center_x, center_y = (np.mean(self._xs), np.mean(self._ys))
             for k, _ in enumerate(self._xs):
-                self._xs[k] = (
-                    self._xs[k] - center_x
-                ) * scale_factor + center_x
-                self._ys[k] = (
-                    self._ys[k] - center_y
-                ) * scale_factor + center_y
+                self._xs[k] = (self._xs[k] - center_x) * scale_factor + center_x
+                self._ys[k] = (self._ys[k] - center_y) * scale_factor + center_y
 
             # update past lines
             for line in self.lines:
@@ -822,12 +812,8 @@ class PolygonSelector(_SelectorWidget):
                 new_ys = []
                 cx_line, cy_line = (np.mean(line["xs"]), np.mean(line["ys"]))
                 for k, _ in enumerate(line["xs"]):
-                    new_xs.append(
-                        (line["xs"][k] - cx_line) * scale_factor + cx_line
-                    )
-                    new_ys.append(
-                        (line["ys"][k] - cy_line) * scale_factor + cy_line
-                    )
+                    new_xs.append((line["xs"][k] - cx_line) * scale_factor + cx_line)
+                    new_ys.append((line["ys"][k] - cy_line) * scale_factor + cy_line)
                 line["xs"] = new_xs
                 line["ys"] = new_ys
                 line["line_obj"].set_data(new_xs, new_ys)
@@ -911,7 +897,9 @@ class LineSelector(_SelectorWidget):
 
         self.artists = [self.current_line, self._line_handles.artist]
         self.set_visible(True)
-        self.ondraw = ondraw  # fn that takes single arg (verts) and does whatever with it.
+        self.ondraw = (
+            ondraw  # fn that takes single arg (verts) and does whatever with it.
+        )
 
     @property
     def _nverts(self):
@@ -926,9 +914,7 @@ class LineSelector(_SelectorWidget):
         """Button press event handler"""
 
         # Check for selection of a tool handle on current polygon
-        if (self._line_completed or "move_vertex" in self.state) and len(
-            self._xs
-        ) > 0:
+        if (self._line_completed or "move_vertex" in self.state) and len(self._xs) > 0:
             h_idx, h_dist = self._line_handles.closest(event.x, event.y)
             if h_dist < self.vertex_select_radius:
                 self._active_handle_idx = h_idx
@@ -1123,9 +1109,7 @@ class LineSelector(_SelectorWidget):
 
     @property
     def current_verts(self):
-        ret = list(
-            zip(self.current_line.get_xdata(), self.current_line.get_ydata())
-        )
+        ret = list(zip(self.current_line.get_xdata(), self.current_line.get_ydata()))
         return ret
 
     @property

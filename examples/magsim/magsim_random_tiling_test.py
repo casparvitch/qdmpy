@@ -24,9 +24,7 @@ height = 290e-9
 res = 700e-9
 # res = 1e-6
 fov_size = 30e-6
-poly_shape = (
-    6  # note: hexagons not so useful, unless using random mag direction.
-)
+poly_shape = 6  # note: hexagons not so useful, unless using random mag direction.
 domain_side_len = 0.1e-6
 
 # colors = [f"C{i % 10}" for i in range(num_domains)]

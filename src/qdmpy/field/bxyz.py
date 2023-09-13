@@ -67,10 +67,7 @@ def from_single_bnv(options, bnvs):
         return None
 
     chosen_freqs = options["freqs_to_use"]
-    if (
-        len(bnvs) > 1
-        and not list(reversed(chosen_freqs[4:])) == chosen_freqs[:4]
-    ):
+    if len(bnvs) > 1 and not list(reversed(chosen_freqs[4:])) == chosen_freqs[:4]:
         raise ValueError(
             """
             'field_method' method was 'prop_single_bnv' with more than one bnv,
@@ -104,9 +101,7 @@ def from_single_bnv(options, bnvs):
             0,
             0,
         ]:  # only single freq used, R transition rel to bias
-            idx = np.argwhere(np.array(list(reversed(chosen_freqs[4:]))) == 1)[
-                0
-            ][0]
+            idx = np.argwhere(np.array(list(reversed(chosen_freqs[4:]))) == 1)[0][0]
         else:
             idx = np.argwhere(np.array(chosen_freqs[:4]) == 1)[0][0]
         unv = unvs[idx]
@@ -134,9 +129,7 @@ def from_single_bnv(options, bnvs):
         "Bx": bxyzs[0],
         "By": bxyzs[1],
         "Bz": bxyzs[2],
-        "residual_field": np.zeros(
-            (bxyzs[2]).shape
-        ),  # no residual as there's no fit
+        "residual_field": np.zeros((bxyzs[2]).shape),  # no residual as there's no fit
     }
 
 
@@ -176,9 +169,7 @@ def from_unv_inversion(options, bnvs):
     chosen_freqs = options["freqs_to_use"]
 
     if sum(chosen_freqs) != 6:
-        raise ValueError(
-            "Only 6 freqs should be chosen for the 'invert_unvs' method."
-        )
+        raise ValueError("Only 6 freqs should be chosen for the 'invert_unvs' method.")
 
     if not len(bnvs) >= 3:
         raise ValueError(
@@ -230,9 +221,7 @@ def from_unv_inversion(options, bnvs):
 # ============================================================================
 
 
-def from_hamiltonian_fitting(
-    options, fit_params, bias_field_spherical_deg_gauss
-):
+def from_hamiltonian_fitting(options, fit_params, bias_field_spherical_deg_gauss):
     """
     (pl fitting) fit_params -> (freq/bnvs fitting) ham_results.
 
@@ -285,7 +274,7 @@ def from_hamiltonian_fitting(
     if use_bnvs:
         # data shape: [bnvs/freqs, y, x]
         bnv_lst, _ = qdmpy.field.bnv.get_bnvs_and_dshifts(
-            fit_params, bias_field_spherical_deg_gauss, options["chosen_freqs"]
+            fit_params, bias_field_spherical_deg_gauss, options["freqs_to_use"]
         )
         if sum(chooser_ar) < 4:
             unwanted_bnvs = np.argwhere(np.array(chooser_ar) == 0)[0]
@@ -326,9 +315,7 @@ def from_hamiltonian_fitting(
 # ============================================================================
 
 
-def sub_bground_bxyz(
-    options, field_params, field_sigmas, method, **method_settings
-):
+def sub_bground_bxyz(options, field_params, field_sigmas, method, **method_settings):
     """Calculate and subtract a background from the Bx, By and Bz keys in params and sigmas
 
     Methods available for background calculation:

@@ -126,9 +126,7 @@ def bnvs_and_dshifts(options, name, bnvs, dshifts):
         )
 
     if options["save_plots"]:
-        fig.savefig(
-            options["field_dir"] / (f"Bnv_{name}." + options["save_fig_type"])
-        )
+        fig.savefig(options["field_dir"] / (f"Bnv_{name}." + options["save_fig_type"]))
 
     return fig
 
@@ -164,9 +162,7 @@ def bfield(options, name, field_params):
 
     for p in ["B" + comp for comp in components]:
         if p not in field_params:
-            warn(
-                f"bfield param '{p} missing from field_params, skipping bfield plot."
-            )
+            warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
             return None
         elif field_params[p] is None:
             return None
@@ -180,9 +176,7 @@ def bfield(options, name, field_params):
 
     fig, ax = plt.subplots(height, width, figsize=figsize)
 
-    c_map = (
-        "Greys" if name == "mask" else options["colormaps"]["bfield_images"]
-    )
+    c_map = "Greys" if name == "mask" else options["colormaps"]["bfield_images"]
 
     for i, bcomponent in enumerate(bfields):
         c_range = (
@@ -202,8 +196,7 @@ def bfield(options, name, field_params):
 
     if options["save_plots"]:
         fig.savefig(
-            options["field_dir"]
-            / (f"Bfield_{name}." + options["save_fig_type"])
+            options["field_dir"] / (f"Bfield_{name}." + options["save_fig_type"])
         )
 
     return fig
@@ -250,8 +243,7 @@ def dshift_fit(options, name, field_params):
 
     if options["save_plots"]:
         fig.savefig(
-            options["field_dir"]
-            / (f"Dshift_fit_{name}." + options["save_fig_type"])
+            options["field_dir"] / (f"Dshift_fit_{name}." + options["save_fig_type"])
         )
 
     return fig
@@ -390,8 +382,7 @@ def field_param(
 
     if options["save_plots"]:
         fig.savefig(
-            options["field_dir"]
-            / (f"{param_name}_{name}." + options["save_fig_type"])
+            options["field_dir"] / (f"{param_name}_{name}." + options["save_fig_type"])
         )
 
     return fig
@@ -543,11 +534,7 @@ def field_param_flattened(
                 lw=mpl.rcParams["lines.linewidth"] * 2,
             )
         )
-    if (
-        bounds is not None
-        and isinstance(bounds, (list, tuple))
-        and len(bounds) == 2
-    ):
+    if bounds is not None and isinstance(bounds, (list, tuple)) and len(bounds) == 2:
         for b in bounds:
             ax.axhline(b, ls=(0, (2, 1)), c="grey", zorder=9)
         legend_names.append("Bounds")
@@ -575,10 +562,7 @@ def field_param_flattened(
     if options["save_plots"]:
         fig.savefig(
             options["field_dir"]
-            / (
-                f"{name}_{param_name}_fit_flattened."
-                + options["save_fig_type"]
-            )
+            / (f"{name}_{param_name}_fit_flattened." + options["save_fig_type"])
         )
 
     return fig
@@ -625,25 +609,19 @@ def bfield_consistency(options, name, field_params):
 
     for p in ["B" + comp for comp in components]:
         if p not in field_params:
-            warn(
-                f"bfield param '{p} missing from field_params, skipping bfield plot."
-            )
+            warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
             return None
         elif field_params[p] is None:
             return None
     for p in ["B" + comp + "_recon" for comp in components]:
         if p not in field_params:
-            warn(
-                f"bfield param '{p} missing from field_params, skipping bfield plot."
-            )
+            warn(f"bfield param '{p} missing from field_params, skipping bfield plot.")
             return None
         elif field_params[p] is None:
             return None
 
     bfields = [field_params["B" + comp] for comp in components]
-    bfield_recons = [
-        field_params["B" + comp + "_recon"] for comp in components
-    ]
+    bfield_recons = [field_params["B" + comp + "_recon"] for comp in components]
 
     figsize = mpl.rcParams["figure.figsize"].copy()
     width = 3
@@ -681,8 +659,7 @@ def bfield_consistency(options, name, field_params):
 
     if options["save_plots"]:
         fig.savefig(
-            options["field_dir"]
-            / (f"Bfield_{name}_recon." + options["save_fig_type"])
+            options["field_dir"] / (f"Bfield_{name}_recon." + options["save_fig_type"])
         )
 
     return fig

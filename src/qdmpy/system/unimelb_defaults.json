@@ -578,6 +578,45 @@
         "option_default": null
     },
 
+    // TODO annotate, for Walsh/Hall T1 models
+    "walsh_R_guess": {
+        "option_default": null
+    },
+    "walsh_R_bounds": {
+        "option_default": null
+    },
+    "walsh_eta_guess": {
+        "option_default": null
+    },
+    "walsh_eta_bounds": {
+        "option_default": null
+    },
+    "walsh_A_guess": {
+        "option_default": null
+    },
+    "walsh_A_bounds": {
+        "option_default": null
+    },
+    
+    "hall_exp_t_guess": {
+        "option_default": null
+    },
+    "hall_exp_t_bounds": {
+        "option_default": null
+    },
+    "hall_eta_guess": {
+        "option_default": null
+    },
+    "hall_eta_bounds": {
+        "option_default": null
+    },
+    "hall_A_guess": {
+        "option_default": null
+    },
+    "hall_A_bounds": {
+        "option_default": null
+    },
+
     // ========== Hamiltonian / field retrieval parameters ==========
     // Note: it is assumed the reference experiment is run under the same
     // measurement parameters, except for some single parameter changed
@@ -849,7 +888,7 @@
                 "arctan"
             ]
     },
-    // ========== gpufit options ===========
+    // ========== gpufit options {ALSO USED FOR CPUFIT} ===========
     // Fit tolerance threshold
     // Setting a lower value for the tolerance results in more precise values for the fit 
     // parameters, but requires more fit iterations to reach convergence.

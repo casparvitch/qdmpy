@@ -528,12 +528,8 @@ def get_j_from_bnv(
         k, do_hanning_filter, hanning_low_cutoff, hanning_high_cutoff, standoff
     )
 
-    bnv_to_jx = qdmpy.shared.fourier.set_naninf_to_zero(
-        hanning_filt * bnv_to_jx
-    )
-    bnv_to_jy = qdmpy.shared.fourier.set_naninf_to_zero(
-        hanning_filt * bnv_to_jy
-    )
+    bnv_to_jx = qdmpy.shared.fourier.set_naninf_to_zero(hanning_filt * bnv_to_jx)
+    bnv_to_jy = qdmpy.shared.fourier.set_naninf_to_zero(hanning_filt * bnv_to_jy)
 
     fft_jx = bnv_to_jx * fft_bnv
     fft_jy = bnv_to_jy * fft_bnv
