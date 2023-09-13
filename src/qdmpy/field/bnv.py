@@ -64,7 +64,7 @@ for details of the g-factor anisotropy.
 # ============================================================================
 
 
-def get_bnvs_and_dshifts(pixel_fit_params, bias_field_spherical_deg):
+def get_bnvs_and_dshifts(pixel_fit_params, bias_field_spherical_deg, chosen_freqs):
     """
         pixel_fit_params -> bnvs, dshifts (both lists of np arrays, 2D)
 
@@ -76,6 +76,8 @@ def get_bnvs_and_dshifts(pixel_fit_params, bias_field_spherical_deg):
             If None, returns ([], [])
         bias_field_spherical_deg : tuple
             Bias field in spherical polar degrees (and gauss).
+        freqs_to_use : array-like, length 8, each evaluating as True/False
+            Which resonant frequencies are being used?
     `
         Returns
         -------
@@ -104,13 +106,14 @@ def get_bnvs_and_dshifts(pixel_fit_params, bias_field_spherical_deg):
     num_peaks = len(peak_posns)
 
     if num_peaks == 1:
-        sign = (
-            -1 if np.mean(peak_posns[0]) < 2870 else +1
-        )  # det. if L/R resonance (rel to bias)
-        if bias_mag > GSLAC:
-            # sign *= -1
-            sign = 1
-        bnvs = [sign * peak_posns[0] / GAMMA]
+        if bias_mag > GSLAC and chosen_freqs[0]:
+            bnvs = [peak_posns[0] / GAMMA + 1024.0]
+        else:
+            if np.mean(peak_posns[0]) < 2870:
+                bnvs = [(2870 - peak_posns[0]) / GAMMA]
+            else:
+                bnvs = [(peak_posns[0] - 2870) / GAMMA]
+
         dshifts = [np.empty(bnvs[0].shape)]
         dshifts[0].fill(np.nan)
     elif num_peaks == 2:
