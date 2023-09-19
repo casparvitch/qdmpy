@@ -44,7 +44,7 @@ from qdmpy.shared.misc import warn
 # ============================================================================
 
 
-def bnvs_and_dshifts(options, name, bnvs, dshifts):
+def bnvs_and_dshifts(options, name, bnvs, dshifts, custom_c_range=None):
     """
     Plots bnv arrays above dshift arrays.
 
@@ -92,10 +92,12 @@ def bnvs_and_dshifts(options, name, bnvs, dshifts):
             and options["bias_field_spherical_deg_gauss"][0] < 0
             else bnv
         )
-
-        c_range = qdmpy.plot.common.get_colormap_range(
-            options["colormap_range_dicts"]["bnv_images"], data
-        )
+        if custom_c_range:
+            c_range = custom_c_range
+        else:
+            c_range = qdmpy.plot.common.get_colormap_range(
+                options["colormap_range_dicts"]["bnv_images"], data
+            )
         title = f"{name} B NV_{i}"
         if width == 1 and (dshifts is None or not dshifts):
             ax = axs
@@ -134,7 +136,7 @@ def bnvs_and_dshifts(options, name, bnvs, dshifts):
 # ============================================================================
 
 
-def bfield(options, name, field_params):
+def bfield(options, name, field_params, remove_mean=False, custom_c_range=None):
     """Plot Bxyz if available as keys in 'field_params'.
 
     Arguments
@@ -179,13 +181,19 @@ def bfield(options, name, field_params):
     c_map = "Greys" if name == "mask" else options["colormaps"]["bfield_images"]
 
     for i, bcomponent in enumerate(bfields):
-        c_range = (
-            [0, 1]
-            if name == "mask"
-            else qdmpy.plot.common.get_colormap_range(
-                options["colormap_range_dicts"]["bfield_images"], bcomponent
+        if remove_mean:
+            bcomponent = bcomponent - np.mean(bcomponent)
+            print("removed mean from bfield image.")
+        if custom_c_range:
+            c_range = custom_c_range
+        else:
+            c_range = (
+                [0, 1]
+                if name == "mask"
+                else qdmpy.plot.common.get_colormap_range(
+                    options["colormap_range_dicts"]["bfield_images"], bcomponent
+                )
             )
-        )
         if name not in other_selectors:
             title = f"{name} B" + components[i]
         else:
