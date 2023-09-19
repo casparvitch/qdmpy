@@ -90,14 +90,14 @@ fit_model = qdmpy.pl.define_fit_model(options)
 backend_ROI_results_lst = qdmpy.pl.fit_roi_avg_pl(
     options, sig, ref, sweep_list, fit_model
 )
-ROI_fit_fig = qdmpy.plot.roi_avg_fits(options, backend_ROI_results_lst)
+# ROI_fit_fig = qdmpy.plot.roi_avg_fits(options, backend_ROI_results_lst)
 
 fit_result_collection_lst = qdmpy.pl.fit_aois_pl(
     options, sig, ref, single_pixel_pl, sweep_list, fit_model, backend_ROI_results_lst
 )
-AOI_fit_fig = qdmpy.plot.aoi_spectra_fit(
-    options, sig, ref, sweep_list, fit_result_collection_lst, fit_model
-)
+# AOI_fit_fig = qdmpy.plot.aoi_spectra_fit(
+#     options, sig, ref, sweep_list, fit_result_collection_lst, fit_model
+# )
 
 wanted_roi_result = next(
     filter(
@@ -109,25 +109,26 @@ pixel_fit_params, sigmas = qdmpy.pl.get_pl_fit_result(
     options, sig_norm, sweep_list, fit_model, wanted_roi_result
 )
 
-qdmpy.pl.save_pl_fit_results(options, pixel_fit_params)
-qdmpy.pl.save_pl_fit_sigmas(options, sigmas)
+# qdmpy.pl.save_pl_fit_results(options, pixel_fit_params)
+# qdmpy.pl.save_pl_fit_sigmas(options, sigmas)
 
-field_res = qdmpy.field.odmr_field_retrieval(options, pixel_fit_params, ref_fit_params)
-(
-    (sig_bnvs, ref_bnvs, bnvs),
-    (sig_dshifts, ref_dshifts),
-    (sig_params, ref_params, field_params),
-    (sig_field_sigmas, ref_field_sigmas, field_sigmas),
-) = field_res
-qdmpy.field.save_field_calcs(options, *field_res)
+# field_res = qdmpy.field.odmr_field_retrieval(options, pixel_fit_params, ref_fit_params)
+# (
+#     (sig_bnvs, ref_bnvs, bnvs),
+#     (sig_dshifts, ref_dshifts),
+#     (sig_params, ref_params, field_params),
+#     (sig_field_sigmas, ref_field_sigmas, field_sigmas),
+# ) = field_res
+# qdmpy.field.save_field_calcs(options, *field_res)
 
-bnvs_plot = qdmpy.plot.bnvs_and_dshifts(options, "sig_sub_ref", bnvs, [])
+# bnvs_plot = qdmpy.plot.bnvs_and_dshifts(options, "sig_sub_ref", bnvs, [])
 
-qdmpy.save_options(options)
-import qdmpy.shared.json2dict
+# qdmpy.save_options(options)
+# import qdmpy.shared.json2dict
 
-print(qdmpy.shared.json2dict.dict_to_json_str(options))
+print(options["fit_time_(s)"])
+# print(qdmpy.shared.json2dict.dict_to_json_str(options))
 
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
-plt.show()
+# plt.show()

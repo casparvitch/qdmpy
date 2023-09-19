@@ -239,7 +239,7 @@ Follow [instructions](https://gpufit.readthedocs.io/en/latest/installation.html)
         - `cd C:\src\gpufit-build`
         - `cmake -G "Visual Studio 12 2013 Win64" C:\Sources\Gpufit`
     - I then open up the cmake gui (which will auto-populate fields from this previous cmake run) to edit some more things:
-        - set \_USE_CBLAS flag to be true (if you get errors when building try False -> sometimes gpufit gets the name of the cuBLAS dll incorrect)
+        - set \_USE_CBLAS flag to be true (if you get errors when building try False -> sometimes gpufit gets the name of the cuBLAS dll incorrect). Still not sure how to fix this one, not a big issue though.
         - add BOOST_ROOT variable to wherever you installed/unpacked BOOST
 
 - compiling (visual studio)
