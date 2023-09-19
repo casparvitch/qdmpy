@@ -372,7 +372,7 @@ def prop_single_bnv(
 
     # define transformation matrices -> e.g. see Casola 2018 given above
     u = [-1j * kx / k, -1j * ky / k, 1]
-    unv_dot_u = np.dot(unv_cpy, u)
+    unv_dot_u = unv_cpy[0] * u[0] + unv_cpy[1] * u[1] + unv_cpy[2] * u[2]
 
     bnv2bx = u[0] / unv_dot_u
     bnv2by = u[1] / unv_dot_u
