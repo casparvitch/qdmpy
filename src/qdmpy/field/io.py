@@ -587,6 +587,7 @@ def _field_options_compatible(options):
     # can't load dshift (etc.) reference types
     if (
         options["exp_reference_type"] != "field"
+        or "exp_reference_type" not in prev_options
         or prev_options["exp_reference_type"] != "field"
     ):
         return (

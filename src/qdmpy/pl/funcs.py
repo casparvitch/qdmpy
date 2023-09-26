@@ -24,6 +24,7 @@ Classes
  - `qdmpy.pl.funcs.StretchedExponential`
  - `qdmpy.pl.funcs.DampedRabi`
  - `qdmpy.pl.funcs.WalshT1`
+ - `qdmpy.pl.funcs.HallT1`
 """
 
 
@@ -42,6 +43,9 @@ __pdoc__ = {
     "qdmpy.pl.funcs.LorentzianHyperfine_14": True,
     "qdmpy.pl.funcs.LorentzianHyperfine_15": True,
     "qdmpy.pl.funcs.StretchedExponential": True,
+    "qdmpy.pl.funcs.DampedRabi": True,
+    "qdmpy.pl.funcs.WalshT1": True,
+    "qdmpy.pl.funcs.HallT1": True,
 }
 
 # ============================================================================

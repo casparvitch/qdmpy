@@ -132,7 +132,7 @@ def get_m_from_bxy(
     fft_m = qdmpy.shared.fourier.set_naninf_to_zero(fft_m)
 
     # fourier transform back into real space
-    m = np.fft.ifft2(np.fft.ifftshift(fft_m)).real
+    m = numpy_fft.ifft2(numpy_fft.ifftshift(fft_m)).real
 
     # only return non-padded region
     m_reg = qdmpy.shared.fourier.unpad_image(m, padder)
@@ -230,7 +230,7 @@ def get_m_from_bz(
     fft_m = qdmpy.shared.fourier.set_naninf_to_zero(fft_m)
 
     # fourier transform back into real space
-    m = np.fft.ifft2(np.fft.ifftshift(fft_m)).real
+    m = numpy_fft.ifft2(numpy_fft.ifftshift(fft_m)).real
 
     # only return non-padded region
     m_reg = qdmpy.shared.fourier.unpad_image(m, padder)
@@ -351,7 +351,7 @@ def get_m_from_bnv(
     fft_m = qdmpy.shared.fourier.set_naninf_to_zero(fft_m)
 
     # fourier transform back into real space
-    m = np.fft.ifft2(np.fft.ifftshift(fft_m)).real
+    m = numpy_fft.ifft2(numpy_fft.ifftshift(fft_m)).real
 
     # only return non-padded region
     m_reg = qdmpy.shared.fourier.unpad_image(m, padder)

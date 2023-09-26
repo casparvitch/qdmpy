@@ -33,7 +33,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 if __name__ == "__main__":
     setuptools.setup(
         name="qdmpy",  # Replace with your own username
-        version="5.0.1",
+        version="5.1.1",
         author="Sam Scholten",
         author_email="samcaspar@gmail.com",
         description="Quantum Diamond MicroscoPy",

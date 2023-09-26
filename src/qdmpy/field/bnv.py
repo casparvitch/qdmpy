@@ -373,13 +373,13 @@ def prop_single_bnv(
     unv_cpy = copy(unv) if nvs_above_sample else [-unv[0], -unv[1], unv[2]]
 
     # define transformation matrices -> e.g. see Casola 2018 given above
-    u = [-1j * kx / k, -1j * ky / k, 1]
-    unv_dot_u = unv_cpy[0] * u[0] + unv_cpy[1] * u[1] + unv_cpy[2] * u[2]
-    # unv_dot_u = np.dot(unv_cpy, u)
+    kappa = [-1j * kx / k, -1j * ky / k, 1]
+    unv_dot_u = unv_cpy[0] * kappa[0] + unv_cpy[1] * kappa[1] + unv_cpy[2] * kappa[2]
+    # unv_dot_u = np.dot(unv_cpy, kappa)
 
-    bnv2bx = u[0] / unv_dot_u
-    bnv2by = u[1] / unv_dot_u
-    bnv2bz = u[2] / unv_dot_u
+    bnv2bx = kappa[0] / unv_dot_u
+    bnv2by = kappa[1] / unv_dot_u
+    bnv2bz = kappa[2] / unv_dot_u
     # Expanded algebra below:
     # bnv2bx = 1 / (unv_cpy[0] + unv_cpy[1] * ky / kx + 1j * unv_cpy[2] * k / kx)
     # bnv2by = 1 / (unv_cpy[0] * kx / ky + unv_cpy[1] + 1j * unv_cpy[2] * k / ky)

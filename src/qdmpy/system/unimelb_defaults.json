@@ -1449,5 +1449,8 @@
     // store qdmpy version string when code was run, might be useful in future as api changes to
     //  load old settings (haven't implemented that yet. May be useful for a v1 -> v2 transition).
     //  i.e. 'backwards compatibility'
-    "qdmpy_version": {}
+    "qdmpy_version": {},
+    // Shape [num_freqs/taus, width*height pixels], from binary header
+    //  num freqs/taus is *2 if there's a ref
+        "binary_expected_shape": {}
 }
