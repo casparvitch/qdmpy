@@ -34,7 +34,23 @@
             ]
     },
 
-    // additional binning on dataset (local averaging), 0 does nothing. Must be multiple of 2
+    // Smooth each PL frame with direct gaussian kernel. Applied before binning.
+    "smoothing_sigma_px": {
+        "option_default": 0
+    },
+    // Give smoothing sigma in metres -> overrides smoothing_sigma_px
+    "smoothing_sigma_m": {
+        "option_default": 0
+    },
+    // Size of kernel for smoothing op, kernel size = 2*truncate*sigma + 1
+    // See scipy.ndimage.gaussian_filter docs -> UNITS OF PX
+    // Higher number = slower and more precise.
+    "smoothing_truncate": {
+        "option_default": 4.0
+    },
+
+    // additional binning on dataset (local averaging), 0 does nothing. Must be multiple of 2.
+    // applied after & independently of smoothing
     "additional_bins": {
         "option_default": 0
     },
@@ -920,6 +936,7 @@
     // ===============================  Fourier Parameters =======================================
     // ===========================================================================================
     // padding mode, see np.pad
+    // ALSO used for smoothing (even though that's not done in f.space)
     "fourier_pad_mode": {
         "option_default": "constant",
         "option_choices": [
@@ -1452,5 +1469,7 @@
     "qdmpy_version": {},
     // Shape [num_freqs/taus, width*height pixels], from binary header
     //  num freqs/taus is *2 if there's a ref
-        "binary_expected_shape": {}
+    "binary_expected_shape": {},
+    "calculated_raw_pixel_size": {},
+    "calculated_binned_pixel_size": {}
 }
