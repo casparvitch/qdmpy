@@ -496,48 +496,6 @@ def add_bfield_reconstructed(options, field_params):
 
     For a proper explanation of methodology, see [CURR_RECON]_.
 
-    $$  \nabla \times {\bf B} = 0 $$
-
-    to get Bx_recon and By_recon from Bz (in a source-free region), and
-
-    $$ \nabla \cdot {\bf B} = 0 $$
-
-    to get Bz_recon from Bx and By
-
-    Start with e.g.:
-
-    $$ \frac{\partial B_x^{\rm recon}}{\partial z} = \frac{\partial B_z}{\partial x} $$
-
-    with the definitions
-
-    $$ \hat{B}:=  \hat{\mathcal{F}}_{xy} \big\{ B \big\} $$
-
-    and
-
-    $$ k = \sqrt{k_x^2 + k_y^2} $$
-
-    we have:
-
-    $$ \frac{\partial }{\partial z} \hat{B}_x^{\rm recon}(x,y,z=z_{\rm NV}) = i k_x \hat{B}_z(x,y, z=z_{\rm NV}) $$.
-
-    Now using upward continuation [CURR_RECON]_ to evaluate the z partial:
-
-    $$ -k \hat{B}_x^{\rm recon}(x,y,z=z_{\rm NV}) = i k_x \hat{B}_z(k_x, k_y, z_{\rm NV}) $$
-
-    such that for
-
-    $$ k \neq 0 $$
-
-    we have (analogously for y)
-
-    $$ (\hat{B}_x^{\rm recon}(x,y,z=z_{\rm NV}), \hat{B}_y^{\rm recon}(x,y,z=z_{\rm NV})) = \frac{-i}{k} (k_x, k_y) \hat{B}_z(x,y,,z=z_{\rm NV}) $$
-
-
-    Utilising the zero-divergence property of the magnetic field, it can also be shown:
-
-    $$ \hat{B}_z^{\rm recon}(x,y,z=z_{\rm NV}) = \frac{i}{k} \left( k_x \hat{B}_x(x,y,z=z_{\rm NV}) + k_y \hat{B}_y(x,y,z=z_{\rm NV}) \right) $$
-
-
     References
     ----------
     .. [CURR_RECON] E. A. Lima and B. P. Weiss,

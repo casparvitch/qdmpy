@@ -362,6 +362,7 @@ def _remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_nor
     """
     rem_start = options["remove_start_sweep"]
     rem_end = options["remove_end_sweep"]
+    end = -rem_end if rem_end > 0 else None
 
     roi = qdmpy.shared.misc.define_roi(options, *options["rebinned_image_shape"])
 
@@ -375,10 +376,10 @@ def _remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_nor
     pl_image = np.sum(image_rebinned, axis=0)
 
     pl_image_roi = pl_image[roi[0], roi[1]].copy()
-    sig = sig[rem_start : -1 - rem_end, roi[0], roi[1]].copy()  # noqa: E203
-    ref = ref[rem_start : -1 - rem_end, roi[0], roi[1]].copy()  # noqa: E203
-    sig_norm = sig_norm[rem_start : -1 - rem_end, roi[0], roi[1]].copy()  # noqa: E203
-    sweep_list = np.asarray(sweep_list[rem_start : -1 - rem_end]).copy()  # noqa: E203
+    sig = sig[rem_start : end, roi[0], roi[1]].copy()  # noqa: E203
+    ref = ref[rem_start : end, roi[0], roi[1]].copy()  # noqa: E203
+    sig_norm = sig_norm[rem_start : end, roi[0], roi[1]].copy()  # noqa: E203
+    sweep_list = np.asarray(sweep_list[rem_start : end]).copy()  # noqa: E203
 
     return pl_image, pl_image_roi, sig, ref, sig_norm, sweep_list, roi
 

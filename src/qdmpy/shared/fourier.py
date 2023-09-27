@@ -260,20 +260,13 @@ def define_magnetization_transformation(
 
     alpha = 2 * exp_factor / MU_0
 
-    return (-1 / alpha) * np.array(
+    return (1 / alpha) * np.array(
         [
-            [kx**2 / k, (kx * ky) / k, 1j * kx],
-            [(kx * ky) / k, ky**2 / k, 1j * ky],
-            [1j * kx, 1j * ky, -k],
+            [-(kx**2) / k, -(kx * ky) / k, -1j * kx],
+            [-(kx * ky) / k, -(ky**2) / k, -1j * ky],
+            [-1j * kx, -1j * ky, k],
         ]
     )
-    # return (1 / alpha) * np.array(
-    #     [
-    #         [-(kx ** 2 + 2 * ky ** 2) / k, kx * ky / k, 1j * kx],
-    #         [kx * ky / k, -(2 * kx ** 2 + ky ** 2) / k, 1j * ky],
-    #         [-1j * kx, -1j * ky, -k],
-    #     ]
-    # )
 
 
 # ============================================================================
@@ -318,9 +311,9 @@ def define_current_transform(u_proj, ky, kx, k, standoff=None, nv_layer_thicknes
 
     alpha = 2 * exp_factor / MU_0
 
-    # sign on 1j's is opposite to Broadway paper due to different FT definition.
-    b_to_jx = -1 * (alpha * ky) / (u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k)
-    b_to_jy = (alpha * kx) / (u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k)
+    prefac = alpha / (u_proj[0] * kx + u_proj[1] * ky + 1j * u_proj[2] * k)
+    b_to_jx = prefac * -ky
+    b_to_jy = prefac * kx
 
     return b_to_jx, b_to_jy
 

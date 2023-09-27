@@ -316,12 +316,10 @@ def get_im_filtered(image, filter_type, **kwargs):
 def _get_im_filtered_gaussian(image, sigma):
     """Returns image filtered through scipy.ndimage.gaussian_filter with
     parameter 'sigma'."""
-    # f_image = np.fft.fft2(image)
     return scipy.ndimage.gaussian_filter(
         image,
         sigma=sigma,
     )
-    # return np.fft.ifft2(result).real
 
 
 # ============================================================================
