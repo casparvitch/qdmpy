@@ -361,16 +361,16 @@ def fit_roi_avg_pl_gpufit(options, sig, ref, sweep_list, fit_model):
 
     # fit *all* pl data (i.e. summing over FOV)
     # collapse to just pl_ar (as function of sweep, 1D)
-    sig_mean = np.nanmean(sig, axis=(1, 2))
-    ref_mean = np.nanmean(ref, axis=(1, 2))
     if not options["used_ref"]:
-        roi_norm = sig_mean
+        roi_norm = sig
     elif options["normalisation"] == "div":
-        roi_norm = sig_mean / ref_mean
+        roi_norm = sig / ref
     elif options["normalisation"] == "sub":
-        roi_norm = 1 + (sig_mean - ref_mean) / (sig_mean + ref_mean)
+        roi_norm = 1 + (sig - ref) / (sig + ref)
     elif options["normalisation"] == "true_sub":
-        roi_norm = (sig_mean - ref_mean) / np.nanmax(sig_mean - ref_mean)
+        roi_norm = (sig - ref) / np.nanmax(sig - ref)
+
+    roi_norm = np.nanmean(roi_norm, axis=(1,2))
 
     roi_norm_twice = np.repeat([roi_norm], repeats=2, axis=0)
 
@@ -501,8 +501,8 @@ def fit_aois_pl_gpufit(
     constraints = constraints.astype(dtype=np.float32)
 
     for a in aois:
-        this_sig = np.nanmean(sig[:, a[0], a[1]], axis=(1, 2))
-        this_ref = np.nanmean(ref[:, a[0], a[1]], axis=(1, 2))
+        this_sig = sig[:, a[0], a[1]]
+        this_ref = ref[:, a[0], a[1]]
 
         if not options["used_ref"]:
             this_aoi = this_sig
@@ -513,7 +513,8 @@ def fit_aois_pl_gpufit(
         elif options["normalisation"] == "true_sub":
             this_aoi = (this_sig - this_ref) / np.nanmax(this_sig - this_ref)
 
-        this_aoi_twice = np.repeat([this_aoi], repeats=2, axis=0)
+        this_aoi_avg = np.nanmean(this_aoi, axis=(1,2))
+        this_aoi_twice = np.repeat([this_aoi_avg], repeats=2, axis=0)
 
         fitting_results, _, _, _, _ = gf.fit_constrained(
             this_aoi_twice.astype(np.float32),

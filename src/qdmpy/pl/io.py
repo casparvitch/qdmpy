@@ -2,6 +2,8 @@
 """
 This module holds tools for pl input/output
 
+TODO move interface functions to interface.py
+
 Functions
 ---------
  - `qdmpy.pl.io.load_image_and_sweep`
@@ -293,8 +295,7 @@ def _rebin_image(options, image):
         if options["normalisation"] == "sub":
             sig_norm = 1 + (sig - ref) / (sig + ref)
         elif options["normalisation"] == "div":
-            sig_norm = 1 + (sig - ref) / (sig + ref)
-            # sig_norm = sig / ref
+            sig_norm = sig / ref
         elif options["normalisation"] == "true_sub":
             sig_norm = (sig - ref) / np.nanmax(sig - ref, axis=0)
         else:

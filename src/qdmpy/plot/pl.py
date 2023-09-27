@@ -660,18 +660,20 @@ def aoi_spectra_fit(
         # now plot fits as third column
         for i, (fit_param_ar, s, r) in enumerate(zip(fit_params_lst, sigs, refs)):
 
-            if len(s.shape) > 1:
-                s = np.nanmean(s, axis=(1, 2))
-                r = np.nanmean(r, axis=(1, 2))
-
             if not options["used_ref"]:
-                sig_norm_avg = s
+                sig_norm = s
             elif options["normalisation"] == "div":
-                sig_norm_avg = s / r
+                sig_norm = s / r
             elif options["normalisation"] == "sub":
-                sig_norm_avg = 1 + (s - r) / (s + r)
+                sig_norm = 1 + (s - r) / (s + r)
             elif options["normalisation"] == "true_sub":
-                sig_norm_avg = (s - r) / np.nanmax(s - r)
+                sig_norm = (s - r) / np.nanmax(s - r)
+
+            sig_norm_avg = (
+                np.nanmean(sig_norm, axis=(1, 2))
+                if len(sig_norm.shape) > 1
+                else sig_norm
+            )
 
             best_fit_ydata = fit_model(fit_param_ar, high_res_xdata)
             roi_fit_ydata = fit_model(

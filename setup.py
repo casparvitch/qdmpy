@@ -32,14 +32,14 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 
 if __name__ == "__main__":
     setuptools.setup(
-        name="qdmpy",  # Replace with your own username
-        version="5.1.1",
+        name="qdmpy",
+        version="5.2.1",
         author="Sam Scholten",
         author_email="samcaspar@gmail.com",
         description="Quantum Diamond MicroscoPy",
         long_description=long_description,
         long_description_content_type="text/markdown",
-        url="https://gitlab.unimelb.edu.au/sscholten/qdmpy",
+        url="https://github.com/casparvitch/qdmpy",
         keywords=[
             "NV",
             "QDM",

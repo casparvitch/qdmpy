@@ -181,16 +181,16 @@ def fit_roi_avg_pl_scipyfit(options, sig, ref, sweep_list, fit_model):
     """
     # fit *all* pl data (i.e. summing over FOV)
     # collapse to just pl_ar (as function of sweep, 1D)
-    sig_mean = np.nanmean(sig, axis=(1, 2))
-    ref_mean = np.nanmean(ref, axis=(1, 2))
     if not options["used_ref"]:
-        roi_norm = sig_mean
+        roi_norm = sig
     elif options["normalisation"] == "div":
-        roi_norm = sig_mean / ref_mean
+        roi_norm = sig / ref
     elif options["normalisation"] == "sub":
-        roi_norm = 1 + (sig_mean - ref_mean) / (sig_mean + ref_mean)
+        roi_norm = 1 + (sig - ref) / (sig + ref)
     elif options["normalisation"] == "true_sub":
-        roi_norm = (sig_mean - ref_mean) / np.nanmax(sig_mean - ref_mean)
+        roi_norm = (sig - ref) / np.nanmax(sig - ref)
+
+    roi_norm = np.nanmean(roi_norm, axis=(1,2))
 
     fit_options = prep_scipyfit_options(options, fit_model)
 
@@ -330,8 +330,8 @@ def fit_aois_pl_scipyfit(
     aoi_avg_best_fit_results_lst = []
 
     for a in aois:
-        this_sig = np.nanmean(sig[:, a[0], a[1]], axis=(1, 2))
-        this_ref = np.nanmean(ref[:, a[0], a[1]], axis=(1, 2))
+        this_sig = sig[:, a[0], a[1]]
+        this_ref = ref[:, a[0], a[1]]
 
         if not options["used_ref"]:
             this_aoi = this_sig
@@ -345,7 +345,7 @@ def fit_aois_pl_scipyfit(
         fitting_results = least_squares(
             fit_model.residuals_scipyfit,
             guess_params,
-            args=(sweep_list, this_aoi),
+            args=(sweep_list, np.nanmean(this_aoi, axis=(1,2))),
             **fit_opts,
         )
         aoi_avg_best_fit_results_lst.append(fitting_results.x)
