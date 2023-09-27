@@ -230,7 +230,7 @@ class UniMelb(System):
             "option_choices": None,
         }
 
-    def get_raw_pixel_size(self, options):
+    def get_raw_pixel_size(self, options): # in metres
         if "pixel_size" in options and options["pixel_size"]:
             return options["pixel_size"]
         # override keys available as options
@@ -266,6 +266,7 @@ class UniMelb(System):
         cam_pixel_size = sensor_pixel_size * (f_obj / f_tube)
 
         # save into options so it can be read from disk (by user) when saved
+        # DON'T USE THESE IN CODE -> USE THIS FN
         options["calculated_raw_pixel_size"] = cam_pixel_size
         options["calculated_binned_pixel_size"] = cam_pixel_size * options["total_bin"]
 
