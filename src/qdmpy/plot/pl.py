@@ -845,7 +845,7 @@ def pl_param_image(
 # ============================================================================
 
 
-def pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=False):
+def pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=False, custom_c_range=None):
     """
     Plots images for all independent versions of a single parameter type in pixel_fit_params.
 
@@ -958,7 +958,8 @@ def pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=
                 # we have too many axes (i.e. 7 params, 8 subplots), delete the axs
                 fig.delaxes(ax)
                 continue
-
+            
+            # If the colour range has not been passed (default) then generate the correct range given the options.
             if param_name == "residual":
                 c_range = qdmpy.plot.common.get_colormap_range(
                     options["colormap_range_dicts"]["residual_images"],
@@ -976,6 +977,10 @@ def pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=
                 )
                 c_map = options["colormaps"]["param_images"]
 
+            if custom_c_range is None:
+                c_range = custom_c_range
+ 
+            
             if errorplot:
                 c_label = "SD: " + fit_model.get_param_unit(param_name, param_number)
             else:
