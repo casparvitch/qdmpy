@@ -185,7 +185,7 @@ class System:
         # most systems will need these {you need to copy to your subclass method}
         # need to know number of threads to call (might be parallel fitting)
         options["threads"] = cpu_count() - options["scipyfit_sub_threads"]
-        if "base_dir" in options and not self.filepath_joined:
+        if "base_dir" in options and options["base_dir"] is not None and not self.filepath_joined:
             options["filepath"] = options["base_dir"] / options["filepath"]
             self.filepath_joined = True
 
@@ -356,7 +356,7 @@ class UniMelb(System):
         if "freqs_to_use" in options:
             options["freqs_to_use"] = list(map(bool, options["freqs_to_use"]))
 
-        if "base_dir" in options and not self.filepath_joined:
+        if "base_dir" in options and options["base_dir"] is not None and not self.filepath_joined:
             options["filepath"] = os.path.join(options["base_dir"], options["filepath"])
             self.filepath_joined = True  # just a flag so we don't do this twice
 
@@ -573,6 +573,7 @@ _SYSTEMS = {
     "cQDM": cQDM,
     "Argus": Argus,
     "Legacy_Argus": LegacyArgus,
+    "Default": Argus,
 }
 """Dictionary that defines systems available for use.
 
