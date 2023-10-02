@@ -107,6 +107,7 @@ class FitModel:
 
     def jacobian_scipyfit(self, param_ar, sweep_vec, pl_vals):
         """Evaluates (analytic) jacobian of fitmodel in format expected by scipy least_squares"""
+        # NB: pl_vals unused in pl jacobian -> but is used in Hamiltonian fitting
 
         # scipy just wants the jacobian wrt __call__, i.e. just derivs of param_ar
         for i, fn in enumerate(self.fn_chain):

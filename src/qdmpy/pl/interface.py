@@ -33,6 +33,8 @@ __pdoc__ = {
 # ============================================================================
 
 import qdmpy.pl.model
+import qdmpy.pl.fastmodel
+import qdmpy.pl.funcs
 import qdmpy.shared.misc
 from qdmpy.shared.misc import warn
 import qdmpy.pl.io
@@ -57,25 +59,40 @@ def define_fit_model(options):
     fit_functions = options["fit_functions"]
     # reorder fit functions to as expected by gpufit (if model matches a gpufit model)
     ffs = sorted(list(fit_functions.items()))
+    compilable = False
     for i in range(8):
         if ffs == [("constant", 1), ("stretched_exponential", 1)]:
             fit_functions = {"constant": 1, "stretched_exponential": 1}
+            compilable = True
+            fit_model = qdmpy.pl.fastmodel.ConstStretchedExp()
             break
         elif ffs == [("constant", 1), ("damped_rabi", 1)]:
             fit_functions = {"constant": 1, "damped_rabi": 1}
+            compilable = True
+            fit_model = qdmpy.pl.fastmodel.ConstDampedRabi()
             break
         elif ffs == [("linear", 1), ("lorentzian", i + 1)]:
             fit_functions = {"linear": 1, "lorentzian": i + 1}
+            compilable = True
+            fit_model = qdmpy.pl.fastmodel.LinearLorentzians(i+1)
             break
         elif ffs == [("constant", 1), ("lorentzian", i + 1)]:
             fit_functions = {"constant": 1, "lorentzian": i + 1}
+            compilable = True
+            fit_model = qdmpy.pl.fastmodel.ConstLorentzians(i+1)
             break
 
-    fit_model = qdmpy.pl.model.FitModel(fit_functions)
+    if not compilable or not options["use_fastmodel"]:
+        fit_model = qdmpy.pl.model.FitModel(fit_functions)
+        options["used_fastmodel"] = False
+    else:
+        options["used_fastmodel"] = True
 
     options["fit_param_defn"] = fit_model.get_param_odict()
 
     _prep_fit_backends(options, fit_model)
+
+    # overrides the key methods for SPEED
 
     return fit_model
 

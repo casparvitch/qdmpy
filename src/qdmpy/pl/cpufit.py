@@ -277,9 +277,6 @@ def fit_single_pixel_pl_cpufit(
         options, *qdmpy.pl.common.gen_init_guesses(options)
     )
 
-    # shape = num_fits, 2*num_params
-    reshaped_bounds = np.tile(init_bounds, (2, 1)).astype(np.float32)
-
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
         init_guess_params = roi_avg_fit_result.best_params.copy()
 
@@ -288,18 +285,13 @@ def fit_single_pixel_pl_cpufit(
 
     params_to_fit = np.array(params_to_fit, dtype=np.int32)
     init_guess_params = np.repeat([init_guess_params], repeats=2, axis=0)
-    init_guess_params = init_guess_params.astype(dtype=np.float32)
+    init_guess_params = init_guess_params.astype(dtype=np.float64)
 
     # constraints needs to be reshaped too
     constraints = np.repeat([init_bounds], repeats=2, axis=0)
-    constraints = constraints.astype(dtype=np.float32)
+    constraints = constraints.astype(dtype=np.float64)
 
     pixel_pl_ar_doubled = np.repeat([pixel_pl_ar], repeats=2, axis=0)
-
-    constraint_types = np.array(
-        [cf.ConstraintType.LOWER_UPPER for i in range(init_guess_params.shape[1])],
-        dtype=np.int32,
-    )
 
     (
         parameters,
@@ -308,7 +300,7 @@ def fit_single_pixel_pl_cpufit(
         number_iterations,
         execution_time,
     ) = cf.fit_constrained(
-        pixel_pl_ar_doubled.astype(np.float32),
+        pixel_pl_ar_doubled.astype(np.float64),
         None,
         options["ModelID"],
         init_guess_params,
@@ -317,7 +309,7 @@ def fit_single_pixel_pl_cpufit(
             [cf.ConstraintType.LOWER_UPPER for i in range(len(params_to_fit))],
             dtype=np.int32,
         ),
-        user_info=np.array(sweep_list, dtype=np.float32),
+        user_info=np.array(sweep_list, dtype=np.float64),
         parameters_to_fit=params_to_fit,
     )
 
@@ -372,9 +364,6 @@ def fit_roi_avg_pl_cpufit(options, sig, ref, sweep_list, fit_model):
         options, *qdmpy.pl.common.gen_init_guesses(options)
     )
 
-    # shape = num_fits, 2*num_params
-    reshaped_bounds = np.tile(init_bounds, (2, 1)).astype(np.float32)
-
     cpufit_fit_options = prep_cpufit_fit_options(options)
 
     # only fit the params we want to :)
@@ -382,11 +371,11 @@ def fit_roi_avg_pl_cpufit(options, sig, ref, sweep_list, fit_model):
 
     params_to_fit = np.array(params_to_fit, dtype=np.int32)
     init_guess_params = np.repeat([init_guess_params], repeats=2, axis=0)
-    init_guess_params = init_guess_params.astype(dtype=np.float32)
+    init_guess_params = init_guess_params.astype(dtype=np.float64)
 
     # constraints needs to be reshaped too
     constraints = np.repeat([init_bounds], repeats=2, axis=0)
-    constraints = constraints.astype(dtype=np.float32)
+    constraints = constraints.astype(dtype=np.float64)
 
     (
         best_params,
@@ -395,7 +384,7 @@ def fit_roi_avg_pl_cpufit(options, sig, ref, sweep_list, fit_model):
         number_iterations,
         execution_time,
     ) = cf.fit_constrained(
-        roi_norm_twice.astype(np.float32),
+        roi_norm_twice.astype(np.float64),
         None,
         options["ModelID"],
         init_guess_params,
@@ -404,7 +393,7 @@ def fit_roi_avg_pl_cpufit(options, sig, ref, sweep_list, fit_model):
             [cf.ConstraintType.LOWER_UPPER for i in range(len(params_to_fit))],
             dtype=np.int32,
         ),
-        user_info=np.array(sweep_list, dtype=np.float32),
+        user_info=np.array(sweep_list, dtype=np.float64),
         parameters_to_fit=params_to_fit,
         **cpufit_fit_options,
     )
@@ -470,9 +459,6 @@ def fit_aois_pl_cpufit(
         options, *qdmpy.pl.common.gen_init_guesses(options)
     )
 
-    # shape = num_fits, 2*num_params
-    reshaped_bounds = np.tile(init_bounds, (2, 1)).astype(np.float32)
-
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
         init_guess_params = roi_avg_fit_result.best_params.copy()
 
@@ -487,11 +473,11 @@ def fit_aois_pl_cpufit(
 
     params_to_fit = np.array(params_to_fit, dtype=np.int32)
     init_guess_params = np.repeat([init_guess_params], repeats=2, axis=0)
-    init_guess_params = init_guess_params.astype(dtype=np.float32)
+    init_guess_params = init_guess_params.astype(dtype=np.float64)
 
     # constraints needs to be reshaped too
     constraints = np.repeat([init_bounds], repeats=2, axis=0)
-    constraints = constraints.astype(dtype=np.float32)
+    constraints = constraints.astype(dtype=np.float64)
 
     for a in aois:
         this_sig = sig[:, a[0], a[1]]
@@ -510,16 +496,16 @@ def fit_aois_pl_cpufit(
         this_aoi_twice = np.repeat([this_aoi_avg], repeats=2, axis=0)
 
         fitting_results, _, _, _, _ = cf.fit_constrained(
-            this_aoi_twice.astype(np.float32),
+            this_aoi_twice.astype(np.float64),
             None,
             options["ModelID"],
-            np.array(init_guess_params, dtype=np.float32),
+            np.array(init_guess_params, dtype=np.float64),
             constraints=constraints,
             constraint_types=np.array(
                 [cf.ConstraintType.LOWER_UPPER for i in range(len(params_to_fit))],
                 dtype=np.int32,
             ),
-            user_info=np.array(sweep_list, dtype=np.float32),
+            user_info=np.array(sweep_list, dtype=np.float64),
             parameters_to_fit=params_to_fit,
         )
         aoi_avg_best_fit_results_lst.append(fitting_results[0, :])
@@ -579,33 +565,22 @@ def fit_all_pixels_pl_cpufit(
         options, *qdmpy.pl.common.gen_init_guesses(options)
     )
 
-    # shape = num_fits, 2*num_params
-    reshaped_bounds = np.tile(init_bounds, (num_pixels, 1)).astype(np.float32)
-
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
         init_guess_params = roi_avg_fit_result.best_params.copy()
 
     # need to reshape init_guess_params, one for each pixel
-    guess_params = np.array([init_guess_params], dtype=np.float32)
+    guess_params = np.array([init_guess_params], dtype=np.float64)
     init_guess_params_reshaped = np.repeat(guess_params, repeats=num_pixels, axis=0)
 
     # constraints needs to be reshaped too
     constraints = np.repeat([init_bounds], repeats=num_pixels, axis=0)
-    constraints = constraints.astype(dtype=np.float32)
+    constraints = constraints.astype(dtype=np.float64)
 
     # only fit the params we want to :) {i.e. < 8 peak ODMR fit etc.}
     params_to_fit = get_params_to_fit(options, fit_model)
 
     # reshape sig_norm in a way that cpufit likes: (number_fits, number_points)
     sig_norm_shaped, pixel_posns = cpufit_data_shape(pixel_data)
-
-    constraint_types = np.array(
-        [
-            cf.ConstraintType.LOWER_UPPER
-            for i in range(init_guess_params_reshaped.shape[1])
-        ],
-        dtype=np.int32,
-    )
 
     fitting_results, _, _, _, execution_time = cf.fit_constrained(
         sig_norm_shaped,
@@ -617,7 +592,7 @@ def fit_all_pixels_pl_cpufit(
             [cf.ConstraintType.LOWER_UPPER for i in range(len(params_to_fit))],
             dtype=np.int32,
         ),
-        user_info=np.array(sweep_list, dtype=np.float32),
+        user_info=np.array(sweep_list, dtype=np.float64),
         parameters_to_fit=np.array(params_to_fit, dtype=np.int32),
     )
     # for the record
@@ -658,7 +633,7 @@ def cpufit_data_shape(sig_norm):
     Returns
     -------
     sig_norm_reshaped : np array
-        np.float32, shape: (num_pixels, len(sweep_list)). Shaped as cpufit wants it!
+        np.float64, shape: (num_pixels, len(sweep_list)). Shaped as cpufit wants it!
     pixel_posns : list
         List of pixel positions for each rown of sig_norm_reshaped i.e. [(x1, y1), (x2, y2)]
     """
@@ -667,7 +642,7 @@ def cpufit_data_shape(sig_norm):
     for y, x, spectrum in qdmpy.pl.common.pixel_generator(sig_norm):
         pixel_posns.append((y, x))
         sig_norm_reshaped.append(spectrum)
-    return np.array(sig_norm_reshaped, dtype=np.float32), pixel_posns
+    return np.array(sig_norm_reshaped, dtype=np.float64), pixel_posns
 
 
 # ============================================================================

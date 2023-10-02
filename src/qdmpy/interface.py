@@ -170,7 +170,7 @@ def load_options(
         if key not in prelim_options:
             raise RuntimeError(f"Must provide these options: {required_options}")
 
-    chosen_system = qdmpy.system.choose_system(prelim_options["system_name"])
+    chosen_system = qdmpy.system.choose_system(prelim_options.get("system_name", "Default"))
 
     chosen_system.system_specific_option_update(prelim_options)
 
@@ -408,6 +408,9 @@ def _define_output_dir(options):
         )
     else:
         suffix = ""
+
+    if options["custom_output_dir_prefix"] is None and options["custom_output_dir_suffix"] is None:
+        suffix = "_output"
 
     options["output_dir"] = output_dir.parent.joinpath(
         prefix + output_dir.stem + suffix

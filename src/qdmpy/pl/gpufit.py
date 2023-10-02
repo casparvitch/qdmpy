@@ -284,9 +284,6 @@ def fit_single_pixel_pl_gpufit(
         options, *qdmpy.pl.common.gen_init_guesses(options)
     )
 
-    # shape = num_fits, 2*num_params
-    reshaped_bounds = np.tile(init_bounds, (2, 1)).astype(np.float32)
-
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
         init_guess_params = roi_avg_fit_result.best_params.copy()
 
@@ -302,11 +299,6 @@ def fit_single_pixel_pl_gpufit(
     constraints = constraints.astype(dtype=np.float32)
 
     pixel_pl_ar_doubled = np.repeat([pixel_pl_ar], repeats=2, axis=0)
-
-    constraint_types = np.array(
-        [gf.ConstraintType.LOWER_UPPER for i in range(init_guess_params.shape[1])],
-        dtype=np.int32,
-    )
 
     (
         parameters,
@@ -378,9 +370,6 @@ def fit_roi_avg_pl_gpufit(options, sig, ref, sweep_list, fit_model):
     init_guess_params, init_bounds = gen_gpufit_init_guesses(
         options, *qdmpy.pl.common.gen_init_guesses(options)
     )
-
-    # shape = num_fits, 2*num_params
-    reshaped_bounds = np.tile(init_bounds, (2, 1)).astype(np.float32)
 
     gpufit_fit_options = prep_gpufit_fit_options(options)
 
@@ -477,9 +466,6 @@ def fit_aois_pl_gpufit(
         options, *qdmpy.pl.common.gen_init_guesses(options)
     )
 
-    # shape = num_fits, 2*num_params
-    reshaped_bounds = np.tile(init_bounds, (2, 1)).astype(np.float32)
-
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
         init_guess_params = roi_avg_fit_result.best_params.copy()
 
@@ -574,20 +560,10 @@ def fit_all_pixels_pl_gpufit(
     sweep_ar = np.array(sweep_list)
     num_pixels = np.shape(sig_norm)[1] * np.shape(sig_norm)[2]
 
-    # randomize order of fitting pixels (will un-scramble later) so ETA is more correct
-    # not really necessary for gpu?
-    if options["scramble_pixels"]:
-        pixel_data, unshuffler = qdmpy.pl.common.shuffle_pixels(sig_norm)
-    else:
-        pixel_data = sig_norm
-
     # this is just constructing the initial parameter guesses and bounds in the right format
     init_guess_params, init_bounds = gen_gpufit_init_guesses(
         options, *qdmpy.pl.common.gen_init_guesses(options)
     )
-
-    # shape = num_fits, 2*num_params
-    reshaped_bounds = np.tile(init_bounds, (num_pixels, 1)).astype(np.float32)
 
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
         init_guess_params = roi_avg_fit_result.best_params.copy()
@@ -604,15 +580,7 @@ def fit_all_pixels_pl_gpufit(
     params_to_fit = get_params_to_fit(options, fit_model)
 
     # reshape sig_norm in a way that gpufit likes: (number_fits, number_points)
-    sig_norm_shaped, pixel_posns = gpufit_data_shape(pixel_data)
-
-    constraint_types = np.array(
-        [
-            gf.ConstraintType.LOWER_UPPER
-            for i in range(init_guess_params_reshaped.shape[1])
-        ],
-        dtype=np.int32,
-    )
+    sig_norm_shaped, pixel_posns = gpufit_data_shape(sig_norm)
 
     fitting_results, _, _, _, execution_time = gf.fit_constrained(
         sig_norm_shaped,
@@ -639,11 +607,8 @@ def fit_all_pixels_pl_gpufit(
     fit_results = gpufit_reshape_result(fitting_results, pixel_posns, jacs)
 
     res, sigmas = qdmpy.pl.common.get_pixel_fitting_results(
-        fit_model, fit_results, pixel_data, sweep_ar
+        fit_model, fit_results, sig_norm, sweep_ar
     )
-    if options["scramble_pixels"]:
-        res = qdmpy.pl.common.unshuffle_fit_results(res, unshuffler)
-        sigmas = qdmpy.pl.common.unshuffle_fit_results(sigmas, unshuffler)
 
     return res, sigmas
 
