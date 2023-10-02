@@ -404,7 +404,11 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, fit_optns):
     """
     # shaped_data: [y, x, pl]
     # output: (y, x), result_params, jac
-    fitres = least_squares(fun, p0, args=(sweep_vec, shaped_data[2]), **fit_optns)
+    try:
+        fitres = least_squares(fun, p0, args=(sweep_vec, shaped_data[2]), **fit_optns)
+    except ValueError:
+        fitres = np.empty(np.shape(p0))
+        fitres[:] = np.nan
     return ((shaped_data[0], shaped_data[1]), fitres.x, fitres.jac)
 
 
@@ -440,10 +444,11 @@ def fit_all_pixels_pl_scipyfit(
     threads = options["threads"]
     num_pixels = np.shape(sig_norm)[1] * np.shape(sig_norm)[2]
 
-    # this makes low binning work (idk why), else do chunksize = 1
-    chunksize = int(num_pixels / (threads * 100))
+    # divide pixels by numbers of threads (workers) to use
+    chunksize = int(num_pixels / threads)
 
     # randomize order of fitting pixels (will un-scramble later) so ETA is more correct
+    # -> this is not every useful.
     if options["scramble_pixels"]:
         pixel_data, unshuffler = qdmpy.pl.common.shuffle_pixels(sig_norm)
     else:

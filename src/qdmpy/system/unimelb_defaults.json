@@ -248,8 +248,9 @@
             ]
     },
     // fit pixels in a random order to give more accurate ETA
+    // default to false now, unnecessarily slows us down
     "scramble_pixels": {
-        "option_default": true,
+        "option_default": false,
         "option_choices":
             [
                 true,
@@ -269,13 +270,24 @@
     // note: may be reordered to match pattern expected by gpufit
     "fit_functions": {},
 
+
+    // Use new scipy fastmodel (numba) function definitions - use True if in doubt.
+    "use_fastmodel": {
+        "option_default": true,
+        "option_choices":
+            [
+                true,
+                false
+            ]
+    },
+
     // All parameters below can either have a range or a bound.
     // The code automatically detects this by the name of the dictionary key.x
     // range results in bounds of min = guess - range, max = guess + range
     // bounds directly gives these values
     // range takes precedence over bounds
 
-    // Position guess for lorentzian (in MHz)
+    // Position guess for Lorentzian (in MHz)
     "pos_guess": {
         "option_default": null
     },
@@ -827,6 +839,15 @@
     "scipyfit_sub_threads": {
         "option_default": 0
     },
+    // limit the cpu on multiprocessing, e.g. if labview running
+    "scipyfit_limit_cpu": {
+        "option_default": true,
+        "option_choices": 
+            [
+                true,
+                false
+            ]
+    },
      // display progress bar during fitting
     "scipyfit_show_progressbar": {
         "option_default": true,
@@ -893,16 +914,18 @@
                 false
             ]
     },
-    // Determines the loss function. This in non trivial check the scipy documentation
+    // Determines the loss function. This in non trivial check the scipy documentation.
+    // currently not allowing others (we never changed anyway)
+    //     see get_pixel_fitting_results in pl/common.py
     "scipyfit_loss_fn": {
         "option_default": "linear",
         "option_choices": 
             [
-                "linear", 
-                "soft_l1", 
-                "huber", 
-                "cauchy",
-                "arctan"
+                "linear" 
+                // "soft_l1", 
+                // "huber", 
+                // "cauchy",
+                // "arctan"
             ]
     },
     // ========== gpufit options {ALSO USED FOR CPUFIT} ===========
@@ -1233,7 +1256,7 @@
     //        percentile                      : maps the range between percentiles of the data
     //        percentile_symmetric_about_zero : as above but symmetric about zero, caps. all vals
     //        strict_range                    : maps colors between the values given
-    //        mean_plus_minus"                : mean plus or minus value given.
+    //        mean_plus_minus                 : mean plus or minus value given.
     //
     // values : int/float or array
     //    Different for each type:
@@ -1471,5 +1494,7 @@
     //  num freqs/taus is *2 if there's a ref
     "binary_expected_shape": {},
     "calculated_raw_pixel_size": {},
-    "calculated_binned_pixel_size": {}
+    "calculated_binned_pixel_size": {},
+    // Used newer FastFitModel implementation?
+    "used_fastmodel": {}
 }
