@@ -155,6 +155,7 @@ class FastFitModel:
 
 
 class ConstStretchedExp(FastFitModel):
+    fit_functions =  {"constant": 1, "stretched_exponential": 1}
     @staticmethod
     @njit(fastmath=True)
     def _eval(x, fit_params):
@@ -208,6 +209,7 @@ class ConstStretchedExp(FastFitModel):
 
 
 class ConstDampedRabi(FastFitModel):
+    fit_functions = {"constant": 1, "damped_rabi": 1}
     @staticmethod
     @njit(fastmath=True)
     def _eval(x, fit_params):
@@ -259,6 +261,7 @@ class ConstDampedRabi(FastFitModel):
 class LinearLorentzians(FastFitModel):
     def __init__(self, n_lorentzians):
         self.n_lorentzians = n_lorentzians
+        self.fit_functions = {"linear": 1, "lorentzian": n_lorentzians}
 
     def __call__(self, param_ar, sweep_vec):
         return self._eval(self.n_lorentzians, sweep_vec, param_ar)
@@ -337,6 +340,7 @@ class LinearLorentzians(FastFitModel):
 class ConstLorentzians(FastFitModel):
     def __init__(self, n_lorentzians):
         self.n_lorentzians = n_lorentzians
+        self.fit_functions = {"constant": 1, "lorentzian": n_lorentzians}
 
     def __call__(self, param_ar, sweep_vec):
         return self._eval(self.n_lorentzians, sweep_vec, param_ar)
