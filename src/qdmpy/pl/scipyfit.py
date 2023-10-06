@@ -406,10 +406,12 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, fit_optns):
     # output: (y, x), result_params, jac
     try:
         fitres = least_squares(fun, p0, args=(sweep_vec, shaped_data[2]), **fit_optns)
+        fitp = fitres.x
+        fitj = fitres.jac
     except ValueError:
-        fitres = np.empty(np.shape(p0))
-        fitres[:] = np.nan
-    return ((shaped_data[0], shaped_data[1]), fitres.x, fitres.jac)
+        fitp = np.empty(np.shape(p0))
+        fitj = None
+    return ((shaped_data[0], shaped_data[1]), fitp, fitj)
 
 
 # ==========================================================================

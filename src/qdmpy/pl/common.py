@@ -414,22 +414,27 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
     for (y, x), result, jac in fit_results:
         filled_params = {}  # keep track of index, i.e. pos_0, for this pixel
 
-        # NOTE we decide not to call each backend separately here
-        resid = fit_model.residuals_scipyfit(result, sweep_list, pixel_data[:, y, x])
-        fit_image_results["residual_0"][y, x] = np.sum(
-            np.abs(resid, dtype=np.float64), dtype=np.float64
-        )
-        # uncertainty (covariance matrix), copied from scipy.optimize.curve_fit (not abs. sigma)
-        _, s, vt = svd(jac, full_matrices=False)
-        threshold = np.finfo(float).eps * max(jac.shape) * s[0]
-        s = s[s > threshold]
-        vt = vt[: s.size]
-        pcov = np.dot(vt.T / s**2, vt)
-        # NOTE using/assuming linear cost fn,
-        cost = 2 * 0.5 * np.sum(fit_model(result, sweep_list) ** 2)
-        s_sq = cost / (len(resid) - len(result))
-        pcov *= s_sq
-        perr = np.sqrt(np.diag(pcov))  # array of standard deviations
+        if jac is None: # can't fit this pixel
+            fit_image_results["residual_0"][y, x] = np.nan
+            perr = np.empty(np.shape(result))
+            perr[:] = np.nan
+        else:
+            # NOTE we decide not to call each backend separately here
+            resid = fit_model.residuals_scipyfit(result, sweep_list, pixel_data[:, y, x])
+            fit_image_results["residual_0"][y, x] = np.sum(
+                np.abs(resid, dtype=np.float64), dtype=np.float64
+            )
+            # uncertainty (covariance matrix), copied from scipy.optimize.curve_fit (not abs. sigma)
+            _, s, vt = svd(jac, full_matrices=False)
+            threshold = np.finfo(float).eps * max(jac.shape) * s[0]
+            s = s[s > threshold]
+            vt = vt[: s.size]
+            pcov = np.dot(vt.T / s**2, vt)
+            # NOTE using/assuming linear cost fn,
+            cost = 2 * 0.5 * np.sum(fit_model(result, sweep_list) ** 2)
+            s_sq = cost / (len(resid) - len(result))
+            pcov *= s_sq
+            perr = np.sqrt(np.diag(pcov))  # array of standard deviations
 
         for param_num, param_name in enumerate(fit_model.get_param_defn()):
             # keep track of what index we're up to, i.e. pos_1
