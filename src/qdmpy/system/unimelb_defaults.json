@@ -959,7 +959,6 @@
     // ===============================  Fourier Parameters =======================================
     // ===========================================================================================
     // padding mode, see np.pad
-    // ALSO used for smoothing (even though that's not done in f.space)
     "fourier_pad_mode": {
         "option_default": "constant",
         "option_choices": [

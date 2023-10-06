@@ -124,7 +124,6 @@ def _smooth_image(options, image):
         return gaussian_filter(
             image,
             sigma=[0, sigma, sigma],
-            mode=options["fourier_pad_mode"],
             truncate=options["smoothing_truncate"],
         )
 
