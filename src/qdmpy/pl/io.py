@@ -102,11 +102,11 @@ def load_image_and_sweep(options):
 
 def _calc_smooth_sigma_px(options):
     """Parse options to produce smoothing gaussian sigma in Px"""
-    if options["smoothing_sigma_m"]:
+    if "smoothing_sigma_m" in options and options["smoothing_sigma_m"]:
         sigma = np.abs(options["smoothing_sigma_m"])
         # convert m to pxs
         sigma /= options["system"].get_raw_pixel_size(options)
-    elif np.abs(options["smoothing_sigma_px"]):
+    elif "smoothing_sigma_px" in options and np.abs(options["smoothing_sigma_px"]):
         sigma = np.abs(options["smoothing_sigma_px"])
     else:
         return None
