@@ -24,6 +24,7 @@ required = [
     "python-polylabel",  # magism
     "dill",  # for magsim
     "astropy",  # remove if remove sigma_clip background sub
+    "PyQt6"
 ]
 
 here = pathlib.Path(__file__).parent.resolve()

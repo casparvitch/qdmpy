@@ -1321,7 +1321,7 @@
     // extra parameters sent to matplotlib to define plotting stylesheet 
     "mpl_rcparams": {
         "option_default": {
-            "figure.constrained_layout.use": true,
+            "figure.constrained_layout.use": false, // clashes with qt
             "figure.figsize": [6.4, 4.8],
             "figure.dpi": 80,
             "figure.max_open_warning": 30,
