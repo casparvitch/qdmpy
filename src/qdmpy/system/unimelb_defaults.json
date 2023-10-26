@@ -62,7 +62,11 @@
             [
                 "Zyla",
                 "cQDM",
-                "Cryo_Widefield"
+                "Cryo_Widefield",
+                "Argus",
+                "Legacy_Cryo_Widefield",
+                "Legacy_Argus",
+                "Py_Cryo_Widefield"
             ]
     },
 
