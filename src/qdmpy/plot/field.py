@@ -44,7 +44,7 @@ from qdmpy.shared.misc import warn
 # ============================================================================
 
 
-def bnvs_and_dshifts(options, name, bnvs, dshifts):
+def bnvs_and_dshifts(options, name, bnvs, dshifts, given_name_only=False):
     """
     Plots bnv arrays above dshift arrays.
 
@@ -96,7 +96,11 @@ def bnvs_and_dshifts(options, name, bnvs, dshifts):
         c_range = qdmpy.plot.common.get_colormap_range(
             options["colormap_range_dicts"]["bnv_images"], data
         )
-        title = f"{name} B NV_{i}"
+        if given_name_only:
+            title = name
+        else:
+            title = f"{name} B NV_{i}"
+            
         if width == 1 and (dshifts is None or not dshifts):
             ax = axs
         elif width == 1:

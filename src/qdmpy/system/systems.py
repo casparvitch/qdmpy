@@ -560,8 +560,8 @@ class PyControl(UniMelb):
         ]
         bias_field = []
         for key in keys:
-            if key in options["metadata"]["Devices"]["null"]:
-                bias_field.append(options["metadata"]["Devices"]["null"][key])
+            if key in options["metadata"]["Devices"]["magnet"]:
+                bias_field.append(options["metadata"]["Devices"]["magnet"][key])
             else:
                 return False, None
         if len(bias_field) != 3:
