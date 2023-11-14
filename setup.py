@@ -2,6 +2,7 @@ import setuptools
 import pathlib
 import site
 import sys
+import sysconfig
 
 # odd bug with develop (editable) installs, see: https://github.com/pypa/pip/issues/7953
 site.ENABLE_USER_SITE = "--user" in sys.argv[1:]
@@ -24,12 +25,13 @@ required = [
     "python-polylabel",  # magism
     "dill",  # for magsim
     "astropy",  # remove if remove sigma_clip background sub
-    "PyQt6"
+    "PyQt6" # Needed for gui widget stuff
 ]
 
 here = pathlib.Path(__file__).parent.resolve()
 
 long_description = (here / "README.md").read_text(encoding="utf-8")
+arch = sysconfig.get_platform().replace("-", "_").replace(".", "_")
 
 if __name__ == "__main__":
     setuptools.setup(
@@ -49,14 +51,6 @@ if __name__ == "__main__":
             "Quantum Sensing",
             "gpufit",
         ],
-        classifiers=[
-            "Programming Language :: Python :: 3",
-            "Programming Language :: Python :: 3 :: Only",
-            "Programming Language :: Python :: 3.8",
-            "Programming Language :: Python :: Implementation :: CPython",
-            "License :: OSI Approved :: MIT License",
-            "Development Status :: 2 - Pre-Alpha",
-        ],
         license="MIT",
         package_dir={"": "src"},
         packages=setuptools.find_packages(
@@ -65,6 +59,14 @@ if __name__ == "__main__":
         install_requires=required,
         python_requires=">=3.8",  # check pyfftw
         package_data={"": ["*.md", "*.json"]},
-        setup_requires=["wheel"],  # force install of wheel first? Untested 2021-08-01.
+        setup_requires=["wheel"],
+        extras_require={
+            "cpufit": [f"pycpufit @ file://localhost/{here}/gpufit_wheels/pyCpufit-101.2.0-py2.py3-none-{arch}.whl"],
+            "gpufit": [f"pygpufit @ file://localhost/{here}/gpufit_wheels/pyGpufit-101.2.0-py2.py3-none-{arch}.whl"],
+        }
     )
 # https://setuptools.readthedocs.io/en/latest/userguide/datafiles.html
+
+# https://stackoverflow.com/questions/35668295/how-to-include-and-install-local-dependencies-in-setup-py-in-python
+# https://setuptools.pypa.io/en/latest/userguide/dependency_management.html#direct-url-dependencies
+# https://setuptools.pypa.io/en/latest/userguide/dependency_management.html#optional-dependencies
