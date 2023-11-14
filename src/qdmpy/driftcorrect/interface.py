@@ -1,13 +1,39 @@
+# -*- coding: utf-8 -*-
+"""
+This module holds tools for drift correction.
+Does not depend on any of the rest of the qdmpy package.
+Most of the functions are not documented, but the API is only 2 funcs:
+
+Functions
+---------
+ - `qdmpy.driftcorrect.bnv.drift_correct_test`
+ - `qdmpy.driftcorrect.drift_correct_measurement`
+"""
+
+# ============================================================================
+
+__author__ = "Sam Scholten"
+__pdoc__ = {
+    "qdmpy.driftcorrect.drift_correct_test": True,
+    "qdmpy.driftcorrect.drift_correct_measurement": True,
+}
+
+# ============================================================================
+
 import re
 from rebin import rebin
 import numpy as np
 from warnings import warn
 import os
+from tqdm.autonotebook import tqdm
 from skimage.registration import phase_cross_correlation as cross_correl
 from skimage.transform import EuclideanTransform, warp
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable, axes_size
-import matplotlib as mpl
+
+# ============================================================================
+
 
 def read_image(
     filepath,
@@ -30,6 +56,9 @@ def read_image(
         rem_end_pts,
         ROI,
     )
+
+
+# ============================================================================
 
 
 def read_metadata(filepath):
@@ -59,10 +88,12 @@ def read_metadata(filepath):
 
 # ============================================================================
 
+
 def _read_sweep_list(filepath):
     with open(os.path.normpath(str(filepath) + "_metaSpool.txt"), "r") as fid:
         sweep_str = fid.readline().rstrip().split("\t")
     return [float(i) for i in sweep_str]
+
 
 # ============================================================================
 
@@ -244,9 +275,7 @@ def _rebin_image(image, additional_bins=0, used_ref=True, norm="div"):
         image_rebinned = np.array(image)
     else:
         if additional_bins != 1 and additional_bins % 2:
-            raise RuntimeError(
-                "The binning parameter needs to be a multiple of 2."
-            )
+            raise RuntimeError("The binning parameter needs to be a multiple of 2.")
 
         image_rebinned = np.array(
             rebin(
@@ -267,9 +296,7 @@ def _rebin_image(image, additional_bins=0, used_ref=True, norm="div"):
         elif norm == "true_sub":
             sig_norm = (sig - ref) / np.nanmax(sig - ref, axis=0)
         else:
-            raise KeyError(
-                "bad normalisation option, use: ['sub', 'div', 'true_sub']"
-            )
+            raise KeyError("bad normalisation option, use: ['sub', 'div', 'true_sub']")
     else:
         sig = image_rebinned
         ref = image_rebinned
@@ -332,7 +359,9 @@ def _reshape_dataset(
         roi,
     )
 
+
 # ============================================================================
+
 
 def _add_colorbar(im, fig, ax, aspect=20, pad_fraction=1, **kwargs):
     divider = make_axes_locatable(ax)
@@ -347,7 +376,10 @@ def _add_colorbar(im, fig, ax, aspect=20, pad_fraction=1, **kwargs):
     cbar.ax.linewidth = 0.5
     return cbar
 
-def plot_image_on_ax(fig, ax, image_data, title="", c_map="gray", c_range=None, c_label=""):
+
+def plot_image_on_ax(
+    fig, ax, image_data, title="", c_map="gray", c_range=None, c_label=""
+):
     if c_range is None:
         mx = np.nanmax(np.abs([np.nanmin(image_data), np.nanmax(image_data)]))
         c_range = [-mx, mx]
@@ -360,13 +392,18 @@ def plot_image_on_ax(fig, ax, image_data, title="", c_map="gray", c_range=None, 
 
     return fig, ax
 
+
 # ============================================================================
 
-def drift_correct(refr_pl, move_pl, target_pl):
+
+def drift_correct_single(refr_pl, move_pl, target_pl):
+    # refr_pl & move_pl should probably be cropped to some feature
+    # then the shift is applied to target_pl
     with np.errstate(all="ignore"):
         shift_calc = cross_correl(refr_pl, move_pl, normalization=None)[0]
     tform = EuclideanTransform(translation=[-shift_calc[1], -shift_calc[0]])
     return warp(target_pl, tform, mode="edge"), shift_calc
+
 
 def drift_correct_stack(refr_pl, move_pl, move_sig_norm):
     # calc's shift in 'mov_pl' to match 'refr_pl' (image regulation) via cross-corr method
@@ -374,64 +411,285 @@ def drift_correct_stack(refr_pl, move_pl, move_sig_norm):
     with np.errstate(all="ignore"):
         shift_calc = cross_correl(refr_pl, move_pl, normalization=None)[0]
     tform = EuclideanTransform(translation=[-shift_calc[1], -shift_calc[0]])
-    
+
     reg_sig_norm = np.empty(move_sig_norm.shape)
     for i in range(move_sig_norm.shape[0]):
         reg_sig_norm[i, :, :] = warp(move_sig_norm[i, :, :], tform, mode="edge")
     return reg_sig_norm, shift_calc
 
+
 # ============================================================================
 
 
-exec(open("./TEST_DATA_PATH.py").read())
+def read_and_drift_correct(
+    base_path,
+    stub,
+    image_seq,
+    additional_bins=0,
+    rem_start_pts=0,
+    rem_end_pts=0,
+    ROI=None,  # Used for image registration only (no crop on output)
+    mask=None,  # True where you want to include image in accum.
+):
+    first = True
+    for i in tqdm(image_seq):
+        _, sig, ref, _, _, roi = read_image(
+            base_path + stub(i),
+            additional_bins,
+            "div",  # norm - we don't care what it is
+            rem_start_pts,
+            rem_end_pts,
+            ROI,
+        )
+        if first:
+            first = False
+            refr_pl = np.sum(sig, axis=0)
+            accum_sig = sig.copy()
+            accum_ref = ref.copy()
+            prev_sig = sig.copy()
+            prev_ref = ref.copy()
+            continue
 
-base_path = TEST_DATA_PATH + "drift_corr_test/"
-stub = lambda x: f"ODMR - CW_{x}"
-imns = [9, 10, 11, 69]
+        this_sig = sig - prev_sig
+        this_ref = ref - prev_ref
+        this_pl = np.sum(this_sig, axis=0)
+        prev_sig = sig
+        prev_ref = ref
 
-ROI = {"start": [150, 100], "end": [400, 350]}
+        this_sig, shift_calc_stack = drift_correct_stack(
+            crop_roi(refr_pl, roi), crop_roi(this_pl, roi), this_sig
+        )
+        this_ref, shift_calc_stack = drift_correct_stack(
+            crop_roi(refr_pl, roi), crop_roi(this_pl, roi), this_ref
+        )
 
-(refr_pl, _, _, refr_sig_norm, sweep_list, roi) = read_image(
-    base_path + stub(imns[0]), additional_bins=0, norm="div", ROI=ROI
-)
+        if mask is None or mask[i - image_seq[0]]:
+            accum_sig += this_sig
+            accum_ref += this_ref
 
-(move_pl, _, _, move_sig_norm, sweep_list, roi) = read_image(
-    base_path + stub(imns[1]), additional_bins=0, norm="div", ROI=ROI
-)
+    return accum_sig, accum_ref
 
-crop_refr_pl = crop_roi(refr_pl, roi)
-crop_move_pl = crop_roi(move_pl, roi)
 
-crop_regr_pl, shift_calc_pl = drift_correct(crop_refr_pl, crop_move_pl, crop_move_pl)
-print(shift_calc_pl)
-tfig, taxs = plt.subplots(ncols=3, figsize=(14,4), sharex=True, sharey=True)
-plot_image_on_ax(tfig, taxs[0], crop_refr_pl)
-plot_image_on_ax(tfig, taxs[1], crop_move_pl)
-plot_image_on_ax(tfig, taxs[2], crop_regr_pl)
+# ============================================================================
 
-fig, ax = plt.subplots()
-plot_image_on_ax(fig, ax, crop_roi(refr_pl, roi), title="ROI")
 
-sig_norms = [refr_sig_norm,]
-old_pls = [refr_pl,]
-new_pls = [refr_pl,]
-for i in imns[1:]:
-    move_pl, _, _, sig_norm, _, _ = read_image(base_path + stub(i))
-    
-    old_pls.append(move_pl)
-    regr_pl, shift_calc_pl = drift_correct(crop_roi(refr_pl, roi), crop_roi(move_pl, roi), move_pl)
-    new_pls.append(regr_pl)
-    stack, shift_calc_stack = drift_correct_stack(crop_roi(refr_pl, roi), crop_roi(move_pl, roi), sig_norm)
-    sig_norms.append(stack)
-    print(shift_calc_pl, shift_calc_stack)
-    
-fig, axs = plt.subplots(ncols=len(imns), nrows=2, figsize=(16,12), sharex=True, sharey=True)
-for i, f in enumerate(imns):
-    plot_image_on_ax(fig, axs[0, i], old_pls[i], title=f"old {f}")
-    plot_image_on_ax(fig, axs[1, i], new_pls[i], title=f"new {f}")
+def drift_correct_measurement(
+    directory,
+    start_num,
+    end_num,
+    stub,
+    output_file,
+    feature_roi=None,
+    additional_bins=0,  # TODO  need to save in metadata?? for scalebars
+    rem_start_pts=0,
+    rem_end_pts=0,
+    image_nums_mask=None,
+    reader_mode=None,
+    writer_mode=None,
+):
+    """
 
-# now crop with: crop_roi(seq, roi) as required
+    Arguments
+    ---------
+    directory : str
+        Path to directory that contains all the measurements.
+    start_num : int
+        Image/measurement to start accumulating from.
+    end_num : int
+        Image/measurement to end accumulation.
+    stub : function
+        Function that takes image num and returns path to that measurement
+        from directory. I.e. directory + stub(X) for filepath ass. with 'X'
+    output_file : str
+        Output will be stored in directory + output file
+    feature_roi : dict
+        ROI to use for drift-correction.
+        Form: {"start": [X, Y], "end": [X, Y]}
+    additional_bins : int
+        Binning to do before drift-correction. Saved in this form also.
+    rem_start_pts : int
+        Points in freq/tau dimension to remove from sweep at start.
+    rem_end_pts : int
+        Points in freq/tau dimension to remove from sweep at end.
+    image_nums_mask : Sequence of bools
+        For each val in [start_sum, end_sum],
+        do we accumulate this image or not? True = keep that idx.
+    reader_mode : str or None (default)
+        Which type of reader function to apply.
+        Default (only implemented) is the old labview reader.
+    writer_mode : str or None (default)
+        Which type of reader function to apply to output.
+        Default (only implemented) is to compat with the old labview reader.
+    """
 
-# NOTE that all works, but doesn't correctly handle subtracting off previous image frame -> bit tricky eh!
+    if reader_mode is None or reader_mode == "labview":
+        sig, ref = read_and_drift_correct(
+            directory,
+            stub,
+            list(range(start_num, end_num + 1)),
+            ROI=feature_roi,
+            mask=image_nums_mask,
+        )
+    else:
+        raise ValueError(
+            "Only None/default/labview reader_mode is defined at the moment."
+        )
 
-plt.show()
+    if writer_mode is None or writer_mode == "labview":
+        # save output. bit slow but haven't worked out a vectorised version'
+        s = sig.transpose([0, 2, 1])
+        r = ref.transpose([0, 2, 1])
+
+        output = []
+        for f in range(s.shape[0]):
+            output.append(s[f, ::])
+            output.append(r[f, ::])
+        output_array = np.array(output).flatten()
+
+        with open(output_file, "wb") as fid:
+            np.array([0, 0]).astype(np.float32).tofile(fid)
+            output_array.astype(np.float32).tofile(fid)
+
+        # read metaspool, and then write with updated binning.
+        lines = []
+        with open(directory + stub(start_num) + "_metaSpool.txt", "r") as fid:
+            for line in fid:
+                if line.startswith("Binning:"):
+                    old_binning = int(re.match(r"Binning: (\d+)\n", line)[1])
+                    new_binning = (
+                        old_binning
+                        if not additional_bins
+                        else old_binning * additional_bins
+                    )
+                    lines.append(f"Binning: {new_binning}\n")
+                else:
+                    lines.append(line)
+
+        with open(output_file + "_metaSpool.txt", "w") as fid:
+            for line in lines:
+                fid.write(line)
+    else:
+        raise ValueError(
+            "Only None/default/laview writer_mode is defined at the moment."
+        )
+
+
+# ============================================================================
+
+
+def drift_correct_test(
+    directory,
+    start_num,
+    end_num,
+    comparison_nums,
+    stub,
+    feature_roi=None,
+    additional_bins=0,
+    reader_mode=None,
+):
+    """
+
+    Arguments
+    ---------
+    directory : str
+        Path to directory that contains all the measurements.
+    start_num : int
+        Image/measurement to start accumulating from.
+        (Also the reference frame)
+    end_num : int
+        Image/measurement to end accumulation.
+    comparison_nums : list of ints
+        List of image/measurment nums to compare drift calc on.
+    stub : function
+        Function that takes image num and returns path to that measurement
+        from directory. I.e. directory + stub(X) for filepath ass. with 'X'
+    feature_roi : dict
+        ROI to use for drift-correction.
+        Form: {"start": [X, Y], "end": [X, Y]}
+    additional_bins : int
+        Binning to do before drift-correction. Saved in this form also.
+    reader_mode : str or None (default)
+        Which type of reader function to apply.
+        Default (only implemented) is the old labview reader.
+
+    Returns
+    -------
+    crop_fig, crop_axs
+        Matplotlib figure and axes, for further editing/saving etc.
+    """
+
+    # prep fig
+    nrows = len(comparison_nums)
+    fig, axs = plt.subplots(nrows=nrows, ncols=2, figsize=(10, 4 * nrows))
+
+    # read in all frames, only pull out (non-accum) pl frames we want to compare
+    raw_comp_frames = []
+    if reader_mode is None or reader_mode == "labview":
+        image_seq = list(range(start_num, end_num + 1))
+        first = True
+        for i in image_seq:
+            accum_pl, _, _, _, _, roi = read_image(
+                directory + stub(i),
+                additional_bins,
+                "div",  # norm - we don't care what it is
+                0,
+                0,
+                feature_roi,
+            )
+            if first:
+                first = False
+                prev_accum_pl = accum_pl.copy()
+                if i in comparison_nums:
+                    raw_comp_frames.append(accum_pl)
+                continue
+            this_pl = accum_pl - prev_accum_pl
+            prev_accum_pl = accum_pl
+            if i in comparison_nums:
+                raw_comp_frames.append(this_pl)
+            if i > max(comparison_nums):
+                break
+    else:
+        raise ValueError(
+            "Only None/default/labview reader_mode is defined at the moment."
+        )
+
+    # plot cropped sig frames in left column
+    for i, frame, ax in zip(comparison_nums, raw_comp_frames, axs[:, 0]):
+        plot_image_on_ax(
+            fig,
+            ax,
+            crop_roi(frame, roi),
+            title=f"raw   {i}",
+            c_range=None,
+            c_label="Counts",
+        )
+
+    # do cross-corr on comparison frames
+    refr_frame = raw_comp_frames[0]
+    corrected_frames = [
+        refr_frame,
+    ]
+    shift_calcs = [
+        [0, 0],
+    ]
+    for frame in raw_comp_frames[1:]:
+        corrected_frame, shift_calc = drift_correct_single(
+            crop_roi(refr_frame, roi), crop_roi(frame, roi), frame
+        )
+        corrected_frames.append(corrected_frame)
+        shift_calcs.append(shift_calc)
+
+    # plot cropped corrected frames in right column
+    for i, frame, shift_calc, ax in zip(
+        comparison_nums, corrected_frames, shift_calcs, axs[:, 1]
+    ):
+        plot_image_on_ax(
+            fig,
+            ax,
+            crop_roi(frame, roi),
+            title=f"shftd {i}: {shift_calc}",
+            c_range=None,
+            c_label="Counts",
+        )
+
+    return fig, axs
