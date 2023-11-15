@@ -646,20 +646,32 @@
         "option_default": null
     },
 
-    // double_lorentzian fit, fix separation between peaks
+    // double_lorentzian fit, fix separation between peaks (in MHz!!)
     "double_lorentzian_sep": {
-        "option_default": null
+        "option_default": 0.0
     },
     "fwhm_left_bounds": {
+        "option_default": null
+    },
+    "fwhm_left_guess": {
         "option_default": null
     },
     "fwhm_right_bounds": {
         "option_default": null
     },
+    "fwhm_right_guess": {
+        "option_default": null
+    },
     "amp_left_bounds": {
+        "option_default": null
+    },    
+    "amp_left_guess": {
         "option_default": null
     },
     "amp_right_bounds": {
+        "option_default": null
+    },
+    "amp_right_guess": {
         "option_default": null
     },
 

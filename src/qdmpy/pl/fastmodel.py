@@ -477,7 +477,7 @@ class DoubleLorentzian(FastFitModel):
     @staticmethod
     @njit(fastmath=True)
     def _jac(sep, x, pl_vals, fit_params):
-        j = np.empty((x.shape[0], 1 + 3 * n), dtype=np.float64)
+        j = np.empty((x.shape[0], 6), dtype=np.float64)
         j[:, 0] = 1  # wrt constant
 
         c = fit_params[1]
@@ -491,12 +491,20 @@ class DoubleLorentzian(FastFitModel):
 
         # order: pos, fwhm_l, amp_l, fwhm_r, amp_r
         j[:, 1] = (
-            (2 * al * gl**2 * (x - c + sep)) / (gl**2 + (x - c + sep) ** 2) ** 2
-        ) + ((2 * ar * gr**2 * (x - c - sep)) / (gr**2 + (x - c - sep) ** 2) ** 2)
-        j[:, 2] = (al * gl * (x - c + sep) ** 2) / ((x - c + sep) ** 2 + gl**2) ** 2
-        j[:, 3] = gl**2 / ((x - c + sep) ** 2 + gl**2)
-        j[:, 4] = (ar * gr * (x - c - sep) ** 2) / ((x - c - sep) ** 2 + gr**2) ** 2
-        j[:, 5] = gr**2 / ((x - c - sep) ** 2 + gr**2)
+            (2 * al * gl**2 * (x - c + sep / 2))
+            / (gl**2 + (x - c + sep / 2) ** 2) ** 2
+        ) + (
+            (2 * ar * gr**2 * (x - c - sep / 2))
+            / (gr**2 + (x - c - sep / 2) ** 2) ** 2
+        )
+        j[:, 2] = (al * gl * (x - c + sep / 2) ** 2) / (
+            (x - c + sep / 2) ** 2 + gl**2
+        ) ** 2
+        j[:, 3] = gl**2 / ((x - c + sep / 2) ** 2 + gl**2)
+        j[:, 4] = (ar * gr * (x - c - sep / 2) ** 2) / (
+            (x - c - sep / 2) ** 2 + gr**2
+        ) ** 2
+        j[:, 5] = gr**2 / ((x - c - sep / 2) ** 2 + gr**2)
 
         return j
 
@@ -508,8 +516,8 @@ class DoubleLorentzian(FastFitModel):
     def get_param_odict(self):
         defn = [("constant_0", "Amplitude (a.u.)")]
         defn += [("pos_0", "Freq (MHz)")]
-        defn += [("fwhm_left", "Freq (MHz)")]
-        defn += [("amp_left", "Amp (a.u.)")]
-        defn += [("fwhm_right", "Freq (MHz)")]
-        defn += [("amp_right", "Amp (a.u.)")]
+        defn += [("fwhm_left_0", "Freq (MHz)")]
+        defn += [("amp_left_0", "Amp (a.u.)")]
+        defn += [("fwhm_right_0", "Freq (MHz)")]
+        defn += [("amp_right_0", "Amp (a.u.)")]
         return OrderedDict(defn)
