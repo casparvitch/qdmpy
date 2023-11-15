@@ -74,12 +74,19 @@ def define_fit_model(options):
         elif ffs == [("linear", 1), ("lorentzian", i + 1)]:
             fit_functions = {"linear": 1, "lorentzian": i + 1}
             compilable = True
-            fit_model = qdmpy.pl.fastmodel.LinearLorentzians(i+1)
+            fit_model = qdmpy.pl.fastmodel.LinearLorentzians(i + 1)
             break
         elif ffs == [("constant", 1), ("lorentzian", i + 1)]:
             fit_functions = {"constant": 1, "lorentzian": i + 1}
             compilable = True
-            fit_model = qdmpy.pl.fastmodel.ConstLorentzians(i+1)
+            fit_model = qdmpy.pl.fastmodel.ConstLorentzians(i + 1)
+            break
+        elif ffs == [("constant", 1), ("double_lorentzian", 1)]:
+            fit_functions = {"constant": 1, "double_lorentzian": 1}
+            compilable = True
+            fit_model = qdmpy.pl.fastmodel.DoubleLorentzian(
+                options["double_lorentzian_sep"]
+            )
             break
 
     if not compilable or not options["use_fastmodel"]:

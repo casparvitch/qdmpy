@@ -24,6 +24,7 @@ __pdoc__ = {
     "qdmpy.pl.model.ConstDampedRabi": True,
     "qdmpy.pl.model.LinearLorentzians": True,
     "qdmpy.pl.model.ConstLorentzians": True,
+    "qdmpy.pl.model.DoubleLorentzian": True,
 }
 
 # ============================================================================
@@ -155,7 +156,8 @@ class FastFitModel:
 
 
 class ConstStretchedExp(FastFitModel):
-    fit_functions =  {"constant": 1, "stretched_exponential": 1}
+    fit_functions = {"constant": 1, "stretched_exponential": 1}
+
     @staticmethod
     @njit(fastmath=True)
     def _eval(x, fit_params):
@@ -210,6 +212,7 @@ class ConstStretchedExp(FastFitModel):
 
 class ConstDampedRabi(FastFitModel):
     fit_functions = {"constant": 1, "damped_rabi": 1}
+
     @staticmethod
     @njit(fastmath=True)
     def _eval(x, fit_params):
@@ -390,9 +393,9 @@ class ConstLorentzians(FastFitModel):
             a = fit_params[i * 3 + 3]
             g = fwhm / 2
 
-            j[:, 2 + i * 3] = (a * g * (x - c) ** 2) / ((x - c) ** 2 + g**2) ** 2
-            j[:, 3 + i * 3] = (2 * a * g**2 * (x - c)) / (g**2 + (x - c) ** 2) ** 2
-            j[:, 4 + i * 3] = g**2 / ((x - c) ** 2 + g**2)
+            j[:, 1 + i * 3] = (a * g * (x - c) ** 2) / ((x - c) ** 2 + g**2) ** 2
+            j[:, 2 + i * 3] = (2 * a * g**2 * (x - c)) / (g**2 + (x - c) ** 2) ** 2
+            j[:, 3 + i * 3] = g**2 / ((x - c) ** 2 + g**2)
         return j
 
     def get_param_defn(self):
@@ -407,4 +410,106 @@ class ConstLorentzians(FastFitModel):
             defn += [(f"fwhm_{i}", "Freq (MHz)")]
             defn += [(f"pos_{i}", "Freq (MHz)")]
             defn += [(f"amp_{i}", "Amp (a.u.)")]
+        return OrderedDict(defn)
+
+
+# ====================================================================================
+
+
+class DoubleLorentzian(FastFitModel):
+    def __init__(self, lorentzian_separation):
+        self.sep = lorentzian_separation
+
+    def __call__(self, param_ar, sweep_vec):
+        return self._eval(self.sep, sweep_vec, param_ar)
+
+    @staticmethod
+    @njit(fastmath=True)
+    def _eval(sep, x, fit_params):
+        c = fit_params[0]
+        val = c * np.ones(np.shape(x))
+
+        pos = fit_params[1]
+        fwhm_l = fit_params[2]
+        amp_l = fit_params[3]
+        fwhm_r = fit_params[4]
+        amp_r = fit_params[5]
+
+        hwhmsqr_l = (fwhm_l**2) / 4
+        hwhmsqr_r = (fwhm_r**2) / 4
+
+        val += amp_l * hwhmsqr_l / (
+            (x - pos + sep / 2) ** 2 + hwhmsqr_l
+        ) + amp_r * hwhmsqr_r / ((x - pos - sep / 2) ** 2 + hwhmsqr_r)
+
+        return val
+
+    def residuals_scipyfit(self, param_ar, sweep_vec, pl_vals):
+        """Evaluates residual: fit model (affine params/sweep_vec) - pl values"""
+        return self._resid(self.sep, sweep_vec, pl_vals, param_ar)
+
+    # NOTE can this not just call _eval?? or same in residuals_scipyfit above?? seems silly.
+    @staticmethod
+    @njit(fastmath=True)
+    def _resid(sep, x, pl_vals, fit_params):
+        c = fit_params[0]
+        val = c * np.ones(np.shape(x))
+
+        pos = fit_params[1]
+        fwhm_l = fit_params[2]
+        amp_l = fit_params[3]
+        fwhm_r = fit_params[4]
+        amp_r = fit_params[5]
+
+        hwhmsqr_l = (fwhm_l**2) / 4
+        hwhmsqr_r = (fwhm_r**2) / 4
+
+        val += amp_l * hwhmsqr_l / (
+            (x - pos + sep / 2) ** 2 + hwhmsqr_l
+        ) + amp_r * hwhmsqr_r / ((x - pos - sep / 2) ** 2 + hwhmsqr_r)
+
+        return val - pl_vals
+
+    def jacobian_scipyfit(self, param_ar, sweep_vec, pl_vals):
+        """Evaluates (analytic) jacobian of fitmodel in format expected by scipy least_squares"""
+        return self._jac(self.sep, sweep_vec, pl_vals, param_ar)
+
+    @staticmethod
+    @njit(fastmath=True)
+    def _jac(sep, x, pl_vals, fit_params):
+        j = np.empty((x.shape[0], 1 + 3 * n), dtype=np.float64)
+        j[:, 0] = 1  # wrt constant
+
+        c = fit_params[1]
+        fl = fit_params[2]
+        al = fit_params[3]
+        fr = fit_params[4]
+        ar = fit_params[5]
+
+        gl = fl / 2
+        gr = fr / 2
+
+        # order: pos, fwhm_l, amp_l, fwhm_r, amp_r
+        j[:, 1] = (
+            (2 * al * gl**2 * (x - c + sep)) / (gl**2 + (x - c + sep) ** 2) ** 2
+        ) + ((2 * ar * gr**2 * (x - c - sep)) / (gr**2 + (x - c - sep) ** 2) ** 2)
+        j[:, 2] = (al * gl * (x - c + sep) ** 2) / ((x - c + sep) ** 2 + gl**2) ** 2
+        j[:, 3] = gl**2 / ((x - c + sep) ** 2 + gl**2)
+        j[:, 4] = (ar * gr * (x - c - sep) ** 2) / ((x - c - sep) ** 2 + gr**2) ** 2
+        j[:, 5] = gr**2 / ((x - c - sep) ** 2 + gr**2)
+
+        return j
+
+    def get_param_defn(self):
+        defn = ["constant"]
+        defn += ["pos", "fwhm_left", "amp_left", "fwhm_right", "amp_right"]
+        return defn
+
+    def get_param_odict(self):
+        defn = [("constant_0", "Amplitude (a.u.)")]
+        defn += [("pos_0", "Freq (MHz)")]
+        defn += [("fwhm_left", "Freq (MHz)")]
+        defn += [("amp_left", "Amp (a.u.)")]
+        defn += [("fwhm_right", "Freq (MHz)")]
+        defn += [("amp_right", "Amp (a.u.)")]
         return OrderedDict(defn)
