@@ -414,13 +414,15 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
     for (y, x), result, jac in fit_results:
         filled_params = {}  # keep track of index, i.e. pos_0, for this pixel
 
-        if jac is None: # can't fit this pixel
+        if jac is None:  # can't fit this pixel
             fit_image_results["residual_0"][y, x] = np.nan
             perr = np.empty(np.shape(result))
             perr[:] = np.nan
         else:
             # NOTE we decide not to call each backend separately here
-            resid = fit_model.residuals_scipyfit(result, sweep_list, pixel_data[:, y, x])
+            resid = fit_model.residuals_scipyfit(
+                result, sweep_list, pixel_data[:, y, x]
+            )
             fit_image_results["residual_0"][y, x] = np.sum(
                 np.abs(resid, dtype=np.float64), dtype=np.float64
             )
