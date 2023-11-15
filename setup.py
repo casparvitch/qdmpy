@@ -25,7 +25,7 @@ required = [
     "python-polylabel",  # magism
     "dill",  # for magsim
     "astropy",  # remove if remove sigma_clip background sub
-    "PyQt6" # Needed for gui widget stuff
+    "PyQt6",  # Needed for gui widget stuff
 ]
 
 here = pathlib.Path(__file__).parent.resolve()
@@ -36,7 +36,7 @@ arch = sysconfig.get_platform().replace("-", "_").replace(".", "_")
 if __name__ == "__main__":
     setuptools.setup(
         name="qdmpy",
-        version="5.7.1",
+        version="5.8.1",
         author="Sam Scholten",
         author_email="samcaspar@gmail.com",
         description="Quantum Diamond MicroscoPy",
@@ -61,9 +61,13 @@ if __name__ == "__main__":
         package_data={"": ["*.md", "*.json"]},
         setup_requires=["wheel"],
         extras_require={
-            "cpufit": [f"pycpufit @ file://localhost/{here}/gpufit_wheels/pyCpufit-101.2.0-py2.py3-none-{arch}.whl"],
-            "gpufit": [f"pygpufit @ file://localhost/{here}/gpufit_wheels/pyGpufit-101.2.0-py2.py3-none-{arch}.whl"],
-        }
+            "cpufit": [
+                f"pycpufit @ file://localhost/{here}/gpufit_wheels/pyCpufit-101.2.0-py2.py3-none-{arch}.whl"
+            ],
+            "gpufit": [
+                f"pygpufit @ file://localhost/{here}/gpufit_wheels/pyGpufit-101.2.0-py2.py3-none-{arch}.whl"
+            ],
+        },
     )
 # https://setuptools.readthedocs.io/en/latest/userguide/datafiles.html
 
