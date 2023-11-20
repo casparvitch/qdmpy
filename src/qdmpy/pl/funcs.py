@@ -651,7 +651,7 @@ class TopHatT1(FitFunc):
 
     param_defn = ["sigma", "eta", "A"]
     param_units = {
-        "sigma": "Time (s)(?)",
+        "sigma": "Frequency (Hz)",
         "eta": "Unitless",
         "A": "Amplitude (a.u.)",
     }
@@ -690,7 +690,7 @@ class ExpDistT1(FitFunc):
 
     param_defn = ["sigma", "eta", "A"]
     param_units = {
-        "sigma": "Time (s)(?)",
+        "sigma": "Frequency (Hz)",
         "eta": "Unitless",
         "A": "Amplitude (a.u.)",
     }
