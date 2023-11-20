@@ -660,9 +660,9 @@ class TopHatT1(FitFunc):
     @njit
     def eval(x, *fit_params):
         sigma, eta, A = fit_params
-        return -A * (np.exp(-4*sigma*tau)*(-1+np.exp(2*sigma*tau))
-                     (np.exp(2*sigma*tau)*
-                      (-2+eta)-eta))/(4 * sigma * tau)
+        return -A * (np.exp(-4*sigma*x)*(-1+np.exp(2*sigma*x))
+                     (np.exp(2*sigma*x)*
+                      (-2+eta)-eta))/(4 * sigma * x)
 
     #@staticmethod
     #@njit
@@ -700,7 +700,7 @@ class ExpDistT1(FitFunc):
     def eval(x, *fit_params):
         sigma, eta, A = fit_params
         return A * (2*sigma*sigma*(1-2*(-2+eta)*sigma)
-                    )/(1+6*sigma*tau+8*sigma*sigma*tau*tau)
+                    )/(1+6*sigma*x+8*sigma*sigma*x*x)
 
     #@staticmethod
     #@njit
