@@ -112,10 +112,14 @@ def _odmr_with_field_ref(options, sig_fit_params, ref_fit_params):
 
     # first get bnvs (as in global scope)
     sig_bnvs, sig_dshifts = qdmpy.field.bnv.get_bnvs_and_dshifts(
-        sig_fit_params, options["bias_field_spherical_deg_gauss"], options["chosen_freqs"]
+        sig_fit_params,
+        options["bias_field_spherical_deg_gauss"],
+        options["freqs_to_use"],
     )
     ref_bnvs, ref_dshifts = qdmpy.field.bnv.get_bnvs_and_dshifts(
-        ref_fit_params, options["ref_bias_field_spherical_deg_gauss"], options["chosen_freqs"]
+        ref_fit_params,
+        options["ref_bias_field_spherical_deg_gauss"],
+        options["freqs_to_use"],
     )
 
     qdmpy.field.io.choose_field_method(options)
@@ -297,10 +301,14 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
 
     # first get bnvs (as in global scope)
     sig_bnvs, sig_dshifts = qdmpy.field.bnv.get_bnvs_and_dshifts(
-        sig_fit_params, options["bias_field_spherical_deg_gauss"], options["chosen_freqs"]
+        sig_fit_params,
+        options["bias_field_spherical_deg_gauss"],
+        options["freqs_to_use"],
     )
     ref_bnvs, ref_dshifts = qdmpy.field.bnv.get_bnvs_and_dshifts(
-        ref_fit_params, options["ref_bias_field_spherical_deg_gauss"], options["chosen_freqs"]
+        ref_fit_params,
+        options["ref_bias_field_spherical_deg_gauss"],
+        options["freqs_to_use"],
     )
 
     if not options["calc_field_pixels"]:
@@ -359,7 +367,7 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
 
             sig_bias = options["bias_field_spherical_deg_gauss"]
             ref_bias = options["ref_bias_field_spherical_deg_gauss"]
-            sig_bias_mag = np.abs(sig_bias[0]) 
+            sig_bias_mag = np.abs(sig_bias[0])
             ref_bias_mag = np.abs(ref_bias[0])
 
             unv = qdmpy.shared.geom.get_unvs(options)[idx]
@@ -368,14 +376,24 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
             ref_dshift_gauss = ref_dshifts[0] / qdmpy.field.bnv.GAMMA
 
             # case: -1 transition, post GSLAC
-            #    single bnv measurements return relative to 'unknown' GSLAC 
+            #    single bnv measurements return relative to 'unknown' GSLAC
             #    (1024 is assumed i.e. D=0)
             #    BUT INSTEAD we have a reference here so we can use that
             if sig_bias_mag > qdmpy.field.bnv.GSLAC and chosen_freqs[0]:
                 sig_sub_ref_bnv = sig_bnv - 1024 + ref_dshift_gauss
             # case: +1 transition anywhere, or -1 transition pre-GSLAC
             else:
-                sig_sub_ref_bnv = sig_bnv - ref_dshift_gauss
+                # definition of bnv for 1 peak is distance from 2870MHz
+                # so there's a sign flip depending on which side we're on.
+                if chosen_freqs[0]:
+                    sig_sub_ref_bnv = sig_bnv + ref_dshift_gauss
+                elif chosen_freqs[-1]:
+                    sig_sub_ref_bnv = sig_bnv - ref_dshift_gauss
+                else:
+                    raise RuntimeError(
+                        "Chosen frequency for pre-gslac ref must be "
+                        + "identified as 1st or 8th freq in 'chosen_freqs'."
+                    )
 
             other_opts = [
                 options["fourier_pad_mode"],
@@ -477,48 +495,6 @@ def add_bfield_reconstructed(options, field_params):
     nothing (operates in place on field_params)
 
     For a proper explanation of methodology, see [CURR_RECON]_.
-
-    $$  \nabla \times {\bf B} = 0 $$
-
-    to get Bx_recon and By_recon from Bz (in a source-free region), and
-
-    $$ \nabla \cdot {\bf B} = 0 $$
-
-    to get Bz_recon from Bx and By
-
-    Start with e.g.:
-
-    $$ \frac{\partial B_x^{\rm recon}}{\partial z} = \frac{\partial B_z}{\partial x} $$
-
-    with the definitions
-
-    $$ \hat{B}:=  \hat{\mathcal{F}}_{xy} \big\{ B \big\} $$
-
-    and
-
-    $$ k = \sqrt{k_x^2 + k_y^2} $$
-
-    we have:
-
-    $$ \frac{\partial }{\partial z} \hat{B}_x^{\rm recon}(x,y,z=z_{\rm NV}) = i k_x \hat{B}_z(x,y, z=z_{\rm NV}) $$.
-
-    Now using upward continuation [CURR_RECON]_ to evaluate the z partial:
-
-    $$ -k \hat{B}_x^{\rm recon}(x,y,z=z_{\rm NV}) = i k_x \hat{B}_z(k_x, k_y, z_{\rm NV}) $$
-
-    such that for
-
-    $$ k \neq 0 $$
-
-    we have (analogously for y)
-
-    $$ (\hat{B}_x^{\rm recon}(x,y,z=z_{\rm NV}), \hat{B}_y^{\rm recon}(x,y,z=z_{\rm NV})) = \frac{-i}{k} (k_x, k_y) \hat{B}_z(x,y,,z=z_{\rm NV}) $$
-
-
-    Utilising the zero-divergence property of the magnetic field, it can also be shown:
-
-    $$ \hat{B}_z^{\rm recon}(x,y,z=z_{\rm NV}) = \frac{i}{k} \left( k_x \hat{B}_x(x,y,z=z_{\rm NV}) + k_y \hat{B}_y(x,y,z=z_{\rm NV}) \right) $$
-
 
     References
     ----------

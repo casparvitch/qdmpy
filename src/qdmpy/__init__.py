@@ -27,25 +27,28 @@
          |          ======         |<---------+
          |                         |
          |                 itool   |
-         |       geom      -----   |
-         |       ----        |     |             CANNOT IMPORT FROM HIGHER IN HEIRARCHY
-         |                   v     |
-         | misc           polygon  |
+         |       geom      -----   |            +--------------+
+         |       ----        |     |            | driftcorrect |
+         |                   v     |            |==============|
+         | misc           polygon  |            +--------------+
          | ----           -------  |
          |                   |     |                
-         |      fourier      v     |
+         |      fourier      v     |                CANNOT IMPORT FROM HIGHER IN HEIRARCHY
          |      -------  json2dict |               
          |               --------- |                
          +-------------------------+
 ```
 
 
-
+- `qdmpy.driftcorrect`
+    - Sub-package to correct for (in-plane) drifts before continuing with rest of analysis.
+      Not particularly mature.
 - `qdmpy.field`
     - Field sub-package. Contains functions to convert bnvs/resonances to fields (e.g.
      magnetic, electric, ...) through hamiltonian fits/otherwise.
 - `qdmpy.magsim`
-    - Tooling that simulates magnetic field produced by magnetised flakes (static only). 
+    - Tooling that simulates magnetic field produced by magnetised flakes (static only).
+      Not particularly mature.
 - `qdmpy.pl`
     - Sub-package for dealing with pl data. Contains procedures for fitting raw photoliminescence,
       outputting results etc.

@@ -1,11 +1,10 @@
 # -*- coding: utf-8 -*-
 """
-This module contains...
+Not very well documented. 
 
 Don't import any other qdmpy modules, ensure this is a leaf in the dep. tree.
 
-TODO clean this shizzle up. Document, comment, etc.
--> add clean test cases/examples
+Use via ./polygon.py
 """
 
 # ============================================================================

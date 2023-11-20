@@ -30,12 +30,11 @@ __pdoc__ = {
 
 # ============================================================================
 
-import importlib.metadata
-import packaging
-
 # ============================================================================
 
 import qdmpy.pl.model
+import qdmpy.pl.fastmodel
+import qdmpy.pl.funcs
 import qdmpy.shared.misc
 from qdmpy.shared.misc import warn
 import qdmpy.pl.io
@@ -60,25 +59,40 @@ def define_fit_model(options):
     fit_functions = options["fit_functions"]
     # reorder fit functions to as expected by gpufit (if model matches a gpufit model)
     ffs = sorted(list(fit_functions.items()))
+    compilable = False
     for i in range(8):
         if ffs == [("constant", 1), ("stretched_exponential", 1)]:
             fit_functions = {"constant": 1, "stretched_exponential": 1}
+            compilable = True
+            fit_model = qdmpy.pl.fastmodel.ConstStretchedExp()
             break
         elif ffs == [("constant", 1), ("damped_rabi", 1)]:
             fit_functions = {"constant": 1, "damped_rabi": 1}
+            compilable = True
+            fit_model = qdmpy.pl.fastmodel.ConstDampedRabi()
             break
         elif ffs == [("linear", 1), ("lorentzian", i + 1)]:
             fit_functions = {"linear": 1, "lorentzian": i + 1}
+            compilable = True
+            fit_model = qdmpy.pl.fastmodel.LinearLorentzians(i+1)
             break
         elif ffs == [("constant", 1), ("lorentzian", i + 1)]:
             fit_functions = {"constant": 1, "lorentzian": i + 1}
+            compilable = True
+            fit_model = qdmpy.pl.fastmodel.ConstLorentzians(i+1)
             break
 
-    fit_model = qdmpy.pl.model.FitModel(fit_functions)
+    if not compilable or not options["use_fastmodel"]:
+        fit_model = qdmpy.pl.model.FitModel(fit_functions)
+        options["used_fastmodel"] = False
+    else:
+        options["used_fastmodel"] = True
 
     options["fit_param_defn"] = fit_model.get_param_odict()
 
     _prep_fit_backends(options, fit_model)
+
+    # overrides the key methods for SPEED
 
     return fit_model
 
@@ -118,25 +132,24 @@ def _prep_fit_backends(options, fit_model):
             _temp = __import__("qdmpy.pl.scipyfit", globals(), locals())
             fit_scipyfit = _temp.pl.scipyfit
 
-        elif fit_backend in ("gpufit", "cpufit"):
+        elif fit_backend == "gpufit":
             # here we use a programmatic import as we don't want to load (and crash)
             # if user doesn't have the gpufit stuff installed
 
-            if "fit_gpufit" not in globals():  # only import once for gpu/cpufit
-                if fit_backend == "cpufit":
-                    # we want to catch this if it errors
-                    vrs = importlib.metadata.version("pygpufit")
-                    if packaging.version.parse(vrs) <= packaging.version.parse("1.2.0"):
-                        raise RuntimeError(
-                            "cpufit requires pygpufit > 1.2.0 "
-                            + "(with cpufit api exposed to python)"
-                        )
-
+            if "fit_gpufit" not in globals():  # only import once for gpufit
                 global fit_gpufit
                 _temp = __import__("qdmpy.pl.gpufit", globals(), locals())
                 fit_gpufit = _temp.pl.gpufit
 
                 fit_gpufit.prep_gpufit_backend(options, fit_model)
+        elif fit_backend == "cpufit":
+            # NB: make sure you have the latest version of QSL Gpufit!
+            # cpufit/gpufit should be above version 101.2
+            global fit_cpufit
+            _temp = __import__("qdmpy.pl.cpufit", globals(), locals())
+            fit_cpufit = _temp.pl.cpufit
+
+            fit_cpufit.prep_cpufit_backend(options, fit_model)
         else:
             raise RuntimeError(
                 "No backend preparation defined for fit_backend ="
@@ -183,7 +196,7 @@ def fit_roi_avg_pl(options, sig, ref, sweep_list, fit_model):
                     options, sig, ref, sweep_list, fit_model
                 )
             )
-        elif fit_backend in ("gpufit", "cpufit"):
+        elif fit_backend == "gpufit":
             backend_roi_results_lst.append(
                 fit_gpufit.fit_roi_avg_pl_gpufit(
                     options,
@@ -191,7 +204,16 @@ def fit_roi_avg_pl(options, sig, ref, sweep_list, fit_model):
                     ref,
                     sweep_list,
                     fit_model,
-                    platform=fit_backend[:3],
+                )
+            )
+        elif fit_backend == "cpufit":
+            backend_roi_results_lst.append(
+                fit_cpufit.fit_roi_avg_pl_cpufit(
+                    options,
+                    sig,
+                    ref,
+                    sweep_list,
+                    fit_model,
                 )
             )
         else:
@@ -258,7 +280,7 @@ def fit_aois_pl(
                     backend_roi_results_lst[n],
                 ),
             )
-        elif fit_backend in ("gpufit", "cpufit"):
+        elif fit_backend == "gpufit":
             fit_result_collection_lst.append(
                 fit_gpufit.fit_aois_pl_gpufit(
                     options,
@@ -269,7 +291,19 @@ def fit_aois_pl(
                     fit_model,
                     aois,
                     backend_roi_results_lst[n],
-                    platform=fit_backend[:3],
+                )
+            )
+        elif fit_backend == "cpufit":
+            fit_result_collection_lst.append(
+                fit_cpufit.fit_aois_pl_cpufit(
+                    options,
+                    sig,
+                    ref,
+                    single_pixel_pl,
+                    sweep_list,
+                    fit_model,
+                    aois,
+                    backend_roi_results_lst[n],
                 )
             )
         else:
@@ -313,14 +347,21 @@ def fit_all_pixels_pl(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
         return fit_scipyfit.fit_all_pixels_pl_scipyfit(
             options, sig_norm, sweep_list, fit_model, roi_avg_fit_result
         )
-    elif options["fit_backend"] in ("gpufit", "cpufit"):
+    elif options["fit_backend"] == "gpufit":
         return fit_gpufit.fit_all_pixels_pl_gpufit(
             options,
             sig_norm,
             sweep_list,
             fit_model,
             roi_avg_fit_result,
-            platform=options["fit_backend"][:3],
+        )
+    elif options["fit_backend"] == "cpufit":
+        return fit_cpufit.fit_all_pixels_pl_cpufit(
+            options,
+            sig_norm,
+            sweep_list,
+            fit_model,
+            roi_avg_fit_result,
         )
     else:
         raise RuntimeError(

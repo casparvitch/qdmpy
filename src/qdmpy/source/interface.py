@@ -143,12 +143,12 @@ def get_current_density(
         options["fourier_high_cutoff"],
         options["standoff"],
         options["nv_layer_thickness"],
+        options["NVs_above_sample"],
     ]
 
     if any(
         [i in ["from_bxy", "from_bz", "without_ft"] for i in options["recon_methods"]]
     ):
-
         # first check if Bx, By, Bz in fit_params
         # extract them
         if field_params is None:
@@ -184,7 +184,6 @@ def get_current_density(
             jx, jy = qdmpy.source.current.get_j_from_bxy(
                 [bx, by, bz],
                 *useful_opts,
-                nvs_above_sample=options["NVs_above_sample"],
             )
         elif method == "from_bz":
             jx, jy = qdmpy.source.current.get_j_from_bz([bx, by, bz], *useful_opts)
@@ -193,12 +192,7 @@ def get_current_density(
                 bnv,
                 unv,
                 *useful_opts,
-                nvs_above_sample=options["NVs_above_sample"],
             )
-        # elif method == "from_bxyz_w_src":
-        #     jx, jy = qdmpy.source.current.get_j_from_bxyz_w_src(
-        #         [bx, by, bz], *useful_opts, sigma=options["src_sigma"]
-        # )
         elif method == "without_ft":
             jx, jy = qdmpy.source.current.get_j_without_ft([bx, by, bz])
         else:
@@ -312,7 +306,6 @@ def get_magnetization(
     ]
 
     if any([i in ["from_bxy", "from_bz"] for i in options["recon_methods"]]):
-
         # first check if Bx, By, Bz in fit_params
         # extract them
         if field_params is None:
@@ -333,7 +326,6 @@ def get_magnetization(
         bx, by, bz = [field_params["B" + comp] for comp in components]
 
     if any([i in ["from_bnv"] for i in options["recon_methods"]]):
-
         unvs = qdmpy.shared.geom.get_unvs(options)
         unv_opt = options["recon_unv_index"]
         if unv_opt is not None:

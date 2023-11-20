@@ -185,7 +185,11 @@ class System:
         # most systems will need these {you need to copy to your subclass method}
         # need to know number of threads to call (might be parallel fitting)
         options["threads"] = cpu_count() - options["scipyfit_sub_threads"]
-        if "base_dir" in options and not self.filepath_joined:
+        if (
+            "base_dir" in options
+            and options["base_dir"] is not None
+            and not self.filepath_joined
+        ):
             options["filepath"] = options["base_dir"] / options["filepath"]
             self.filepath_joined = True
 
@@ -230,7 +234,7 @@ class UniMelb(System):
             "option_choices": None,
         }
 
-    def get_raw_pixel_size(self, options):
+    def get_raw_pixel_size(self, options):  # in metres
         if "pixel_size" in options and options["pixel_size"]:
             return options["pixel_size"]
         # override keys available as options
@@ -266,33 +270,11 @@ class UniMelb(System):
         cam_pixel_size = sensor_pixel_size * (f_obj / f_tube)
 
         # save into options so it can be read from disk (by user) when saved
+        # DON'T USE THESE IN CODE -> USE THIS FN
         options["calculated_raw_pixel_size"] = cam_pixel_size
         options["calculated_binned_pixel_size"] = cam_pixel_size * options["total_bin"]
 
         return cam_pixel_size
-
-    def read_image(self, filepath, options):
-        with open(os.path.normpath(filepath), mode="r") as fid:
-            raw_data = np.fromfile(fid, dtype=np.float32)[2:]
-            # NOTE is the 2 the file size info (labview save binary default to add ar. shape)?
-            # TODO inspect that data to see what it looks like etc.!
-        return self._reshape_raw(options, raw_data, self.read_sweep_list(filepath))
-
-    def determine_binning(self, options):
-        metadata = self._read_metadata(options["filepath"])
-
-        options["original_bin"] = int(metadata["Binning"])
-        if not int(options["additional_bins"]):
-            options["total_bin"] = options["original_bin"]
-        else:
-            options["total_bin"] = options["original_bin"] * int(
-                options["additional_bins"]
-            )
-
-    def read_sweep_list(self, filepath):
-        with open(os.path.normpath(str(filepath) + "_metaSpool.txt"), "r") as fid:
-            sweep_str = fid.readline().rstrip().split("\t")
-        return [float(i) for i in sweep_str]
 
     def get_default_options(self):
         ret = {}
@@ -305,38 +287,6 @@ class UniMelb(System):
 
     def available_options(self):
         return self.options_dict.keys()
-
-    def get_bias_field(self, options):
-        """get bias on (bool) and field as tuple (mag (G), theta (rad), phi (rad))"""
-        if "metadata" not in options:
-            return False, None
-        key_ars = [
-            ["Field Strength (G)"],
-            ["Theta (deg)"],
-            ["Phi (def)", "Phi (deg)"],
-        ]
-        bias_field = []
-        for ar in key_ars:
-            found = False
-            for key in ar:
-                if key in options["metadata"]:
-                    bias_field.append(options["metadata"][key])
-                    found = True
-            if not found:
-                return False, None
-        if len(bias_field) != 3:
-            warn(
-                f"Found {len(bias_field)} bias field params in metadata, "
-                + "this shouldn't happen (expected 3)."
-            )
-            return False, None
-        onoff_str = options["metadata"].get("Mag on/off", "")
-        bias_on = onoff_str == " TRUE"
-        return bias_on, (
-            bias_field[0],
-            radians(bias_field[1]),
-            radians(bias_field[2]),
-        )
 
     def system_specific_option_update(self, options):
         # set some things that cannot be stored in the json
@@ -353,7 +303,11 @@ class UniMelb(System):
         if "freqs_to_use" in options:
             options["freqs_to_use"] = list(map(bool, options["freqs_to_use"]))
 
-        if "base_dir" in options and not self.filepath_joined:
+        if (
+            "base_dir" in options
+            and options["base_dir"] is not None
+            and not self.filepath_joined
+        ):
             options["filepath"] = os.path.join(options["base_dir"], options["filepath"])
             self.filepath_joined = True  # just a flag so we don't do this twice
 
@@ -362,6 +316,47 @@ class UniMelb(System):
             options["metadata"] = self._read_metadata(options["filepath"])
 
         options["filepath"] = os.path.normpath(options["filepath"])
+
+    def get_headers_and_read_csv(self, options, path):
+        # first get headers
+        headers = pd.read_csv(path, sep=None, engine="python").columns.tolist()
+        headers = [h for h in headers if not h.startswith("Unnamed")]
+        # then load dataset
+        dataset = np.genfromtxt(path, skip_header=1, autostrip=True, delimiter="\t")
+
+        return headers, dataset
+
+
+# ============================================================================
+
+
+class LVControl(UniMelb):
+    name = "Unknown Labview controlled System"
+
+    def read_image(self, filepath, options):
+        with open(os.path.normpath(filepath), mode="r") as fid:
+            raw_data = np.fromfile(fid, dtype=np.float32)[2:]
+        with open(os.path.normpath(filepath), mode="r") as fid:
+            expected_shape = np.fromfile(fid, dtype=np.int32)[:2]
+
+        options["binary_expected_shape"] = list(expected_shape.astype(int))
+        return self._reshape_raw(options, raw_data, self.read_sweep_list(filepath))
+
+    def read_sweep_list(self, filepath):
+        with open(os.path.normpath(str(filepath) + "_metaSpool.txt"), "r") as fid:
+            sweep_str = fid.readline().rstrip().split("\t")
+        return [float(i) for i in sweep_str]
+
+    def determine_binning(self, options):
+        metadata = self._read_metadata(options["filepath"])
+
+        options["original_bin"] = int(metadata["Binning"])
+        if not int(options["additional_bins"]):
+            options["total_bin"] = options["original_bin"]
+        else:
+            options["total_bin"] = options["original_bin"] * int(
+                options["additional_bins"]
+            )
 
     def _read_metadata(self, filepath):
         """
@@ -436,6 +431,7 @@ class UniMelb(System):
                         int(metadata["AOIWidth"]),
                     ],
                 )
+                options["used_ref"] = False
             else:
                 raise ValueError
         except ValueError:
@@ -443,6 +439,7 @@ class UniMelb(System):
             # i.e. auto-detect reference existence
             data_pts = 2 * len(sweep_list)
             if options["ignore_ref"]:
+                options["used_ref"] = False
                 image = np.reshape(
                     raw_data,
                     [
@@ -467,14 +464,118 @@ class UniMelb(System):
         # will work for non-square images
         return image.transpose([0, 2, 1]).copy()
 
-    def get_headers_and_read_csv(self, options, path):
-        # first get headers
-        headers = pd.read_csv(path, sep=None, engine="python").columns.tolist()
-        headers = [h for h in headers if not h.startswith("Unnamed")]
-        # then load dataset
-        dataset = np.genfromtxt(path, skip_header=1, autostrip=True, delimiter="\t")
+    def get_bias_field(self, options):
+        """get bias on (bool) and field as tuple (mag (G), theta (rad), phi (rad))"""
+        if "metadata" not in options:
+            return False, None
+        key_ars = [
+            ["Field Strength (G)"],
+            ["Theta (deg)"],
+            ["Phi (def)", "Phi (deg)"],
+        ]
+        bias_field = []
+        for ar in key_ars:
+            found = False
+            for key in ar:
+                if key in options["metadata"]:
+                    bias_field.append(options["metadata"][key])
+                    found = True
+            if not found:
+                return False, None
+        if len(bias_field) != 3:
+            warn(
+                f"Found {len(bias_field)} bias field params in metadata, "
+                + "this shouldn't happen (expected 3)."
+            )
+            return False, None
+        onoff_str = options["metadata"].get("Mag on/off", "")
+        bias_on = onoff_str == " TRUE"
+        return bias_on, (
+            bias_field[0],
+            radians(bias_field[1]),
+            radians(bias_field[2]),
+        )
 
-        return headers, dataset
+
+# ============================================================================
+
+
+class PyControl(UniMelb):
+    name = "Unknown Python controlled System"
+
+    def read_image(self, filepath, options):
+        im = np.load(os.path.normpath(str(filepath) + ".npy"))
+        if (
+            options["ignore_ref"]
+            and self._read_metadata(options["filepath"])["Measurement"]["ref_bool"]
+        ):
+            # ignore ref but have on
+            options["used_ref"] = False
+            return im[::2]
+        elif not self._read_metadata(options["filepath"])["Measurement"]["ref_bool"]:
+            # don't have a ref
+            options["used_ref"] = False
+            return im
+        else:
+            # do have a ref and want to use it
+            options["used_ref"] = True
+            return im
+
+    def read_sweep_list(self, filepath):
+        return qdmpy.shared.json2dict.json_to_dict(
+            os.path.normpath(str(filepath) + ".json")
+        )["freq_list"] # TODO won't work for tau sweeps
+
+    def determine_binning(self, options):
+        metadata = self._read_metadata(options["filepath"])
+
+        binning = metadata["Devices"]["camera"]["bin"]
+        if binning[0] != binning[1]:
+            raise ValueError("qmdpy not setup to handle anisotropic binning.")
+        options["original_bin"] = int(binning[0])
+
+        if not int(options["additional_bins"]):
+            options["total_bin"] = options["original_bin"]
+        else:
+            options["total_bin"] = options["original_bin"] * int(
+                options["additional_bins"]
+            )
+
+    def _read_metadata(self, filepath):
+        """
+        Reads metaspool text file into a metadata dictionary.
+        Filepath argument is the filepath of the (binary) dataset.
+        """
+        pth = os.path.normpath(str(filepath) + "_metadata.json")
+        return qdmpy.shared.json2dict.json_to_dict(pth, hook="dd")
+
+    def get_bias_field(self, options):
+        """get bias on (bool) and field as tuple (mag (G), theta (rad), phi (rad))"""
+        if "metadata" not in options:
+            return False, None
+        keys = [
+            "bnorm",  # update with units?
+            "theta",
+            "phi",
+        ]
+        bias_field = []
+        for key in keys:
+            if key in options["metadata"]["Devices"]["null"]:
+                bias_field.append(options["metadata"]["Devices"]["null"][key])
+            else:
+                return False, None
+        if len(bias_field) != 3:
+            warn(
+                f"Found {len(bias_field)} bias field params in metadata, "
+                + "this shouldn't happen (expected 3)."
+            )
+            return False, None
+
+        return True, (
+            10 * bias_field[0],  # convert mT to gauss
+            radians(bias_field[1]),
+            radians(bias_field[2]),
+        )
 
 
 # ============================================================================
@@ -482,7 +583,7 @@ class UniMelb(System):
 
 # 'system' level, inherits from broader institute class
 # --> this is what should be passed around!
-class Zyla(UniMelb):
+class Zyla(LVControl):
     """
     Specific system details for the Zyla QDM.
     """
@@ -491,7 +592,7 @@ class Zyla(UniMelb):
     config_path = _CONFIG_PATH / "zyla_config.json"
 
 
-class cQDM(UniMelb):  # noqa: N801
+class cQDM(LVControl):  # noqa: N801
     """
     Specific system details for the cQDM QDM.
     """
@@ -500,7 +601,7 @@ class cQDM(UniMelb):  # noqa: N801
     config_path = _CONFIG_PATH / "cqdm_config.json"
 
 
-class CryoWidefield(UniMelb):
+class CryoWidefield(LVControl):
     """
     Specific system details for Cryogenic (Attocube) widefield QDM.
     """
@@ -509,7 +610,7 @@ class CryoWidefield(UniMelb):
     config_path = _CONFIG_PATH / "cryo_widefield_config.json"
 
 
-class LegacyCryoWidefield(UniMelb):
+class LegacyCryoWidefield(LVControl):
     """
     Specific system details for cryogenic (Attocube) widefield QDM.
     - Legacy binning version
@@ -533,7 +634,7 @@ class LegacyCryoWidefield(UniMelb):
             )
 
 
-class Argus(UniMelb):
+class Argus(LVControl):
     """
     Specific system details for Argus room-temperature widefield QDM.
     """
@@ -542,7 +643,7 @@ class Argus(UniMelb):
     config_path = _CONFIG_PATH / "argus_config.json"
 
 
-class LegacyArgus(UniMelb):
+class LegacyArgus(LVControl):
     name = "Legacy Argus"
     config_path = _CONFIG_PATH / "argus_config.json"
 
@@ -561,6 +662,15 @@ class LegacyArgus(UniMelb):
             )
 
 
+class PyCryoWidefield(PyControl):
+    """
+    Specific system details for Cryogenic (Attocube) widefield QDM.
+    """
+
+    name = "Py Cryo Widefield"
+    config_path = _CONFIG_PATH / "cryo_widefield_config.json"
+
+
 # ============================================================================
 
 _SYSTEMS = {
@@ -570,6 +680,8 @@ _SYSTEMS = {
     "cQDM": cQDM,
     "Argus": Argus,
     "Legacy_Argus": LegacyArgus,
+    "Default": Argus,
+    "Py_Cryo_Widefield": PyCryoWidefield,
 }
 """Dictionary that defines systems available for use.
 
