@@ -681,7 +681,7 @@ class TopHatSigma(FitFunc):
         # wrt eta
         j[:, 1] = -A*(np.exp(-4*sigma*x)*(-1+np.exp(2*sigma*x)**2))/(4*sigma*x)
         # wrt A
-        j[:, 2] = (np.exp(-4*sigma*x)*(-1+np.exp(2*sigma*x))*(np.exp(2*sigma*x)*(-2+eta)-eta))/(4 * sigma * x)
+        j[:, 2] = (np.exp(-4*sigma*x)*(-1+np.exp(2*sigma*x))*(np.exp(2*sigma*x)*(-2+eta)-eta))/(4*sigma*x)
           
         return j
             
@@ -737,8 +737,8 @@ class TopHatT1(FitFunc):
     @staticmethod
     @njit
     def eval(x, *fit_params):
-        sigma, eta, A = fit_params
-        return -A * (np.exp(-4*sigma*x)*(-1+np.exp(2*sigma*x))*(np.exp(2*sigma*x)*(-2+eta)-eta))/(4 * sigma * x)
+        t1, eta, A = fit_params
+        return -A * (np.exp(-4*x/t1)*(-1+np.exp(2*x/t1))*(np.exp(2*x/t1)*(-2+eta)-eta))/(4*x/t1)
 
     @staticmethod
     @njit
@@ -746,16 +746,17 @@ class TopHatT1(FitFunc):
         """Compute the grad of the residue, excluding pl as a param
         {output shape: (len(x), 3)}
         """
-        sigma, eta, A = fit_params
+        t1, eta, A = fit_params
         j = np.empty((x.shape[0], 3), dtype=np.float64)
         # wrt sigma
-        j[:, 0] = A*np.exp(-4*sigma*x)*(np.exp(4*sigma*x)*(eta-2)
-                                        +eta+4*eta*sigma*x-2*np.exp(2*sigma*x)
-                                        *(eta-1)*(1+2*sigma*x))/(4*sigma**2*x)
+        j[:, 0] = -A*(np.exp(-4*x/t1
+                             )*(np.exp(4*x/t1
+                                       )*t1*(eta-2)-2*np.exp(2*x/t1)*(eta-1)*(t1+2*x
+                                                                              )+eta*(t1+4*x))/(4*t1*x))
         # wrt eta
-        j[:, 1] = -A*(np.exp(-4*sigma*x)*(-1+np.exp(2*sigma*x)**2))/(4*sigma*x)
+        j[:, 1] = -A*(np.exp(-4*x/t1)*(-1+np.exp(2*x/t1)**2))/(4*x/t1)
         # wrt A
-        j[:, 2] = (np.exp(-4*sigma*x)*(-1+np.exp(2*sigma*x))*(np.exp(2*sigma*x)*(-2+eta)-eta))/(4 * sigma * x)
+        j[:, 2] = (np.exp(-4*x/t1)*(-1+np.exp(2*x/t1))*(np.exp(2*x/t1)*(-2+eta)-eta))/(4 * sigma * x)
           
         return j
             
