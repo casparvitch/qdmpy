@@ -729,7 +729,7 @@ class TopHatT1(FitFunc):
 
     param_defn = ["sigma", "eta", "A"]
     param_units = {
-        "sigma": "Frequency (Hz)",
+        "t1": "Frequency (Hz)",
         "eta": "Unitless",
         "A": "Amplitude (a.u.)",
     }
