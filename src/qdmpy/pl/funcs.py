@@ -756,7 +756,7 @@ class TopHatT1(FitFunc):
         # wrt eta
         j[:, 1] = -A*(np.exp(-4*x/t1)*(-1+np.exp(2*x/t1)**2))/(4*x/t1)
         # wrt A
-        j[:, 2] = (np.exp(-4*x/t1)*(-1+np.exp(2*x/t1))*(np.exp(2*x/t1)*(-2+eta)-eta))/(4 * sigma * x)
+        j[:, 2] = (np.exp(-4*x/t1)*(-1+np.exp(2*x/t1))*(np.exp(2*x/t1)*(-2+eta)-eta))/(4*x/t1)
           
         return j
             
