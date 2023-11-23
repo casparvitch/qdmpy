@@ -648,9 +648,9 @@ class HallT1(FitFunc):
         )  # wrt A
         return j
 
-class TopHatT1(FitFunc):
+class TopHatSigma(FitFunc):
     """
-    Convolved Walsh/Hall T1 model with top hat distribution of Gamma1
+    Convolved Walsh/Hall T1 model with top hat distribution of Gamma1 - fitting to rate
     """
 
     param_defn = ["sigma", "eta", "A"]
@@ -666,28 +666,29 @@ class TopHatT1(FitFunc):
         sigma, eta, A = fit_params
         return -A * (np.exp(-4*sigma*x)*(-1+np.exp(2*sigma*x))*(np.exp(2*sigma*x)*(-2+eta)-eta))/(4 * sigma * x)
 
-    #@staticmethod
-    #@njit
-    #def grad_fn(x, *fit_params):
-        #"""Compute the grad of the residue, excluding pl as a param
-        #{output shape: (len(x), 3)}
-        #"""
-        #exp_t, eta, A = fit_params
-        #j = np.empty((x.shape[0], 3), dtype=np.float64)
-        #j[:, 0] = (-2 * A * (eta - 1) * x * np.exp(2 * x / exp_t)) / (
-            #((eta - A * np.exp(2 * x / exp_t)) ** 2) * exp_t**2
-        #)  # wrt sigma
-        #j[:, 1] = (1 - A * np.exp(2 * x / exp_t)) / (
-            #(eta - A * np.exp(2 * x / exp_t)) ** 2
-        #)  # wrt eta
-        #j[:, 2] = ((eta - 1) * np.exp(2 * x / exp_t)) / (
-            #(eta - A * np.exp(2 * x / exp_t)) ** 2
-        #)  # wrt A
-        #return j
+    @staticmethod
+    @njit
+    def grad_fn(x, *fit_params):
+        """Compute the grad of the residue, excluding pl as a param
+        {output shape: (len(x), 3)}
+        """
+        sigma, eta, A = fit_params
+        j = np.empty((x.shape[0], 3), dtype=np.float64)
+        # wrt sigma
+        j[:, 0] = A*np.exp(-4*sigma*x)*(np.exp(4*sigma*x)*(eta-2)
+                                        +eta+4*eta*sigma*x-2*np.exp(2*sigma*x)
+                                        *(eta-1)*(1+2*sigma*x))/(4*sigma**2*x)
+        # wrt eta
+        j[:, 1] = -A*(np.exp(-4*sigma*x)*(-1+np.exp(2*sigma*x)**2))/(4*sigma*x)
+        # wrt A
+        j[:, 2] = (np.exp(-4*sigma*x)*(-1+np.exp(2*sigma*x))*(np.exp(2*sigma*x)*(-2+eta)-eta))/(4 * sigma * x)
+          
+        return j
             
-class ExpDistT1(FitFunc):
+class ExpDistSigma(FitFunc):
     """
     Convolved Walsh/Hall T1 model with exponential distribution of Gamma1
+    - fitting to rate
     """
 
     param_defn = ["sigma", "eta", "A"]
@@ -701,27 +702,100 @@ class ExpDistT1(FitFunc):
     @njit
     def eval(x, *fit_params):
         sigma, eta, A = fit_params
-        return A * (2*sigma*sigma*(1-2*(-2+eta)*sigma)
-                    )/(1+6*sigma*x+8*sigma*sigma*x*x)
+        return A * ((1-eta)/(1+2*sigma*x)+(eta)/(1+4*sigma*x))
 
-    #@staticmethod
-    #@njit
-    #def grad_fn(x, *fit_params):
-        #"""Compute the grad of the residue, excluding pl as a param
-        #{output shape: (len(x), 3)}
-        #"""
-        #exp_t, eta, A = fit_params
-        #j = np.empty((x.shape[0], 3), dtype=np.float64)
-        #j[:, 0] = (-2 * A * (eta - 1) * x * np.exp(2 * x / exp_t)) / (
-            #((eta - A * np.exp(2 * x / exp_t)) ** 2) * exp_t**2
-        #)  # wrt sigma
-        #j[:, 1] = (1 - A * np.exp(2 * x / exp_t)) / (
-            #(eta - A * np.exp(2 * x / exp_t)) ** 2
-        #)  # wrt eta
-        #j[:, 2] = ((eta - 1) * np.exp(2 * x / exp_t)) / (
-            #(eta - A * np.exp(2 * x / exp_t)) ** 2
-        #)  # wrt A
-        #return j
+    @staticmethod
+    @njit
+    def grad_fn(x, *fit_params):
+        """Compute the grad of the residue, excluding pl as a param
+        {output shape: (len(x), 3)}
+        """
+        sigma, eta, A = fit_params
+        j = np.empty((x.shape[0], 3), dtype=np.float64)
+        # wrt sigma
+        j[:, 0] = -A*((2*(1-eta)*x)/((1+2*sigma*x)**2)+(4*x*eta)/(1+4*sigma*x)**2)
+         
+        # wrt eta
+        j[:, 1] = A*(-1/(1+2*sigma*x)+1/(1+4*sigma*x))
+        
+        # wrt A
+        j[:, 2] = ((1-eta)/(1+2*sigma*x)+(eta)/(1+4*sigma*x))
+        return j
+
+class TopHatT1(FitFunc):
+    """
+    Convolved Walsh/Hall T1 model with top hat distribution of Gamma1 - fitting to rate
+    """
+
+    param_defn = ["sigma", "eta", "A"]
+    param_units = {
+        "sigma": "Frequency (Hz)",
+        "eta": "Unitless",
+        "A": "Amplitude (a.u.)",
+    }
+
+    @staticmethod
+    @njit
+    def eval(x, *fit_params):
+        sigma, eta, A = fit_params
+        return -A * (np.exp(-4*sigma*x)*(-1+np.exp(2*sigma*x))*(np.exp(2*sigma*x)*(-2+eta)-eta))/(4 * sigma * x)
+
+    @staticmethod
+    @njit
+    def grad_fn(x, *fit_params):
+        """Compute the grad of the residue, excluding pl as a param
+        {output shape: (len(x), 3)}
+        """
+        sigma, eta, A = fit_params
+        j = np.empty((x.shape[0], 3), dtype=np.float64)
+        # wrt sigma
+        j[:, 0] = A*np.exp(-4*sigma*x)*(np.exp(4*sigma*x)*(eta-2)
+                                        +eta+4*eta*sigma*x-2*np.exp(2*sigma*x)
+                                        *(eta-1)*(1+2*sigma*x))/(4*sigma**2*x)
+        # wrt eta
+        j[:, 1] = -A*(np.exp(-4*sigma*x)*(-1+np.exp(2*sigma*x)**2))/(4*sigma*x)
+        # wrt A
+        j[:, 2] = (np.exp(-4*sigma*x)*(-1+np.exp(2*sigma*x))*(np.exp(2*sigma*x)*(-2+eta)-eta))/(4 * sigma * x)
+          
+        return j
+            
+class ExpDistT1(FitFunc):
+    """
+    Convolved Walsh/Hall T1 model with exponential distribution of Gamma1
+    - fitting to rate
+    """
+
+    param_defn = ["sigma", "eta", "A"]
+    param_units = {
+        "t1": "Time (s)",
+        "eta": "Unitless",
+        "A": "Amplitude (a.u.)",
+    }
+
+    @staticmethod
+    @njit
+    def eval(x, *fit_params):
+        t1, eta, A = fit_params
+        return A * ((1-eta)/(1+2*x/t1)+(eta)/(1+4*x/t1))
+
+    @staticmethod
+    @njit
+    def grad_fn(x, *fit_params):
+        """Compute the grad of the residue, excluding pl as a param
+        {output shape: (len(x), 3)}
+        """
+        t1, eta, A = fit_params
+        j = np.empty((x.shape[0], 3), dtype=np.float64)
+        # wrt sigma
+        j[:, 0] = -A*((2*(1-eta)*x)/(t1**2*(1+2*x/t1)**2)+(4*x*eta)/(t1**2*(1+4*x/t1)**2))
+         
+        # wrt eta
+        j[:, 1] = A*(-1/(1+2*x/t1)+1/(1+4*x/t1))
+        
+        # wrt A
+        j[:, 2] = ((1-eta)/(1+2*x/t1)+(eta)/(1+4*x/t1))
+        return j
+
 
 
 
@@ -742,6 +816,8 @@ AVAILABLE_FNS = {
     "lorentzian_hBN": LorentzianhBN,
     "walsh_t1": WalshT1,
     "hall_t1": HallT1,
+    "tophat_sigma": TopHatSigma,
+    "expdist_sigma": ExpDistSigma,
     "tophat_t1": TopHatT1,
     "expdist_t1": ExpDistT1
 }
