@@ -35,10 +35,12 @@
     },
 
     // Smooth each PL frame with direct gaussian kernel. Applied before binning.
+    // NB: FWHM = 2.355 * σ
     "smoothing_sigma_px": {
         "option_default": 0
     },
     // Give smoothing sigma in metres -> overrides smoothing_sigma_px
+    // NB: FWHM = 2.355 * σ
     "smoothing_sigma_m": {
         "option_default": 0
     },
