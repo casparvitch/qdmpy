@@ -727,7 +727,7 @@ class TopHatT1(FitFunc):
     Convolved Walsh/Hall T1 model with top hat distribution of Gamma1 - fitting to rate
     """
 
-    param_defn = ["sigma", "eta", "A"]
+    param_defn = ["t1", "eta", "A"]
     param_units = {
         "t1": "Frequency (Hz)",
         "eta": "Unitless",
@@ -766,7 +766,7 @@ class ExpDistT1(FitFunc):
     - fitting to rate
     """
 
-    param_defn = ["sigma", "eta", "A"]
+    param_defn = ["t1", "eta", "A"]
     param_units = {
         "t1": "Time (s)",
         "eta": "Unitless",
