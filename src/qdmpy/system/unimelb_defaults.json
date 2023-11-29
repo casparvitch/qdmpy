@@ -649,6 +649,20 @@
     "hall_A_bounds": {
         "option_default": null
     },
+    // convolved function guesses - still fiddling
+    "sigma_guess": {
+        "option_default": null
+    },
+    "eta_guess": {
+        "option_default": null
+    },
+    "A_guess": {
+        "option_default": null
+    },
+    "t1_guess": {
+        "option_default": null
+    },
+    
 
     // ========== Hamiltonian / field retrieval parameters ==========
     // Note: it is assumed the reference experiment is run under the same
