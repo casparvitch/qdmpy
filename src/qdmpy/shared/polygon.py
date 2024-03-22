@@ -4,6 +4,8 @@ This module holds the Polygon class: a class to compute if a point
 lies inside/outside/on-side of a polygon. Also defined is a function
 (polygon_gui) that can be called to select a polygon region on an image.
 
+For use check examples: examples/scripts/
+
 Polygon-GUI
 -----------
 Function to select polygons on an image. Ensure you have the required
@@ -17,6 +19,8 @@ to polygon_gui.
 The output json path can then be specified in the usual way (there's an
 option called 'polygon_nodes_path') to utilize these regions in the main
 processing code.
+
+Update: probably best to use polygon_selector() function. Check examples.
 
 Polygon
 -------

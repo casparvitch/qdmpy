@@ -238,7 +238,6 @@ class Gaussian(FitFunc):
 
 
 class GaussianHyperfine14(FitFunc):
-
     param_defn = [
         "pos_gauss_h14",
         "amp_gauss_h14_hyp_1",
@@ -279,7 +278,6 @@ class GaussianHyperfine14(FitFunc):
 
 
 class GaussianHyperfine15(FitFunc):
-
     param_defn = [
         "pos_gauss_h15",
         "amp_gauss_h15_hyp_1",
@@ -351,7 +349,6 @@ class Lorentzian(FitFunc):
 
 
 class LorentzianHyperfine14(FitFunc):
-
     param_defn = [
         "pos_h14",
         "amp_h14_hyp_1",
@@ -395,7 +392,6 @@ class LorentzianHyperfine14(FitFunc):
 
 
 class LorentzianHyperfine15(FitFunc):
-
     param_defn = [
         "pos_h15",
         "amp_h15_hyp_1",
@@ -424,7 +420,6 @@ class LorentzianHyperfine15(FitFunc):
 
 
 class LorentzianhBN(FitFunc):
-
     param_defn = [
         "pos_hBN",
         "amp_hBN_hyp_1",
@@ -474,13 +469,27 @@ class LorentzianhBN(FitFunc):
         return ret
 
 
+class DoubleLorentzian(FitFunc):
+    """Double Lorentzian function (with fixed separation)"""
+
+    param_defn = ["pos", "fwhm_left", "amp_left", "fwhm_right", "amp_right"]
+    param_units = {
+        "pos": "Freq (MHz)",
+        "fwhm_left": "Freq (MHz)",
+        "amp_left": "Amp (a.u.)",
+        "fwhm_right": "Freq (MHz)",
+        "amp_right": "Amp (a.u.)",
+    }
+    # should always use fastmodel for this one:
+    #    {"constant": 1, "double_lorentzian": 1}
+
+
 # ==========================================================================
 # Exponential fit functions
 # ==========================================================================
 
 
 class StretchedExponential(FitFunc):
-
     param_defn = ["charac_exp_t", "amp_exp", "power_exp"]
     param_units = {
         "charac_exp_t": "Time (s)",
@@ -666,6 +675,7 @@ AVAILABLE_FNS = {
     "lorentzian_hBN": LorentzianhBN,
     "walsh_t1": WalshT1,
     "hall_t1": HallT1,
+    "double_lorentzian": DoubleLorentzian,
 }
 """Dictionary that defines fit functions available for use.
 

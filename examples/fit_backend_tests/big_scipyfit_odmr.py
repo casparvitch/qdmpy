@@ -16,7 +16,8 @@ if __name__ == "__main__":
     options_dict = {
         "base_dir": TEST_DATA_PATH,  # var is read from TEST_DATA_PATH.py
         "filepath": "j_test/ODMR - Pulsed_42",
-        "custom_output_dir_suffix": "_{fit_backend}_bin_{total_bin}",
+        "custom_output_dir_suffix": "_{use_fastmodel}_{fit_backend}_bin_{total_bin}",
+        "use_fastmodel": False,
         "additional_bins": 2,
         "objective_mag": 40,
         "system_name": "Zyla",

@@ -11,7 +11,7 @@ Functions
  - `qdmpy.plot.pl.aoi_spectra_fit`
  - `qdmpy.plot.pl.pl_param_image`
  - `qdmpy.plot.pl.pl_param_images`
- - `qdmpy.plot.pl.pl_params_flattened`
+ # - `qdmpy.plot.pl.pl_params_flattened`
  - `qdmpy.plot.pl.other_measurements`
  - `qdmpy.plot.pl._add_patch_rect`
  - `qdmpy.plot.pl._annotate_roi_image`
@@ -30,7 +30,7 @@ __pdoc__ = {
     "qdmpy.plot.pl.aoi_spectra_fit": True,
     "qdmpy.plot.pl.pl_param_image": True,
     "qdmpy.plot.pl.pl_param_images": True,
-    "qdmpy.plot.pl.pl_params_flattened": True,
+    # "qdmpy.plot.pl.pl_params_flattened": True,
     "qdmpy.plot.pl.other_measurements": True,
     "qdmpy.plot.pl._add_patch_rect": True,
     "qdmpy.plot.pl._annotate_roi_image": True,
@@ -1015,243 +1015,243 @@ def pl_param_images(options, fit_model, pixel_fit_params, param_name, errorplot=
 
 # ============================================================================
 
+# useless & annoying with new fit features. Turned off for now.
+# def pl_params_flattened(
+#     options,
+#     fit_model,
+#     pixel_fit_params,
+#     roi_avg_fit_result,
+#     param_name,
+#     sigmas=None,
+#     plot_bounds=True,
+#     plot_sigmas=True,
+#     errorevery=1,
+# ):
+#     """
+#     Compare pixel fits against flattened pixels: initial guess vs ROI fit vs fit result.
 
-def pl_params_flattened(
-    options,
-    fit_model,
-    pixel_fit_params,
-    roi_avg_fit_result,
-    param_name,
-    sigmas=None,
-    plot_bounds=True,
-    plot_sigmas=True,
-    errorevery=1,
-):
-    """
-    Compare pixel fits against flattened pixels: initial guess vs ROI fit vs fit result.
+#     Arguments
+#     ---------
+#     options : dict
+#         Generic options dict holding all the user options.
+#     fit_model : `qdmpy.pl.model.FitModel`
+#         Model we're fitting to.
+#     pixel_fit_params : dict
+#         Dictionary, key: param_keys, val: image (2D) of param values across FOV.
+#     roi_avg_fit_result
+#         `qdmpy.pl.common.ROIAvgFitResult` object.
+#     param_name : str
+#         Name of parameter you want to plot, e.g. 'fwhm'. Can also be 'residual'.
+#     plot_bounds : bool
+#         Defaults to True, add fit bounds/constraints to plot. (Does nothing for residual plots)
+#     plot_sigmas : bool
+#         Defaults to True, add error bars (sigma) to plot. (Does nothing for residual plots)
 
-    Arguments
-    ---------
-    options : dict
-        Generic options dict holding all the user options.
-    fit_model : `qdmpy.pl.model.FitModel`
-        Model we're fitting to.
-    pixel_fit_params : dict
-        Dictionary, key: param_keys, val: image (2D) of param values across FOV.
-    roi_avg_fit_result
-        `qdmpy.pl.common.ROIAvgFitResult` object.
-    param_name : str
-        Name of parameter you want to plot, e.g. 'fwhm'. Can also be 'residual'.
-    plot_bounds : bool
-        Defaults to True, add fit bounds/constraints to plot. (Does nothing for residual plots)
-    plot_sigmas : bool
-        Defaults to True, add error bars (sigma) to plot. (Does nothing for residual plots)
+#     Returns
+#     -------
+#     fig : matplotlib Figure object
 
-    Returns
-    -------
-    fig : matplotlib Figure object
+#     """
+#     if pixel_fit_params is None:
+#         return None
 
-    """
-    if pixel_fit_params is None:
-        return None
+#     if not sigmas:
+#         plot_sigmas = False
 
-    if not sigmas:
-        plot_sigmas = False
+#     # initial guess vs ROI fit vs pixel fit
 
-    # initial guess vs ROI fit vs pixel fit
+#     param_keys = sorted([p for p in pixel_fit_params if p.startswith(param_name)])
 
-    param_keys = sorted([p for p in pixel_fit_params if p.startswith(param_name)])
+#     figsize = mpl.rcParams["figure.figsize"].copy()
 
-    figsize = mpl.rcParams["figure.figsize"].copy()
+#     height = len(param_keys)
+#     width = 1
+#     figsize[0] *= 2  # make some extra space...
+#     figsize[1] = figsize[1] * height / 2 if height > 1 else figsize[1]
 
-    height = len(param_keys)
-    width = 1
-    figsize[0] *= 2  # make some extra space...
-    figsize[1] = figsize[1] * height / 2 if height > 1 else figsize[1]
+#     fig, axs = plt.subplots(height, width, sharex=True, figsize=figsize)
+#     # axs indexed: axs[row, col] (n_cols = 1 here, so index linearly)
+#     if not isinstance(axs, np.ndarray):
+#         axs = np.array([axs])
 
-    fig, axs = plt.subplots(height, width, sharex=True, figsize=figsize)
-    # axs indexed: axs[row, col] (n_cols = 1 here, so index linearly)
-    if not isinstance(axs, np.ndarray):
-        axs = np.array([axs])
+#     if param_name == "residual":
+#         param_guesses = [
+#             fit_model.residuals_scipyfit(
+#                 roi_avg_fit_result.init_param_guess,
+#                 roi_avg_fit_result.sweep_list,
+#                 roi_avg_fit_result.pl_roi,
+#             ).sum()
+#         ]
 
-    if param_name == "residual":
-        param_guesses = [
-            fit_model.residuals_scipyfit(
-                roi_avg_fit_result.init_param_guess,
-                roi_avg_fit_result.sweep_list,
-                roi_avg_fit_result.pl_roi,
-            ).sum()
-        ]
+#         param_roi_fits = [
+#             fit_model.residuals_scipyfit(
+#                 roi_avg_fit_result.best_params,
+#                 roi_avg_fit_result.sweep_list,
+#                 roi_avg_fit_result.pl_roi,
+#             ).sum()
+#         ]
+#     else:
+#         param_guesses = []
+#         param_roi_fits = []
+#         param_bounds = []
+#         for fn_obj in fit_model.fn_chain:
+#             for param_num, param_root in enumerate(fn_obj.param_defn):
+#                 if param_root == param_name:
+#                     param_guesses.append(
+#                         roi_avg_fit_result.init_param_guess[
+#                             fn_obj.this_fn_param_indices[param_num]
+#                         ]
+#                     )
+#                     param_roi_fits.append(
+#                         roi_avg_fit_result.best_params[
+#                             fn_obj.this_fn_param_indices[param_num]
+#                         ]
+#                     )
+#                     param_bounds.append(
+#                         roi_avg_fit_result.init_param_bounds[
+#                             fn_obj.this_fn_param_indices[param_num]
+#                         ]
+#                     )
 
-        param_roi_fits = [
-            fit_model.residuals_scipyfit(
-                roi_avg_fit_result.best_params,
-                roi_avg_fit_result.sweep_list,
-                roi_avg_fit_result.pl_roi,
-            ).sum()
-        ]
-    else:
-        param_guesses = []
-        param_roi_fits = []
-        param_bounds = []
-        for fn_obj in fit_model.fn_chain:
-            for param_num, param_root in enumerate(fn_obj.param_defn):
-                if param_root == param_name:
-                    param_guesses.append(
-                        roi_avg_fit_result.init_param_guess[
-                            fn_obj.this_fn_param_indices[param_num]
-                        ]
-                    )
-                    param_roi_fits.append(
-                        roi_avg_fit_result.best_params[
-                            fn_obj.this_fn_param_indices[param_num]
-                        ]
-                    )
-                    param_bounds.append(
-                        roi_avg_fit_result.init_param_bounds[
-                            fn_obj.this_fn_param_indices[param_num]
-                        ]
-                    )
+#     axs[-1].set_xlabel("Pixel # (flattened)")
+#     for ax in axs:
+#         ax.set_ylabel(fit_model.get_param_unit(param_name, 0))
+#         ax.grid()
 
-    axs[-1].set_xlabel("Pixel # (flattened)")
-    for ax in axs:
-        ax.set_ylabel(fit_model.get_param_unit(param_name, 0))
-        ax.grid()
+#     # uses the default color cycle... i.e.:
+#     prop_cycle = plt.rcParams["axes.prop_cycle"]
+#     colors = prop_cycle.by_key()["color"]
 
-    # uses the default color cycle... i.e.:
-    prop_cycle = plt.rcParams["axes.prop_cycle"]
-    colors = prop_cycle.by_key()["color"]
+#     if param_name != "residual" and plot_bounds:
+#         legend_names = ["Fit bounds", "Initial guesses", "ROI fits"]
+#         custom_lines = [
+#             Line2D(
+#                 [0],
+#                 [0],
+#                 color="k",
+#                 ls=(0, (2, 1)),
+#                 lw=mpl.rcParams["lines.linewidth"],
+#             ),
+#             Line2D(
+#                 [0],
+#                 [0],
+#                 color="k",
+#                 ls=(0, (1, 1)),
+#                 lw=mpl.rcParams["lines.linewidth"] * 2,
+#             ),
+#             Line2D(
+#                 [0],
+#                 [0],
+#                 color="k",
+#                 ls=(0, (5, 1)),
+#                 lw=mpl.rcParams["lines.linewidth"] * 2,
+#             ),
+#         ]
+#     else:
+#         legend_names = ["Initial guesses", "ROI fits"]
+#         # https://matplotlib.org/3.2.1/gallery/lines_bars_and_markers/linestyles.html
+#         custom_lines = [
+#             Line2D(
+#                 [0],
+#                 [0],
+#                 color="k",
+#                 ls=(0, (1, 1)),
+#                 lw=mpl.rcParams["lines.linewidth"] * 2,
+#             ),
+#             Line2D(
+#                 [0],
+#                 [0],
+#                 color="k",
+#                 ls=(0, (5, 1)),
+#                 lw=mpl.rcParams["lines.linewidth"] * 2,
+#             ),
+#         ]
 
-    if param_name != "residual" and plot_bounds:
-        legend_names = ["Fit bounds", "Initial guesses", "ROI fits"]
-        custom_lines = [
-            Line2D(
-                [0],
-                [0],
-                color="k",
-                ls=(0, (2, 1)),
-                lw=mpl.rcParams["lines.linewidth"],
-            ),
-            Line2D(
-                [0],
-                [0],
-                color="k",
-                ls=(0, (1, 1)),
-                lw=mpl.rcParams["lines.linewidth"] * 2,
-            ),
-            Line2D(
-                [0],
-                [0],
-                color="k",
-                ls=(0, (5, 1)),
-                lw=mpl.rcParams["lines.linewidth"] * 2,
-            ),
-        ]
-    else:
-        legend_names = ["Initial guesses", "ROI fits"]
-        # https://matplotlib.org/3.2.1/gallery/lines_bars_and_markers/linestyles.html
-        custom_lines = [
-            Line2D(
-                [0],
-                [0],
-                color="k",
-                ls=(0, (1, 1)),
-                lw=mpl.rcParams["lines.linewidth"] * 2,
-            ),
-            Line2D(
-                [0],
-                [0],
-                color="k",
-                ls=(0, (5, 1)),
-                lw=mpl.rcParams["lines.linewidth"] * 2,
-            ),
-        ]
+#     if param_name != "residual" and plot_bounds:
+#         for i, bounds in enumerate(param_bounds):
+#             for b in bounds:
+#                 axs[i].axhline(b, ls=(0, (2, 1)), c="grey", zorder=9)
 
-    if param_name != "residual" and plot_bounds:
-        for i, bounds in enumerate(param_bounds):
-            for b in bounds:
-                axs[i].axhline(b, ls=(0, (2, 1)), c="grey", zorder=9)
+#     for i, guess in enumerate(param_guesses):
+#         axs[i].axhline(
+#             guess,
+#             ls=(0, (1, 1)),
+#             c="k",
+#             zorder=10,
+#             lw=mpl.rcParams["lines.linewidth"] * 2,
+#         )
 
-    for i, guess in enumerate(param_guesses):
-        axs[i].axhline(
-            guess,
-            ls=(0, (1, 1)),
-            c="k",
-            zorder=10,
-            lw=mpl.rcParams["lines.linewidth"] * 2,
-        )
+#     for i, roi_fit in enumerate(param_roi_fits):
+#         axs[i].axhline(
+#             roi_fit,
+#             ls=(0, (5, 1)),
+#             lw=mpl.rcParams["lines.linewidth"] * 2,
+#             c="k",
+#             zorder=5,
+#         )
 
-    for i, roi_fit in enumerate(param_roi_fits):
-        axs[i].axhline(
-            roi_fit,
-            ls=(0, (5, 1)),
-            lw=mpl.rcParams["lines.linewidth"] * 2,
-            c="k",
-            zorder=5,
-        )
+#     for i, (param_key, color) in enumerate(zip(param_keys, colors)):
+#         if param_name == "residual" or not plot_sigmas:
+#             axs[i].plot(
+#                 pixel_fit_params[param_key].flatten(),
+#                 label=param_key,
+#                 marker="o",
+#                 mfc="w",
+#                 ms=mpl.rcParams["lines.markersize"],
+#                 mec=color,
+#                 ls="",
+#                 zorder=20,
+#             )
+#         else:
+#             yvals = pixel_fit_params[param_key].flatten()
+#             xvals = list(range(len(yvals)))
+#             axs[i].errorbar(
+#                 xvals,
+#                 yvals,
+#                 xerr=None,
+#                 yerr=sigmas[param_key].flatten(),
+#                 label=param_key,
+#                 marker="o",
+#                 mfc="w",
+#                 ms=mpl.rcParams["lines.markersize"],
+#                 mec=color,
+#                 ecolor=color,
+#                 ls="",
+#                 zorder=20,
+#                 errorevery=errorevery,
+#             )
+#         legend_names.append(param_key)
+#         custom_lines.append(
+#             Line2D(
+#                 [0],
+#                 [0],
+#                 marker="o",
+#                 mfc="w",
+#                 ms=mpl.rcParams["lines.markersize"] * 2,
+#                 mec=color,
+#                 ls="",
+#             )
+#         )
 
-    for i, (param_key, color) in enumerate(zip(param_keys, colors)):
-        if param_name == "residual" or not plot_sigmas:
-            axs[i].plot(
-                pixel_fit_params[param_key].flatten(),
-                label=param_key,
-                marker="o",
-                mfc="w",
-                ms=mpl.rcParams["lines.markersize"],
-                mec=color,
-                ls="",
-                zorder=20,
-            )
-        else:
-            yvals = pixel_fit_params[param_key].flatten()
-            xvals = list(range(len(yvals)))
-            axs[i].errorbar(
-                xvals,
-                yvals,
-                xerr=None,
-                yerr=sigmas[param_key].flatten(),
-                label=param_key,
-                marker="o",
-                mfc="w",
-                ms=mpl.rcParams["lines.markersize"],
-                mec=color,
-                ecolor=color,
-                ls="",
-                zorder=20,
-                errorevery=errorevery,
-            )
-        legend_names.append(param_key)
-        custom_lines.append(
-            Line2D(
-                [0],
-                [0],
-                marker="o",
-                mfc="w",
-                ms=mpl.rcParams["lines.markersize"] * 2,
-                mec=color,
-                ls="",
-            )
-        )
+#     # https://jdhao.github.io/2018/01/23/matplotlib-legend-outside-of-axes/
+#     axs[0].legend(
+#         custom_lines,
+#         legend_names,
+#         loc="lower left",
+#         bbox_to_anchor=(0.0, 1.01),
+#         ncol=height + 2,
+#         borderaxespad=0,
+#         frameon=False,
+#         fontsize="medium",
+#     )
 
-    # https://jdhao.github.io/2018/01/23/matplotlib-legend-outside-of-axes/
-    axs[0].legend(
-        custom_lines,
-        legend_names,
-        loc="lower left",
-        bbox_to_anchor=(0.0, 1.01),
-        ncol=height + 2,
-        borderaxespad=0,
-        frameon=False,
-        fontsize="medium",
-    )
+#     if options["save_plots"]:
+#         fig.savefig(
+#             options["output_dir"]
+#             / (f"{param_name}_fit_flattened." + options["save_fig_type"])
+#         )
 
-    if options["save_plots"]:
-        fig.savefig(
-            options["output_dir"]
-            / (f"{param_name}_fit_flattened." + options["save_fig_type"])
-        )
-
-    return fig
+#     return fig
 
 
 # ============================================================================

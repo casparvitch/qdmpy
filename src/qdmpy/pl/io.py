@@ -25,6 +25,8 @@ Functions
  - `qdmpy.pl.io._prev_pl_fits_exist`
  - `qdmpy.pl.io._prev_pl_sigmas_exist`
  - `qdmpy.pl.io.get_prev_options`
+ - `qdmpy.pl.io._calc_smooth_sigma_px`
+ - `qdmpy.pl.io._smooth_image`
 """
 
 
@@ -51,6 +53,8 @@ __pdoc__ = {
     "qdmpy.pl.io._prev_pl_fits_exist": True,
     "qdmpy.pl.io._prev_pl_sigmas_exist": True,
     "qdmpy.pl.io.get_prev_options": True,
+    "qdmpy.pl.io._calc_smooth_sigma_px": True,
+    "qdmpy.pl.io._smooth_image": True,
 }
 
 # ============================================================================
@@ -58,6 +62,7 @@ __pdoc__ = {
 import numpy as np
 import pathlib
 from rebin import rebin
+from scipy.ndimage import gaussian_filter
 
 # ============================================================================
 
@@ -90,6 +95,37 @@ def load_image_and_sweep(options):
     image = options["system"].read_image(options["filepath"], options)
     sweep_list = options["system"].read_sweep_list(options["filepath"])
     return image, sweep_list
+
+
+# ============================================================================
+
+
+def _calc_smooth_sigma_px(options):
+    """Parse options to produce smoothing gaussian sigma in Px"""
+    if "smoothing_sigma_m" in options and options["smoothing_sigma_m"]:
+        sigma = np.abs(options["smoothing_sigma_m"])
+        # convert m to pxs
+        sigma /= options["system"].get_raw_pixel_size(options)
+    elif "smoothing_sigma_px" in options and np.abs(options["smoothing_sigma_px"]):
+        sigma = np.abs(options["smoothing_sigma_px"])
+    else:
+        return None
+    return sigma
+
+
+def _smooth_image(options, image):
+    """Smooth each frame of image (3d dataset) with direct (non-ft) gaussian filter."""
+    sigma = _calc_smooth_sigma_px(options)
+    options["smoothing_sigma_px_used"] = sigma
+    if sigma is None:
+        return image
+    else:
+        # doesn't use fourier, but use that choice here too
+        return gaussian_filter(
+            image,
+            sigma=[0, sigma, sigma],
+            truncate=options["smoothing_truncate"],
+        )
 
 
 # ============================================================================
@@ -140,7 +176,7 @@ def reshape_dataset(options, image, sweep_list):
         E.g. sig_ROI = sig[:, roi[0], roi[1]] (post rebinning)
     """
 
-    # image = reshape_raw(options, raw_data, sweep_list)
+    image = _smooth_image(options, image)
     image_rebinned, sig, ref, sig_norm = _rebin_image(options, image)
     try:
         size_h, size_w = image_rebinned.shape[1:]
@@ -265,23 +301,6 @@ def _rebin_image(options, image):
         if options["additional_bins"] != 1 and options["additional_bins"] % 2:
             raise RuntimeError("The binning parameter needs to be a multiple of 2.")
 
-        # data_pts = image.shape[0]
-        # height = image.shape[1]
-        # width = image.shape[2]
-        # image_rebinned = (
-        #     np.reshape(
-        #         image,
-        #         [
-        #             data_pts,
-        #             int(height / options["additional_bins"]),
-        #             options["additional_bins"],
-        #             int(width / options["additional_bins"]),
-        #             options["additional_bins"],
-        #         ],
-        #     )
-        #     .sum(2)
-        #     .sum(3)
-        # ) # this is old version... moving to rebin package
         image_rebinned = rebin(
             image,
             factor=(1, options["additional_bins"], options["additional_bins"]),
@@ -377,10 +396,10 @@ def _remove_unwanted_data(options, image_rebinned, sweep_list, sig, ref, sig_nor
     pl_image = np.sum(image_rebinned, axis=0)
 
     pl_image_roi = pl_image[roi[0], roi[1]].copy()
-    sig = sig[rem_start : end, roi[0], roi[1]].copy()  # noqa: E203
-    ref = ref[rem_start : end, roi[0], roi[1]].copy()  # noqa: E203
-    sig_norm = sig_norm[rem_start : end, roi[0], roi[1]].copy()  # noqa: E203
-    sweep_list = np.asarray(sweep_list[rem_start : end]).copy()  # noqa: E203
+    sig = sig[rem_start:end, roi[0], roi[1]].copy()  # noqa: E203
+    ref = ref[rem_start:end, roi[0], roi[1]].copy()  # noqa: E203
+    sig_norm = sig_norm[rem_start:end, roi[0], roi[1]].copy()  # noqa: E203
+    sweep_list = np.asarray(sweep_list[rem_start:end]).copy()  # noqa: E203
 
     return pl_image, pl_image_roi, sig, ref, sig_norm, sweep_list, roi
 
@@ -710,6 +729,9 @@ def options_compatible(options, prev_options):
         or options["ROI_end"] != prev_options["ROI_end"]
     ):
         return False, "different ROI rectangle bounds"
+
+    if _calc_smooth_sigma_px(options) != _calc_smooth_sigma_px(prev_options):
+        return False, "different smooth options"
 
     # check relevant param guesses/bounds
 

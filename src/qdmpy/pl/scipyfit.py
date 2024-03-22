@@ -137,7 +137,6 @@ def gen_scipyfit_init_guesses(options, init_guesses, init_bounds):
     for fn_type, num in options["fit_functions"].items():
         # extract a guess/bounds for each of the copies of each fn_type (e.g. 8 lorentzians)
         for n in range(num):
-
             for pos, key in enumerate(qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn):
                 # this check is to handle the edge case of guesses/bounds
                 # options being provided as numbers rather than lists of numbers
@@ -190,7 +189,7 @@ def fit_roi_avg_pl_scipyfit(options, sig, ref, sweep_list, fit_model):
     elif options["normalisation"] == "true_sub":
         roi_norm = (sig - ref) / np.nanmax(sig - ref)
 
-    roi_norm = np.nanmean(roi_norm, axis=(1,2))
+    roi_norm = np.nanmean(roi_norm, axis=(1, 2))
 
     fit_options = prep_scipyfit_options(options, fit_model)
 
@@ -345,7 +344,7 @@ def fit_aois_pl_scipyfit(
         fitting_results = least_squares(
             fit_model.residuals_scipyfit,
             guess_params,
-            args=(sweep_list, np.nanmean(this_aoi, axis=(1,2))),
+            args=(sweep_list, np.nanmean(this_aoi, axis=(1, 2))),
             **fit_opts,
         )
         aoi_avg_best_fit_results_lst.append(fitting_results.x)
@@ -404,8 +403,14 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, fit_optns):
     """
     # shaped_data: [y, x, pl]
     # output: (y, x), result_params, jac
-    fitres = least_squares(fun, p0, args=(sweep_vec, shaped_data[2]), **fit_optns)
-    return ((shaped_data[0], shaped_data[1]), fitres.x, fitres.jac)
+    try:
+        fitres = least_squares(fun, p0, args=(sweep_vec, shaped_data[2]), **fit_optns)
+        fitp = fitres.x
+        fitj = fitres.jac
+    except ValueError:
+        fitp = np.empty(np.shape(p0))
+        fitj = None
+    return ((shaped_data[0], shaped_data[1]), fitp, fitj)
 
 
 # ==========================================================================
@@ -440,10 +445,11 @@ def fit_all_pixels_pl_scipyfit(
     threads = options["threads"]
     num_pixels = np.shape(sig_norm)[1] * np.shape(sig_norm)[2]
 
-    # this makes low binning work (idk why), else do chunksize = 1
-    chunksize = int(num_pixels / (threads * 100))
+    # divide pixels by numbers of threads (workers) to use
+    chunksize = int(num_pixels / threads)
 
     # randomize order of fitting pixels (will un-scramble later) so ETA is more correct
+    # -> this is not every useful.
     if options["scramble_pixels"]:
         pixel_data, unshuffler = qdmpy.pl.common.shuffle_pixels(sig_norm)
     else:

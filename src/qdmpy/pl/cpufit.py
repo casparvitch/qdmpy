@@ -277,9 +277,6 @@ def fit_single_pixel_pl_cpufit(
         options, *qdmpy.pl.common.gen_init_guesses(options)
     )
 
-    # shape = num_fits, 2*num_params
-    reshaped_bounds = np.tile(init_bounds, (2, 1)).astype(np.float32)
-
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
         init_guess_params = roi_avg_fit_result.best_params.copy()
 
@@ -295,11 +292,6 @@ def fit_single_pixel_pl_cpufit(
     constraints = constraints.astype(dtype=np.float32)
 
     pixel_pl_ar_doubled = np.repeat([pixel_pl_ar], repeats=2, axis=0)
-
-    constraint_types = np.array(
-        [cf.ConstraintType.LOWER_UPPER for i in range(init_guess_params.shape[1])],
-        dtype=np.int32,
-    )
 
     (
         parameters,
@@ -371,9 +363,6 @@ def fit_roi_avg_pl_cpufit(options, sig, ref, sweep_list, fit_model):
     init_guess_params, init_bounds = gen_cpufit_init_guesses(
         options, *qdmpy.pl.common.gen_init_guesses(options)
     )
-
-    # shape = num_fits, 2*num_params
-    reshaped_bounds = np.tile(init_bounds, (2, 1)).astype(np.float32)
 
     cpufit_fit_options = prep_cpufit_fit_options(options)
 
@@ -469,9 +458,6 @@ def fit_aois_pl_cpufit(
     init_guess_params, init_bounds = gen_cpufit_init_guesses(
         options, *qdmpy.pl.common.gen_init_guesses(options)
     )
-
-    # shape = num_fits, 2*num_params
-    reshaped_bounds = np.tile(init_bounds, (2, 1)).astype(np.float32)
 
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
         init_guess_params = roi_avg_fit_result.best_params.copy()
@@ -579,9 +565,6 @@ def fit_all_pixels_pl_cpufit(
         options, *qdmpy.pl.common.gen_init_guesses(options)
     )
 
-    # shape = num_fits, 2*num_params
-    reshaped_bounds = np.tile(init_bounds, (num_pixels, 1)).astype(np.float32)
-
     if options["use_ROI_avg_fit_res_for_all_pixels"]:
         init_guess_params = roi_avg_fit_result.best_params.copy()
 
@@ -598,14 +581,6 @@ def fit_all_pixels_pl_cpufit(
 
     # reshape sig_norm in a way that cpufit likes: (number_fits, number_points)
     sig_norm_shaped, pixel_posns = cpufit_data_shape(pixel_data)
-
-    constraint_types = np.array(
-        [
-            cf.ConstraintType.LOWER_UPPER
-            for i in range(init_guess_params_reshaped.shape[1])
-        ],
-        dtype=np.int32,
-    )
 
     fitting_results, _, _, _, execution_time = cf.fit_constrained(
         sig_norm_shaped,
