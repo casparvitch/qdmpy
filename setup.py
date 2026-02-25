@@ -37,7 +37,7 @@ arch = sysconfig.get_platform().replace("-", "_").replace(".", "_")
 if __name__ == "__main__":
     setuptools.setup(
         name="qdmpy",
-        version="5.8.1",
+        version="5.9.0",
         author="Sam Scholten",
         author_email="samcaspar@gmail.com",
         description="Quantum Diamond MicroscoPy",
