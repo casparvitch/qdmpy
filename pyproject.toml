@@ -30,7 +30,7 @@ dependencies = [
     "numpy",
     "matplotlib>=3.4.0",
     "scipy>=1.7",
-    "numba>=0.61",
+    "numba>=0.61,<0.64",
     "psutil",
     "matplotlib-scalebar>=0.7.2",
     "tqdm",
