@@ -10,8 +10,9 @@ Modules
  - `qdmpy.shared.json2dict`
  - `qdmpy.shared.misc`
  - `qdmpy.shared.polygon`
- 
+
 """
+
 __author__ = "Sam Scholten"
 __pdoc__ = {
     "qdmpy.shared.fourier": True,

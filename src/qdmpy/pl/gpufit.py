@@ -218,9 +218,7 @@ def gen_gpufit_init_guesses(options, init_guesses, init_bounds):
 
         for n in range(num_fns_required):
             if n < num:
-                for pos, key in enumerate(
-                    qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn
-                ):
+                for pos, key in enumerate(qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn):
                     # these checks here are to handling the edge case of guesses/bounds
                     # options being provided as numbers rather than lists of numbers
                     try:
@@ -235,9 +233,7 @@ def gen_gpufit_init_guesses(options, init_guesses, init_bounds):
                         bound_lst.append(init_bounds[key][1])
             else:
                 # insert guesses and bounds for params we won't fit. (gpufit requires full array)
-                for pos, key in enumerate(
-                    qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn
-                ):
+                for pos, key in enumerate(qdmpy.pl.funcs.AVAILABLE_FNS[fn_type].param_defn):
                     param_lst.append(0)
                     bound_lst.append(0)
                     bound_lst.append(1)
@@ -250,9 +246,7 @@ def gen_gpufit_init_guesses(options, init_guesses, init_bounds):
 # ============================================================================
 
 
-def fit_single_pixel_pl_gpufit(
-    options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result
-):
+def fit_single_pixel_pl_gpufit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result):
     """
     Fit Single pixel and return optimal fit parameters with gpufit backend
 
@@ -362,7 +356,7 @@ def fit_roi_avg_pl_gpufit(options, sig, ref, sweep_list, fit_model):
     elif options["normalisation"] == "true_sub":
         roi_norm = (sig - ref) / np.nanmax(sig - ref)
 
-    roi_norm = np.nanmean(roi_norm, axis=(1,2))
+    roi_norm = np.nanmean(roi_norm, axis=(1, 2))
 
     roi_norm_twice = np.repeat([roi_norm], repeats=2, axis=0)
 
@@ -501,7 +495,7 @@ def fit_aois_pl_gpufit(
         elif options["normalisation"] == "true_sub":
             this_aoi = (this_sig - this_ref) / np.nanmax(this_sig - this_ref)
 
-        this_aoi_avg = np.nanmean(this_aoi, axis=(1,2))
+        this_aoi_avg = np.nanmean(this_aoi, axis=(1, 2))
         this_aoi_twice = np.repeat([this_aoi_avg], repeats=2, axis=0)
 
         fitting_results, _, _, _, _ = gf.fit_constrained(
@@ -516,7 +510,7 @@ def fit_aois_pl_gpufit(
             ),
             user_info=np.array(sweep_list, dtype=np.float32),
             parameters_to_fit=params_to_fit,
-            **gpufit_fit_options
+            **gpufit_fit_options,
         )
         aoi_avg_best_fit_results_lst.append(fitting_results[0, :])
 
@@ -599,16 +593,13 @@ def fit_all_pixels_pl_gpufit(
         ),
         user_info=np.array(sweep_list, dtype=np.float32),
         parameters_to_fit=np.array(params_to_fit, dtype=np.int32),
-        **gpufit_fit_options
+        **gpufit_fit_options,
     )
     # for the record
     options["fit_time_(s)"] = execution_time
 
     # calculate jacobians via scipy as gpufit doesn't return them at soln
-    jacs = [
-        fit_model.jacobian_scipyfit(param_ar, sweep_ar, None)
-        for param_ar in fitting_results
-    ]
+    jacs = [fit_model.jacobian_scipyfit(param_ar, sweep_ar, None) for param_ar in fitting_results]
 
     fit_results = gpufit_reshape_result(fitting_results, pixel_posns, jacs)
 

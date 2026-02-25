@@ -241,9 +241,7 @@ def get_background(
         )
     for setting in method_required_settings[method]:
         if setting not in method_params_dict:
-            raise ValueError(
-                f"{setting} key missing from method_params_dict for method: {method}"
-            )
+            raise ValueError(f"{setting} key missing from method_params_dict for method: {method}")
 
     if method != "interpolate":
         # can't mask it for interpolate as we need that info!
@@ -288,6 +286,7 @@ def mu_sigma_inside_polygons(image, polygons=None):
 
 # ============================================================================
 # ============================================================================
+
 
 # hands off to other filters
 def get_im_filtered(image, filter_type, **kwargs):
@@ -373,14 +372,10 @@ def _three_point_background(image, points, sample_size):
         raise TypeError("sample_size must be an integer >= 0")
     for p in points:
         if len(p) != 2:
-            raise ValueError(
-                "points needs to be len 3 of format: [x, y] (int or floats)."
-            )
+            raise ValueError("points needs to be len 3 of format: [x, y] (int or floats).")
         for c in p:
             if not isinstance(c, (int, float)):
-                raise ValueError(
-                    "points needs to be len 3 of format: [x, y] (int or floats)."
-                )
+                raise ValueError("points needs to be len 3 of format: [x, y] (int or floats).")
         if image.mask[p[1], p[0]]:
             warn(
                 "One of the input points was masked (inside a polygon?), "
@@ -442,23 +437,17 @@ def _poly_background(image, order):
         return _mean_background(image)
 
     init_params = np.zeros((order + 1, order + 1))
-    init_params[0, 0] = np.nanmean(
-        image
-    )  # set zeroth term to be mean to get it started
+    init_params[0, 0] = np.nanmean(image)  # set zeroth term to be mean to get it started
     Y, X = np.indices(image.shape)  # noqa: N806
     good_vals = np.logical_and(~np.isnan(image), ~image.mask)
     y = Y[good_vals]
     x = X[good_vals]
 
     data = image[good_vals]  # flattened
-    best_c = least_squares(
-        _residual_poly, init_params.flatten()[:-1], args=(y, x, data, order)
-    ).x
+    best_c = least_squares(_residual_poly, init_params.flatten()[:-1], args=(y, x, data, order)).x
     best_c = np.append(best_c, 0)
     c = best_c.reshape((order + 1, order + 1))
-    return polyval2d(Y.flatten(), X.flatten(), c).reshape(
-        image.shape
-    )  # eval over full image
+    return polyval2d(Y.flatten(), X.flatten(), c).reshape(image.shape)  # eval over full image
 
 
 # ============================================================================
@@ -469,10 +458,8 @@ def _gaussian(p, y, x):
     height, center_y, center_x, width_y, width_x, rot, offset = p
     return offset + height * np.exp(
         -(
-            (((y - center_y) * np.cos(rot) + (x - center_x) * np.sin(rot)) / width_y)
-            ** 2
-            + (((x - center_x) * np.cos(rot) - (y - center_y) * np.sin(rot)) / width_x)
-            ** 2
+            (((y - center_y) * np.cos(rot) + (x - center_x) * np.sin(rot)) / width_y) ** 2
+            + (((x - center_x) * np.cos(rot) - (y - center_y) * np.sin(rot)) / width_x) ** 2
         )
         / 2
     )
@@ -494,12 +481,8 @@ def _moments(image):
 
     col = image[int(center_y), :]
     row = image[:, int(center_x)]
-    width_x = np.nansum(
-        np.sqrt(abs((np.arange(col.size) - center_y) ** 2 * col)) / np.nansum(col)
-    )
-    width_y = np.nansum(
-        np.sqrt(abs((np.arange(row.size) - center_x) ** 2 * row)) / np.nansum(row)
-    )
+    width_x = np.nansum(np.sqrt(abs((np.arange(col.size) - center_y) ** 2 * col)) / np.nansum(col))
+    width_y = np.nansum(np.sqrt(abs((np.arange(row.size) - center_x) ** 2 * row)) / np.nansum(row))
     height = np.nanmax(image)
     return height, center_y, center_x, width_y, width_x, 0.0, offset
 
@@ -582,12 +565,8 @@ def _interpolated_background(image, interp_method, polygons, sigma):
     for p in polygons:
         in_or_out = p.is_inside(grid_y, grid_x)
         # mask all vals that are not background
-        is_this_poly = np.ma.masked_greater_equal(
-            in_or_out, 0
-        ).mask  # >= 0 => inside/on poly
-        isnt_poly = np.logical_and(
-            isnt_poly, ~is_this_poly
-        )  # prev isnt_poly and isnt this poly
+        is_this_poly = np.ma.masked_greater_equal(in_or_out, 0).mask  # >= 0 => inside/on poly
+        isnt_poly = np.logical_and(isnt_poly, ~is_this_poly)  # prev isnt_poly and isnt this poly
 
     # now we want to send all of the values in indexes that is_bg is True to griddata
     pts = []

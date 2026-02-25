@@ -296,17 +296,13 @@ def gen_init_guesses(options):
                 # assumes bounds are passed in with correct formatatting
                 bounds = options[param_key + "_bounds"]
             else:
-                raise RuntimeError(
-                    f"Provide bounds for the {fn_type}.{param_key} param."
-                )
+                raise RuntimeError(f"Provide bounds for the {fn_type}.{param_key} param.")
 
             if guess is not None:
                 init_guesses[param_key] = guess
                 init_bounds[param_key] = np.array(bounds)
             else:
-                raise RuntimeError(
-                    f"Not sure why your guess for {fn_type}.{param_key} is None?"
-                )
+                raise RuntimeError(f"Not sure why your guess for {fn_type}.{param_key} is None?")
 
     return init_guesses, init_bounds
 
@@ -419,9 +415,7 @@ def get_pixel_fitting_results(fit_model, fit_results, pixel_data, sweep_list):
             perr[:] = np.nan
         else:
             # NOTE we decide not to call each backend separately here
-            resid = fit_model.residuals_scipyfit(
-                result, sweep_list, pixel_data[:, y, x]
-            )
+            resid = fit_model.residuals_scipyfit(result, sweep_list, pixel_data[:, y, x])
             fit_image_results["residual_0"][y, x] = np.sum(
                 np.abs(resid, dtype=np.float64), dtype=np.float64
             )

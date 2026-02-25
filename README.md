@@ -133,7 +133,26 @@ TODO. Code is still pretty rough. My next big TODO is cleaning this up though!
 
 # Install
 
-See INSTALL.md
+Requires Python 3.11+
+
+```bash
+# Clone
+git clone https://github.com/casparvitch/qdmpy.git
+cd qdmpy
+
+# Install with uv
+just install
+# or: uv pip install -e .
+
+# Verify installation
+just check
+
+# Optional: fit backends for faster fitting
+just install-cpufit  # Linux/Windows
+just install-gpufit  # Windows only
+```
+
+See INSTALL.md for detailed instructions, GPUFit build from source, and troubleshooting.
 
 # Options reference
 

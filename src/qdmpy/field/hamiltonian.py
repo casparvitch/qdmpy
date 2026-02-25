@@ -92,9 +92,7 @@ class Chooser:
         self.chooser_ar = chooser_ar
 
     def __call__(self, some_ar):
-        return np.array(
-            [some_ar[i] for i, do_use in enumerate(self.chooser_ar) if do_use]
-        )
+        return np.array([some_ar[i] for i, do_use in enumerate(self.chooser_ar) if do_use])
 
 
 # ============================================================================
@@ -187,7 +185,6 @@ def fit_hamiltonian_pixels(options, data, hamiltonian):
 
 
 class Hamiltonian:
-
     param_defn: List[str] = []
     param_units: Dict[str, str] = {}
     jac_defined = False
@@ -199,9 +196,7 @@ class Hamiltonian:
         """
         self.chooser_obj = chooser_obj
         self.unv_frames = unv_frames
-        self.unvs = unv_frames[
-            :, 2, :
-        ].copy()  # i.e. z axis of each nv ref. frame in lab frame
+        self.unvs = unv_frames[:, 2, :].copy()  # i.e. z axis of each nv ref. frame in lab frame
 
     # =================================
 
@@ -234,9 +229,7 @@ class Hamiltonian:
         Measured data must be a np array (of the same shape that __call__ returns),
         i.e. freqs, or bnvs.
         """
-        return self.chooser_obj(self.__call__(param_ar)) - self.chooser_obj(
-            measured_data
-        )
+        return self.chooser_obj(self.__call__(param_ar)) - self.chooser_obj(measured_data)
 
     # =================================
 
@@ -369,9 +362,7 @@ class Bxyz(Hamiltonian):
             bz_proj_onto_unv = np.dot(param_ar[1:4], self.unv_frames[i, 2, :])
 
             HB = GAMMA * (  # noqa: N806
-                bx_proj_onto_unv * S_MAT_X
-                + by_proj_onto_unv * S_MAT_Y
-                + bz_proj_onto_unv * S_MAT_Z
+                bx_proj_onto_unv * S_MAT_X + by_proj_onto_unv * S_MAT_Y + bz_proj_onto_unv * S_MAT_Z
             )
             freq, _ = LA.eig(Hzero + HB)
             freq = np.sort(np.real(freq))
@@ -456,7 +447,6 @@ def ham_gen_init_guesses(options):
 
     ham = AVAILABLE_HAMILTONIANS[options["hamiltonian"]]
     for param_key in ham.param_defn:
-
         if param_key in override_guesses:
             guess = override_guesses[param_key]
         else:
@@ -474,9 +464,7 @@ def ham_gen_init_guesses(options):
             init_guesses[param_key] = guess
             init_bounds[param_key] = np.array(bounds)
         else:
-            raise RuntimeError(
-                f"Not sure why your guess for {ham}.{param_key} is None?"
-            )
+            raise RuntimeError(f"Not sure why your guess for {ham}.{param_key} is None?")
 
     return init_guesses, init_bounds
 
@@ -488,7 +476,6 @@ def ham_bounds_from_range(options, param_key, guess):
     """Generate parameter bounds (list, len 2) when given a range option."""
     rang = options[param_key + "_range"]
     if isinstance(guess, (list, tuple)) and len(guess) > 1:
-
         # separate bounds for each fn of this type
         if isinstance(rang, (list, tuple)) and len(rang) > 1:
             bounds = [
@@ -675,9 +662,7 @@ def ham_get_pixel_fitting_results(hamiltonian, fit_results, pixel_data):
         fit_image_results[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
         sigmas[key] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
-    fit_image_results["residual_field"] = (
-        np.zeros((roi_shape[0], roi_shape[1])) * np.nan
-    )
+    fit_image_results["residual_field"] = np.zeros((roi_shape[0], roi_shape[1])) * np.nan
 
     # Fill the arrays element-wise from the results function, which returns a
     # 1D array of flattened best-fit parameters.

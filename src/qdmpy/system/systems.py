@@ -91,9 +91,7 @@ class System:
         """
         Initialisation of system. Must set options_dict.
         """
-        raise NotImplementedError(
-            "System init must set options_dict: override default!"
-        )
+        raise NotImplementedError("System init must set options_dict: override default!")
 
     def read_image(self, filepath, options):
         """
@@ -185,11 +183,7 @@ class System:
         # most systems will need these {you need to copy to your subclass method}
         # need to know number of threads to call (might be parallel fitting)
         options["threads"] = cpu_count() - options["scipyfit_sub_threads"]
-        if (
-            "base_dir" in options
-            and options["base_dir"] is not None
-            and not self.filepath_joined
-        ):
+        if "base_dir" in options and options["base_dir"] is not None and not self.filepath_joined:
             options["filepath"] = options["base_dir"] / options["filepath"]
             self.filepath_joined = True
 
@@ -222,9 +216,7 @@ class UniMelb(System):
         # ensure all values default to None (at all levels of reading in json)
 
         # global defaults
-        self.options_dict = qdmpy.shared.json2dict.json_to_dict(
-            self.uni_defaults_path, hook="dd"
-        )
+        self.options_dict = qdmpy.shared.json2dict.json_to_dict(self.uni_defaults_path, hook="dd")
         # system specific options, then recursively update
         sys_spec_opts = qdmpy.shared.json2dict.json_to_dict(self.config_path, hook="dd")
         qdmpy.shared.json2dict.recursive_dict_update(self.options_dict, sys_spec_opts)
@@ -247,7 +239,7 @@ class UniMelb(System):
         default_keys = ["default_" + key for key in override_keys]
         default_keys.insert(0, "sensor_pixel_size")
         settings_dict = self.options_dict["microscope_setup"]["option_default"]
-        
+
         def key_finder(key):
             if key in settings_dict:
                 return settings_dict[key]
@@ -303,11 +295,7 @@ class UniMelb(System):
         if "freqs_to_use" in options:
             options["freqs_to_use"] = list(map(bool, options["freqs_to_use"]))
 
-        if (
-            "base_dir" in options
-            and options["base_dir"] is not None
-            and not self.filepath_joined
-        ):
+        if "base_dir" in options and options["base_dir"] is not None and not self.filepath_joined:
             options["filepath"] = os.path.join(options["base_dir"], options["filepath"])
             self.filepath_joined = True  # just a flag so we don't do this twice
 
@@ -354,9 +342,7 @@ class LVControl(UniMelb):
         if not int(options["additional_bins"]):
             options["total_bin"] = options["original_bin"]
         else:
-            options["total_bin"] = options["original_bin"] * int(
-                options["additional_bins"]
-            )
+            options["total_bin"] = options["original_bin"] * int(options["additional_bins"])
 
     def _read_metadata(self, filepath):
         """
@@ -447,9 +433,7 @@ class LVControl(UniMelb):
                         int(metadata["AOIHeight"]),
                         int(metadata["AOIWidth"]),
                     ],
-                )[
-                    ::2
-                ]  # hmmm disregard ref -> use every second element.
+                )[::2]  # hmmm disregard ref -> use every second element.
             else:
                 image = np.reshape(
                     raw_data,
@@ -522,9 +506,9 @@ class PyControl(UniMelb):
             return im
 
     def read_sweep_list(self, filepath):
-        return qdmpy.shared.json2dict.json_to_dict(
-            os.path.normpath(str(filepath) + ".json")
-        )["freq_list"] # TODO won't work for tau sweeps
+        return qdmpy.shared.json2dict.json_to_dict(os.path.normpath(str(filepath) + ".json"))[
+            "freq_list"
+        ]  # TODO won't work for tau sweeps
 
     def determine_binning(self, options):
         metadata = self._read_metadata(options["filepath"])
@@ -537,9 +521,7 @@ class PyControl(UniMelb):
         if not int(options["additional_bins"]):
             options["total_bin"] = options["original_bin"]
         else:
-            options["total_bin"] = options["original_bin"] * int(
-                options["additional_bins"]
-            )
+            options["total_bin"] = options["original_bin"] * int(options["additional_bins"])
 
     def _read_metadata(self, filepath):
         """
@@ -629,9 +611,7 @@ class LegacyCryoWidefield(LVControl):
         if not int(options["additional_bins"]):
             options["total_bin"] = options["original_bin"]
         else:
-            options["total_bin"] = options["original_bin"] * int(
-                options["additional_bins"]
-            )
+            options["total_bin"] = options["original_bin"] * int(options["additional_bins"])
 
 
 class Argus(LVControl):
@@ -657,9 +637,7 @@ class LegacyArgus(LVControl):
         if not int(options["additional_bins"]):
             options["total_bin"] = options["original_bin"]
         else:
-            options["total_bin"] = options["original_bin"] * int(
-                options["additional_bins"]
-            )
+            options["total_bin"] = options["original_bin"] * int(options["additional_bins"])
 
 
 class PyCryoWidefield(PyControl):

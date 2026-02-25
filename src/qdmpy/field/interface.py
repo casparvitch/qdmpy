@@ -332,18 +332,12 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
     else:
         # always force field calc for this method (it's quick)
         if not ref_fit_params:
-            raise RuntimeError(
-                "with exp_reference_type = 'pre_gslac' you must define a reference."
-            )
+            raise RuntimeError("with exp_reference_type = 'pre_gslac' you must define a reference.")
         else:
             warn("Using pre_gslac reference. Assuming unv is same for sig & ref.")
             # must match expected pattern
-            num_freqs_sig = len(
-                list(filter(lambda x: x.startswith("pos"), sig_fit_params))
-            )
-            num_freqs_ref = len(
-                list(filter(lambda x: x.startswith("pos"), ref_fit_params))
-            )
+            num_freqs_sig = len(list(filter(lambda x: x.startswith("pos"), sig_fit_params)))
+            num_freqs_ref = len(list(filter(lambda x: x.startswith("pos"), ref_fit_params)))
             if num_freqs_sig != 1:
                 raise ValueError("num freqs fit (sig) for pre_gslac ref type is not 1.")
             if num_freqs_ref != 2:
@@ -352,8 +346,7 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
             chosen_freqs = options["freqs_to_use"]
             if sum(chosen_freqs) != 1:
                 raise ValueError(
-                    "Only select 1 freq ('freqs_to_use') for exp_reference_type:"
-                    " pre_gslac."
+                    "Only select 1 freq ('freqs_to_use') for exp_reference_type: pre_gslac."
                 )
             if chosen_freqs[:4] == [
                 0,
@@ -366,9 +359,7 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
                 idx = np.argwhere(np.array(chosen_freqs[:4]) == 1)[0][0]
 
             sig_bias = options["bias_field_spherical_deg_gauss"]
-            ref_bias = options["ref_bias_field_spherical_deg_gauss"]
             sig_bias_mag = np.abs(sig_bias[0])
-            ref_bias_mag = np.abs(ref_bias[0])
 
             unv = qdmpy.shared.geom.get_unvs(options)[idx]
             sig_bnv = sig_bnvs[0]
@@ -405,9 +396,7 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
 
             sig_bxyz = qdmpy.field.bnv.prop_single_bnv(sig_bnv, unv, *other_opts)
             ref_bxyz = qdmpy.field.bnv.prop_single_bnv(ref_bnv, unv, *other_opts)
-            sig_sub_ref_bxyz = qdmpy.field.bnv.prop_single_bnv(
-                sig_sub_ref_bnv, unv, *other_opts
-            )
+            sig_sub_ref_bxyz = qdmpy.field.bnv.prop_single_bnv(sig_sub_ref_bnv, unv, *other_opts)
 
             sig_params, ref_params, sub_ref_params = [
                 {
@@ -428,7 +417,10 @@ def _odmr_with_pre_glac_ref(options, sig_fit_params, ref_fit_params):
             sigmas_lst = [sigmas, sigmas, sigmas]
 
             if options["bfield_bground_method"]:
-                (params_lst[2], sigmas_lst[2],) = qdmpy.field.bxyz.sub_bground_bxyz(
+                (
+                    params_lst[2],
+                    sigmas_lst[2],
+                ) = qdmpy.field.bxyz.sub_bground_bxyz(
                     options,
                     params_lst[2],
                     sigmas_lst[2],
@@ -581,9 +573,7 @@ def add_bfield_theta_phi(options, field_params, theta, phi):
     u = np.array([ux, uy, uz])
     uhat = u / np.linalg.norm(u)
 
-    field_params["B_theta_phi"] = np.apply_along_axis(
-        lambda b: np.dot(uhat, b), 0, bvec
-    )
+    field_params["B_theta_phi"] = np.apply_along_axis(lambda b: np.dot(uhat, b), 0, bvec)
     options["bfield_proj_angles_(deg)"] = [theta, phi]
 
     return None
@@ -607,31 +597,20 @@ def _check_fit_params_are_ok(options, sig_fit_params, ref_fit_params):
     if not any(map(lambda x: x.startswith("pos"), sig_fit_params.keys())):
         raise RuntimeError("No 'pos' keys found in sig_fit_params")
     else:
-        sig_poskey = next(filter(lambda x: x.startswith("pos"), sig_fit_params.keys()))[
-            :-2
-        ]
+        sig_poskey = next(filter(lambda x: x.startswith("pos"), sig_fit_params.keys()))[:-2]
 
     if ref_fit_params:
         if not any(map(lambda x: x.startswith("pos"), ref_fit_params.keys())):
-            raise RuntimeError(
-                "No 'pos_<something>' keys found in given ref_fit_params"
-            )
+            raise RuntimeError("No 'pos_<something>' keys found in given ref_fit_params")
         else:
-            ref_poskey = next(
-                filter(lambda x: x.startswith("pos"), ref_fit_params.keys())
-            )[:-2]
+            ref_poskey = next(filter(lambda x: x.startswith("pos"), ref_fit_params.keys()))[:-2]
 
-        if (
-            not sig_fit_params[sig_poskey + "_0"].shape
-            == ref_fit_params[ref_poskey + "_0"].shape
-        ):
+        if not sig_fit_params[sig_poskey + "_0"].shape == ref_fit_params[ref_poskey + "_0"].shape:
             raise RuntimeError("Different FOV shape between sig & ref.")
         if options["exp_reference_type"] == "field" and not len(
             list(filter(lambda x: x.startswith("pos"), sig_fit_params))
         ) == len(list(filter(lambda x: x.startswith("pos"), ref_fit_params))):
-            raise RuntimeError(
-                "Different # of frequencies fit in sig & ref. (ref. type = field)."
-            )
+            raise RuntimeError("Different # of frequencies fit in sig & ref. (ref. type = field).")
 
 
 # ============================================================================

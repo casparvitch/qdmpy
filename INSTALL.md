@@ -1,72 +1,78 @@
 Install Instructions for qdmpy
 ==============================
 
+# Quick Install (uv)
+
+Requires Python 3.11+
+
+```bash
+# Clone
+git clone https://github.com/casparvitch/qdmpy.git
+cd qdmpy
+
+# Install with uv (base dependencies)
+just install
+# or: uv pip install -e .
+
+# Or with extras:
+just install-gui    # includes FreeSimpleGUI for polygon_gui()
+just install-dev    # includes prospector for linting
+just install-all    # includes both gui and dev extras
+
+# Verify installation
+just check
+# or: uv run python -c "import qdmpy; print(qdmpy.__version__)"
+```
+
+# Optional: Fit Backends
+
+Pre-built wheels are included in `gpufit_wheels/`:
+
+```bash
+# cpufit - works on Linux and Windows
+just install-cpufit
+
+# gpufit - Windows only (requires NVIDIA GPU)
+just install-gpufit
+```
+
+Or install manually:
+```bash
+uv run python install_gpufit_wheels.py cpufit
+uv run python install_gpufit_wheels.py gpufit
+uv run python install_gpufit_wheels.py both
+```
+
 # Usage
 
-- follow instructions below for install
-- copy one of the example notebooks/scipts to another directory
-- open the directory in jupyterlab from a shell: `jupyter-lab`
-- edit the options, see '/src/systems/unimelb_defaults.json' for rough docs
+- copy one of the example notebooks/scripts to another directory
+- open the directory in jupyterlab: `uv run jupyter lab`
+- edit the options, see '/src/qdmpy/system/unimelb_defaults.json' for rough docs
 
 # Examples/tests
 
 - grab testing datasets from Sam for now, will upload somewhere shared in future.
 
-# Basic install
-(Assuming you know git - see below)
-
-- [clone](https://gitlab.unimelb.edu.au/sscholten/qdmpy)
-- install python3.8
-- navigate to root-dir (containing 'src' etc.)
-```bash
-pip install . # will install deps
-pip install jupyterlab
-```
-
-## If above install didn't work
-- install conda/miniconda
-- this is useful as it allows us to specify the python version
-
-```bash
-conda info # verify install 
-conda update -n base conda # update base conda
-conda create --name QDMPy python=3.8 # new environment called QDMPy
-conda info --envs # list environments
-conda activate QDMPy # activate environment
-conda install numpy # installing dependencies
-conda install -c conda-force matplotlib-scalebar # some deps are in conda-forge
-```
-- navigate to root-dir (containing 'src' etc.), [info](https://github.com/conda/conda-build/issues/4251)
-```bash
-pip install --no-build-isolation --no-deps -e .
-```
-- you will need to install your own deps:
-
-```bash
-conda install numpy "matplotlib>=3.4.0" "scipy>=1.7" numba tqdm psutil simplejson pandas dill astropy
-conda install -c conda-forge "matplotlib-scalebar>=0.7.2" pyfftw pysimplegui
-pip install rebin foronoi python-polylabel # hopefully these don't muck anything up, I will be trying to remove these soon
-```
-
-- although the above may have issues, see e.g. [here](https://github.com/conda/conda-build/issues/4251)
-
 # Documentation
 
-- navigate to root-dir (containing 'src' etc.)
 ```bash
-conda install -c conda-forge pdoc3
-pdoc3 --output-dir docs --html --template-dir ./docs/ --force ./src/qdmpy # or eq. on windows
+just docs
+# or: uv run pdoc3 --output-dir docs --html --template-dir ./docs/ --force ./src/qdmpy
 ```
 
-# prospector
+# Linting
 
-- navigate to root-dir (containing 'src' etc.)
-```bash 
-pip install prospector # or use conda...
-prospector --profile qdmpy.prospector.yaml -o grouped:prospector.log
+```bash
+just lint           # Run prospector, check prospector.log for issues (always succeeds)
+just lint-strict    # Run prospector, fails if issues found (for CI/CD)
+
+# Or manually:
+uv run prospector --profile qdmpy.prospector.yaml -o grouped:prospector.log
 ```
 
-# jupyter-lab widgets
+Output is written to `prospector.log`.
+
+# Jupyter-lab widgets
 
 - Install [nodejs](https://nodejs.org/en/) and [ipywidgets](https://ipywidgets.readthedocs.io/en/latest/user_install.html#installing-the-jupyterlab-extension).
 
@@ -76,9 +82,11 @@ prospector --profile qdmpy.prospector.yaml -o grouped:prospector.log
 
 # Version control / git
 
-The project is housed on [Gitlab](https://gitlab.unimelb.edu.au/sscholten/qdmpy), you will need to be given access by an owner and sign in with uni credentials. To communicate with the Gitlab server you will need to setup an ssh key (on each device connected, there will need to be one on each lab computer as well). My installation instructions below are taken from the Gitlab Docs [here](https://docs.gitlab.com/ee/ssh/).
+The project is housed on [GitHub](https://github.com/casparvitch/qdmpy). 
 
-You can also use Gitlab in-browser, i.e. not using the git commands at all. This is not recommended but can be great in a pinch.
+To communicate with the GitHub server you will need to setup an ssh key. My installation instructions below are taken from the GitHub Docs.
+
+You can also use GitHub in-browser, i.e. not using the git commands at all. This is not recommended but can be great in a pinch.
 
 Tip: It's a lot easier to read diffs/merges using the side-by-side visual. Somewhere in your diff tool/online it will have this options, give it a shot.
 
@@ -90,13 +98,13 @@ If you're on windows you will need to download a Git/OpenSSH client (Unix system
 Open the Git Bash terminal (or Bash on Unix). Generate a new ED25519 SSH key pair:
 
 ```Bash
-ssh-keygen -t ed25519 -C "<YOUR UNI EMAIL HERE>"
+ssh-keygen -t ed25519 -C "<YOUR EMAIL HERE>"
 ```
 
 You will be prompted to input a file path to save it to. Just click Enter to put it in the default \~/.ssh/config file
 Once that's decided you will be prompted to input a password. To skip press Enter twice (make sure you don't do this for a shared PC such as the Lab computers).
 
-**Now add to your Gitlab account** (under settings in your browser)
+**Now add to your GitHub account** (under settings > SSH and GPG keys in your browser)
 To clip the public key to your clipboard for pasting, in Git Bash:
 
 ```Bash
@@ -118,12 +126,12 @@ xclip -sel clip < ~/.ssh/id_ed25519.pub
 Now we can check whether that worked correctly:
 
 ```Bash
-ssh -T git@git.unimelb.edu.au
+ssh -T git@github.com
 ```
 
-If it's the first time you connect to Gitlab via SSH, you will be asked to verify it's authenticity (respond yes). You may also need to provide your password. If it responds with *Welcome to Gitlab, @username!* then you're all setup. 
+If it's the first time you connect to GitHub via SSH, you will be asked to verify it's authenticity (respond yes). You may also need to provide your password. If it responds with *Hi username! You've successfully authenticated...* then you're all setup. 
 
-# Gpufit install
+# Gpufit install (from source)
 
 Can install a binary from [here](https://github.com/gpufit/Gpufit/releases).
 
@@ -136,7 +144,7 @@ Follow [instructions](https://gpufit.readthedocs.io/en/latest/installation.html)
 
 ## Github/Gitlab details for GPUFit
 
-- Our fork of GPUFit (with our lorentzian models etc.) is held [here](https://gitlab.unimelb.edu.au/QSL/gpufit)
+- Our fork of GPUFit (with our lorentzian models etc.) is held [here](https://github.com/casparvitch/gpufit) (mirrored from original GitLab)
 - Most important Gpufit details:
 	- 2 remotes: origin (Github, Gpufit i.e. **THEM**) and cloud (Gitlab, QSL i.e. **US**)
 	- a few branches: 
@@ -243,12 +251,10 @@ Follow [instructions](https://gpufit.readthedocs.io/en/latest/installation.html)
         - add BOOST_ROOT variable to wherever you installed/unpacked BOOST
 
 - compiling (visual studio)
-    - After configuring and generating the solution files using CMake, go to the desired build directory and open Gpufit.sln using Visual Studio. Select the “Debug” or “Release” build options, as appropriate. Select the build target “ALL_BUILD”, and build this target. If the build process completes without errors, the Gpufit binary files will be created in the corresponding “Debug” or “Release” folders in the build directory.
-    - The unit tests can be executed by building the target “RUN_TESTS” or by starting the created executables in the output directory from the command line. (I RECOMMEND YOU RUN SOME TESTS!)
+    - After configuring and generating the solution files using CMake, go to the desired build directory and open Gpufit.sln using Visual Studio. Select the "Debug" or "Release" build options, as appropriate. Select the build target "ALL_BUILD", and build this target. If the build process completes without errors, the Gpufit binary files will be created in the corresponding "Debug" or "Release" folders in the build directory.
+    - The unit tests can be executed by building the target "RUN_TESTS" or by starting the created executables in the output directory from the command line. (I RECOMMEND YOU RUN SOME TESTS!)
 
 - Building python wheel file
     - ENSURE wheel installed (pip install wheel) BEFORE compilation
     - uninstall any previous version you installed (`pip uninstall pygpufit`)
-    - `pip install C:\src\gpufit-build-Release\pyGpufit\dist\wheel_file_here.wh`
-
-
+    - `pip install C:\src\gpufit-build-Release\pyGpufit\dist\wheel_file_here.whl`

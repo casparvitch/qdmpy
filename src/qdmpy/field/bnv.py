@@ -129,9 +129,7 @@ def get_bnvs_and_dshifts(pixel_fit_params, bias_field_spherical_deg, chosen_freq
             dshifts.append((peak_posns[-i - 1] + peak_posns[i]) / 2)
         if ((num_peaks // 2) * 2) + 1 == num_peaks:
             peak = peak_posns[num_peaks // 2 + 1]
-            sign = (
-                -1 if np.mean(peak) < 2870 else +1
-            )  # det. if L/R resonance (rel to bias)
+            sign = -1 if np.mean(peak) < 2870 else +1  # det. if L/R resonance (rel to bias)
             middle_bnv = sign * peak / GAMMA
             bnvs.append(middle_bnv)
             middle_dshift = np.empty(middle_bnv.shape)
@@ -193,8 +191,7 @@ def check_exp_bnv_compatibility(sig_bnvs, ref_bnvs):
 
     if len(sig_bnvs) != len(ref_bnvs):
         raise RuntimeError(
-            "Number of bnvs/dshifts in sig experiment different from number in"
-            " reference."
+            "Number of bnvs/dshifts in sig experiment different from number in reference."
         )
     if sig_bnvs[0].shape != ref_bnvs[0].shape:
         raise RuntimeError("Different image shape in main experiment to reference.")
@@ -291,9 +288,7 @@ def sub_bground_bnvs(options, bnvs, method, **method_settings):
     output_bnvs
         bnvs with background subtracted
     """
-    if "polygons" in options and (
-        options["mask_polygons_bground"] or method == "interpolate"
-    ):
+    if "polygons" in options and (options["mask_polygons_bground"] or method == "interpolate"):
         polygons = options["polygons"]
     else:
         polygons = None
@@ -366,9 +361,7 @@ def prop_single_bnv(
     padded_bnv, padder = qdmpy.shared.fourier.pad_image(bnv, pad_mode, pad_factor)
 
     fft_bnv = numpy_fft.fftshift(numpy_fft.fft2(padded_bnv))
-    ky, kx, k = qdmpy.shared.fourier.define_k_vectors(
-        fft_bnv.shape, pixel_size, k_vector_epsilon
-    )
+    ky, kx, k = qdmpy.shared.fourier.define_k_vectors(fft_bnv.shape, pixel_size, k_vector_epsilon)
 
     unv_cpy = copy(unv) if nvs_above_sample else [-unv[0], -unv[1], unv[2]]
 

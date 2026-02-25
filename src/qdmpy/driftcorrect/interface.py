@@ -98,9 +98,7 @@ def _read_sweep_list(filepath):
 # ============================================================================
 
 
-def _check_start_end_rectangle(
-    name, start_x, start_y, end_x, end_y, full_size_w, full_size_h
-):
+def _check_start_end_rectangle(name, start_x, start_y, end_x, end_y, full_size_w, full_size_h):
     if start_x >= end_x:
         warn(f"{name} Rectangle ends before it starts (in x), swapping them")
         start_x, end_x = end_x, start_x
@@ -108,25 +106,17 @@ def _check_start_end_rectangle(
         warn(f"{name} Rectangle ends before it starts (in y), swapping them")
         start_y, end_y = end_y, start_y
     if start_x >= full_size_w:
-        warn(
-            f"{name} Rectangle starts outside image (too large in x), setting to zero."
-        )
+        warn(f"{name} Rectangle starts outside image (too large in x), setting to zero.")
         start_x = 0
     elif start_x < 0:
-        warn(
-            f"{name} Rectangle starts outside image (negative in x), setting to zero.."
-        )
+        warn(f"{name} Rectangle starts outside image (negative in x), setting to zero..")
         start_x = 0
 
     if start_y >= full_size_h:
-        warn(
-            f"{name} Rectangle starts outside image (too large in y), setting to zero."
-        )
+        warn(f"{name} Rectangle starts outside image (too large in y), setting to zero.")
         start_y = 0
     elif start_y < 0:
-        warn(
-            f"{name}  Rectangle starts outside image (negative in y), setting to zero."
-        )
+        warn(f"{name}  Rectangle starts outside image (negative in y), setting to zero.")
         start_y = 0
 
     if end_x >= full_size_w:
@@ -318,16 +308,14 @@ def _reshape_dataset(
     rem_end_pts=0,
     ROI=None,
 ):
-    image_rebinned, sig, ref, sig_norm = _rebin_image(
-        image, additional_bins, used_ref, norm
-    )
+    image_rebinned, sig, ref, sig_norm = _rebin_image(image, additional_bins, used_ref, norm)
     try:
         size_h, size_w = image_rebinned.shape[1:]
     except Exception:
         size_h, size_w = image_rebinned.shape
 
     # check options to ensure ROI is in correct format (now we have image size)
-    if ROI != None:
+    if ROI is not None:
         ROI["start"], ROI["end"] = _check_start_end_rectangle(
             "ROI", *ROI["start"], *ROI["end"], size_w, size_h
         )  # opposite convention here, [x, y]
@@ -377,9 +365,7 @@ def _add_colorbar(im, fig, ax, aspect=20, pad_fraction=1, **kwargs):
     return cbar
 
 
-def plot_image_on_ax(
-    fig, ax, image_data, title="", c_map="gray", c_range=None, c_label=""
-):
+def plot_image_on_ax(fig, ax, image_data, title="", c_map="gray", c_range=None, c_label=""):
     if c_range is None:
         mx = np.nanmax(np.abs([np.nanmin(image_data), np.nanmax(image_data)]))
         c_range = [-mx, mx]
@@ -531,9 +517,7 @@ def drift_correct_measurement(
             mask=image_nums_mask,
         )
     else:
-        raise ValueError(
-            "Only None/default/labview reader_mode is defined at the moment."
-        )
+        raise ValueError("Only None/default/labview reader_mode is defined at the moment.")
 
     if writer_mode is None or writer_mode == "labview":
         # save output. bit slow but haven't worked out a vectorised version'
@@ -557,9 +541,7 @@ def drift_correct_measurement(
                 if line.startswith("Binning:"):
                     old_binning = int(re.match(r"Binning: (\d+)\n", line)[1])
                     new_binning = (
-                        old_binning
-                        if not additional_bins
-                        else old_binning * additional_bins
+                        old_binning if not additional_bins else old_binning * additional_bins
                     )
                     lines.append(f"Binning: {new_binning}\n")
                 else:
@@ -569,9 +551,7 @@ def drift_correct_measurement(
             for line in lines:
                 fid.write(line)
     else:
-        raise ValueError(
-            "Only None/default/laview writer_mode is defined at the moment."
-        )
+        raise ValueError("Only None/default/laview writer_mode is defined at the moment.")
 
 
 # ============================================================================
@@ -649,9 +629,7 @@ def drift_correct_test(
             if i > max(comparison_nums):
                 break
     else:
-        raise ValueError(
-            "Only None/default/labview reader_mode is defined at the moment."
-        )
+        raise ValueError("Only None/default/labview reader_mode is defined at the moment.")
 
     # plot cropped sig frames in left column
     for i, frame, ax in zip(comparison_nums, raw_comp_frames, axs[:, 0]):
@@ -680,9 +658,7 @@ def drift_correct_test(
         shift_calcs.append(shift_calc)
 
     # plot cropped corrected frames in right column
-    for i, frame, shift_calc, ax in zip(
-        comparison_nums, corrected_frames, shift_calcs, axs[:, 1]
-    ):
+    for i, frame, shift_calc, ax in zip(comparison_nums, corrected_frames, shift_calcs, axs[:, 1]):
         plot_image_on_ax(
             fig,
             ax,

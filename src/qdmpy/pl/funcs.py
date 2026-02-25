@@ -202,12 +202,8 @@ class Circular(FitFunc):
         """
         circ_freq, pos, amp = fit_params
         j = np.empty((x.shape[0], 3), dtype=np.float64)
-        j[:, 0] = (
-            2 * np.pi * amp * (x - pos) * np.cos(2 * np.pi * circ_freq * (x - pos))
-        )
-        j[:, 1] = (
-            -2 * np.pi * circ_freq * amp * np.cos(2 * np.pi * circ_freq * (x - pos))
-        )
+        j[:, 0] = 2 * np.pi * amp * (x - pos) * np.cos(2 * np.pi * circ_freq * (x - pos))
+        j[:, 1] = -2 * np.pi * circ_freq * amp * np.cos(2 * np.pi * circ_freq * (x - pos))
         j[:, 2] = np.sin(2 * np.pi * circ_freq * (x - pos))
         return j
 
@@ -414,9 +410,9 @@ class LorentzianHyperfine15(FitFunc):
         pos, amp_1_hyp, amp_2_hyp, fwhm_1_hyp, fwhm_2_hyp = fit_params
         hwhmsqr1 = fwhm_1_hyp**2 / 4
         hwhmsqr2 = fwhm_2_hyp**2 / 4
-        return amp_1_hyp * hwhmsqr1 / (
-            (x - pos - 1.515) ** 2 + hwhmsqr1
-        ) + amp_2_hyp * hwhmsqr2 / ((x - pos + 1.515) ** 2 + hwhmsqr2)
+        return amp_1_hyp * hwhmsqr1 / ((x - pos - 1.515) ** 2 + hwhmsqr1) + amp_2_hyp * hwhmsqr2 / (
+            (x - pos + 1.515) ** 2 + hwhmsqr2
+        )
 
 
 class LorentzianhBN(FitFunc):
@@ -566,16 +562,10 @@ class DampedRabi(FitFunc):
         """
         omega, pos, amp, tau = fit_params
         j = np.empty((x.shape[0], 4), dtype=np.float64)
-        j[:, 0] = (
-            amp * (pos - x) * np.sin(omega * (x - pos)) * np.exp(-x / tau)
-        )  # wrt omega
-        j[:, 1] = (amp * omega * np.sin(omega * (x - pos))) * np.exp(
-            -x / tau
-        )  # wrt pos
+        j[:, 0] = amp * (pos - x) * np.sin(omega * (x - pos)) * np.exp(-x / tau)  # wrt omega
+        j[:, 1] = (amp * omega * np.sin(omega * (x - pos))) * np.exp(-x / tau)  # wrt pos
         j[:, 2] = np.exp(-x / tau) * np.cos(omega * (x - pos))  # wrt amp
-        j[:, 3] = (amp * x * np.cos(omega * (x - pos))) / (
-            np.exp(x / tau) * tau**2
-        )  # wrt tau
+        j[:, 3] = (amp * x * np.cos(omega * (x - pos))) / (np.exp(x / tau) * tau**2)  # wrt tau
         return j
 
 
@@ -611,12 +601,8 @@ class WalshT1(FitFunc):
         j[:, 0] = (2 * A * (eta - 1) * x * np.exp(2 * R * x)) / (
             (eta - A * np.exp(2 * R * x)) ** 2
         )  # wrt R
-        j[:, 1] = (1 - A * np.exp(2 * R * x)) / (
-            (eta - A * np.exp(2 * R * x)) ** 2
-        )  # wrt eta
-        j[:, 2] = ((eta - 1) * np.exp(2 * R * x)) / (
-            (eta - A * np.exp(2 * R * x)) ** 2
-        )  # wrt A
+        j[:, 1] = (1 - A * np.exp(2 * R * x)) / ((eta - A * np.exp(2 * R * x)) ** 2)  # wrt eta
+        j[:, 2] = ((eta - 1) * np.exp(2 * R * x)) / ((eta - A * np.exp(2 * R * x)) ** 2)  # wrt A
         return j
 
 

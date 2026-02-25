@@ -231,16 +231,10 @@ class ConstDampedRabi(FastFitModel):
         c, omega, pos, amp, tau = fit_params
         j = np.empty((x.shape[0], 5))
         j[:, 0] = 1
-        j[:, 1] = (
-            amp * (pos - x) * np.sin(omega * (x - pos)) * np.exp(-x / tau)
-        )  # wrt omega
-        j[:, 2] = (amp * omega * np.sin(omega * (x - pos))) * np.exp(
-            -x / tau
-        )  # wrt pos
+        j[:, 1] = amp * (pos - x) * np.sin(omega * (x - pos)) * np.exp(-x / tau)  # wrt omega
+        j[:, 2] = (amp * omega * np.sin(omega * (x - pos))) * np.exp(-x / tau)  # wrt pos
         j[:, 3] = np.exp(-x / tau) * np.cos(omega * (x - pos))  # wrt amp
-        j[:, 4] = (amp * x * np.cos(omega * (x - pos))) / (
-            np.exp(x / tau) * tau**2
-        )  # wrt tau
+        j[:, 4] = (amp * x * np.cos(omega * (x - pos))) / (np.exp(x / tau) * tau**2)  # wrt tau
         return j
 
     def get_param_defn(self):
@@ -438,9 +432,9 @@ class DoubleLorentzian(FastFitModel):
         hwhmsqr_l = (fwhm_l**2) / 4
         hwhmsqr_r = (fwhm_r**2) / 4
 
-        val += amp_l * hwhmsqr_l / (
-            (x - pos + sep / 2) ** 2 + hwhmsqr_l
-        ) + amp_r * hwhmsqr_r / ((x - pos - sep / 2) ** 2 + hwhmsqr_r)
+        val += amp_l * hwhmsqr_l / ((x - pos + sep / 2) ** 2 + hwhmsqr_l) + amp_r * hwhmsqr_r / (
+            (x - pos - sep / 2) ** 2 + hwhmsqr_r
+        )
 
         return val
 
@@ -464,9 +458,9 @@ class DoubleLorentzian(FastFitModel):
         hwhmsqr_l = (fwhm_l**2) / 4
         hwhmsqr_r = (fwhm_r**2) / 4
 
-        val += amp_l * hwhmsqr_l / (
-            (x - pos + sep / 2) ** 2 + hwhmsqr_l
-        ) + amp_r * hwhmsqr_r / ((x - pos - sep / 2) ** 2 + hwhmsqr_r)
+        val += amp_l * hwhmsqr_l / ((x - pos + sep / 2) ** 2 + hwhmsqr_l) + amp_r * hwhmsqr_r / (
+            (x - pos - sep / 2) ** 2 + hwhmsqr_r
+        )
 
         return val - pl_vals
 
@@ -490,20 +484,12 @@ class DoubleLorentzian(FastFitModel):
         gr = fr / 2
 
         # order: pos, fwhm_l, amp_l, fwhm_r, amp_r
-        j[:, 1] = (
-            (2 * al * gl**2 * (x - c + sep / 2))
-            / (gl**2 + (x - c + sep / 2) ** 2) ** 2
-        ) + (
-            (2 * ar * gr**2 * (x - c - sep / 2))
-            / (gr**2 + (x - c - sep / 2) ** 2) ** 2
+        j[:, 1] = ((2 * al * gl**2 * (x - c + sep / 2)) / (gl**2 + (x - c + sep / 2) ** 2) ** 2) + (
+            (2 * ar * gr**2 * (x - c - sep / 2)) / (gr**2 + (x - c - sep / 2) ** 2) ** 2
         )
-        j[:, 2] = (al * gl * (x - c + sep / 2) ** 2) / (
-            (x - c + sep / 2) ** 2 + gl**2
-        ) ** 2
+        j[:, 2] = (al * gl * (x - c + sep / 2) ** 2) / ((x - c + sep / 2) ** 2 + gl**2) ** 2
         j[:, 3] = gl**2 / ((x - c + sep / 2) ** 2 + gl**2)
-        j[:, 4] = (ar * gr * (x - c - sep / 2) ** 2) / (
-            (x - c - sep / 2) ** 2 + gr**2
-        ) ** 2
+        j[:, 4] = (ar * gr * (x - c - sep / 2) ** 2) / ((x - c - sep / 2) ** 2 + gr**2) ** 2
         j[:, 5] = gr**2 / ((x - c - sep / 2) ** 2 + gr**2)
 
         return j

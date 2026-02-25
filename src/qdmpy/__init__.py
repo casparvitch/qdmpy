@@ -32,10 +32,10 @@
          |                   v     |            |==============|
          | misc           polygon  |            +--------------+
          | ----           -------  |
-         |                   |     |                
+         |                   |     |
          |      fourier      v     |                CANNOT IMPORT FROM HIGHER IN HEIRARCHY
-         |      -------  json2dict |               
-         |               --------- |                
+         |      -------  json2dict |
+         |               --------- |
          +-------------------------+
 ```
 
@@ -55,12 +55,12 @@
 - `qdmpy.plot`
     - This sub-package contains all of the plotting functions (matplotlib based).
 - `qdmpy.source`
-    - Contains tools for reconstructing source fields (e.g. current densities or intrinsic 
+    - Contains tools for reconstructing source fields (e.g. current densities or intrinsic
       magnetization) from the measured magnetic field calculated in qdmpy.field.
 - `qdmpy.shared`
     - Contains procedures shared between the other higher level modules. Cannot import from the
       other modules or you'll get circular import errors. Specific tooling here includes those
-      to help with fourier transforms, NV geometry, image tooling such as filtering and 
+      to help with fourier transforms, NV geometry, image tooling such as filtering and
       background subtraction, as well as json io and polygon selection.
 - `qdmpy.system`
     - This sub-package contains the tooling for defining institution specific settings for example
@@ -70,4 +70,5 @@
 `qdmpy` itself also exposes some functions from qdmpy.interface
 """
 
+from qdmpy._version import __version__  # noqa: F401
 from qdmpy.interface import *  # noqa: F401, F403

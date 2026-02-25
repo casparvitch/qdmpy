@@ -84,9 +84,7 @@ def define_fit_model(options):
         elif ffs == [("constant", 1), ("double_lorentzian", 1)]:
             fit_functions = {"constant": 1, "double_lorentzian": 1}
             compilable = True
-            fit_model = qdmpy.pl.fastmodel.DoubleLorentzian(
-                options["double_lorentzian_sep"]
-            )
+            fit_model = qdmpy.pl.fastmodel.DoubleLorentzian(options["double_lorentzian_sep"])
             break
 
     if not compilable or not options["use_fastmodel"]:
@@ -159,8 +157,7 @@ def _prep_fit_backends(options, fit_model):
             fit_cpufit.prep_cpufit_backend(options, fit_model)
         else:
             raise RuntimeError(
-                "No backend preparation defined for fit_backend ="
-                f" {options['fit_backend']}"
+                f"No backend preparation defined for fit_backend = {options['fit_backend']}"
             )
 
 
@@ -199,9 +196,7 @@ def fit_roi_avg_pl(options, sig, ref, sweep_list, fit_model):
     for fit_backend in options["fit_backend_comparison"]:
         if fit_backend == "scipyfit":
             backend_roi_results_lst.append(
-                fit_scipyfit.fit_roi_avg_pl_scipyfit(
-                    options, sig, ref, sweep_list, fit_model
-                )
+                fit_scipyfit.fit_roi_avg_pl_scipyfit(options, sig, ref, sweep_list, fit_model)
             )
         elif fit_backend == "gpufit":
             backend_roi_results_lst.append(
@@ -225,8 +220,7 @@ def fit_roi_avg_pl(options, sig, ref, sweep_list, fit_model):
             )
         else:
             raise RuntimeError(
-                "No fit_roi_avg_pl fn defined for fit_backend ="
-                f" {options['fit_backend']}"
+                f"No fit_roi_avg_pl fn defined for fit_backend = {options['fit_backend']}"
             )
     return backend_roi_results_lst
 
@@ -372,8 +366,7 @@ def fit_all_pixels_pl(options, sig_norm, sweep_list, fit_model, roi_avg_fit_resu
         )
     else:
         raise RuntimeError(
-            "No fit_all_pixels_pl fn defined for fit_backend ="
-            f" {options['fit_backend']}"
+            f"No fit_all_pixels_pl fn defined for fit_backend = {options['fit_backend']}"
         )
 
 

@@ -136,9 +136,7 @@ def define_k_vectors(shape, pixel_size, k_vector_epsilon):
     # Include a small factor in the k vectors to remove division by zero issues (min_k)
     # Make a meshgrid to pass back
     if k_vector_epsilon:
-        ky, kx = np.meshgrid(
-            ky_vec - k_vector_epsilon, kx_vec + k_vector_epsilon, indexing="ij"
-        )
+        ky, kx = np.meshgrid(ky_vec - k_vector_epsilon, kx_vec + k_vector_epsilon, indexing="ij")
     else:
         ky, kx = np.meshgrid(ky_vec, kx_vec, indexing="ij")
 
@@ -159,9 +157,7 @@ def set_naninf_to_zero(array):
 # ============================================================================
 
 
-def hanning_filter_kspace(
-    k, do_filt, hanning_low_cutoff, hanning_high_cutoff, standoff
-):
+def hanning_filter_kspace(k, do_filt, hanning_low_cutoff, hanning_high_cutoff, standoff):
     """Computes a hanning image filter with both low and high pass filters.
 
     Arguments
@@ -187,9 +183,7 @@ def hanning_filter_kspace(
     # Define Hanning filter to prevent noise amplification at frequencies higher than the
     # spatial resolution
 
-    if (
-        do_filt and standoff and standoff > 1e-10
-    ):  # standoff greater than an angstrom...
+    if do_filt and standoff and standoff > 1e-10:  # standoff greater than an angstrom...
         hy = np.hanning(k.shape[0])
         hx = np.hanning(k.shape[1])
         img_filt = np.sqrt(np.outer(hy, hx))
@@ -211,9 +205,7 @@ def hanning_filter_kspace(
 # ============================================================================
 
 
-def define_magnetization_transformation(
-    ky, kx, k, standoff=None, nv_layer_thickness=None
-):
+def define_magnetization_transformation(ky, kx, k, standoff=None, nv_layer_thickness=None):
     """M => b fourier-space transformation.
 
 

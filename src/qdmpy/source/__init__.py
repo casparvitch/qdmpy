@@ -2,6 +2,7 @@
 """
 Sub-package for inverting fields to calculate their source (field).
 """
+
 __author__ = "Sam Scholten"
 __pdoc__ = {
     "qdmpy.source.current": True,

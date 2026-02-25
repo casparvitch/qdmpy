@@ -219,9 +219,7 @@ def fit_roi_avg_pl_scipyfit(options, sig, ref, sweep_list, fit_model):
 # ==========================================================================
 
 
-def fit_single_pixel_pl_scipyfit(
-    options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result
-):
+def fit_single_pixel_pl_scipyfit(options, pixel_pl_ar, sweep_list, fit_model, roi_avg_fit_result):
     """
     Fit Single pixel and return best_fit_result.x (i.e. the optimal fit parameters)
 
@@ -416,9 +414,7 @@ def to_squares_wrapper(fun, p0, sweep_vec, shaped_data, fit_optns):
 # ==========================================================================
 
 
-def fit_all_pixels_pl_scipyfit(
-    options, sig_norm, sweep_list, fit_model, roi_avg_fit_result
-):
+def fit_all_pixels_pl_scipyfit(options, sig_norm, sweep_list, fit_model, roi_avg_fit_result):
     """
     Fits each pixel and returns dictionary of param_name -> param_image.
 

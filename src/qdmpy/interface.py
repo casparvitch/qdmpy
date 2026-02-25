@@ -152,18 +152,14 @@ def load_options(
         # options_dict takes precedence
         options_path = None
     if options_dict is None and options_path is None:
-        raise RuntimeError(
-            "pass at least one of options_dict and options_path to load_options"
-        )
+        raise RuntimeError("pass at least one of options_dict and options_path to load_options")
 
     if options_path is not None:
         if not pathlib.Path(options_path).is_file():
             raise ValueError("options file at `options_path` not found?")
         prelim_options = qdmpy.shared.json2dict.json_to_dict(options_path)
     else:
-        prelim_options = OrderedDict(
-            options_dict
-        )  # unnescessary py3.7+, leave to describe intent
+        prelim_options = OrderedDict(options_dict)  # unnescessary py3.7+, leave to describe intent
 
     required_options = ["filepath", "fit_functions"]
     for key in required_options:
@@ -180,9 +176,7 @@ def load_options(
 
     chosen_system.determine_binning(options)
 
-    chosen_system.system_specific_option_update(
-        options
-    )  # do this again on full options to be sure
+    chosen_system.system_specific_option_update(options)  # do this again on full options to be sure
 
     options["system"] = chosen_system
 
@@ -234,10 +228,7 @@ def load_ref_options(options, ref_options=None, ref_options_dir=None):
     if not ref_options_dir or options["exp_reference_type"] is None:
         ref_options_dir = None
     if ref_options is None and ref_options_dir is None:
-        warn(
-            "Continuing without reference. (No reference chosen or exp_referece_type"
-            " was 'None')"
-        )
+        warn("Continuing without reference. (No reference chosen or exp_referece_type was 'None')")
         options["field_dir"] = options["output_dir"].joinpath("field")
         options["field_sig_dir"] = options["field_dir"].joinpath("sig")
         options["field_ref_dir"] = options["field_dir"].joinpath("ref_nothing")
@@ -261,12 +252,8 @@ def load_ref_options(options, ref_options=None, ref_options_dir=None):
         loading_ref=True,
     )
     # copy reference bias to sig options.
-    options["ref_bias_field_cartesian_gauss"] = ref_options[
-        "bias_field_cartesian_gauss"
-    ]
-    options["ref_bias_field_spherical_deg_gauss"] = ref_options[
-        "bias_field_spherical_deg_gauss"
-    ]
+    options["ref_bias_field_cartesian_gauss"] = ref_options["bias_field_cartesian_gauss"]
+    options["ref_bias_field_spherical_deg_gauss"] = ref_options["bias_field_spherical_deg_gauss"]
 
     ref_name = pathlib.Path(ref_options["filepath"]).stem
     options["field_dir"] = options["output_dir"].joinpath("field")
@@ -396,25 +383,19 @@ def _define_output_dir(options):
         output_dir = pathlib.PurePosixPath(str(options["filepath"]))
 
     if options["custom_output_dir_prefix"] is not None:
-        prefix = _interpolate_option_str(
-            str(options["custom_output_dir_prefix"]), options
-        )
+        prefix = _interpolate_option_str(str(options["custom_output_dir_prefix"]), options)
     else:
         prefix = ""
 
     if options["custom_output_dir_suffix"] is not None:
-        suffix = _interpolate_option_str(
-            str(options["custom_output_dir_suffix"]), options
-        )
+        suffix = _interpolate_option_str(str(options["custom_output_dir_suffix"]), options)
     else:
         suffix = ""
 
     if options["custom_output_dir_prefix"] is None and options["custom_output_dir_suffix"] is None:
         suffix = "_output"
 
-    options["output_dir"] = output_dir.parent.joinpath(
-        prefix + output_dir.stem + suffix
-    )
+    options["output_dir"] = output_dir.parent.joinpath(prefix + output_dir.stem + suffix)
     options["data_dir"] = options["output_dir"].joinpath("data")
 
 
@@ -497,9 +478,9 @@ def load_polygons(options):
     if options["polygon_nodes_path"]:
         options["polygon_nodes"] = [
             np.array(polygon)
-            for polygon in qdmpy.shared.json2dict.json_to_dict(
-                options["polygon_nodes_path"]
-            )["nodes"]
+            for polygon in qdmpy.shared.json2dict.json_to_dict(options["polygon_nodes_path"])[
+                "nodes"
+            ]
         ]
         options["polygons"] = [
             qdmpy.shared.polygon.Polygon(nodes[:, 0], nodes[:, 1])
@@ -530,9 +511,7 @@ class OptionsError(Exception):
                 + f", pick from: {choices}"
             )
         else:
-            self.default_msg = (
-                f"Option {option_given} not a valid option for {option_name}."
-            )
+            self.default_msg = f"Option {option_given} not a valid option for {option_name}."
 
         super().__init__(custom_msg)
 
@@ -550,12 +529,8 @@ class OptionsError(Exception):
 def check_option(key, val, system):
     if key not in system.available_options():
         warn(f"Option {key} was not recognised by the {system.name} system.")
-    elif system.option_choices(key) is not None and val not in system.option_choices(
-        key
-    ):
-        OptionsError(
-            key, val, system
-        )  # FIXME test this actually raises exception/warning...
+    elif system.option_choices(key) is not None and val not in system.option_choices(key):
+        OptionsError(key, val, system)  # FIXME test this actually raises exception/warning...
 
 
 # ===============================
