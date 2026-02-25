@@ -1,5 +1,17 @@
 # QDMPy - Quantum Diamond MicroscoPy
 
+# Clean build artifacts and caches
+clean:
+	rm -rf build dist .eggs *.egg-info
+	rm -rf .ruff_cache __pycache__
+	find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
+	find . -type f -name "*.pyc" -delete
+	rm -f prospector.log
+
+# Clean everything including virtual environment
+clean-all: clean
+	rm -rf .venv
+
 # Install in editable mode
 install:
 	uv pip install -e .
