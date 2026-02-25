@@ -30,7 +30,7 @@ dependencies = [
     "numpy",
     "matplotlib>=3.4.0",
     "scipy>=1.7",
-    "numba",
+    "numba>=0.59",
     "psutil",
     "matplotlib-scalebar>=0.7.2",
     "tqdm",
@@ -42,12 +42,12 @@ dependencies = [
     "python-polylabel",
     "dill",
     "astropy",
-    "PyQt6",
 ]
 
 [project.optional-dependencies]
 gui = [
     "FreeSimpleGUI",
+    "PyQt6",
 ]
 dev = [
     "prospector[with_bandit,with_pyroma,with_vulture]",
