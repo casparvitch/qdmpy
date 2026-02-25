@@ -26,6 +26,7 @@ required = [
     "dill",  # for magsim
     "astropy",  # remove if remove sigma_clip background sub
     "PyQt6",  # Needed for gui widget stuff
+    "scikit-image",
 ]
 
 here = pathlib.Path(__file__).parent.resolve()

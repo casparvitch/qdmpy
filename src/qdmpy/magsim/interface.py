@@ -300,7 +300,7 @@ class MagSim:
     def run(
         self,
         standoff,
-        resolution=None,
+        resolution=None, # NOTE resolution is given as a sigma not a fwhm! should be fwhm.
         pad_mode="mean",
         pad_factor=2,
         k_vector_epsilon=1e-6,
@@ -370,13 +370,8 @@ class MagSim:
             )  # matrix mul b = d * m (d and m are stacked in last 2 dimensions)
 
             if nv_layer_thickness is not None and standoff:
-                # integrate exp factor exp(-k z) across
-                # z = [standoff - nv_thickness / 2, standoff + nv_thickness / 2]
-                # get exp(-k z) * sinh(k nv_thickness / 2) / (k / 2)
-                # NOTE hmmm... I think nv_layer_thickness needs to be in on the bottom too??
-                # otherwise it doesn't scale correctly... TODO test FIXME
-                arg = k / 2
-                nv_thickness_correction = np.sinh(arg * nv_layer_thickness) / arg
+                arg = k * nv_layer_thickness / 2
+                nv_thickness_correction = np.sinh(arg) / arg
                 for vec in fft_b_vec:
                     vec *= nv_thickness_correction
 

@@ -356,11 +356,10 @@ def bounds_from_range(options, param_key, guess):
             else:
                 raise RuntimeError("param range len should match guess len")
         # param guess and range are just single vals (easy!)
-        else:
-            bounds = [
-                guess - rang,
-                guess + rang,
-            ]
+        bounds = [
+            guess - rang,
+            guess + rang,
+        ]
     return bounds
 
 

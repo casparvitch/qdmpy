@@ -486,6 +486,8 @@ def fit_aois_pl_gpufit(
     constraints = np.repeat([init_bounds], repeats=2, axis=0)
     constraints = constraints.astype(dtype=np.float32)
 
+    gpufit_fit_options = prep_gpufit_fit_options(options)
+
     for a in aois:
         this_sig = sig[:, a[0], a[1]]
         this_ref = ref[:, a[0], a[1]]
@@ -514,6 +516,7 @@ def fit_aois_pl_gpufit(
             ),
             user_info=np.array(sweep_list, dtype=np.float32),
             parameters_to_fit=params_to_fit,
+            **gpufit_fit_options
         )
         aoi_avg_best_fit_results_lst.append(fitting_results[0, :])
 
@@ -582,6 +585,8 @@ def fit_all_pixels_pl_gpufit(
     # reshape sig_norm in a way that gpufit likes: (number_fits, number_points)
     sig_norm_shaped, pixel_posns = gpufit_data_shape(sig_norm)
 
+    gpufit_fit_options = prep_gpufit_fit_options(options)
+
     fitting_results, _, _, _, execution_time = gf.fit_constrained(
         sig_norm_shaped,
         None,
@@ -594,6 +599,7 @@ def fit_all_pixels_pl_gpufit(
         ),
         user_info=np.array(sweep_list, dtype=np.float32),
         parameters_to_fit=np.array(params_to_fit, dtype=np.int32),
+        **gpufit_fit_options
     )
     # for the record
     options["fit_time_(s)"] = execution_time

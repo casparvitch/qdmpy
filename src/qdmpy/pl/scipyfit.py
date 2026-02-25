@@ -445,8 +445,8 @@ def fit_all_pixels_pl_scipyfit(
     threads = options["threads"]
     num_pixels = np.shape(sig_norm)[1] * np.shape(sig_norm)[2]
 
-    # divide pixels by numbers of threads (workers) to use
-    chunksize = int(num_pixels / threads)
+    # divide pixels amongst threads/workers.
+    chunksize = int(num_pixels / (2 * threads))
 
     # randomize order of fitting pixels (will un-scramble later) so ETA is more correct
     # -> this is not every useful.

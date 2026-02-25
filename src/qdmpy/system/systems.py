@@ -247,7 +247,7 @@ class UniMelb(System):
         default_keys = ["default_" + key for key in override_keys]
         default_keys.insert(0, "sensor_pixel_size")
         settings_dict = self.options_dict["microscope_setup"]["option_default"]
-
+        
         def key_finder(key):
             if key in settings_dict:
                 return settings_dict[key]
